@@ -12,7 +12,16 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('inventories', function (Blueprint $table) {
-            $table->id();
+            $table->id('item_id');
+            $table->enum('item_type', ['gown', 'suit']);
+            $table->string('name');
+            $table->string('size');
+            $table->string('color');
+            $table->string('design');
+            $table->enum('condition', ['good', 'damaged', 'under repaird', 'retired'])->default('good');
+            $table->decimal('rental_price', 10,2)->default(0);
+            $table->integer('quantity')->default(1);
+            $table->foreignId('status_id')->constrained('inventory_statuses', 'status_id')->cascadeOnDelete();
             $table->timestamps();
         });
     }

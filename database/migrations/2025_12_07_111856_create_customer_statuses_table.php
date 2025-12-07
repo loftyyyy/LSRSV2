@@ -12,8 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('customer_statuses', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
+            $table->id('status_id');
+            $table->String('status_name');
+            $table->String('reason')->nullable();
         });
     }
 

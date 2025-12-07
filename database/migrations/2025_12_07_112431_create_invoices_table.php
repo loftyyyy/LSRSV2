@@ -12,7 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('invoices', function (Blueprint $table) {
-            $table->id();
+            $table->id('invoice_id');
+            $table->foreignId('payment_id')->constrained('payments', 'payment_id')->cascadeOnDelete();
+            $table->string('invoice_number')->unique();
+            $table->dateTime('invoice_date');
+            $table->decimal('total_amount', 10,2)->default(0);
             $table->timestamps();
         });
     }

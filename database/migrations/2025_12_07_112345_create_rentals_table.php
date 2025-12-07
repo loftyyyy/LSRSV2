@@ -12,7 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('rentals', function (Blueprint $table) {
-            $table->id();
+            $table->id('rental_id');
+            $table->foreignId('reservation_id')->constrained('reservations', 'reservation_id')->cascadeOnDelete();
+            $table->foreignId('released_by')->constrained('users', 'user_id')->cascadeOnDelete();
+            $table->date('released_date');
+            $table->date('due_date');
+            $table->date('return_date');
+            $table->decimal('penalty_fee', 10,2)->default(0);
+            $table->foreignId('status_id')->constrained('rental_statuses', 'status_id')->cascadeOnDelete();
             $table->timestamps();
         });
     }

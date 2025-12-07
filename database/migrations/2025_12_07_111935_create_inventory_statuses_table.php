@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('inventory_statuses', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
+            $table->id('status_id');
+            $table->string('status_name');
         });
     }
 

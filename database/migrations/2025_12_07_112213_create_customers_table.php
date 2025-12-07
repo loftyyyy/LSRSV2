@@ -12,7 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('customers', function (Blueprint $table) {
-            $table->id();
+            $table->id('customer_id');
+            $table->string('first_name');
+            $table->string('last_name');
+            $table->string('email');
+            $table->string('contact_number');
+            $table->string('address');
+            $table->json('measurement');
+            $table->foreignId('status_id')->constrained('customer_statuses', 'status_id')->cascadeOnDelete();
             $table->timestamps();
         });
     }
