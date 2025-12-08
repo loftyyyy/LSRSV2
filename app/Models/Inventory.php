@@ -9,4 +9,5 @@ class Inventory extends Model
 {
     /** @use HasFactory<\Database\Factories\InventoryFactory> */
     use HasFactory;
+    protected $table = 'inventories';
 }
