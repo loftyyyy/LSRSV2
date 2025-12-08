@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('rental_id')->constrained('rentals', 'rental_id')->cascadeOnDelete();
             $table->foreignId('reservation_id')->constrained('reservations', 'reservation_id')->cascadeOnDelete();
             $table->enum('payment_type', ['rental_fee', 'deposit']);
-            $table->enum('payment_type', ['cash', 'card', 'bank_transfer']);
+            $table->enum('payment_method', ['cash', 'card', 'bank_transfer']);
             $table->date('payment_date');
             $table->foreignId('processed_by')->constrained('users', 'user_id')->cascadeOnDelete();
             $table->foreignId('status_id')->constrained('payment_statuses', 'status_id')->cascadeOnDelete();
