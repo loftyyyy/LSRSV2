@@ -24,4 +24,8 @@ class Customer extends Model
     protected $casts = [
         'measurement' => 'array',
     ];
+
+    public function status(){
+        return $this->belongsTo(CustomerStatus::class, 'status_id', 'status_id');
+    }
 }
