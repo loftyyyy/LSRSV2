@@ -11,6 +11,8 @@ class PaymentStatus extends Model
     use HasFactory;
     protected $table = 'payment_statuses';
     protected $primaryKey = 'status_id';
-    protected $fillable = [];
+    protected $fillable = [
+        'status_name',
+    ];
 
 }
