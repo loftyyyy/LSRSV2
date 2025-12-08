@@ -39,7 +39,6 @@ class Payment extends Model
     public function status(){
         return $this->belongsTo(PaymentStatus::class, 'status_id', 'status_id');
     }
-
     public function invoice(){
         return $this->hasOne(Invoice::class, 'payment_id', 'payment_id');
     }
