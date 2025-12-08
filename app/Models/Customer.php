@@ -10,9 +10,18 @@ class Customer extends Model
     /** @use HasFactory<\Database\Factories\CustomerFactory> */
     use HasFactory;
     protected $table = 'customers';
+    protected $primaryKey = 'customer_id';
     protected $fillable = [
-        'name',
+        'first_name',
+        'last_name',
         'email',
-        'password'
+        'contact_number',
+        'address',
+        'measurement',
+        'status_id'
+    ];
+
+    protected $casts = [
+        'measurement' => 'array',
     ];
 }
