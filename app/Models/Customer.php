@@ -9,4 +9,10 @@ class Customer extends Model
 {
     /** @use HasFactory<\Database\Factories\CustomerFactory> */
     use HasFactory;
+    protected $table = 'customers';
+    protected $fillable = [
+        'name',
+        'email',
+        'password'
+    ];
 }
