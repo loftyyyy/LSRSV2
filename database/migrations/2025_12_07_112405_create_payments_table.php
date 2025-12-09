@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('payments', function (Blueprint $table) {
             $table->id('payment_id');
-            $table->foreignId('rental_id')->constrained('rentals', 'rental_id')->cascadeOnDelete();
-            $table->foreignId('reservation_id')->constrained('reservations', 'reservation_id')->cascadeOnDelete();
+            $table->foreignId('rental_id')->nullable()->constrained('rentals', 'rental_id')->cascadeOnDelete();
+            $table->foreignId('reservation_id')->nullable()->constrained('reservations', 'reservation_id')->cascadeOnDelete();
             $table->enum('payment_type', ['rental_fee', 'deposit']);
             $table->enum('payment_method', ['cash', 'card', 'bank_transfer']);
             $table->date('payment_date');
