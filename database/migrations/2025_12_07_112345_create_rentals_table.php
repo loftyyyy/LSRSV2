@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('rentals', function (Blueprint $table) {
             $table->id('rental_id');
             $table->foreignId('reservation_id')->nullable()->constrained('reservations', 'reservation_id')->nullOnDelete();
-            $table->foreignId('item_id')->constrained('items', 'item_id')->nullOnDelete();
+            $table->foreignId('item_id')->constrained('inventories', 'item_id')->nullOnDelete();
             $table->foreignId('customer_id')->constrained('customers', 'customer_id')->cascadeOnDelete();
             $table->foreignId('released_by')->constrained('users', 'user_id')->cascadeOnDelete();
             $table->date('released_date');
