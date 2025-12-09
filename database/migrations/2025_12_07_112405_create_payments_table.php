@@ -18,6 +18,7 @@ return new class extends Migration
             $table->enum('payment_type', ['rental_fee', 'deposit']);
             $table->enum('payment_method', ['cash', 'card', 'bank_transfer']);
             $table->date('payment_date');
+            $table->decimal('amount', 10,2);
             $table->foreignId('processed_by')->constrained('users', 'user_id')->cascadeOnDelete();
             $table->foreignId('status_id')->constrained('payment_statuses', 'status_id')->cascadeOnDelete();
             $table->timestamps();

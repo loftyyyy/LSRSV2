@@ -19,12 +19,14 @@ class Payment extends Model
         'payment_type',
         'payment_method',
         'payment_date',
+        'amount',
         'processed_by',
         'status_id',
     ];
 
     protected $casts = [
         'payment_date' => 'date',
+        'amount' => 'decimal',
     ];
 
     public function rental(){
