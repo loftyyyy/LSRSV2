@@ -14,7 +14,6 @@ class Reservation extends Model
     protected $primaryKey = 'reservation_id';
 
     protected $fillable = [
-        'item_id',
         'reserved_by',
         'customer_id',
         'status_id',
@@ -28,11 +27,6 @@ class Reservation extends Model
         'start_date' => 'date',
         'end_date' => 'date',
     ];
-
-    public function inventory()
-    {
-        return $this->belongsTo(Inventory::class, 'item_id', 'item_id');
-    }
 
     public function reservedBy()
     {
