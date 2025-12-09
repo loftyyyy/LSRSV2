@@ -18,6 +18,7 @@ class Rental extends Model
         'customer_id',
         'released_by',
         'released_date',
+        'rental_price',
         'penalty_fee',
         'due_date',
         'return_date',
@@ -30,6 +31,7 @@ class Rental extends Model
         'due_date' => 'date',
         'return_date' => 'date',
         'penalty_fee' => 'decimal:2',
+        'rental_price' => 'decimal:2',
     ];
 
         public function reservation()
