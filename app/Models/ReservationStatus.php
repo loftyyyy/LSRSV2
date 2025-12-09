@@ -9,4 +9,9 @@ class ReservationStatus extends Model
 {
     /** @use HasFactory<\Database\Factories\ReservationStatusFactory> */
     use HasFactory;
+    protected $table = 'reservation_statuses';
+    protected $primaryKey = 'status_id';
+    protected $fillable = [
+        'status_name',
+    ];
 }
