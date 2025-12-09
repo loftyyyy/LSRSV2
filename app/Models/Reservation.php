@@ -29,29 +29,29 @@ class Reservation extends Model
         'end_date' => 'date',
     ];
 
-        public function inventory()
-        {
-            return $this->belongsTo(Inventory::class, 'item_id', 'item_id');
-        }
+    public function inventory()
+    {
+        return $this->belongsTo(Inventory::class, 'item_id', 'item_id');
+    }
 
-        public function reservedBy()
-        {
-            return $this->belongsTo(User::class, 'reserved_by', 'user_id');
-        }
+    public function reservedBy()
+    {
+        return $this->belongsTo(User::class, 'reserved_by', 'user_id');
+    }
 
-        public function customer()
-        {
-            return $this->belongsTo(Customer::class, 'customer_id', 'customer_id');
-        }
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class, 'customer_id', 'customer_id');
+    }
 
-        public function status()
-        {
-            return $this->belongsTo(ReservationStatus::class, 'status_id', 'status_id');
-        }
+    public function status()
+    {
+        return $this->belongsTo(ReservationStatus::class, 'status_id', 'status_id');
+    }
 
-        public function rental()
-        {
-            return $this->hasOne(Rental::class, 'reservation_id', 'reservation_id');
-        }
+    public function rental()
+    {
+        return $this->hasOne(Rental::class, 'reservation_id', 'reservation_id');
+    }
 
 }
