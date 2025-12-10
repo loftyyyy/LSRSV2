@@ -21,7 +21,7 @@ return new class extends Migration
             $table->date('due_date');
             $table->date('return_date');
             $table->decimal('rental_price', 10,2);
-
+            $table->decimal('deposit_amount', 10, 2)->default(0);
             $table->decimal('penalty_fee', 10,2)->default(0);
             $table->foreignId('status_id')->constrained('rental_statuses', 'status_id')->cascadeOnDelete();
             $table->timestamps();
