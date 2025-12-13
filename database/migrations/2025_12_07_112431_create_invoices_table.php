@@ -13,10 +13,23 @@ return new class extends Migration
     {
         Schema::create('invoices', function (Blueprint $table) {
             $table->id('invoice_id');
-            $table->foreignId('payment_id')->constrained('payments', 'payment_id')->cascadeOnDelete();
             $table->string('invoice_number')->unique();
+            $table->foreignId('customer_id')->constrained('customers', 'customer_id')->cascadeOnDelete();
+            $table->foreignId('reservation_id')->nullable()->constrained('reservations', 'reservation_id')->nullOnDelete();
+            $table->foreignId('rental_id')->nullable()->constrained('rentals', 'rental_id')->nullOnDelete();
+
+            // Financial summary
+            $table->decimal('subtotal', 10, 2)->default(0); // Sum of all line items
+            $table->decimal('discount', 10, 2)->default(0);
+            $table->decimal('tax', 10, 2)->default(0);
+            $table->decimal('total_amount', 10, 2)->default(0); // Final amount due
+            $table->decimal('amount_paid', 10, 2)->default(0); // Total payments received
+            $table->decimal('balance_due', 10, 2)->default(0); // Remaining balance
+
             $table->dateTime('invoice_date');
-            $table->decimal('total_amount', 10,2)->default(0);
+            $table->dateTime('due_date')->nullable();
+            $table->enum('invoice_type', ['reservation', 'rental', 'final']); // What type of invoice
+            $table->foreignId('created_by')->constrained('users', 'user_id')->cascadeOnDelete();
             $table->timestamps();
         });
     }

@@ -13,12 +13,12 @@ return new class extends Migration
     {
         Schema::create('payments', function (Blueprint $table) {
             $table->id('payment_id');
-            $table->foreignId('rental_id')->nullable()->constrained('rentals', 'rental_id')->cascadeOnDelete();
-            $table->foreignId('reservation_id')->nullable()->constrained('reservations', 'reservation_id')->cascadeOnDelete();
-            $table->enum('payment_type', ['rental_fee', 'deposit']);
-            $table->enum('payment_method', ['cash', 'card', 'bank_transfer']);
-            $table->date('payment_date');
-            $table->decimal('amount', 10,2);
+            $table->foreignId('invoice_id')->constrained('invoices', 'invoice_id')->cascadeOnDelete();
+            $table->string('payment_reference')->nullable(); // Transaction/receipt number
+            $table->decimal('amount', 10, 2);
+            $table->enum('payment_method', ['cash', 'card', 'bank_transfer', 'gcash', 'paymaya']);
+            $table->dateTime('payment_date');
+            $table->text('notes')->nullable();
             $table->foreignId('processed_by')->constrained('users', 'user_id')->cascadeOnDelete();
             $table->foreignId('status_id')->constrained('payment_statuses', 'status_id')->cascadeOnDelete();
             $table->timestamps();

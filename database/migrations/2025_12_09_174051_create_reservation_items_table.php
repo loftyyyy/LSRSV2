@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id('reservation_item_id');
             $table->foreignId('reservation_id')->constrained('reservations', 'reservation_id')->cascadeOnDelete();
             $table->foreignId('item_id')->constrained('inventories', 'item_id')->cascadeOnDelete();
+            $table->enum('fulfillment_status', ['pending', 'fulfilled', 'cancelled'])->default('pending');
             $table->integer('quantity')->default(1); // If you rent multiple of same item
             $table->timestamps();
             $table->unique(['reservation_id', 'item_id']); // Prevent duplicate items in same reservation
