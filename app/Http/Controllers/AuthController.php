@@ -6,6 +6,7 @@ use App\Http\Requests\StoreCustomerRequest;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 abstract class AuthController extends Controller
 {
@@ -20,7 +21,7 @@ abstract class AuthController extends Controller
 
         if(Auth::attempt($credentials)){
             $request->session()->regenerate();
-            return redirect()->intended('/'); // TODO: Update the route
+            return redirect()->route('/'); // TODO: Update the route
         }
 
         return back()->withErrors([
@@ -31,13 +32,27 @@ abstract class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        auth()->logout();
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
         return redirect()->route('landing');
     }
 
-    public function register(StoreCustomerRequest $request)
+    public function register(Request $request)
     {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ]);
 
+        $user = User::create([
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'password' => Hash::make($data['password']),
+        ]);
+
+        return redirect()->route('login');
     }
 
 }
