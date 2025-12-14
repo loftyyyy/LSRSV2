@@ -19,6 +19,11 @@ return new class extends Migration
             $table->foreignId('released_by')->constrained('users', 'user_id')->cascadeOnDelete();
             $table->date('released_date');
             $table->date('due_date');
+            $table->date('original_due_date'); // Original due date (set when rental is created, unchanged by extensions)
+            $table->integer('extension_count')->default(0); // Number of times rental was officially extended
+            $table->foreignId('extended_by')->nullable()->constrained('users', 'user_id')->nullOnDelete(); // User who authorized the last extension
+            $table->dateTime('last_extended_at')->nullable(); // When the rental was last extended
+            $table->text('extension_reason')->nullable(); // Reason/notes for the extension
             $table->date('return_date')->nullable();
             $table->foreignId('returned_to')->nullable()->constrained('users', 'user_id')->nullOnDelete();
             $table->text('return_notes')->nullable(); // Document damages, condition, etc.

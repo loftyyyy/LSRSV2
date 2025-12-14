@@ -19,6 +19,11 @@ class Rental extends Model
         'released_by',
         'released_date',
         'due_date',
+        'original_due_date',
+        'extension_count',
+        'extended_by',
+        'last_extended_at',
+        'extension_reason',
         'return_date',
         'return_notes',
         'returned_to',
@@ -28,7 +33,10 @@ class Rental extends Model
     protected $casts = [
         'released_date' => 'date',
         'due_date' => 'date',
+        'original_due_date' => 'date',
         'return_date' => 'date',
+        'extension_count' => 'integer',
+        'last_extended_at' => 'datetime',
     ];
 
     public function reservation()
@@ -54,6 +62,11 @@ class Rental extends Model
     public function returnedTo()
     {
         return $this->belongsTo(User::class, 'returned_to', 'user_id');
+    }
+
+    public function extendedBy()
+    {
+        return $this->belongsTo(User::class, 'extended_by', 'user_id');
     }
 
     public function status()
