@@ -4,12 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreCustomerRequest;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
 
-abstract class AuthController
+abstract class AuthController extends Controller
 {
     //
     public function login(Request $request)
     {
+
 
     }
 
