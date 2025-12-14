@@ -27,9 +27,16 @@ class InvoiceController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreInvoiceRequest $request)
+    public function store(StoreInvoiceRequest $request): JsonResponse
     {
-        //
+        $invoice = Invoice::create($request->validated());
+
+        $invoice->load('customer', 'items');
+
+        return response()->json([
+            'message' => 'Invoice created successfully',
+            'data' => $invoice
+        ], 201);
     }
 
     /**

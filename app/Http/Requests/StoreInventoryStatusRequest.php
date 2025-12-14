@@ -11,7 +11,7 @@ class StoreInventoryStatusRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true; // Authorization handled by policy if needed
     }
 
     /**
@@ -22,7 +22,7 @@ class StoreInventoryStatusRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'status_name' => ['required', 'string', 'max:255', 'unique:inventory_statuses,status_name'],
         ];
     }
 }

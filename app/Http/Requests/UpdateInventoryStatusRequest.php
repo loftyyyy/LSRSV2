@@ -11,7 +11,7 @@ class UpdateInventoryStatusRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true; // Authorization handled by policy if needed
     }
 
     /**
@@ -21,8 +21,10 @@ class UpdateInventoryStatusRequest extends FormRequest
      */
     public function rules(): array
     {
+        $statusId = $this->route('inventoryStatus')->status_id ?? null;
+
         return [
-            //
+            'status_name' => ['sometimes', 'required', 'string', 'max:255', 'unique:inventory_statuses,status_name,' . $statusId . ',status_id'],
         ];
     }
 }
