@@ -11,7 +11,7 @@ class UpdateCustomerStatusRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true; // Authorization handled by policy if needed
     }
 
     /**
@@ -21,8 +21,11 @@ class UpdateCustomerStatusRequest extends FormRequest
      */
     public function rules(): array
     {
+        $statusId = $this->route('customerStatus')->status_id ?? null;
+
         return [
-            //
+            'status_name' => ['sometimes', 'required', 'string', 'max:255', 'unique:customer_statuses,status_name,' . $statusId . ',status_id'],
+            'reason' => ['nullable', 'string', 'max:500'],
         ];
     }
 }
