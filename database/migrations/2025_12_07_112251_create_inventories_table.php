@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('inventories', function (Blueprint $table) {
             $table->id('item_id');
             $table->enum('item_type', ['gown', 'suit']);
+            $table->string('sku')->unique();
             $table->string('name');
             $table->string('size');
             $table->string('color');

@@ -11,7 +11,7 @@ class UpdateInventoryRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true; // Authorization handled by policy if needed
     }
 
     /**
@@ -21,8 +21,18 @@ class UpdateInventoryRequest extends FormRequest
      */
     public function rules(): array
     {
+        $inventoryId = $this->route('inventory')->item_id ?? null;
+
         return [
-            //
+            'sku' => ['nullable', 'string', 'max:50', 'unique:inventories,sku,' . $inventoryId . ',item_id'],
+            'item_type' => ['sometimes', 'required', 'in:gown,suit'],
+            'name' => ['sometimes', 'required', 'string', 'max:255'],
+            'size' => ['sometimes', 'required', 'string', 'max:50'],
+            'color' => ['sometimes', 'required', 'string', 'max:100'],
+            'design' => ['sometimes', 'required', 'string', 'max:255'],
+            'condition' => ['sometimes', 'required', 'in:good,damaged,under repaired,retired'],
+            'rental_price' => ['sometimes', 'required', 'numeric', 'min:0', 'max:999999.99'],
+            'status_id' => ['sometimes', 'required', 'exists:inventory_statuses,status_id'],
         ];
     }
 }

@@ -12,6 +12,7 @@ class Inventory extends Model
     protected $table = 'inventories';
     protected $primaryKey = 'item_id';
     protected $fillable = [
+        'sku',
         'item_type',
         'name',
         'size',
@@ -44,5 +45,42 @@ class Inventory extends Model
     public function invoiceItems()
     {
         return $this->hasMany(InvoiceItem::class, 'item_id', 'item_id');
+    }
+
+    /**
+     * Boot the model and auto-generate SKU if not provided
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($inventory) {
+            if (empty($inventory->sku)) {
+                $inventory->sku = static::generateSku($inventory->item_type);
+            }
+        });
+    }
+
+    /**
+     * Generate a unique SKU based on item type
+     * Format: GWN-001, GWN-002 for gowns, SUT-001, SUT-002 for suits
+     */
+    protected static function generateSku(string $itemType): string
+    {
+        $prefix = strtoupper(substr($itemType, 0, 3)); // GWN or SUT
+        
+        // Get the highest number for this item type
+        $lastItem = static::where('item_type', $itemType)
+            ->where('sku', 'like', "{$prefix}-%")
+            ->orderByRaw('CAST(SUBSTRING(sku, 5) AS UNSIGNED) DESC')
+            ->first();
+
+        if ($lastItem && preg_match('/-(\d+)$/', $lastItem->sku, $matches)) {
+            $nextNumber = (int)$matches[1] + 1;
+        } else {
+            $nextNumber = 1;
+        }
+
+        return sprintf('%s-%03d', $prefix, $nextNumber);
     }
 }

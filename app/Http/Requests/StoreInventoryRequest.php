@@ -11,7 +11,7 @@ class StoreInventoryRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true; // Authorization handled by policy if needed
     }
 
     /**
@@ -22,7 +22,15 @@ class StoreInventoryRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'sku' => ['nullable', 'string', 'max:50', 'unique:inventories,sku'],
+            'item_type' => ['required', 'in:gown,suit'],
+            'name' => ['required', 'string', 'max:255'],
+            'size' => ['required', 'string', 'max:50'],
+            'color' => ['required', 'string', 'max:100'],
+            'design' => ['required', 'string', 'max:255'],
+            'condition' => ['required', 'in:good,damaged,under repaired,retired'],
+            'rental_price' => ['required', 'numeric', 'min:0', 'max:999999.99'],
+            'status_id' => ['required', 'exists:inventory_statuses,status_id'],
         ];
     }
 }
