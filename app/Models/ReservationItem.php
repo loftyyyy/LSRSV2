@@ -15,8 +15,22 @@ class ReservationItem extends Model
     protected $fillable = [
         'reservation_id',
         'item_id',
+        'fulfillment_status',
         'quantity',
-        'penalty_fee',
     ];
+
+    protected $casts = [
+        'quantity' => 'integer',
+    ];
+
+    public function reservation()
+    {
+        return $this->belongsTo(Reservation::class, 'reservation_id', 'reservation_id');
+    }
+
+    public function item()
+    {
+        return $this->belongsTo(Inventory::class, 'item_id', 'item_id');
+    }
 
 }

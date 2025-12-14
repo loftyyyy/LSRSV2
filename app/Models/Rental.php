@@ -18,11 +18,10 @@ class Rental extends Model
         'customer_id',
         'released_by',
         'released_date',
-        'rental_price',
-        'penalty_fee',
         'due_date',
         'return_date',
-        'penalty_fee',
+        'return_notes',
+        'returned_to',
         'status_id',
     ];
 
@@ -30,13 +29,21 @@ class Rental extends Model
         'released_date' => 'date',
         'due_date' => 'date',
         'return_date' => 'date',
-        'penalty_fee' => 'decimal:2',
-        'rental_price' => 'decimal:2',
     ];
 
-        public function reservation()
+    public function reservation()
     {
         return $this->belongsTo(Reservation::class, 'reservation_id', 'reservation_id');
+    }
+
+    public function item()
+    {
+        return $this->belongsTo(Inventory::class, 'item_id', 'item_id');
+    }
+
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class, 'customer_id', 'customer_id');
     }
 
     public function releasedBy()
@@ -44,14 +51,19 @@ class Rental extends Model
         return $this->belongsTo(User::class, 'released_by', 'user_id');
     }
 
+    public function returnedTo()
+    {
+        return $this->belongsTo(User::class, 'returned_to', 'user_id');
+    }
+
     public function status()
     {
         return $this->belongsTo(RentalStatus::class, 'status_id', 'status_id');
     }
 
-    public function payment()
+    public function invoices()
     {
-        return $this->hasOne(Payment::class, 'rental_id', 'rental_id');
+        return $this->hasMany(Invoice::class, 'rental_id', 'rental_id');
     }
 
 }

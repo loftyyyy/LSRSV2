@@ -15,4 +15,8 @@ class InventoryStatus extends Model
         'status_name'
     ];
 
+    public function inventories()
+    {
+        return $this->hasMany(Inventory::class, 'status_id', 'status_id');
+    }
 }

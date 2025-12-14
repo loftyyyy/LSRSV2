@@ -43,9 +43,18 @@ class Reservation extends Model
         return $this->belongsTo(ReservationStatus::class, 'status_id', 'status_id');
     }
 
-    public function rental()
+    public function items()
     {
-        return $this->hasOne(Rental::class, 'reservation_id', 'reservation_id');
+        return $this->hasMany(ReservationItem::class, 'reservation_id', 'reservation_id');
     }
 
+    public function rentals()
+    {
+        return $this->hasMany(Rental::class, 'reservation_id', 'reservation_id');
+    }
+
+    public function invoices()
+    {
+        return $this->hasMany(Invoice::class, 'reservation_id', 'reservation_id');
+    }
 }

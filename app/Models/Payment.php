@@ -14,34 +14,33 @@ class Payment extends Model
     protected $primaryKey = 'payment_id';
 
     protected $fillable = [
-        'rental_id',
-        'reservation_id',
-        'payment_type',
+        'invoice_id',
+        'payment_reference',
+        'amount',
         'payment_method',
         'payment_date',
-        'amount',
+        'notes',
         'processed_by',
         'status_id',
     ];
 
     protected $casts = [
-        'payment_date' => 'date',
-        'amount' => 'decimal',
+        'payment_date' => 'datetime',
+        'amount' => 'decimal:2',
     ];
 
-    public function rental(){
-        return $this->belongsTo(Rental::class, 'rental_id', 'rental_id');
+    public function invoice()
+    {
+        return $this->belongsTo(Invoice::class, 'invoice_id', 'invoice_id');
     }
-    public function reservation(){
-        return $this->belongsTo(Reservation::class, 'reservation_id', 'reservation_id');
-    }
-    public function processedBy(){
+
+    public function processedBy()
+    {
         return $this->belongsTo(User::class, 'processed_by', 'user_id');
     }
-    public function status(){
+
+    public function status()
+    {
         return $this->belongsTo(PaymentStatus::class, 'status_id', 'status_id');
-    }
-    public function invoice(){
-        return $this->hasOne(Invoice::class, 'payment_id', 'payment_id');
     }
 }

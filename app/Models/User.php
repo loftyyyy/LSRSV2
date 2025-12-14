@@ -12,6 +12,9 @@ class User extends Authenticatable
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
+    protected $table = 'users';
+    protected $primaryKey = 'user_id';
+
     /**
      * The attributes that are mass assignable.
      *
@@ -44,5 +47,30 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function reservations()
+    {
+        return $this->hasMany(Reservation::class, 'reserved_by', 'user_id');
+    }
+
+    public function releasedRentals()
+    {
+        return $this->hasMany(Rental::class, 'released_by', 'user_id');
+    }
+
+    public function returnedRentals()
+    {
+        return $this->hasMany(Rental::class, 'returned_to', 'user_id');
+    }
+
+    public function processedPayments()
+    {
+        return $this->hasMany(Payment::class, 'processed_by', 'user_id');
+    }
+
+    public function createdInvoices()
+    {
+        return $this->hasMany(Invoice::class, 'created_by', 'user_id');
     }
 }

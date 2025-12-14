@@ -15,4 +15,9 @@ class RentalStatus extends Model
     protected $fillable = [
         "status_name"
     ];
+
+    public function rentals()
+    {
+        return $this->hasMany(Rental::class, 'status_id', 'status_id');
+    }
 }

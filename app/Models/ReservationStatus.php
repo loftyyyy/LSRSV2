@@ -14,4 +14,9 @@ class ReservationStatus extends Model
     protected $fillable = [
         'status_name',
     ];
+
+    public function reservations()
+    {
+        return $this->hasMany(Reservation::class, 'status_id', 'status_id');
+    }
 }

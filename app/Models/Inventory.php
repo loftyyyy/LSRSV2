@@ -19,15 +19,30 @@ class Inventory extends Model
         'design',
         'condition',
         'rental_price',
-        'quantity',
         'status_id'
     ];
 
     protected $casts = [
         'rental_price' => 'decimal:2',
-        'quantity' => 'integer',
     ];
-    public function status(){
+
+    public function status()
+    {
         return $this->belongsTo(InventoryStatus::class, 'status_id', 'status_id');
+    }
+
+    public function rentals()
+    {
+        return $this->hasMany(Rental::class, 'item_id', 'item_id');
+    }
+
+    public function reservationItems()
+    {
+        return $this->hasMany(ReservationItem::class, 'item_id', 'item_id');
+    }
+
+    public function invoiceItems()
+    {
+        return $this->hasMany(InvoiceItem::class, 'item_id', 'item_id');
     }
 }

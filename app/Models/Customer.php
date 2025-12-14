@@ -25,7 +25,23 @@ class Customer extends Model
         'measurement' => 'array',
     ];
 
-    public function status(){
+    public function status()
+    {
         return $this->belongsTo(CustomerStatus::class, 'status_id', 'status_id');
+    }
+
+    public function reservations()
+    {
+        return $this->hasMany(Reservation::class, 'customer_id', 'customer_id');
+    }
+
+    public function rentals()
+    {
+        return $this->hasMany(Rental::class, 'customer_id', 'customer_id');
+    }
+
+    public function invoices()
+    {
+        return $this->hasMany(Invoice::class, 'customer_id', 'customer_id');
     }
 }
