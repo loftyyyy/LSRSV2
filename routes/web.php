@@ -7,8 +7,11 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/register', AuthController::class,  'showRegisterForm')->name('register');
-Route::get('/login', AuthController::class, 'showLoginForm')->name('login');
+Route::get('/register', [AuthController::class,  'showRegisterForm'])->name('register');
+Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
+
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', function () {
