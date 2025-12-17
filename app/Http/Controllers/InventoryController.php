@@ -7,9 +7,18 @@ use App\Http\Requests\StoreInventoryRequest;
 use App\Http\Requests\UpdateInventoryRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class InventoryController extends Controller
 {
+    /**
+     * Display Inventory Page
+     */
+
+    public function showInventoryPage(): View
+    {
+        return view('inventories.index');
+    }
     /**
      * Display a listing of the resource.
      */
