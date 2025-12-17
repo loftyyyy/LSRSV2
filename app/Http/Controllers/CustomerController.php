@@ -7,9 +7,18 @@ use App\Http\Requests\StoreCustomerRequest;
 use App\Http\Requests\UpdateCustomerRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class CustomerController extends Controller
 {
+    /**
+     * Display the Customer Page
+     */
+    public function showCustomerPage(): View
+    {
+        return view('customers.index');
+    }
+
     /**
      * Display a listing of the resource.
      */
