@@ -7,9 +7,18 @@ use App\Http\Requests\StoreReservationRequest;
 use App\Http\Requests\UpdateReservationRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class ReservationController extends Controller
 {
+    /**
+     * Display Reservation Page
+     */
+
+    public function showReservationPage(): View
+    {
+        return view('reservations.index');
+    }
     /**
      * Display a listing of the resource.
      */

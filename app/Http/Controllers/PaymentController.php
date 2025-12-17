@@ -7,9 +7,19 @@ use App\Http\Requests\StorePaymentRequest;
 use App\Http\Requests\UpdatePaymentRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class PaymentController extends Controller
 {
+
+    /**
+     * Display Payment Page
+     */
+
+    public function showPaymentPage(): View
+    {
+        return view('payments.index');
+    }
     /**
      * Display a listing of the resource.
      */

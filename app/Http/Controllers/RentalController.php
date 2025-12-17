@@ -7,9 +7,18 @@ use App\Http\Requests\StoreRentalRequest;
 use App\Http\Requests\UpdateRentalRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class RentalController extends Controller
 {
+
+    /**
+     * Display Rental Page
+     */
+    public function showRentalPage():View
+    {
+        return view('rentals.index');
+    }
     /**
      * Display a listing of the resource.
      */
