@@ -7,9 +7,17 @@ use App\Http\Requests\StoreInvoiceRequest;
 use App\Http\Requests\UpdateInvoiceRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class InvoiceController extends Controller
 {
+    /**
+     * Display Invoice Page
+     */
+    public function showInvoicePage():View
+    {
+        return view('invoice.index');
+    }
     /**
      * Display a listing of the resource.
      */
