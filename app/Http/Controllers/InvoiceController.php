@@ -16,7 +16,7 @@ class InvoiceController extends Controller
      */
     public function showInvoicePage():View
     {
-        return view('invoice.index');
+        return view('invoices.index');
     }
     /**
      * Display a listing of the resource.
