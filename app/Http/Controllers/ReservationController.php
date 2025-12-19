@@ -11,10 +11,26 @@ use Illuminate\View\View;
 
 class ReservationController extends Controller
 {
+
+
+    /**
+     * Display Reports Page
+     */
+    public function report(Request $request):JsonResponse
+    {
+
+    }
+
+    /**
+     * Create PDF for reports
+     */
+    public function generatePDF()
+    {
+
+    }
     /**
      * Display Reservation Page
      */
-
     public function showReservationPage(): View
     {
         return view('reservations.index');
