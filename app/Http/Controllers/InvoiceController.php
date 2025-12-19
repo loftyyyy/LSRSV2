@@ -11,6 +11,22 @@ use Illuminate\View\View;
 
 class InvoiceController extends Controller
 {
+
+    /**
+     * Display Reports Page
+     */
+    public function report(Request $request):JsonResponse
+    {
+
+    }
+
+    /**
+     * Create PDF for reports
+     */
+    public function generatePDF()
+    {
+
+    }
     /**
      * Display Invoice Page
      */
