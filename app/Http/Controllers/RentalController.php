@@ -12,6 +12,22 @@ use Illuminate\View\View;
 class RentalController extends Controller
 {
 
+
+    /**
+     * Display Reports Page
+     */
+    public function report(Request $request):JsonResponse
+    {
+
+    }
+
+    /**
+     * Create PDF for reports
+     */
+    public function generatePDF()
+    {
+
+    }
     /**
      * Display Rental Page
      */
