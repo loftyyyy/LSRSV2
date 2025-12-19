@@ -12,6 +12,21 @@ use Illuminate\View\View;
 class CustomerController extends Controller
 {
     /**
+     * Display Reports for Customer
+     */
+    public function report(Request $request):JsonResponse
+    {
+
+    }
+
+    /**
+     * Download PDF
+     */
+    public function generatePDF()
+    {
+
+    }
+    /**
      * Display the Customer Page
      */
     public function showCustomerPage(): View
