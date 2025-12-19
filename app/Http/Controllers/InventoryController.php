@@ -12,9 +12,23 @@ use Illuminate\View\View;
 class InventoryController extends Controller
 {
     /**
+     * Display Reports Page
+     */
+    public function report(Request $request):JsonResponse
+    {
+
+    }
+
+    /**
+     * Create PDF for reports
+     */
+    public function generatePDF()
+    {
+
+    }
+    /**
      * Display Inventory Page
      */
-
     public function showInventoryPage(): View
     {
         return view('inventories.index');
