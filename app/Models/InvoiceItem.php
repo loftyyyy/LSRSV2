@@ -37,4 +37,23 @@ class InvoiceItem extends Model
     {
         return $this->belongsTo(Inventory::class, 'item_id', 'item_id');
     }
+     /**
+     * Check if this is a penalty/late fee
+     */
+    public function isPenalty(): bool
+    {
+        return in_array($this->item_type, ['penalty', 'late_fee']);
+    }
+
+    /**
+     * Automatically calculate total_price before saving
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::saving(function ($invoiceItem) {
+            $invoiceItem->total_price = $invoiceItem->quantity * $invoiceItem->unit_price;
+        });
+    }
 }
