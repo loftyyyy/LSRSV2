@@ -68,4 +68,30 @@ class Invoice extends Model
     {
         return $this->hasMany(Payment::class, 'invoice_id', 'invoice_id');
     }
+
+    /**
+     * Get total penalties from this invoice @return float
+     */
+    public function getTotalPenalties(): float
+    {
+        return $this->items()->whereIn('item_type', ['penalty, late_fee'])->sum('total_price');
+    }
+     /**
+     * Get rental fee items
+     */
+    public function getRentalFees()
+    {
+        return $this->invoiceItems()
+            ->where('item_type', 'rental_fee')
+            ->get();
+    }
+
+    /**
+     * Check if invoice is fully paid
+     */
+//    public function isPaid(): bool
+//    {
+//        return $this-> === 'paid';
+//    }
+
 }
