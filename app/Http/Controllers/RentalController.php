@@ -175,4 +175,32 @@ class RentalController extends Controller
             'message' => 'Rental deleted successfully'
         ]);
     }
+
+    /**
+     * Cancel a rental
+     */
+    public function cancel(Rental $rental): JsonResponse
+    {
+        //TODO: To be implemented
+    }
+
+    /**
+     * Does overdue check for each rental
+     */
+    public function checkOverdue(Rental $rental): void
+    {
+        //TODO: To be implemented
+    }
+
+    /**
+     * Calculates penalties for late returns ( A helper function )
+     */
+    public function calculatePenalty(): void
+    {
+
+    }
+
+
+
+
 }
