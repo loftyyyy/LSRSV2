@@ -12,7 +12,6 @@ use Illuminate\View\View;
 class ReservationController extends Controller
 {
 
-
     /**
      * Display Reports Page
      */
