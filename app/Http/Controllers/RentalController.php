@@ -201,9 +201,30 @@ class RentalController extends Controller
 
         // Update the rental status to cancelled
         $cancelledStatus = \App\Models\RentalStatus::where('status_name', 'Cancelled')->first();
+        if(!$cancelledStatus){
+            return response()->json([
+                'message' => 'Cancelled status not found in the system.'
+            ], 500);
 
+        }
 
+        $rental->update([
+            'status_id' => $cancelledStatus->status_id,
+            'return_notes' => 'Rental cancelled on ' . now()->format('Y-m-d H:i:s')
+        ]);
 
+        // If there's a reservation, update its status too
+        if($rental->reservation){
+            $rental->reservation->update([
+                'reservation_status' => 'Cancelled'
+            ]);
+        }
+
+        $rental->load(['customer', 'item', 'status', 'reservation', 'releasedBy']);
+        return response()->json([
+            'message' => 'Rental cancelled successfully',
+            'data' => $rental
+        ]);
     }
 
     /**
