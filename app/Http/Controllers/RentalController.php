@@ -183,7 +183,27 @@ class RentalController extends Controller
      */
     public function cancel(Rental $rental): JsonResponse
     {
-        //TODO: To be implemented
+        // Check if rental was already returned
+        if($rental->return_date !== null){
+            return response()->json([
+                'message' => 'Cannot cancel a rental that has already been returned.'
+            ], 422);
+        }
+
+        // Check if rental has invoices that are already paid
+        $paidInvoices = $rental->invoices()->where('payment_status', 'paid')->count();
+        if($paidInvoices > 0){
+            return response()->json([
+                'message' => 'Cannot cancel rental. It has paid invoices associated with it.'
+
+            ], 422);
+        }
+
+        // Update the rental status to cancelled
+        $cancelledStatus = \App\Models\RentalStatus::where('status_name', 'Cancelled')->first();
+
+
+
     }
 
     /**
@@ -191,7 +211,28 @@ class RentalController extends Controller
      */
     public function checkOverdue(Rental $rental): void
     {
-        //TODO: To be implemented
+        // Check if rental hasn't been returned
+        if($rental->return_date === null){
+            $now = Carbon::now();
+            $dueDate = Carbon::parse($rental->due_date);
+
+            // if Rental is overdue
+            if($now->greaterThan($dueDate)){
+                $overdueStatus = \App\Models\RentalStatus::where('status_name', 'Overdue')->first();
+
+                if($overdueStatus && $rental->status_id !== $overdueStatus->status_id){
+                    $rental->update([
+                        'status_id' => $overdueStatus->status_id,
+                    ]);
+                }
+
+
+
+                // Calculate and create/update penalty invoice
+                $this->createOrUpdatePenaltyInvoice($rental);
+            }
+
+        }
     }
 
     /**

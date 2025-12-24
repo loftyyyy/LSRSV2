@@ -30,6 +30,7 @@ return new class extends Migration
             $table->dateTime('due_date')->nullable();
             $table->enum('invoice_type', ['reservation', 'rental', 'final']); // What type of invoice
             $table->foreignId('created_by')->constrained('users', 'user_id')->cascadeOnDelete();
+            $table->foreignId('status_id')->constrained('payment_statuses', 'status_id')->cascadeOnDelete();
             $table->timestamps();
         });
     }

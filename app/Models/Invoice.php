@@ -25,6 +25,7 @@ class Invoice extends Model
         'invoice_date',
         'due_date',
         'invoice_type',
+        'payment_status',
         'created_by',
     ];
 
