@@ -217,7 +217,6 @@ class RentalController extends Controller
      * Call this when a rental is being returned
      */
     public function processReturn(Rental $rental, Request $request): JsonResponse
-
     {
         DB::transaction(function () use ($rental, $request) {
             // Update rental with return information
@@ -235,18 +234,16 @@ class RentalController extends Controller
             if($returnedStatus) {
                 $rental->update(['status_id' => $returnedStatus->status_id]);
             }
-
-            $rental->load(['customer', 'item', 'status', 'invoices.invoiceItems']);
-
-            return response()->json([
-                'message' =>'Rental return processed successfully',
-                'data' => $rental,
-                'penalty_charged' => $this->calculatePenalty($rental)
-            ]);
         });
 
-    }
+        $rental->load(['customer', 'item', 'status', 'invoices.invoiceItems']);
 
+        return response()->json([
+            'message' =>'Rental return processed successfully',
+            'data' => $rental,
+            'penalty_charged' => $this->calculatePenalty($rental)
+        ]);
+    }
 
 
 }
