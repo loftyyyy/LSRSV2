@@ -247,6 +247,10 @@ class RentalController extends Controller
         ]);
     }
 
+    /**
+     * @return JsonResponse
+     * Checks all the rentals and identifies overdue rentals
+     */
     public function batchCheckOverdue(): JsonResponse
     {
         $activeRentals = Rental::whereNull('return_date')->get();
