@@ -8,6 +8,8 @@ use App\Http\Requests\UpdateRentalRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Carbon\Carbon;
+
 
 class RentalController extends Controller
 {
@@ -243,6 +245,32 @@ class RentalController extends Controller
             'data' => $rental,
             'penalty_charged' => $this->calculatePenalty($rental)
         ]);
+    }
+
+    public function batchCheckOverdue(): JsonResponse
+    {
+        $activeRentals = Rental::whereNull('return_date')->get();
+        $overDueCount = 0;
+        $penaltiesCreated = 0;
+
+        foreach ($activeRentals as $rental) {
+            $wasOverdue = Carbon::parse($rental->due_date)->lessThan(Carbon::now());
+
+            $this->checkOverdue($rental);
+
+            if($wasOverdue) {
+                $overDueCount++;
+                $penaltiesCreated++;
+            }
+        }
+
+        return response()->json([
+            'message' => 'Overdue check completed',
+            'checked' => $activeRentals->count(),
+            'overdue' => $overDueCount,
+            'penalties_created_or_updated' => $penaltiesCreated
+        ]);
+
     }
 
 
