@@ -195,11 +195,57 @@ class RentalController extends Controller
     /**
      * Calculates penalties for late returns ( A helper function )
      */
-    public function calculatePenalty(): void
+    public function calculatePenalty(Rental $rental): void
     {
 
     }
 
+    /**
+     * @param Rental $rental
+     * @return void
+     *
+     */
+    public function createOrUpdatePenaltyInvoice(Rental $rental): void
+    {
+
+    }
+    /**
+     * @param Rental $rental
+     * @param Request $request
+     * @return JsonResponse
+     * Process return and finalize penalties
+     * Call this when a rental is being returned
+     */
+    public function processReturn(Rental $rental, Request $request): JsonResponse
+
+    {
+        DB::transaction(function () use ($rental, $request) {
+            // Update rental with return information
+            $rental->update([
+                'return_date' => $request->input('return_date', now()),
+                'returned_to' => auth()->id(),
+                'return_notes' => $request->input('return_notes')
+            ]);
+
+            // Calculate and create final penalty if returned late
+            $this->createOrUpdatePenaltyInvoice($rental);
+
+            // Update rental status to returned
+            $returnedStatus = \App\Models\RentalStatus::where('status_name', 'returned')->first();
+            if($returnedStatus) {
+                $rental->update(['status_id' => $returnedStatus->status_id]);
+            }
+
+            $rental->load(['customer', 'item', 'status', 'invoices.invoiceItems']);
+
+            return response()->json([
+                'message' =>'Rental return processed successfully',
+                'data' => $rental,
+                'penalty_charged' => $this->calculatePenalty($rental)
+            ]);
+        });
+
+    }
 
 
 
