@@ -197,9 +197,41 @@ class RentalController extends Controller
     /**
      * Calculates penalties for late returns ( A helper function )
      */
-    public function calculatePenalty(Rental $rental): void
+    public function calculatePenalty(Rental $rental): float
     {
 
+        if($rental->return_date !== null) {
+            $returnDate = Carbon::parse($rental->return_date);
+            $dueDate =  Carbon::parse($rental->due_date);
+
+            // If returned on time or early, no penalty
+            if($returnDate->lessThanOrEqualTo($dueDate)) {
+                return 0;
+            }
+
+            // Calculate days late
+            $daysLate = $returnDate->diffInDays($dueDate);
+        } else {
+
+            // Rental is still active
+            $now = Carbon::now();
+            $dueDate = Carbon::parse($rental->due_date);
+
+            if($now->lessThanOrEqualTo($dueDate)) {
+                return 0;
+            }
+
+            $daysLate = $now->diffInDays($dueDate);
+        }
+
+        $penaltyPerDay = 50.00;
+        $penalty = $daysLate * $penaltyPerDay;
+
+        // Optional, I could add a grace period (first day could be free)
+        //
+        //
+
+        return $penalty;
     }
 
     /**
