@@ -20,6 +20,39 @@ class RentalController extends Controller
      */
     public function report(Request $request):JsonResponse
     {
+        $query = Rental::with(['customer', 'item', 'status', 'reservation', 'releasedBy', 'invoices.invoiceItems']);
+
+        // Apply date range filters
+        if($request->has('date_from')){
+            $query->where('released_date', '>=', Carbon::parse($request->get('date_from')));
+        }
+        if($request->has('date_to')){
+            $query->where('released_date', '<=', Carbon::parse($request->get('date_to')));
+        }
+
+        // Filter by status
+        if($request->has('status_id')){
+            $query->where('status_id', $request->get('status_id'));
+        }
+
+        // Filter by rental status (active/returned/overdue)
+        if($request->has('rental_status')){
+            $rentalStatus = $request->get('rental_status');
+            if($rentalStatus === 'active'){
+                $query->whereNull('return_date')->where('due_date', '>=', Carbon::now());
+            }
+            elseif($rentalStatus === 'returned'){
+                $query->whereNotNull('return_date');
+            }
+            elseif($rentalStatus === 'overdue'){
+                $query->whereNull('return_date')->where('due_date', '<', Carbon::now());
+            }
+        }
+
+        $rentals = $query->get();
+
+        // Calculate Analytics
+
 
     }
 
