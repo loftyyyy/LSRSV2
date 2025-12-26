@@ -86,6 +86,7 @@ class RentalController extends Controller
     {
         // Get filtered request based on request parameters
         $query = Rental::with(['customer', 'item', 'status', 'reservation', 'releasedBy', 'invoices.invoiceItems']);
+
     }
     /**
      * Display Rental Page
