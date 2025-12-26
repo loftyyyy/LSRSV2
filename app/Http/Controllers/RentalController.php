@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\InvoiceItem;
 use App\Models\Rental;
 use App\Http\Requests\StoreRentalRequest;
 use App\Http\Requests\UpdateRentalRequest;
@@ -65,6 +66,19 @@ class RentalController extends Controller
 
     }
 
+    /**
+     * Get total penalties from invoice items
+     */
+    public function getTotalPenaltiesFromInvoices($rentals): float
+    {
+        $rentalIds = $rentals->pluck('rental_id');
+
+        return InvoiceItem::whereIn('invoice_id', function($query) use ($rentalIds){
+            $query->select('invoice_id')->from('invoices')->whereIn('rental_id', $rentalIds);
+        })->whereIn('item_type', ['penalty', 'late_fee'])->sum('total_price');
+
+
+    }
 
 
     /**
