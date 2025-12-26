@@ -76,17 +76,16 @@ class RentalController extends Controller
         return InvoiceItem::whereIn('invoice_id', function($query) use ($rentalIds){
             $query->select('invoice_id')->from('invoices')->whereIn('rental_id', $rentalIds);
         })->whereIn('item_type', ['penalty', 'late_fee'])->sum('total_price');
-
-
     }
 
 
     /**
      * Create PDF for reports
      */
-    public function generatePDF()
+    public function generatePDF(Request $request)
     {
-
+        // Get filtered request based on request parameters
+        $query = Rental::with(['customer', 'item', 'status', 'reservation', 'releasedBy', 'invoices.invoiceItems']);
     }
     /**
      * Display Rental Page
