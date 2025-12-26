@@ -52,9 +52,20 @@ class RentalController extends Controller
         $rentals = $query->get();
 
         // Calculate Analytics
+        $totalRentals = $rentals->count();
+        $activeRentals = $rentals->whereNull('return_date')->where('due_date', '>=', Carbon::now())->count();
+        $returnedOnTimeRentals = $rentals->whereNotNull('return_date')->where('due_date', '<', Carbon::now())->count();
+        $returnedOverdueRentals = $rentals->whereNotNull('return_date')->where('due_date', '>', Carbon::now())->count();
+        $overdueRentals = $rentals->whereNull('return_date')->where('due_date', '<', Carbon::now())->count();
+
+
+        // Calculate total penalties from invoice items
+        $totalPenalties = $this->getTotalPenaltiesFromInvoices($rentals);
 
 
     }
+
+
 
     /**
      * Create PDF for reports
