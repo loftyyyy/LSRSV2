@@ -10,6 +10,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 
 class RentalController extends Controller
@@ -86,6 +87,38 @@ class RentalController extends Controller
     {
         // Get filtered request based on request parameters
         $query = Rental::with(['customer', 'item', 'status', 'reservation', 'releasedBy', 'invoices.invoiceItems']);
+
+        if($request->has('date_from')){
+            $query->where('released_date', '>=', Carbon::parse($request->get('date_from')));
+        }
+        if($request->has('date_to')){
+            $query->where('released_date', '<=', Carbon::parse($request->get('date_to')));
+        }
+        if($request->has('status_id')){
+            $query->where('status_id', $request->get('status_id'));
+        }
+
+        $rentals = $query->get();
+
+        // Calculate summary data
+        $summary = [
+            'total_rentals' => $rentals->count(),
+            'active_rentals' => $rentals->where('return_date', null)->where('due_date', '>=', now())->count(),
+            'returned_rentals' => $rentals->whereNotNull('return_date')->count(),
+            'overdue_rentals' => $rentals->where('return_date', null)->where('due_date', '<', now())->count(),
+            'total_penalties' => $this->getTotalPenaltiesFromInvoices($rentals),
+            'date_from' => $request->get('date_from', 'All'),
+            'date_to' => $request->get('date_to', 'All'),
+        ];
+
+                // Generate PDF using a view
+        $pdf = Pdf::loadView('rentals.report-pdf', [
+            'rentals' => $rentals,
+            'summary' => $summary,
+            'generated_at' => now()->format('Y-m-d H:i:s')
+        ]);
+
+        return $pdf->download('rental-report-' . now()->format('Y-m-d') . '.pdf');
 
     }
     /**
