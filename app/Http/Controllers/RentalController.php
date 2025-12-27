@@ -390,10 +390,74 @@ class RentalController extends Controller
     /**
      * @param Rental $rental
      * @return void
-     *
+     * Create or update penalty invoice for an overdue rental. Stores the penalty in the invoice_items table
      */
     public function createOrUpdatePenaltyInvoice(Rental $rental): void
     {
+        $penaltyAmount = $this->calculatePenalty($rental);
+
+        if ($penaltyAmount <= 0) {
+            return; // No penalty to add
+        }
+
+        DB::transaction(function () use ($rental, $penaltyAmount) {
+            // Find or create an invoice for this rental
+            $invoice = Invoice::firstOrCreate(
+                [
+                    'rental_id' => $rental->rental_id,
+                    'invoice_type' => 'penalty' // or 'rental' depending on your design
+                ],
+                [
+                    'customer_id' => $rental->customer_id,
+                    'invoice_date' => now(),
+                    'due_date' => now()->addDays(7), // 7 days to pay penalty
+                    'subtotal' => 0,
+                    'tax_amount' => 0,
+                    'total_amount' => 0,
+                    'payment_status' => 'unpaid',
+                    'notes' => 'Late return penalty invoice'
+                ]
+            );
+
+            // Calculate days late for description
+            $dueDate = Carbon::parse($rental->due_date);
+            $currentDate = $rental->return_date ? Carbon::parse($rental->return_date) : Carbon::now();
+            $daysLate = $currentDate->diffInDays($dueDate);
+
+            // Check if penalty item already exists
+            $existingPenaltyItem = InvoiceItem::where('invoice_id', $invoice->invoice_id)
+                ->where('item_type', 'late_fee')
+                ->first();
+
+            if ($existingPenaltyItem) {
+                // Update existing penalty
+                $existingPenaltyItem->update([
+                    'description' => "Late return penalty ({$daysLate} days @ ₱50/day)",
+                    'quantity' => $daysLate,
+                    'unit_price' => 50.00,
+                    'total_price' => $penaltyAmount
+                ]);
+            } else {
+                // Create new penalty item
+                InvoiceItem::create([
+                    'invoice_id' => $invoice->invoice_id,
+                    'description' => "Late return penalty ({$daysLate} days @ ₱50/day)",
+                    'item_type' => 'late_fee',
+                    'item_id' => $rental->item_id,
+                    'quantity' => $daysLate,
+                    'unit_price' => 50.00,
+                    'total_price' => $penaltyAmount
+                ]);
+            }
+
+            // Recalculate invoice totals
+            $invoice->refresh();
+            $totalAmount = $invoice->invoiceItems()->sum('total_price');
+            $invoice->update([
+                'subtotal' => $totalAmount,
+                'total_amount' => $totalAmount
+            ]);
+        });
 
     }
     /**
@@ -461,6 +525,5 @@ class RentalController extends Controller
         ]);
 
     }
-
 
 }
