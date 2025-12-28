@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Reservation;
+use App\Models\Item;
 use App\Http\Requests\StoreReservationRequest;
 use App\Http\Requests\UpdateReservationRequest;
 use Illuminate\Http\JsonResponse;
@@ -221,7 +222,69 @@ class ReservationController extends Controller
      */
     public function browseAvailableItems(Request $request): JsonResponse
     {
-        $query = Item::with()
+        $query = Item::with(['category', 'itemStatus']);
+
+        // Filter by category (gowns, suits, and etc.)
+        if ($request->has('category_id')) {
+            $query->where('category_id', $request->get('category_id'));
+        }
+
+        // Filter by size
+        if ($request->has('size')) {
+            $query->where('size', $request->get('size'));
+        }
+
+        // Filter by color
+        if ($request->has('color')) {
+            $query->where('color', $request->get('color'));
+        }
+
+        // Filter by availability status (available items only)
+        if ($request->get('available_only', true)) {
+            $query->whereHas('itemStatus', function ($statusQuery) {
+                $statusQuery->where('status_name', 'Available');
+            });
+        }
+
+        // Search by name or code
+        if ($request->has('search')) {
+            $search = $request->get('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('item_name', 'like', "%{$search}%")
+                    ->orWhere('item_code', 'like', "%{$search}%");
+            });
+        }
+
+        // Check availability for specific date range
+        if ($request->has('start_date') && $request->has('end_date')) {
+            $startDate = $request->get('start_date');
+            $endDate = $request->get('end_date');
+
+            // Exclude items that are already reserved in this date range
+            $query->whereDoesntHave('reservationItems', function ($resQuery) use ($startDate, $endDate) {
+                $resQuery->whereHas('reservation', function ($dateQuery) use ($startDate, $endDate) {
+                    $dateQuery->where(function ($q) use ($startDate, $endDate) {
+                        $q->whereBetween('start_date', [$startDate, $endDate])
+                            ->orWhereBetween('end_date', [$startDate, $endDate])
+                            ->orWhere(function ($innerQ) use ($startDate, $endDate) {
+                                $innerQ->where('start_date', '<=', $startDate)
+                                    ->where('end_date', '>=', $endDate);
+                            });
+                    })
+                        ->whereHas('status', function ($statusQ) {
+                            // Exclude cancelled reservations
+                            $statusQ->where('status_name', '!=', 'Cancelled');
+                        });
+                });
+            });
+        }
+
+        $items = $query->paginate($request->get('per_page', 20));
+
+        return response()->json([
+            'data' => $items,
+            'message' => 'Available items retrieved successfully'
+        ]);
 
     }
 }
