@@ -192,7 +192,7 @@ class RentalController extends Controller
 
         // Pagination
         $perPage = $request->get('per_page', 15);
-        $rentals = $query->paginate($perPage);
+        $rentals = $query->orderBy('created_at', 'desc')->paginate($perPage);
 
         return response()->json($rentals);
     }
