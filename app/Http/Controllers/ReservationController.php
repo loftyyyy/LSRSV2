@@ -15,11 +15,72 @@ class ReservationController extends Controller
 {
 
     /**
-     * Display Reports Page
+     * Returns a comprehensive report data
      */
     public function report(Request $request):JsonResponse
     {
+        $query = Reservation::with(['customer', 'status', 'reservedBy', 'items.item']);
 
+        // Filter by date range
+        if ($request->has('start_date')) {
+            $query->where('reservation_date', '>=', $request->get('start_date'));
+        }
+        if ($request->has('end_date')) {
+            $query->where('reservation_date', '<=', $request->get('end_date'));
+        }
+
+        // Filter by status
+        if ($request->has('status_id')) {
+            $query->where('status_id', $request->get('status_id'));
+        }
+
+        // Filter by customer
+        if ($request->has('customer_id')) {
+            $query->where('customer_id', $request->get('customer_id'));
+        }
+
+        // Filter by reserved by (clerk/admin)
+        if ($request->has('reserved_by')) {
+            $query->where('reserved_by', $request->get('reserved_by'));
+        }
+
+        // Order by reservation date
+        $query->orderBy('reservation_date', 'desc');
+
+        $reservations = $query->get();
+
+        // Calculate summary statistics
+        $summary = [
+            'total_reservations' => $reservations->count(),
+            'by_status' => $reservations->groupBy('status.status_name')->map(function ($group) {
+                return $group->count();
+            }),
+            'total_items_reserved' => $reservations->sum(function ($reservation) {
+                return $reservation->items->sum('quantity');
+            }),
+            'total_revenue' => $reservations->sum(function ($reservation) {
+                return $reservation->items->sum(function ($item) {
+                    return ($item->rental_price ?? 0) * ($item->quantity ?? 1);
+                });
+            }),
+            'by_month' => $reservations->groupBy(function ($reservation) {
+                return $reservation->reservation_date->format('Y-m');
+            })->map(function ($group) {
+                return $group->count();
+            }),
+            'by_clerk' => $reservations->groupBy('reservedBy.name')->map(function ($group) {
+                return $group->count();
+            }),
+            'average_items_per_reservation' => $reservations->count() > 0
+                ? round($reservations->sum(function ($r) { return $r->items->count(); }) / $reservations->count(), 2)
+                : 0,
+        ];
+
+        return response()->json([
+            'summary' => $summary,
+            'reservations' => $reservations,
+            'filters' => $request->only(['start_date', 'end_date', 'status_id', 'customer_id', 'reserved_by'])
+        ]);
     }
 
     /**
