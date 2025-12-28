@@ -8,6 +8,7 @@ use App\Http\Requests\StoreReservationRequest;
 use App\Http\Requests\UpdateReservationRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class ReservationController extends Controller
@@ -219,18 +220,88 @@ class ReservationController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * Updates an existing reservation.
      */
     public function update(UpdateReservationRequest $request, Reservation $reservation): JsonResponse
     {
-        $reservation->update($request->validated());
+        try {
+            DB::beginTransaction();
 
-        $reservation->load(['customer', 'status', 'reservedBy', 'items']);
+            // Check if reservation can be updated
+            if ($reservation->status->status_name === 'Completed') {
+                return response()->json([
+                    'message' => 'Cannot update a completed reservation'
+                ], 422);
+            }
 
-        return response()->json([
-            'message' => 'Reservation updated successfully',
-            'data' => $reservation
-        ]);
+            // Update reservation basic info
+            $validatedData = $request->validated();
+            $reservation->update($validatedData);
+
+            // Update items if provided
+            if ($request->has('items')) {
+                // Remove old items if updating
+                if ($request->get('replace_items', false)) {
+                    $reservation->items()->delete();
+                }
+
+                // Add new/updated items
+                foreach ($request->items as $itemData) {
+                    // Check availability for the updated dates
+                    $item = Item::findOrFail($itemData['item_id']);
+
+                    $isAvailable = $this->checkItemAvailabilityForDateRange(
+                        $itemData['item_id'],
+                        $validatedData['start_date'] ?? $reservation->start_date,
+                        $validatedData['end_date'] ?? $reservation->end_date,
+                        $reservation->reservation_id // Exclude current reservation
+                    );
+
+                    if (!$isAvailable) {
+                        DB::rollBack();
+                        return response()->json([
+                            'message' => "Item '{$item->item_name}' is not available for the updated dates",
+                            'error' => 'ITEM_NOT_AVAILABLE',
+                            'item_id' => $item->item_id
+                        ], 422);
+                    }
+
+                    // Update or create reservation item
+                    if (isset($itemData['reservation_item_id'])) {
+                        ReservationItem::where('reservation_item_id', $itemData['reservation_item_id'])
+                            ->update([
+                                'quantity' => $itemData['quantity'] ?? 1,
+                                'rental_price' => $itemData['rental_price'] ?? $item->rental_price,
+                                'notes' => $itemData['notes'] ?? null
+                            ]);
+                    } else {
+                        ReservationItem::create([
+                            'reservation_id' => $reservation->reservation_id,
+                            'item_id' => $itemData['item_id'],
+                            'quantity' => $itemData['quantity'] ?? 1,
+                            'rental_price' => $itemData['rental_price'] ?? $item->rental_price,
+                            'notes' => $itemData['notes'] ?? null
+                        ]);
+                    }
+                }
+            }
+
+            DB::commit();
+
+            $reservation->load(['customer', 'status', 'reservedBy', 'items.item']);
+
+            return response()->json([
+                'message' => 'Reservation updated successfully',
+                'data' => $reservation
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Failed to update reservation',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
