@@ -458,7 +458,6 @@ class RentalController extends Controller
                 'total_amount' => $totalAmount
             ]);
         });
-
     }
     /**
      * @param Rental $rental
