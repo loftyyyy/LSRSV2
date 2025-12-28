@@ -596,5 +596,31 @@ class ReservationController extends Controller
         // TODO: Should update the inventory status (still didn't thought about the inventory status but it should go like (reserved, available, or other stuff)
     }
 
+    /**
+     * Helper method: Check item availability for a date range
+     */
+    private function checkItemAvailabilityForDateRange($itemId, $startDate, $endDate, $excludeReservationId = null): bool
+    {
+        $query = ReservationItem::where('item_id', $itemId)
+            ->whereHas('reservation', function ($resQuery) use ($startDate, $endDate, $excludeReservationId) {
+                $resQuery->where(function ($q) use ($startDate, $endDate) {
+                    $q->whereBetween('start_date', [$startDate, $endDate])
+                      ->orWhereBetween('end_date', [$startDate, $endDate])
+                      ->orWhere(function ($innerQ) use ($startDate, $endDate) {
+                          $innerQ->where('start_date', '<=', $startDate)
+                                 ->where('end_date', '>=', $endDate);
+                      });
+                })
+                ->whereHas('status', function ($statusQ) {
+                    $statusQ->where('status_name', '!=', 'Cancelled');
+                });
+
+                if ($excludeReservationId) {
+                    $resQuery->where('reservation_id', '!=', $excludeReservationId);
+                }
+            });
+
+        return $query->count() === 0;
+    }
 
 }
