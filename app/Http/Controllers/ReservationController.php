@@ -623,4 +623,30 @@ class ReservationController extends Controller
         return $query->count() === 0;
     }
 
+    /**
+     * Confirm a pending reservation
+     */
+    public function confirmReservation(Reservation $reservation): JsonResponse
+    {
+        if ($reservation->status->status_name !== 'Pending') {
+            return response()->json([
+                'message' => 'Only pending reservations can be confirmed'
+            ], 422);
+        }
+
+        $confirmedStatus = \App\Models\ReservationStatus::where('status_name', 'Confirmed')->first();
+
+        $reservation->update([
+            'status_id' => $confirmedStatus->status_id,
+            'confirmed_at' => now(),
+            'confirmed_by' => Auth::id()
+        ]);
+
+        $reservation->load(['customer', 'status', 'reservedBy', 'items.item']);
+
+        return response()->json([
+            'message' => 'Reservation confirmed successfully',
+            'data' => $reservation
+        ]);
+    }
 }
