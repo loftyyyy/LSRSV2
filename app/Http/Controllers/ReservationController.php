@@ -477,4 +477,62 @@ class ReservationController extends Controller
         ]);
     }
 
+    /**
+     * @param Request $request
+     * @param Reservation $reservation
+     * @return JsonResponse
+     * Cancels a reservation by updating its status
+     */
+    public function cancelReservation(Request $request, Reservation $reservation): JsonResponse
+    {
+        // Check if reservation can be cancelled
+        if ($reservation->status->status_name === 'Completed') {
+            return response()->json([
+                'message' => 'Cannot cancel a completed reservation'
+            ], 422);
+        }
+
+        if ($reservation->status->status_name === 'Cancelled') {
+            return response()->json([
+                'message' => 'Reservation is already cancelled'
+            ], 422);
+        }
+
+        // Check if reservation has active rentals
+        $hasActiveRentals = $reservation->rentals()
+            ->whereNull('return_date')
+            ->exists();
+
+        if ($hasActiveRentals) {
+            return response()->json([
+                'message' => 'Cannot cancel reservation with active rentals. Please return all items first.'
+            ], 422);
+        }
+
+        // Find cancelled status
+        $cancelledStatus = \App\Models\ReservationStatus::where('status_name', 'Cancelled')->first();
+
+        if (!$cancelledStatus) {
+            return response()->json([
+                'message' => 'Cancelled status not found in system'
+            ], 500);
+        }
+
+        // Update reservation status to cancelled
+        $reservation->update([
+            'status_id' => $cancelledStatus->status_id,
+            'cancellation_reason' => $request->get('cancellation_reason'),
+            'cancelled_at' => now(),
+            'cancelled_by' => Auth::id()
+        ]);
+
+        $reservation->load(['customer', 'status', 'reservedBy', 'items.item']);
+
+        return response()->json([
+            'message' => 'Reservation cancelled successfully',
+            'data' => $reservation
+        ]);
+        // TODO: Should update the inventory status (still didn't thought about the inventory status but it should go like (reserved, available, or other stuff)
+    }
+
 }
