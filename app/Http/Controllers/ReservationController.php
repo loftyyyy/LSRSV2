@@ -596,4 +596,5 @@ class ReservationController extends Controller
         // TODO: Should update the inventory status (still didn't thought about the inventory status but it should go like (reserved, available, or other stuff)
     }
 
+
 }

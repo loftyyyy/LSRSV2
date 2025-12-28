@@ -70,7 +70,7 @@ class RentalController extends Controller
     /**
      * Get total penalties from invoice items
      */
-    public function getTotalPenaltiesFromInvoices($rentals): float
+    private function getTotalPenaltiesFromInvoices($rentals): float
     {
         $rentalIds = $rentals->pluck('rental_id');
 
@@ -392,7 +392,7 @@ class RentalController extends Controller
      * @return void
      * Create or update penalty invoice for an overdue rental. Stores the penalty in the invoice_items table
      */
-    public function createOrUpdatePenaltyInvoice(Rental $rental): void
+    private function createOrUpdatePenaltyInvoice(Rental $rental): void
     {
         $penaltyAmount = $this->calculatePenalty($rental);
 
