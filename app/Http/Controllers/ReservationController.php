@@ -138,14 +138,65 @@ class ReservationController extends Controller
      */
     public function store(StoreReservationRequest $request): JsonResponse
     {
-        $reservation = Reservation::create($request->validated());
+        try {
+            DB::beginTransaction();
 
-        $reservation->load(['customer', 'status', 'reservedBy', 'items']);
+            // Set the clerk who created the reservation
+            $validatedData = $request->validated();
+            $validatedData['reserved_by'] = Auth::id();
+            $validatedData['reservation_date'] = now();
 
-        return response()->json([
-            'message' => 'Reservation created successfully',
-            'data' => $reservation
-        ], 201);
+            // Create the reservation
+            $reservation = Reservation::create($validatedData);
+
+            // Add items to reservation if provided
+            if ($request->has('items')) {
+                foreach ($request->items as $itemData) {
+                    // Check item availability
+                    $item = Item::findOrFail($itemData['item_id']);
+
+                    $isAvailable = $this->checkItemAvailabilityForDateRange(
+                        $itemData['item_id'],
+                        $validatedData['start_date'],
+                        $validatedData['end_date']
+                    );
+
+                    if (!$isAvailable) {
+                        DB::rollBack();
+                        return response()->json([
+                            'message' => "Item '{$item->item_name}' is not available for the selected dates",
+                            'error' => 'ITEM_NOT_AVAILABLE',
+                            'item_id' => $item->item_id
+                        ], 422);
+                    }
+
+                    // Create reservation item
+                    ReservationItem::create([
+                        'reservation_id' => $reservation->reservation_id,
+                        'item_id' => $itemData['item_id'],
+                        'quantity' => $itemData['quantity'] ?? 1,
+                        'rental_price' => $itemData['rental_price'] ?? $item->rental_price,
+                        'notes' => $itemData['notes'] ?? null
+                    ]);
+                }
+            }
+
+            DB::commit();
+
+            $reservation->load(['customer', 'status', 'reservedBy', 'items.item']);
+
+            return response()->json([
+                'message' => 'Reservation created successfully',
+                'data' => $reservation
+            ], 201);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Failed to create reservation',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -354,4 +405,5 @@ class ReservationController extends Controller
             'message' => 'Item details retrieved successfully'
         ]);
     }
+
 }
