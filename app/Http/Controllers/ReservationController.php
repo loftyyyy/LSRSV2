@@ -89,7 +89,7 @@ class ReservationController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $query = Reservation::with(['customer', 'status', 'reservedBy']);
+        $query = Reservation::with(['customer', 'status', 'reservedBy', 'items.item']);
 
         // Search functionality
         if ($request->has('search')) {
@@ -127,7 +127,7 @@ class ReservationController extends Controller
 
         // Pagination
         $perPage = $request->get('per_page', 15);
-        $reservations = $query->paginate($perPage);
+        $reservations = $query->orderBy('created_at', 'desc')->paginate($perPage);
 
         return response()->json($reservations);
     }
