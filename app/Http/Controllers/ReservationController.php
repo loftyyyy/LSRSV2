@@ -213,4 +213,15 @@ class ReservationController extends Controller
             'message' => 'Reservation deleted successfully'
         ]);
     }
+
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     * Returns available items filtered by type, size, color, and etc.
+     */
+    public function browseAvailableItems(Request $request): JsonResponse
+    {
+        $query = Item::with()
+
+    }
 }
