@@ -285,6 +285,73 @@ class ReservationController extends Controller
             'data' => $items,
             'message' => 'Available items retrieved successfully'
         ]);
+    }
 
+    /**
+     * @param Request $request
+     * @param $itemId
+     * @return JsonResponse
+     * Returns detailed information about a specific item
+     */
+    public function checkItemDetails(Request $request, $itemId): JsonResponse
+    {
+        $item = Item::with([
+            'category',
+            'itemStatus',
+            'reservationItems.reservation' => function ($query) {
+                $query->where('end_date', '>=', now())
+                      ->whereHas('status', function ($statusQ) {
+                          $statusQ->where('status_name', '!=', 'Cancelled');
+                      });
+            }
+        ])->findOrFail($itemId);
+
+        // Calculate next available date if item is currently reserved
+        $nextAvailableDate = null;
+        if ($item->reservationItems->isNotEmpty()) {
+            $lastReservation = $item->reservationItems
+                ->sortByDesc('reservation.end_date')
+                ->first();
+
+            if ($lastReservation && $lastReservation->reservation) {
+                $nextAvailableDate = $lastReservation->reservation->end_date->addDay();
+            }
+        }
+
+        // Check availability for specific date range
+        $isAvailableForDates = true;
+        if ($request->has('start_date') && $request->has('end_date')) {
+            $startDate = $request->get('start_date');
+            $endDate = $request->get('end_date');
+
+            $conflictingReservations = $item->reservationItems()
+                ->whereHas('reservation', function ($query) use ($startDate, $endDate) {
+                    $query->where(function ($q) use ($startDate, $endDate) {
+                        $q->whereBetween('start_date', [$startDate, $endDate])
+                          ->orWhereBetween('end_date', [$startDate, $endDate])
+                          ->orWhere(function ($innerQ) use ($startDate, $endDate) {
+                              $innerQ->where('start_date', '<=', $startDate)
+                                     ->where('end_date', '>=', $endDate);
+                          });
+                    })
+                    ->whereHas('status', function ($statusQ) {
+                        $statusQ->where('status_name', '!=', 'Cancelled');
+                    });
+                })
+                ->count();
+
+            $isAvailableForDates = $conflictingReservations === 0;
+        }
+
+        return response()->json([
+            'data' => $item,
+            'availability' => [
+                'is_currently_available' => $item->itemStatus->status_name === 'Available',
+                'next_available_date' => $nextAvailableDate,
+                'is_available_for_requested_dates' => $isAvailableForDates,
+                'upcoming_reservations' => $item->reservationItems->count()
+            ],
+            'message' => 'Item details retrieved successfully'
+        ]);
     }
 }
