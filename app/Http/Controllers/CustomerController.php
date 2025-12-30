@@ -271,6 +271,11 @@ class CustomerController extends Controller
 
     }
 
+    /**
+     * @param Customer $customer
+     * @return JsonResponse
+     * Reactivate a customer
+     */
     public function reactivate(Customer $customer): JsonResponse
     {
          // Find active status ID
@@ -291,5 +296,33 @@ class CustomerController extends Controller
         ]);
     }
 
+    /**
+     * @param Customer $customer
+     * @return JsonResponse
+     * Get customer rental history
+     */
+    public function rentalHistory(Customer $customer): JsonResponse
+    {
+         $rentals = $customer->rentals()
+            ->with(['status', 'items.inventoryItem.item'])
+            ->orderBy('rental_date', 'desc')
+            ->get();
+
+        $reservations = $customer->reservations()
+            ->with(['status', 'items.inventoryItem.item'])
+            ->orderBy('reservation_date', 'desc')
+            ->get();
+
+        return response()->json([
+            'customer' => [
+                'customer_id' => $customer->customer_id,
+                'name' => $customer->first_name . ' ' . $customer->last_name,
+                'email' => $customer->email,
+            ],
+            'rentals' => $rentals,
+            'reservations' => $reservations,
+        ]);
+
+    }
 
 }
