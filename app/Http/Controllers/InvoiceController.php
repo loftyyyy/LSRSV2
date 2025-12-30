@@ -92,11 +92,57 @@ class InvoiceController extends Controller
     }
 
     /**
+     * Generate invoice/receipt PDF for a specific transaction
+     */
+    public function generateInvoicePDF(Invoice $invoice)
+    {
+        $invoice->load(['customer', 'reservation', 'rental', 'invoiceItems', 'payments', 'createdBy']);
+
+        $pdf = Pdf::loadView('invoices.invoice-pdf', [
+            'invoice' => $invoice,
+            'company' => [
+                'name' => 'Love and Style Rental System',
+                'address' => 'Your Company Address',
+                'phone' => 'Your Phone Number',
+                'email' => 'Your Email',
+            ]
+        ]);
+
+        return $pdf->download('invoice-' . $invoice->invoice_number . '.pdf');
+    }
+
+    /**
      * Create PDF for reports
      */
-    public function generatePDF()
+    public function generatePDF(Request $request)
     {
+         $startDate = $request->get('start_date', Carbon::now()->startOfMonth());
+        $endDate = $request->get('end_date', Carbon::now()->endOfMonth());
+        $reportType = $request->get('report_type', 'daily');
 
+        $invoices = Invoice::with(['customer', 'payments', 'invoiceItems'])
+            ->whereBetween('invoice_date', [$startDate, $endDate])
+            ->get();
+
+        $summary = [
+            'total_invoices' => $invoices->count(),
+            'total_amount' => $invoices->sum('total_amount'),
+            'total_paid' => $invoices->sum('amount_paid'),
+            'total_balance_due' => $invoices->sum('balance_due'),
+            'fully_paid_count' => $invoices->where('balance_due', '<=', 0)->count(),
+            'pending_payment_count' => $invoices->where('balance_due', '>', 0)->count(),
+        ];
+
+        $pdf = Pdf::loadView('reports.billing-report', [
+            'invoices' => $invoices,
+            'summary' => $summary,
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+            'report_type' => $reportType,
+            'generated_at' => Carbon::now(),
+        ]);
+
+        return $pdf->download('billing-report-' . Carbon::now()->format('Y-m-d') . '.pdf');
     }
     /**
      * Display Invoice Page
