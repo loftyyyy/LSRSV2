@@ -193,7 +193,7 @@ class InvoiceController extends Controller
 
         // Pagination
         $perPage = $request->get('per_page', 15);
-        $invoices = $query->paginate($perPage);
+        $invoices = $query->orderBy('invoice_date', 'desc')->paginate($perPage);
 
         return response()->json($invoices);
     }
@@ -203,14 +203,33 @@ class InvoiceController extends Controller
      */
     public function store(StoreInvoiceRequest $request): JsonResponse
     {
-        $invoice = Invoice::create($request->validated());
+        DB::beginTransaction();
 
-        $invoice->load(['customer', 'items', 'reservation', 'rental', 'createdBy']);
+        try {
+            $invoice = Invoice::create($request->validated());
 
-        return response()->json([
-            'message' => 'Invoice created successfully',
-            'data' => $invoice
-        ], 201);
+            // If invoice items are provided, create them
+            if ($request->has('items')) {
+                foreach ($request->items as $item) {
+                    $invoice->invoiceItems()->create($item);
+                }
+            }
+
+            $invoice->load(['customer', 'invoiceItems', 'reservation', 'rental', 'createdBy']);
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Invoice created successfully',
+                'data' => $invoice
+            ], 201);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Failed to create invoice',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
