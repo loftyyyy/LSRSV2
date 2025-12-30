@@ -244,4 +244,32 @@ class CustomerController extends Controller
             'message' => 'Customer deleted successfully'
         ]);
     }
+
+    /**
+     * @param Customer $customer
+     * @return JsonResponse
+     * Deactivate customer
+     */
+    public function deactivate(Customer $customer): JsonResponse
+    {
+         // Find inactive status ID
+        $inactiveStatus = \App\Models\CustomerStatus::where('status_name', 'inactive')->first();
+
+        if (!$inactiveStatus) {
+            return response()->json([
+                'message' => 'Inactive status not found in system'
+            ], 404);
+        }
+
+        $customer->update(['status_id' => $inactiveStatus->status_id]);
+        $customer->load('status');
+
+        return response()->json([
+            'message' => 'Customer deactivated successfully',
+            'data' => $customer
+        ]);
+
+    }
+
+
 }
