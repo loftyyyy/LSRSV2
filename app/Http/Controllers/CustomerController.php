@@ -16,6 +16,53 @@ class CustomerController extends Controller
      */
     public function report(Request $request):JsonResponse
     {
+        $startDate = $request->get('start_date');
+        $endDate = $request->get('end_date');
+        $statusId = $request->get('status_id');
+
+        $query = Customer::with(['status', 'rentals', 'reservations']);
+
+        // Filter by date range
+        if ($startDate && $endDate) {
+            $query->whereBetween('created_at', [$startDate, $endDate]);
+        }
+
+        // Filter by status
+        if ($statusId) {
+            $query->where('status_id', $statusId);
+        }
+
+        $customers = $query->get();
+
+        // Generate report statistics
+        $statistics = [
+            'total_customers' => $customers->count(),
+            'active_customers' => $customers->where('status.status_name', 'active')->count(),
+            'inactive_customers' => $customers->where('status.status_name', 'inactive')->count(),
+            'total_rentals' => $customers->sum(fn($c) => $c->rentals->count()),
+            'customers_with_rentals' => $customers->filter(fn($c) => $c->rentals->count() > 0)->count(),
+        ];
+
+        // Customer rental history summary
+        $customerData = $customers->map(function ($customer) {
+            return [
+                'customer_id' => $customer->customer_id,
+                'name' => $customer->first_name . ' ' . $customer->last_name,
+                'email' => $customer->email,
+                'contact_number' => $customer->contact_number,
+                'status' => $customer->status->status_name ?? 'N/A',
+                'total_rentals' => $customer->rentals->count(),
+                'total_reservations' => $customer->reservations->count(),
+                'registration_date' => $customer->created_at->format('Y-m-d'),
+                'last_rental_date' => $customer->rentals->max('rental_date'),
+            ];
+        });
+
+        return response()->json([
+            'statistics' => $statistics,
+            'customers' => $customerData,
+            'generated_at' => now()->format('Y-m-d H:i:s'),
+        ]);
 
     }
 
