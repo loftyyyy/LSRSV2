@@ -180,10 +180,24 @@ class CustomerController extends Controller
      */
     public function show(Customer $customer): JsonResponse
     {
-        $customer->load(['status', 'reservations', 'rentals', 'invoices']);
+        $customer->load([
+            'status',
+            'reservations.status',
+            'rentals.status',
+            'invoices.status'
+        ]);
+
+        // Calculate rental statistics
+        $rentalStats = [
+            'total_rentals' => $customer->rentals->count(),
+            'active_rentals' => $customer->rentals->whereNull('return_date')->count(),
+            'completed_rentals' => $customer->rentals->whereNotNull('return_date')->count(),
+            'total_reservations' => $customer->reservations->count(),
+        ];
 
         return response()->json([
-            'data' => $customer
+            'data' => $customer,
+            'rental_statistics' => $rentalStats
         ]);
     }
 
