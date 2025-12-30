@@ -17,6 +17,51 @@ class InvoiceController extends Controller
      */
     public function report(Request $request):JsonResponse
     {
+        $startDate = $request->get('start_date', Carbon::now()->startOfMonth());
+        $endDate = $request->get('end_date', Carbon::now()->endOfMonth());
+        $reportType = $request->get('report_type', 'daily'); // daily, weekly, monthly
+
+        $query = Invoice::with(['customer', 'payments', 'invoiceItems'])
+            ->whereBetween('invoice_date', [$startDate, $endDate]);
+
+        // Summary statistics
+        $summary = [
+            'total_invoices' => $query->count(),
+            'total_amount' => $query->sum('total_amount'),
+            'total_paid' => $query->sum('amount_paid'),
+            'total_balance_due' => $query->sum('balance_due'),
+            'fully_paid_count' => $query->clone()->where('balance_due', '<=', 0)->count(),
+            'pending_payment_count' => $query->clone()->where('balance_due', '>', 0)->count(),
+        ];
+
+        // Group by date based on report type
+        $groupedData = $this->groupInvoicesByPeriod($query->get(), $reportType);
+
+        // Payment method breakdown
+        $paymentMethodBreakdown = DB::table('payments')
+            ->join('invoices', 'payments.invoice_id', '=', 'invoices.invoice_id')
+            ->whereBetween('payments.payment_date', [$startDate, $endDate])
+            ->select('payment_method', DB::raw('COUNT(*) as count'), DB::raw('SUM(amount) as total'))
+            ->groupBy('payment_method')
+            ->get();
+
+        // Invoice type breakdown
+        $invoiceTypeBreakdown = $query->clone()
+            ->select('invoice_type', DB::raw('COUNT(*) as count'), DB::raw('SUM(total_amount) as total'))
+            ->groupBy('invoice_type')
+            ->get();
+
+        return response()->json([
+            'summary' => $summary,
+            'grouped_data' => $groupedData,
+            'payment_method_breakdown' => $paymentMethodBreakdown,
+            'invoice_type_breakdown' => $invoiceTypeBreakdown,
+            'period' => [
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                'report_type' => $reportType,
+            ]
+        ]);
 
     }
 
