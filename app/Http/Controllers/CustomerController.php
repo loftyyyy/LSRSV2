@@ -271,5 +271,25 @@ class CustomerController extends Controller
 
     }
 
+    public function reactivate(Customer $customer): JsonResponse
+    {
+         // Find active status ID
+        $activeStatus = \App\Models\CustomerStatus::where('status_name', 'active')->first();
+
+        if (!$activeStatus) {
+            return response()->json([
+                'message' => 'Active status not found in system'
+            ], 404);
+        }
+
+        $customer->update(['status_id' => $activeStatus->status_id]);
+        $customer->load('status');
+
+        return response()->json([
+            'message' => 'Customer reactivated successfully',
+            'data' => $customer
+        ]);
+    }
+
 
 }
