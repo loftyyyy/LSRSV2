@@ -69,9 +69,53 @@ class CustomerController extends Controller
     /**
      * Download PDF
      */
-    public function generatePDF()
+    public function generatePDF(Request $request):JsonResponse
     {
+        $startDate = $request->get('start_date');
+        $endDate = $request->get('end_date');
+        $statusId = $request->get('status_id');
 
+        $query = Customer::with(['status', 'rentals', 'reservations']);
+
+        if ($startDate && $endDate) {
+            $query->whereBetween('created_at', [$startDate, $endDate]);
+        }
+
+        if ($statusId) {
+            $query->where('status_id', $statusId);
+        }
+
+        $customers = $query->get();
+
+        $statistics = [
+            'total_customers' => $customers->count(),
+            'active_customers' => $customers->where('status.status_name', 'active')->count(),
+            'inactive_customers' => $customers->where('status.status_name', 'inactive')->count(),
+            'total_rentals' => $customers->sum(fn($c) => $c->rentals->count()),
+        ];
+
+        $customerData = $customers->map(function ($customer) {
+            return [
+                'name' => $customer->first_name . ' ' . $customer->last_name,
+                'email' => $customer->email,
+                'contact_number' => $customer->contact_number,
+                'status' => $customer->status->status_name ?? 'N/A',
+                'total_rentals' => $customer->rentals->count(),
+                'registration_date' => $customer->created_at->format('Y-m-d'),
+            ];
+        });
+
+        $pdf = PDF::loadView('customers.report-pdf', [
+            'customers' => $customerData,
+            'statistics' => $statistics,
+            'date_range' => [
+                'start' => $startDate,
+                'end' => $endDate
+            ],
+            'generated_at' => now()->format('Y-m-d H:i:s')
+        ]);
+
+        return $pdf->download('customer-report-' . now()->format('Y-m-d') . '.pdf');
     }
     /**
      * Display the Customer Page
