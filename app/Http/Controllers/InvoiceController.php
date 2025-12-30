@@ -321,4 +321,46 @@ class InvoiceController extends Controller
             ]
         ]);
     }
+     /**
+     * Monitor all completed and pending payments
+     */
+    public function monitorPayments(Request $request): JsonResponse
+    {
+        $status = $request->get('status', 'all'); // all, completed, pending
+
+        $query = Invoice::with(['customer', 'payments', 'reservation', 'rental']);
+
+        if ($status === 'completed') {
+            $query->where('balance_due', '<=', 0);
+        } elseif ($status === 'pending') {
+            $query->where('balance_due', '>', 0);
+        }
+
+        // Additional filters
+        if ($request->has('customer_id')) {
+            $query->where('customer_id', $request->get('customer_id'));
+        }
+
+        if ($request->has('date_from')) {
+            $query->where('invoice_date', '>=', $request->get('date_from'));
+        }
+
+        if ($request->has('date_to')) {
+            $query->where('invoice_date', '<=', $request->get('date_to'));
+        }
+
+        $perPage = $request->get('per_page', 15);
+        $invoices = $query->orderBy('invoice_date', 'desc')->paginate($perPage);
+
+        $summary = [
+            'total_completed' => Invoice::where('balance_due', '<=', 0)->count(),
+            'total_pending' => Invoice::where('balance_due', '>', 0)->count(),
+            'total_pending_amount' => Invoice::where('balance_due', '>', 0)->sum('balance_due'),
+        ];
+
+        return response()->json([
+            'invoices' => $invoices,
+            'summary' => $summary,
+        ]);
+    }
 }
