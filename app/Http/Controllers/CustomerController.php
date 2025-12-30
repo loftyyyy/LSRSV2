@@ -148,6 +148,11 @@ class CustomerController extends Controller
             $query->where('status_id', $request->get('status_id'));
         }
 
+        // Include rental history count if requested
+        if ($request->get('include_history', false)) {
+            $query->withCount(['rentals', 'reservations']);
+        }
+
         // Pagination
         $perPage = $request->get('per_page', 15);
         $customers = $query->paginate($perPage);
