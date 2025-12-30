@@ -267,4 +267,58 @@ class InvoiceController extends Controller
             'message' => 'Invoice deleted successfully'
         ]);
     }
+     /**
+     * Get rental fee details for a customer
+     */
+    public function getRentalFeeDetails(Request $request): JsonResponse
+    {
+        $invoiceId = $request->get('invoice_id');
+        $reservationId = $request->get('reservation_id');
+        $rentalId = $request->get('rental_id');
+
+        $query = Invoice::with(['invoiceItems', 'customer', 'reservation', 'rental']);
+
+        if ($invoiceId) {
+            $invoice = $query->find($invoiceId);
+        } elseif ($reservationId) {
+            $invoice = $query->where('reservation_id', $reservationId)->first();
+        } elseif ($rentalId) {
+            $invoice = $query->where('rental_id', $rentalId)->first();
+        } else {
+            return response()->json(['message' => 'Please provide invoice_id, reservation_id, or rental_id'], 400);
+        }
+
+        if (!$invoice) {
+            return response()->json(['message' => 'Invoice not found'], 404);
+        }
+
+        $rentalFees = $invoice->invoiceItems()
+            ->where('item_type', 'rental_fee')
+            ->get();
+
+        $penalties = $invoice->invoiceItems()
+            ->whereIn('item_type', ['penalty', 'late_fee'])
+            ->get();
+
+        $otherCharges = $invoice->invoiceItems()
+            ->whereNotIn('item_type', ['rental_fee', 'penalty', 'late_fee'])
+            ->get();
+
+        return response()->json([
+            'invoice' => $invoice,
+            'breakdown' => [
+                'rental_fees' => $rentalFees,
+                'penalties' => $penalties,
+                'other_charges' => $otherCharges,
+            ],
+            'totals' => [
+                'subtotal' => $invoice->subtotal,
+                'discount' => $invoice->discount,
+                'tax' => $invoice->tax,
+                'total_amount' => $invoice->total_amount,
+                'amount_paid' => $invoice->amount_paid,
+                'balance_due' => $invoice->balance_due,
+            ]
+        ]);
+    }
 }
