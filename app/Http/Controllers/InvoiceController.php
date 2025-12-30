@@ -65,6 +65,32 @@ class InvoiceController extends Controller
 
     }
 
+     /**
+     * Helper function to group invoices by period
+     */
+    private function groupInvoicesByPeriod($invoices, $reportType)
+    {
+        return $invoices->groupBy(function ($invoice) use ($reportType) {
+            switch ($reportType) {
+                case 'daily':
+                    return $invoice->invoice_date->format('Y-m-d');
+                case 'weekly':
+                    return $invoice->invoice_date->format('Y-W');
+                case 'monthly':
+                    return $invoice->invoice_date->format('Y-m');
+                default:
+                    return $invoice->invoice_date->format('Y-m-d');
+            }
+        })->map(function ($group) {
+            return [
+                'count' => $group->count(),
+                'total_amount' => $group->sum('total_amount'),
+                'amount_paid' => $group->sum('amount_paid'),
+                'balance_due' => $group->sum('balance_due'),
+            ];
+        });
+    }
+
     /**
      * Create PDF for reports
      */
