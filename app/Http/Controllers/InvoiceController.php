@@ -7,6 +7,7 @@ use App\Http\Requests\StoreInvoiceRequest;
 use App\Http\Requests\UpdateInvoiceRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class InvoiceController extends Controller
@@ -258,7 +259,7 @@ class InvoiceController extends Controller
     {
         $invoice->update($request->validated());
 
-        $invoice->load(['customer', 'items', 'reservation', 'rental', 'createdBy']);
+        $invoice->load(['customer', 'invoiceItems', 'reservation', 'rental', 'createdBy']);
 
         return response()->json([
             'message' => 'Invoice updated successfully',
