@@ -221,4 +221,21 @@ class InventoryController extends Controller
             'data' => $inventory
         ]);
     }
+     /**
+     * Update inventory condition
+     */
+    public function updateCondition(Request $request, Inventory $inventory): JsonResponse
+    {
+        $request->validate([
+            'condition' => 'required|in:excellent,good,fair,poor'
+        ]);
+
+        $inventory->update(['condition' => $request->condition]);
+        $inventory->load('status');
+
+        return response()->json([
+            'message' => 'Inventory condition updated successfully',
+            'data' => $inventory
+        ]);
+    }
 }
