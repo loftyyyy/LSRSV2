@@ -154,10 +154,30 @@ class PaymentController extends Controller
         return $pdf->download('payment-report-' . Carbon::now()->format('Y-m-d') . '.pdf');
 
     }
+
+    /**
+     * Generate receipt PDF for a specific payment
+     */
+    public function generateReceiptPDF(Payment $payment)
+    {
+        $payment->load(['invoice', 'invoice.customer', 'invoice.invoiceItems', 'processedBy', 'status']);
+
+        $pdf = Pdf::loadView('payments.receipt-pdf', [
+            'payment' => $payment,
+            'company' => [
+                'name' => 'Love and Style Rental System',
+                'address' => 'Your Company Address',
+                'phone' => 'Your Phone Number',
+                'email' => 'Your Email',
+            ]
+        ]);
+
+        return $pdf->download('receipt-' . $payment->payment_reference . '.pdf');
+    }
+
     /**
      * Display Payment Page
      */
-
     public function showPaymentPage(): View
     {
         return view('payments.index');
