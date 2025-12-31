@@ -279,4 +279,26 @@ class InventoryImageController
             'data' => $primaryImage
         ]);
     }
+     /**
+     * Get images by view type (front, back, side, etc.)
+     */
+    public function getByViewType(Inventory $inventory, string $viewType): JsonResponse
+    {
+        $validViewTypes = ['front', 'back', 'side', 'detail', 'full'];
+
+        if (!in_array($viewType, $validViewTypes)) {
+            return response()->json([
+                'message' => 'Invalid view type. Must be one of: ' . implode(', ', $validViewTypes)
+            ], 400);
+        }
+
+        $images = $inventory->images()
+            ->where('view_type', $viewType)
+            ->orderBy('display_order', 'asc')
+            ->get();
+
+        return response()->json([
+            'data' => $images
+        ]);
+    }
 }
