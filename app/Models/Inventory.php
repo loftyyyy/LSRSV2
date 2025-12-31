@@ -47,6 +47,11 @@ class Inventory extends Model
         return $this->hasMany(InvoiceItem::class, 'item_id', 'item_id');
     }
 
+    public function images()
+    {
+        return $this->hasMany(InventoryImage::class);
+    }
+
     /**
      * Boot the model and auto-generate SKU if not provided
      */
@@ -68,7 +73,7 @@ class Inventory extends Model
     protected static function generateSku(string $itemType): string
     {
         $prefix = strtoupper(substr($itemType, 0, 3)); // GWN or SUT
-        
+
         // Get the highest number for this item type
         $lastItem = static::where('item_type', $itemType)
             ->where('sku', 'like', "{$prefix}-%")
