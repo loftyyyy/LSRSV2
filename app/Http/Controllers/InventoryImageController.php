@@ -140,4 +140,27 @@ class InventoryImageController
     {
         //
     }
+    /**
+     * Set an image as primary/main image
+     */
+    public function setPrimary(Inventory $inventory, InventoryImage $image): JsonResponse
+    {
+        // Ensure the image belongs to the inventory item
+        if ($image->item_id !== $inventory->item_id) {
+            return response()->json([
+                'message' => 'Image not found for this inventory item'
+            ], 404);
+        }
+
+        // Remove primary status from all images of this inventory item
+        $inventory->images()->update(['is_primary' => false]);
+
+        // Set this image as primary
+        $image->update(['is_primary' => true]);
+
+        return response()->json([
+            'message' => 'Primary image updated successfully',
+            'data' => $image
+        ]);
+    }
 }
