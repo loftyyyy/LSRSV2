@@ -341,4 +341,52 @@ class InventoryImageController
             'data' => $image
         ]);
     }
+    /**
+     * Bulk delete multiple images
+     */
+    public function bulkDestroy(Request $request, Inventory $inventory): JsonResponse
+    {
+        $request->validate([
+            'image_ids' => 'required|array',
+            'image_ids.*' => 'required|exists:inventory_images,image_id'
+        ]);
+
+        $deletedCount = 0;
+        $hadPrimary = false;
+
+        foreach ($request->image_ids as $imageId) {
+            $image = InventoryImage::find($imageId);
+
+            // Ensure the image belongs to this inventory item
+            if ($image && $image->item_id === $inventory->item_id) {
+                if ($image->is_primary) {
+                    $hadPrimary = true;
+                }
+
+                // Delete physical file
+                if (Storage::disk('public')->exists($image->image_path)) {
+                    Storage::disk('public')->delete($image->image_path);
+                }
+
+                $image->delete();
+                $deletedCount++;
+            }
+        }
+
+        // If a primary image was deleted, set a new one
+        if ($hadPrimary) {
+            $nextImage = $inventory->images()
+                ->orderBy('display_order', 'asc')
+                ->first();
+
+            if ($nextImage) {
+                $nextImage->update(['is_primary' => true]);
+            }
+        }
+
+        return response()->json([
+            'message' => "{$deletedCount} image(s) deleted successfully",
+            'deleted_count' => $deletedCount
+        ]);
+    }
 }
