@@ -163,4 +163,34 @@ class InventoryImageController
             'data' => $image
         ]);
     }
+
+    /**
+     * Reorder images
+     */
+    public function reorder(Request $request, Inventory $inventory): JsonResponse
+    {
+        $request->validate([
+            'image_orders' => 'required|array',
+            'image_orders.*.image_id' => 'required|exists:inventory_images,image_id',
+            'image_orders.*.display_order' => 'required|integer|min:1'
+        ]);
+
+        foreach ($request->image_orders as $orderData) {
+            $image = InventoryImage::find($orderData['image_id']);
+
+            // Ensure the image belongs to this inventory item
+            if ($image && $image->item_id === $inventory->item_id) {
+                $image->update(['display_order' => $orderData['display_order']]);
+            }
+        }
+
+        $updatedImages = $inventory->images()
+            ->orderBy('display_order', 'asc')
+            ->get();
+
+        return response()->json([
+            'message' => 'Images reordered successfully',
+            'data' => $updatedImages
+        ]);
+    }
 }
