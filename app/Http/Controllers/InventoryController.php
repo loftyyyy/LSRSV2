@@ -344,4 +344,31 @@ class InventoryController extends Controller
             'by_size' => $availableItems->groupBy('size')
         ];
     }
+
+    /**
+     * Get rental history report
+     */
+    private function getRentalHistoryReport(Request $request): array
+    {
+        $query = Inventory::with(['rentals.customer']);
+
+        if ($request->has('start_date') && $request->has('end_date')) {
+            $query->whereHas('rentals', function ($q) use ($request) {
+                $q->whereBetween('rental_date', [
+                    $request->get('start_date'),
+                    $request->get('end_date')
+                ]);
+            });
+        }
+
+        $inventories = $query->get();
+
+        return [
+            'title' => 'Rental History Report',
+            'items' => $inventories,
+            'total_rentals' => $inventories->sum(function ($item) {
+                return $item->rentals->count();
+            })
+        ];
+    }
 }
