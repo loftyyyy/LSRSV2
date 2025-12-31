@@ -389,4 +389,28 @@ class InventoryImageController
             'deleted_count' => $deletedCount
         ]);
     }
+      /**
+     * Get inventory items with their primary images
+     */
+    public function getInventoryWithImages(Request $request): JsonResponse
+    {
+        $query = Inventory::with(['images' => function ($q) {
+            $q->where('is_primary', true)
+              ->orWhereIn('image_id', function ($subQ) {
+                  $subQ->selectRaw('MIN(image_id)')
+                       ->from('inventory_images')
+                       ->groupBy('item_id');
+              });
+        }]);
+
+        // Apply filters if provided
+        if ($request->has('item_type')) {
+            $query->where('item_type', $request->get('item_type'));
+        }
+
+        $perPage = $request->get('per_page', 15);
+        $inventories = $query->paginate($perPage);
+
+        return response()->json($inventories);
+    }
 }
