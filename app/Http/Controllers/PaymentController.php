@@ -7,6 +7,7 @@ use App\Http\Requests\StorePaymentRequest;
 use App\Http\Requests\UpdatePaymentRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class PaymentController extends Controller
@@ -233,6 +234,56 @@ class PaymentController extends Controller
             'payments' => $payments,
             'summary' => $summary,
         ]);
+    }
+
+     /**
+     * Process and log payment in the system
+     */
+    public function processPayment(StorePaymentRequest $request): JsonResponse
+    {
+        DB::beginTransaction();
+
+        try {
+            // Generate unique payment reference
+            $paymentReference = 'PAY-' . strtoupper(Str::random(10));
+
+            // Create payment record
+            $paymentData = $request->validated();
+            $paymentData['payment_reference'] = $paymentReference;
+            $paymentData['payment_date'] = now();
+
+            $payment = Payment::create($paymentData);
+
+            // Update invoice amount_paid and balance_due
+            $invoice = Invoice::findOrFail($payment->invoice_id);
+            $invoice->amount_paid += $payment->amount;
+            $invoice->balance_due = $invoice->total_amount - $invoice->amount_paid;
+
+            // Update payment status based on balance
+            if ($invoice->balance_due <= 0) {
+                $invoice->payment_status = 'paid';
+            } elseif ($invoice->amount_paid > 0) {
+                $invoice->payment_status = 'partial';
+            }
+
+            $invoice->save();
+
+            $payment->load(['invoice', 'invoice.customer', 'status', 'processedBy']);
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Payment processed successfully',
+                'data' => $payment,
+                'invoice' => $invoice
+            ], 201);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Failed to process payment',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
