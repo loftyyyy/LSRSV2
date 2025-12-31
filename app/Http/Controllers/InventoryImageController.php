@@ -83,11 +83,20 @@ class InventoryImageController
     }
 
     /**
-     * Display the specified resource.
+     * Display a specific image
      */
-    public function show(InventoryImage $inventoryImage)
+    public function show(Inventory $inventory, InventoryImage $image): JsonResponse
     {
-        //
+        // Ensure the image belongs to the inventory item
+        if ($image->item_id !== $inventory->item_id) {
+            return response()->json([
+                'message' => 'Image not found for this inventory item'
+            ], 404);
+        }
+
+        return response()->json([
+            'data' => $image
+        ]);
     }
 
     /**
