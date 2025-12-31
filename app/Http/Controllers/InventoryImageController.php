@@ -301,4 +301,44 @@ class InventoryImageController
             'data' => $images
         ]);
     }
+
+    /**
+     * Replace an existing image
+     */
+    public function replace(Request $request, Inventory $inventory, InventoryImage $image): JsonResponse
+    {
+        // Ensure the image belongs to the inventory item
+        if ($image->item_id !== $inventory->item_id) {
+            return response()->json([
+                'message' => 'Image not found for this inventory item'
+            ], 404);
+        }
+
+        $request->validate([
+            'image' => 'required|image|mimes:jpg,jpeg,png,webp|max:5120'
+        ]);
+
+        // Delete old image file
+        if (Storage::disk('public')->exists($image->image_path)) {
+            Storage::disk('public')->delete($image->image_path);
+        }
+
+        // Store new image
+        $newImage = $request->file('image');
+        $filename = Str::uuid() . '.' . $newImage->getClientOriginalExtension();
+        $path = $newImage->storeAs('inventory/' . $inventory->item_id, $filename, 'public');
+
+        // Update image record
+        $image->update([
+            'image_path' => $path,
+            'image_url' => Storage::url($path),
+            'file_size' => $newImage->getSize(),
+            'mime_type' => $newImage->getMimeType()
+        ]);
+
+        return response()->json([
+            'message' => 'Image replaced successfully',
+            'data' => $image
+        ]);
+    }
 }
