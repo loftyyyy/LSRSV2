@@ -18,6 +18,70 @@ class PaymentController extends Controller
      */
     public function report(Request $request):JsonResponse
     {
+        $startDate = $request->get('start_date', Carbon::now()->startOfMonth());
+        $endDate = $request->get('end_date', Carbon::now()->endOfMonth());
+        $reportType = $request->get('report_type', 'daily'); // daily, weekly, monthly
+
+        $query = Payment::with(['invoice', 'invoice.customer', 'processedBy', 'status'])
+            ->whereBetween('payment_date', [$startDate, $endDate]);
+
+        // Summary statistics
+        $summary = [
+            'total_payments' => $query->count(),
+            'total_amount_collected' => $query->sum('amount'),
+            'completed_payments' => $query->clone()->whereHas('status', function ($q) {
+                $q->where('status_name', 'completed');
+            })->count(),
+            'pending_payments' => $query->clone()->whereHas('status', function ($q) {
+                $q->where('status_name', 'pending');
+            })->count(),
+        ];
+
+        // Group by date based on report type
+        $groupedData = $this->groupPaymentsByPeriod($query->get(), $reportType);
+
+        // Payment method breakdown
+        $paymentMethodBreakdown = $query->clone()
+            ->select('payment_method', DB::raw('COUNT(*) as count'), DB::raw('SUM(amount) as total'))
+            ->groupBy('payment_method')
+            ->get();
+
+        // Payment status breakdown
+        $statusBreakdown = DB::table('payments')
+            ->join('payment_statuses', 'payments.status_id', '=', 'payment_statuses.status_id')
+            ->whereBetween('payments.payment_date', [$startDate, $endDate])
+            ->select('payment_statuses.status_name', DB::raw('COUNT(*) as count'), DB::raw('SUM(payments.amount) as total'))
+            ->groupBy('payment_statuses.status_name')
+            ->get();
+
+        // Top customers by payment amount
+        $topCustomers = DB::table('payments')
+            ->join('invoices', 'payments.invoice_id', '=', 'invoices.invoice_id')
+            ->join('customers', 'invoices.customer_id', '=', 'customers.customer_id')
+            ->whereBetween('payments.payment_date', [$startDate, $endDate])
+            ->select(
+                'customers.customer_id',
+                DB::raw("CONCAT(customers.first_name, ' ', customers.last_name) as customer_name"),
+                DB::raw('COUNT(payments.payment_id) as payment_count'),
+                DB::raw('SUM(payments.amount) as total_paid')
+            )
+            ->groupBy('customers.customer_id', 'customers.first_name', 'customers.last_name')
+            ->orderByDesc('total_paid')
+            ->limit(10)
+            ->get();
+
+        return response()->json([
+            'summary' => $summary,
+            'grouped_data' => $groupedData,
+            'payment_method_breakdown' => $paymentMethodBreakdown,
+            'status_breakdown' => $statusBreakdown,
+            'top_customers' => $topCustomers,
+            'period' => [
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                'report_type' => $reportType,
+            ]
+        ]);
 
     }
 
