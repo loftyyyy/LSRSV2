@@ -117,8 +117,41 @@ class PaymentController extends Controller
     /**
      * Create PDF for reports
      */
-    public function generatePDF()
+    public function generatePDF(Request $request)
     {
+        $startDate = $request->get('start_date', Carbon::now()->startOfMonth());
+        $endDate = $request->get('end_date', Carbon::now()->endOfMonth());
+        $reportType = $request->get('report_type', 'daily');
+
+        $payments = Payment::with(['invoice', 'invoice.customer', 'processedBy', 'status'])
+            ->whereBetween('payment_date', [$startDate, $endDate])
+            ->get();
+
+        $summary = [
+            'total_payments' => $payments->count(),
+            'total_amount_collected' => $payments->sum('amount'),
+            'completed_payments' => $payments->where('status.status_name', 'completed')->count(),
+            'pending_payments' => $payments->where('status.status_name', 'pending')->count(),
+        ];
+
+        $paymentMethodBreakdown = $payments->groupBy('payment_method')->map(function ($group) {
+            return [
+                'count' => $group->count(),
+                'total' => $group->sum('amount'),
+            ];
+        });
+
+        $pdf = Pdf::loadView('reports.payment-report', [
+            'payments' => $payments,
+            'summary' => $summary,
+            'payment_method_breakdown' => $paymentMethodBreakdown,
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+            'report_type' => $reportType,
+            'generated_at' => Carbon::now(),
+        ]);
+
+        return $pdf->download('payment-report-' . Carbon::now()->format('Y-m-d') . '.pdf');
 
     }
     /**
