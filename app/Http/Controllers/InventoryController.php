@@ -442,5 +442,54 @@ class InventoryController extends Controller
             'updated_count' => $updated
         ]);
     }
+     /**
+     * Check item availability for specific dates
+     */
+    public function checkAvailability(Request $request, Inventory $inventory): JsonResponse
+    {
+        $request->validate([
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after:start_date'
+        ]);
+
+        $startDate = $request->start_date;
+        $endDate = $request->end_date;
+
+        // Check for conflicting rentals
+        $hasRentals = $inventory->rentals()
+            ->where(function ($q) use ($startDate, $endDate) {
+                $q->whereBetween('rental_date', [$startDate, $endDate])
+                    ->orWhereBetween('return_date', [$startDate, $endDate])
+                    ->orWhere(function ($dateQ) use ($startDate, $endDate) {
+                        $dateQ->where('rental_date', '<=', $startDate)
+                            ->where('return_date', '>=', $endDate);
+                    });
+            })
+            ->whereNull('return_date')
+            ->exists();
+
+        // Check for conflicting reservations
+        $hasReservations = $inventory->reservationItems()
+            ->whereHas('reservation', function ($q) use ($startDate, $endDate) {
+                $q->where(function ($dateQ) use ($startDate, $endDate) {
+                    $dateQ->whereBetween('event_date', [$startDate, $endDate])
+                        ->orWhereBetween('expected_return_date', [$startDate, $endDate]);
+                })->whereHas('status', function ($statusQ) {
+                    $statusQ->where('status_name', '!=', 'cancelled');
+                });
+            })
+            ->exists();
+
+        $isAvailable = !$hasRentals && !$hasReservations && $inventory->status->status_name === 'available';
+
+        return response()->json([
+            'available' => $isAvailable,
+            'item' => $inventory,
+            'conflicts' => [
+                'has_rentals' => $hasRentals,
+                'has_reservations' => $hasReservations
+            ]
+        ]);
+    }
 
 }
