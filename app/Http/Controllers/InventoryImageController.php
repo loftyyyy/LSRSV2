@@ -223,4 +223,32 @@ class InventoryImageController
             'data' => $updatedImages
         ]);
     }
+
+    /**
+     * Delete all images for an inventory item
+     */
+    public function destroyAll(Inventory $inventory): JsonResponse
+    {
+        $images = $inventory->images;
+
+        foreach ($images as $image) {
+            // Delete physical file
+            if (Storage::disk('public')->exists($image->image_path)) {
+                Storage::disk('public')->delete($image->image_path);
+            }
+        }
+
+        // Delete all image records
+        $inventory->images()->delete();
+
+        // Optionally delete the entire folder
+        $folderPath = 'inventory/' . $inventory->item_id;
+        if (Storage::disk('public')->exists($folderPath)) {
+            Storage::disk('public')->deleteDirectory($folderPath);
+        }
+
+        return response()->json([
+            'message' => 'All images deleted successfully'
+        ]);
+    }
 }
