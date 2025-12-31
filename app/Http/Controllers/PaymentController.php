@@ -176,6 +176,66 @@ class PaymentController extends Controller
     }
 
     /**
+     * Monitor all completed and pending payments
+     */
+    public function monitorPayments(Request $request): JsonResponse
+    {
+        $status = $request->get('status', 'all'); // all, completed, pending
+
+        $query = Payment::with(['invoice', 'invoice.customer', 'processedBy', 'status']);
+
+        if ($status === 'completed') {
+            $query->whereHas('status', function ($q) {
+                $q->where('status_name', 'completed');
+            });
+        } elseif ($status === 'pending') {
+            $query->whereHas('status', function ($q) {
+                $q->where('status_name', 'pending');
+            });
+        }
+
+        // Additional filters
+        if ($request->has('payment_method')) {
+            $query->where('payment_method', $request->get('payment_method'));
+        }
+
+        if ($request->has('date_from')) {
+            $query->where('payment_date', '>=', $request->get('date_from'));
+        }
+
+        if ($request->has('date_to')) {
+            $query->where('payment_date', '<=', $request->get('date_to'));
+        }
+
+        if ($request->has('processed_by')) {
+            $query->where('processed_by', $request->get('processed_by'));
+        }
+
+        $perPage = $request->get('per_page', 15);
+        $payments = $query->orderBy('payment_date', 'desc')->paginate($perPage);
+
+        $summary = [
+            'total_completed' => Payment::whereHas('status', function ($q) {
+                $q->where('status_name', 'completed');
+            })->count(),
+            'total_pending' => Payment::whereHas('status', function ($q) {
+                $q->where('status_name', 'pending');
+            })->count(),
+            'total_completed_amount' => Payment::whereHas('status', function ($q) {
+                $q->where('status_name', 'completed');
+            })->sum('amount'),
+            'total_pending_amount' => Payment::whereHas('status', function ($q) {
+                $q->where('status_name', 'pending');
+            })->sum('amount'),
+        ];
+
+        return response()->json([
+            'payments' => $payments,
+            'summary' => $summary,
+        ]);
+    }
+
+    /**
      * Display Payment Page
      */
     public function showPaymentPage(): View
