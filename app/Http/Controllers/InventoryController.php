@@ -302,4 +302,26 @@ class InventoryController extends Controller
 
         return response()->json($stats);
     }
+     /**
+     * Get inventory summary report
+     */
+    private function getInventorySummaryReport(Request $request): array
+    {
+        $query = Inventory::with(['status']);
+
+        if ($request->has('item_type')) {
+            $query->where('item_type', $request->get('item_type'));
+        }
+
+        $inventories = $query->get();
+
+        return [
+            'title' => 'Inventory Summary Report',
+            'items' => $inventories,
+            'total_count' => $inventories->count(),
+            'total_value' => $inventories->sum('rental_price'),
+            'by_status' => $inventories->groupBy('status.status_name'),
+            'by_condition' => $inventories->groupBy('condition')
+        ];
+    }
 }
