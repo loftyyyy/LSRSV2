@@ -386,4 +386,41 @@ class InventoryController extends Controller
             'maintenance_needed' => $items->where('condition', 'poor')
         ];
     }
+
+    /**
+     * Get revenue by item report
+     */
+    private function getRevenueByItemReport(Request $request): array
+    {
+        $query = Inventory::with(['rentals', 'invoiceItems']);
+
+        if ($request->has('start_date') && $request->has('end_date')) {
+            $startDate = $request->get('start_date');
+            $endDate = $request->get('end_date');
+
+            $query->whereHas('rentals', function ($q) use ($startDate, $endDate) {
+                $q->whereBetween('rental_date', [$startDate, $endDate]);
+            });
+        }
+
+        $inventories = $query->get()->map(function ($item) {
+            $rentalCount = $item->rentals->count();
+            $totalRevenue = $item->invoiceItems->sum('subtotal');
+
+            return [
+                'item' => $item,
+                'rental_count' => $rentalCount,
+                'total_revenue' => $totalRevenue,
+                'average_revenue' => $rentalCount > 0 ? $totalRevenue / $rentalCount : 0
+            ];
+        })->sortByDesc('total_revenue');
+
+        return [
+            'title' => 'Revenue by Item Report',
+            'items' => $inventories,
+            'total_revenue' => $inventories->sum('total_revenue'),
+            'total_rentals' => $inventories->sum('rental_count')
+        ];
+    }
+
 }
