@@ -251,4 +251,32 @@ class InventoryImageController
             'message' => 'All images deleted successfully'
         ]);
     }
+
+    /**
+     * Get primary/main image for an inventory item
+     */
+    public function getPrimary(Inventory $inventory): JsonResponse
+    {
+        $primaryImage = $inventory->images()
+            ->where('is_primary', true)
+            ->first();
+
+        if (!$primaryImage) {
+            // If no primary image set, get the first one
+            $primaryImage = $inventory->images()
+                ->orderBy('display_order', 'asc')
+                ->first();
+        }
+
+        if (!$primaryImage) {
+            return response()->json([
+                'message' => 'No images found for this inventory item',
+                'data' => null
+            ]);
+        }
+
+        return response()->json([
+            'data' => $primaryImage
+        ]);
+    }
 }
