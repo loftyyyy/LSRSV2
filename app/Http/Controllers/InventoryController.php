@@ -16,6 +16,18 @@ class InventoryController extends Controller
      */
     public function report(Request $request):JsonResponse
     {
+        $reportType = $request->get('report_type', 'inventory_summary');
+
+        $reportData = match ($reportType) {
+            'inventory_summary' => $this->getInventorySummaryReport($request),
+            'availability_report' => $this->getAvailabilityReport($request),
+            'rental_history' => $this->getRentalHistoryReport($request),
+            'condition_report' => $this->getConditionReport($request),
+            'revenue_by_item' => $this->getRevenueByItemReport($request),
+            default => $this->getInventorySummaryReport($request)
+        };
+
+        return response()->json($reportData);
 
     }
 
