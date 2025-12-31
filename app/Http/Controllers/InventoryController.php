@@ -371,4 +371,19 @@ class InventoryController extends Controller
             })
         ];
     }
+
+    /**
+     * Get condition report
+     */
+    private function getConditionReport(Request $request): array
+    {
+        $items = Inventory::with(['status'])->get();
+
+        return [
+            'title' => 'Condition Report',
+            'items' => $items,
+            'by_condition' => $items->groupBy('condition'),
+            'maintenance_needed' => $items->where('condition', 'poor')
+        ];
+    }
 }
