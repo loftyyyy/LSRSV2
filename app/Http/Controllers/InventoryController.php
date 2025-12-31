@@ -204,4 +204,21 @@ class InventoryController extends Controller
             'data' => $items
         ]);
     }
+    /**
+     * Update inventory status
+     */
+    public function updateStatus(Request $request, Inventory $inventory): JsonResponse
+    {
+        $request->validate([
+            'status_id' => 'required|exists:inventory_statuses,status_id'
+        ]);
+
+        $inventory->update(['status_id' => $request->status_id]);
+        $inventory->load('status');
+
+        return response()->json([
+            'message' => 'Inventory status updated successfully',
+            'data' => $inventory
+        ]);
+    }
 }
