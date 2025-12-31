@@ -324,4 +324,24 @@ class InventoryController extends Controller
             'by_condition' => $inventories->groupBy('condition')
         ];
     }
+
+    /**
+     * Get availability report
+     */
+    private function getAvailabilityReport(Request $request): array
+    {
+        $availableItems = Inventory::with(['status'])
+            ->whereHas('status', function ($q) {
+                $q->where('status_name', 'available');
+            })
+            ->get();
+
+        return [
+            'title' => 'Availability Report',
+            'available_items' => $availableItems,
+            'total_available' => $availableItems->count(),
+            'by_type' => $availableItems->groupBy('item_type'),
+            'by_size' => $availableItems->groupBy('size')
+        ];
+    }
 }
