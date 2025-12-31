@@ -413,10 +413,38 @@ class PaymentController extends Controller
      */
     public function destroy(Payment $payment): JsonResponse
     {
-        $payment->delete();
+        DB::beginTransaction();
 
-        return response()->json([
-            'message' => 'Payment deleted successfully'
-        ]);
+        try {
+            // Update invoice before deleting payment
+            $invoice = $payment->invoice;
+            $invoice->amount_paid -= $payment->amount;
+            $invoice->balance_due = $invoice->total_amount - $invoice->amount_paid;
+
+            // Update payment status
+            if ($invoice->balance_due <= 0) {
+                $invoice->payment_status = 'paid';
+            } elseif ($invoice->amount_paid > 0) {
+                $invoice->payment_status = 'partial';
+            } else {
+                $invoice->payment_status = 'unpaid';
+            }
+
+            $invoice->save();
+
+            $payment->delete();
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Payment deleted successfully'
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Failed to delete payment',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }
