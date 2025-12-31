@@ -32,12 +32,14 @@ Route::middleware('auth')->group(function () {
 
     // Internal API endpoints (session-authenticated)
     Route::prefix('api')->group(function () {
+
         // Customer CRUD
         Route::get('/customers', [CustomerController::class, 'index']);
         Route::post('/customers', [CustomerController::class, 'store']);
         Route::get('/customers/{id}', [CustomerController::class, 'show']);
         Route::put('/customers/{id}', [CustomerController::class, 'update']);
         Route::delete('/customers/{id}', [CustomerController::class, 'destroy']);
+
 
         // Inventory CRUD
         Route::get('/inventories', [InventoryController::class, 'index']);
