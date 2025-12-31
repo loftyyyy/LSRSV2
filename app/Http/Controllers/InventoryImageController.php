@@ -108,11 +108,29 @@ class InventoryImageController
     }
 
     /**
-     * Update the specified resource in storage.
+     * Update image details (view type, display order, etc.)
      */
-    public function update(UpdateInventoryImageRequest $request, InventoryImage $inventoryImage)
+    public function update(Request $request, Inventory $inventory, InventoryImage $image): JsonResponse
     {
-        //
+        // Ensure the image belongs to the inventory item
+        if ($image->item_id !== $inventory->item_id) {
+            return response()->json([
+                'message' => 'Image not found for this inventory item'
+            ], 404);
+        }
+
+        $request->validate([
+            'view_type' => 'nullable|string|in:front,back,side,detail,full',
+            'display_order' => 'nullable|integer|min:1',
+            'caption' => 'nullable|string|max:255'
+        ]);
+
+        $image->update($request->only(['view_type', 'display_order', 'caption']));
+
+        return response()->json([
+            'message' => 'Image updated successfully',
+            'data' => $image
+        ]);
     }
 
     /**
