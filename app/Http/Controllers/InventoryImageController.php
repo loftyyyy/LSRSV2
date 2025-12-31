@@ -6,6 +6,7 @@ use App\Models\Inventory;
 use App\Models\InventoryImage;
 use App\Http\Requests\StoreInventoryImageRequest;
 use App\Http\Requests\UpdateInventoryImageRequest;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class InventoryImageController
@@ -36,28 +37,49 @@ class InventoryImageController
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(Request $request, Inventory  $inventory): JsonResponse
     {
         $request->validate([
-            'images.*' => 'image|mimes:jpg,jpeg,png|max:2048'
+            'images' => 'required|array|max:10',
+            'images.*' => 'required|image|mimes:jpg,jpeg,png,webp|max:5120', // 5MB max
+            'view_types' => 'nullable|array',
+            'view_types.*' => 'nullable|string|in:front,back,side,detail,full'
         ]);
 
-        $inventory = Inventory::create($request->only([
-            'item_type', 'sku', 'name', 'size', 'color', 'design', 'rental_price', 'status_id'
-        ]));
+        $uploadedImages = [];
+        $existingImagesCount = $inventory->images()->count();
 
-        if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $index => $image) {
-                $path = $image->store('inventory', 'public');
+        // Check if this is the first image to set as primary
+        $shouldSetPrimary = $existingImagesCount === 0;
 
-                $inventory->images()->create([
-                    'image_path' => $path,
-                    'is_primary' => $index === 0 // first image = main image
-                ]);
-            }
+        foreach ($request->file('images') as $index => $image) {
+            // Generate unique filename
+            $filename = Str::uuid() . '.' . $image->getClientOriginalExtension();
+
+            // Store image in public disk under inventory folder
+            $path = $image->storeAs('inventory/' . $inventory->item_id, $filename, 'public');
+
+            // Get view type if provided
+            $viewType = $request->view_types[$index] ?? null;
+
+            // Create image record
+            $inventoryImage = $inventory->images()->create([
+                'image_path' => $path,
+                'image_url' => Storage::url($path),
+                'view_type' => $viewType,
+                'is_primary' => $shouldSetPrimary && $index === 0,
+                'display_order' => $existingImagesCount + $index + 1,
+                'file_size' => $image->getSize(),
+                'mime_type' => $image->getMimeType()
+            ]);
+
+            $uploadedImages[] = $inventoryImage;
         }
 
-        return redirect()->back()->with('success', 'Item created successfully!');
+        return response()->json([
+            'message' => count($uploadedImages) . ' image(s) uploaded successfully',
+            'data' => $uploadedImages
+        ], 201);
     }
 
     /**
