@@ -34,8 +34,25 @@ class InventoryController extends Controller
     /**
      * Create PDF for reports
      */
-    public function generatePDF()
+    public function generatePDF(Request $request):JsonResponse
     {
+        $reportType = $request->get('report_type', 'inventory_summary');
+        $reportData = match ($reportType) {
+            'inventory_summary' => $this->getInventorySummaryReport($request),
+            'availability_report' => $this->getAvailabilityReport($request),
+            'rental_history' => $this->getRentalHistoryReport($request),
+            'condition_report' => $this->getConditionReport($request),
+            'revenue_by_item' => $this->getRevenueByItemReport($request),
+            default => $this->getInventorySummaryReport($request)
+        };
+
+        $pdf = PDF::loadView('reports.inventory_pdf', [
+            'reportType' => $reportType,
+            'data' => $reportData,
+            'generatedAt' => now()->format('F d, Y h:i A')
+        ]);
+
+        return $pdf->download("inventory_report_{$reportType}_" . now()->format('Y-m-d') . ".pdf");
 
     }
     /**
