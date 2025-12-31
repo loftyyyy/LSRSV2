@@ -337,7 +337,7 @@ class PaymentController extends Controller
 
         // Pagination
         $perPage = $request->get('per_page', 15);
-        $payments = $query->paginate($perPage);
+        $payments = $query->orderBy('payment_date', 'desc')->paginate($perPage);
 
         return response()->json($payments);
     }
@@ -347,14 +347,7 @@ class PaymentController extends Controller
      */
     public function store(StorePaymentRequest $request): JsonResponse
     {
-        $payment = Payment::create($request->validated());
-
-        $payment->load(['invoice', 'status', 'processedBy']);
-
-        return response()->json([
-            'message' => 'Payment created successfully',
-            'data' => $payment
-        ], 201);
+        return $this->processPayment($request);
     }
 
     /**
@@ -362,7 +355,7 @@ class PaymentController extends Controller
      */
     public function show(Payment $payment): JsonResponse
     {
-        $payment->load(['invoice', 'status', 'processedBy']);
+        $payment->load(['invoice', 'invoice.customer', 'invoice.invoiceItems', 'status', 'processedBy']);
 
         return response()->json([
             'data' => $payment
@@ -374,14 +367,45 @@ class PaymentController extends Controller
      */
     public function update(UpdatePaymentRequest $request, Payment $payment): JsonResponse
     {
-        $payment->update($request->validated());
+        DB::beginTransaction();
 
-        $payment->load(['invoice', 'status', 'processedBy']);
+        try {
+            $oldAmount = $payment->amount;
+            $payment->update($request->validated());
 
-        return response()->json([
-            'message' => 'Payment updated successfully',
-            'data' => $payment
-        ]);
+            // If amount changed, update invoice
+            if ($oldAmount != $payment->amount) {
+                $invoice = $payment->invoice;
+                $invoice->amount_paid = $invoice->amount_paid - $oldAmount + $payment->amount;
+                $invoice->balance_due = $invoice->total_amount - $invoice->amount_paid;
+
+                // Update payment status
+                if ($invoice->balance_due <= 0) {
+                    $invoice->payment_status = 'paid';
+                } elseif ($invoice->amount_paid > 0) {
+                    $invoice->payment_status = 'partial';
+                } else {
+                    $invoice->payment_status = 'unpaid';
+                }
+
+                $invoice->save();
+            }
+
+            $payment->load(['invoice', 'status', 'processedBy']);
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Payment updated successfully',
+                'data' => $payment
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Failed to update payment',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
