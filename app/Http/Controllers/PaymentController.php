@@ -85,6 +85,35 @@ class PaymentController extends Controller
 
     }
 
+
+    /**
+     * Helper function to group payments by period
+     */
+    private function groupPaymentsByPeriod($payments, $reportType)
+    {
+        return $payments->groupBy(function ($payment) use ($reportType) {
+            switch ($reportType) {
+                case 'daily':
+                    return $payment->payment_date->format('Y-m-d');
+                case 'weekly':
+                    return $payment->payment_date->format('Y-W');
+                case 'monthly':
+                    return $payment->payment_date->format('Y-m');
+                default:
+                    return $payment->payment_date->format('Y-m-d');
+            }
+        })->map(function ($group) {
+            return [
+                'count' => $group->count(),
+                'total_amount' => $group->sum('amount'),
+                'cash' => $group->where('payment_method', 'cash')->sum('amount'),
+                'card' => $group->where('payment_method', 'card')->sum('amount'),
+                'gcash' => $group->where('payment_method', 'gcash')->sum('amount'),
+                'bank_transfer' => $group->where('payment_method', 'bank_transfer')->sum('amount'),
+            ];
+        });
+    }
+
     /**
      * Create PDF for reports
      */
