@@ -134,11 +134,41 @@ class InventoryImageController
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Remove an image
      */
-    public function destroy(InventoryImage $inventoryImage)
+    public function destroy(Inventory $inventory, InventoryImage $image): JsonResponse
     {
-        //
+        // Ensure the image belongs to the inventory item
+        if ($image->item_id !== $inventory->item_id) {
+            return response()->json([
+                'message' => 'Image not found for this inventory item'
+            ], 404);
+        }
+
+        $wasPrimary = $image->is_primary;
+
+        // Delete the physical file
+        if (Storage::disk('public')->exists($image->image_path)) {
+            Storage::disk('public')->delete($image->image_path);
+        }
+
+        // Delete the database record
+        $image->delete();
+
+        // If deleted image was primary, set another image as primary
+        if ($wasPrimary) {
+            $nextImage = $inventory->images()
+                ->orderBy('display_order', 'asc')
+                ->first();
+
+            if ($nextImage) {
+                $nextImage->update(['is_primary' => true]);
+            }
+        }
+
+        return response()->json([
+            'message' => 'Image deleted successfully'
+        ]);
     }
     /**
      * Set an image as primary/main image
