@@ -423,4 +423,24 @@ class InventoryController extends Controller
         ];
     }
 
+    /**
+     * Bulk update inventory status
+     */
+    public function bulkUpdateStatus(Request $request): JsonResponse
+    {
+        $request->validate([
+            'item_ids' => 'required|array',
+            'item_ids.*' => 'exists:inventories,item_id',
+            'status_id' => 'required|exists:inventory_statuses,status_id'
+        ]);
+
+        $updated = Inventory::whereIn('item_id', $request->item_ids)
+            ->update(['status_id' => $request->status_id]);
+
+        return response()->json([
+            'message' => "Successfully updated {$updated} items",
+            'updated_count' => $updated
+        ]);
+    }
+
 }
