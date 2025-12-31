@@ -221,6 +221,7 @@ class InventoryController extends Controller
             'data' => $inventory
         ]);
     }
+
      /**
      * Update inventory condition
      */
@@ -237,5 +238,39 @@ class InventoryController extends Controller
             'message' => 'Inventory condition updated successfully',
             'data' => $inventory
         ]);
+    }
+
+     /**
+     * Get inventory statistics and dashboard data
+     */
+    public function getStatistics(): JsonResponse
+    {
+        $stats = [
+            'total_items' => Inventory::count(),
+            'available_items' => Inventory::whereHas('status', function ($q) {
+                $q->where('status_name', 'available');
+            })->count(),
+            'rented_items' => Inventory::whereHas('status', function ($q) {
+                $q->where('status_name', 'rented');
+            })->count(),
+            'under_maintenance' => Inventory::whereHas('status', function ($q) {
+                $q->where('status_name', 'maintenance');
+            })->count(),
+            'by_item_type' => Inventory::select('item_type', DB::raw('count(*) as count'))
+                ->groupBy('item_type')
+                ->get(),
+            'by_condition' => Inventory::select('condition', DB::raw('count(*) as count'))
+                ->groupBy('condition')
+                ->get(),
+            'low_stock_items' => Inventory::select('item_type', DB::raw('count(*) as count'))
+                ->whereHas('status', function ($q) {
+                    $q->where('status_name', 'available');
+                })
+                ->groupBy('item_type')
+                ->having('count', '<', 5)
+                ->get()
+        ];
+
+        return response()->json($stats);
     }
 }
