@@ -13,9 +13,16 @@ class InventoryImageController
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Inventory  $inventory)
     {
-        //
+        $images = $inventory->images()
+            ->orderBy('is_primary', 'desc')
+            ->orderBy('display_order', 'asc')
+            ->get();
+
+        return response()->json([
+            'data' => $images
+        ]);
     }
 
     /**
