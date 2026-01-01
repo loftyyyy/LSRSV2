@@ -73,9 +73,20 @@ Route::middleware('auth')->group(function () {
         // Invoice CRUD
         Route::get('/invoices', [InvoiceController::class, 'index']);
         Route::post('/invoices', [InvoiceController::class, 'store']);
-        Route::get('/invoices/{id}', [InvoiceController::class, 'show']);
-        Route::put('/invoices/{id}', [InvoiceController::class, 'update']);
-        Route::delete('/invoices/{id}', [InvoiceController::class, 'destroy']);
+        Route::get('/invoices/{invoice}', [InvoiceController::class, 'show']);
+        Route::put('/invoices/{invoice}', [InvoiceController::class, 'update']);
+        Route::delete('/invoices/{invoice}', [InvoiceController::class, 'destroy']);
+
+        // Invoice Additional Actions
+        Route::get('/invoices/details', [InvoiceController::class, 'getRentalFeeDetails']);
+        Route::get('/invoices/monitor', [InvoiceController::class, 'monitorPayments']);
+
+        // Invoice Reports
+        Route::get('/invoices/reports/generate', [InvoiceController::class, 'report']);
+        Route::get('/invoices/reports/pdf', [InvoiceController::class, 'generatePDF']);
+        Route::get('/invoices/reports/invoice/{invoice}', [InvoiceController::class, 'generateInvoicePDF']);
+
+
 
         // Payment CRUD
         Route::get('/payments', [PaymentController::class, 'index']);
