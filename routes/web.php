@@ -58,12 +58,17 @@ Route::middleware('auth')->group(function () {
         Route::delete('/inventories/{inventory}', [InventoryController::class, 'destroy']);
 
         // Inventory Additional Actions
-
-
+        Route::get('/inventories/available', [InventoryController::class, 'getAvailableItems']);
+        Route::get('/inventories/available/{inventory}', [InventoryController::class, 'checkAvailability']);
+        Route::put('/inventories/{inventory}/updateStatus', [InventoryController::class, 'updateStatus']);
+        Route::put('/inventories/{inventory}/updateCondition', [InventoryController::class, 'updateCondition']);
+        Route::put('/inventories/update/bulk', [InventoryController::class, 'bulkUpdateStatus']);
 
         // Inventory Reports
         Route::get('/inventories/reports/generate', [InventoryController::class, 'report']);
         Route::get('/inventories/reports/pdf', [InventoryController::class, 'generatePDF']);
+        Route::get('/inventories/reports/statistics', [InventoryController::class, 'getStatistics']);
+
 
         // Invoice CRUD
         Route::get('/invoices', [InvoiceController::class, 'index']);
