@@ -33,6 +33,10 @@ Route::middleware('auth')->group(function () {
     // Internal API endpoints (session-authenticated)
     Route::prefix('api')->group(function () {
 
+        // Customer Reports
+        Route::get('/customers/reports/generate', [CustomerController::class, 'report']);
+        Route::get('/customers/reports/pdf', [CustomerController::class, 'generatePDF']);
+
         // Customer CRUD
         Route::get('/customers', [CustomerController::class, 'index']);
         Route::post('/customers', [CustomerController::class, 'store']);
@@ -45,10 +49,11 @@ Route::middleware('auth')->group(function () {
         Route::post('/customers/{customer}/reactivate', [CustomerController::class, 'reactivate']);
         Route::get('/customers/{customer}/rental-history', [CustomerController::class, 'rentalHistory']);
 
-        // Customer Reports
-        Route::get('/customers/reports/generate', [CustomerController::class, 'report']);
-        Route::get('/customers/reports/pdf', [CustomerController::class, 'generatePDF']);
 
+        // Inventory Reports
+        Route::get('/inventories/reports/generate', [InventoryController::class, 'report']);
+        Route::get('/inventories/reports/pdf', [InventoryController::class, 'generatePDF']);
+        Route::get('/inventories/reports/statistics', [InventoryController::class, 'getStatistics']);
 
         // Inventory CRUD
         Route::get('/inventories', [InventoryController::class, 'index']);
@@ -64,11 +69,11 @@ Route::middleware('auth')->group(function () {
         Route::put('/inventories/{inventory}/updateCondition', [InventoryController::class, 'updateCondition']);
         Route::put('/inventories/update/bulk', [InventoryController::class, 'bulkUpdateStatus']);
 
-        // Inventory Reports
-        Route::get('/inventories/reports/generate', [InventoryController::class, 'report']);
-        Route::get('/inventories/reports/pdf', [InventoryController::class, 'generatePDF']);
-        Route::get('/inventories/reports/statistics', [InventoryController::class, 'getStatistics']);
 
+        // Invoice Reports
+        Route::get('/invoices/reports/generate', [InvoiceController::class, 'report']);
+        Route::get('/invoices/reports/pdf', [InvoiceController::class, 'generatePDF']);
+        Route::get('/invoices/reports/invoice/{invoice}', [InvoiceController::class, 'generateInvoicePDF']);
 
         // Invoice CRUD
         Route::get('/invoices', [InvoiceController::class, 'index']);
@@ -81,12 +86,12 @@ Route::middleware('auth')->group(function () {
         Route::get('/invoices/details', [InvoiceController::class, 'getRentalFeeDetails']);
         Route::get('/invoices/monitor', [InvoiceController::class, 'monitorPayments']);
 
-        // Invoice Reports
-        Route::get('/invoices/reports/generate', [InvoiceController::class, 'report']);
-        Route::get('/invoices/reports/pdf', [InvoiceController::class, 'generatePDF']);
-        Route::get('/invoices/reports/invoice/{invoice}', [InvoiceController::class, 'generateInvoicePDF']);
 
-
+        // Payment Reports
+        Route::get('/payments/reports/generate', [PaymentController::class, 'report']);
+        Route::get('/payments/reports/pdf', [PaymentController::class, 'generatePDF']);
+        Route::get('/payments/{payment}/receipt', [PaymentController::class, 'generateReceiptPDF']);
+        Route::get('/payments/monitor', [PaymentController::class, 'monitorPayments']);
 
         // Payment CRUD
         Route::get('/payments', [PaymentController::class, 'index']);
@@ -97,13 +102,21 @@ Route::middleware('auth')->group(function () {
 
         // Additional Payment Actions
 
-        // Payment Reports
-        Route::get('/payments/reports/generate', [PaymentController::class, 'report']);
-        Route::get('/payments/reports/pdf', [PaymentController::class, 'generatePDF']);
-        Route::get('/payments/{payment}/receipt', [PaymentController::class, 'generateReceiptPDF']);
-        Route::get('/payments/monitor', [PaymentController::class, 'monitorPayments']);
 
 
+        // Rental Reports
+        Route::get('/rentals/reports/generate', [RentalController::class, 'report']);
+        Route::get('/rentals/reports/pdf', [RentalController::class, 'generatePDF']);
+
+        // Batch Operations
+        Route::post('/rentals/batch/check-overdue', [RentalController::class, 'batchCheckOverdue']);
+
+        // Get Overdue Rentals
+        Route::get('/rentals/overdue/list', [RentalController::class, 'getOverdueRentals']);
+
+        // Customer & Item History
+        Route::get('/rentals/customer/{customerId}/history', [RentalController::class, 'customerHistory']);
+        Route::get('/rentals/item/{itemId}/history', [RentalController::class, 'itemHistory']);
 
         // Rental CRUD
         Route::get('/rentals', [RentalController::class, 'index']);
@@ -113,10 +126,12 @@ Route::middleware('auth')->group(function () {
         Route::delete('/rentals/{rental}', [RentalController::class, 'destroy']);
 
         // Additional Rental Actions
+        Route::post('/rentals/release', [RentalController::class, 'releaseItem']);
+        Route::post('/rentals/{rental}/return', [RentalController::class, 'processReturn']);
+        Route::post('/rentals/{rental}/extend', [RentalController::class, 'extendRental']);
+        Route::post('/rentals/{rental}/cancel', [RentalController::class, 'cancel']);
+        Route::post('/rentals/{rental}/check-overdue', [RentalController::class, 'checkOverdue']);
 
-        // Rental Reports
-        Route::get('/rentals/reports/generate', [RentalController::class, 'report']);
-        Route::get('/rentals/reports/pdf', [RentalController::class, 'generatePDF']);
 
 
         // Reservation CRUD
