@@ -91,9 +91,19 @@ Route::middleware('auth')->group(function () {
         // Payment CRUD
         Route::get('/payments', [PaymentController::class, 'index']);
         Route::post('/payments', [PaymentController::class, 'store']);
-        Route::get('/payments/{id}', [PaymentController::class, 'show']);
-        Route::put('/payments/{id}', [PaymentController::class, 'update']);
-        Route::delete('/payments/{id}', [PaymentController::class, 'destroy']);
+        Route::get('/payments/{payment}', [PaymentController::class, 'show']);
+        Route::put('/payments/{payment}', [PaymentController::class, 'update']);
+        Route::delete('/payments/{payment}', [PaymentController::class, 'destroy']);
+
+        // Additional Payment Actions
+
+        // Payment Reports
+        Route::get('/payments/reports/generate', [PaymentController::class, 'report']);
+        Route::get('/payments/reports/pdf', [PaymentController::class, 'generatePDF']);
+        Route::get('/payments/{payment}/receipt', [PaymentController::class, 'generateReceiptPDF']);
+        Route::get('/payments/monitor', [PaymentController::class, 'monitorPayments']);
+
+
 
         // Rental CRUD
         Route::get('/rentals', [RentalController::class, 'index']);
