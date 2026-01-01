@@ -100,7 +100,6 @@ Route::middleware('auth')->group(function () {
         Route::put('/payments/{payment}', [PaymentController::class, 'update']);
         Route::delete('/payments/{payment}', [PaymentController::class, 'destroy']);
 
-        // Additional Payment Actions
 
 
 
@@ -133,6 +132,13 @@ Route::middleware('auth')->group(function () {
         Route::post('/rentals/{rental}/check-overdue', [RentalController::class, 'checkOverdue']);
 
 
+        // Reservation Reports
+        Route::get('/reservations/reports/generate', [ReservationController::class, 'report']);
+        Route::get('/reservations/reports/pdf', [ReservationController::class, 'generatePDF']);
+
+        // Browse & Check Available Items
+        Route::get('/reservations/items/browse', [ReservationController::class, 'browseAvailableItems']);
+        Route::get('/reservations/items/{itemId}/details', [ReservationController::class, 'checkItemDetails']);
 
         // Reservation CRUD
         Route::get('/reservations', [ReservationController::class, 'index']);
@@ -140,5 +146,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/reservations/{id}', [ReservationController::class, 'show']);
         Route::put('/reservations/{id}', [ReservationController::class, 'update']);
         Route::delete('/reservations/{id}', [ReservationController::class, 'destroy']);
+
+        // Reservation Actions (operations on specific reservations)
+        Route::post('/reservations/{reservation}/confirm', [ReservationController::class, 'confirmReservation']);
+        Route::post('/reservations/{reservation}/cancel', [ReservationController::class, 'cancelReservation']);
+
     });
 });
