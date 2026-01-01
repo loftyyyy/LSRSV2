@@ -53,9 +53,17 @@ Route::middleware('auth')->group(function () {
         // Inventory CRUD
         Route::get('/inventories', [InventoryController::class, 'index']);
         Route::post('/inventories', [InventoryController::class, 'store']);
-        Route::get('/inventories/{id}', [InventoryController::class, 'show']);
-        Route::put('/inventories/{id}', [InventoryController::class, 'update']);
-        Route::delete('/inventories/{id}', [InventoryController::class, 'destroy']);
+        Route::get('/inventories/{inventory}', [InventoryController::class, 'show']);
+        Route::put('/inventories/{inventory}', [InventoryController::class, 'update']);
+        Route::delete('/inventories/{inventory}', [InventoryController::class, 'destroy']);
+
+        // Inventory Additional Actions
+
+
+
+        // Inventory Reports
+        Route::get('/inventories/reports/generate', [InventoryController::class, 'report']);
+        Route::get('/inventories/reports/pdf', [InventoryController::class, 'generatePDF']);
 
         // Invoice CRUD
         Route::get('/invoices', [InvoiceController::class, 'index']);

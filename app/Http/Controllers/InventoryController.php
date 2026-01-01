@@ -181,6 +181,7 @@ class InventoryController extends Controller
             'message' => 'Inventory item deleted successfully'
         ]);
     }
+
      /**
      * Get available inventory items for rental
      * Items that are not currently rented or reserved
