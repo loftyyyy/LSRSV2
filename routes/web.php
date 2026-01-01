@@ -36,9 +36,18 @@ Route::middleware('auth')->group(function () {
         // Customer CRUD
         Route::get('/customers', [CustomerController::class, 'index']);
         Route::post('/customers', [CustomerController::class, 'store']);
-        Route::get('/customers/{id}', [CustomerController::class, 'show']);
-        Route::put('/customers/{id}', [CustomerController::class, 'update']);
-        Route::delete('/customers/{id}', [CustomerController::class, 'destroy']);
+        Route::get('/customers/{customer}', [CustomerController::class, 'show']);
+        Route::put('/customers/{customer}', [CustomerController::class, 'update']);
+        Route::delete('/customers/{customer}', [CustomerController::class, 'destroy']);
+
+        // Customer Additional Actions
+        Route::post('/customers/{customer}/deactivate', [CustomerController::class, 'deactivate']);
+        Route::post('/customers/{customer}/reactivate', [CustomerController::class, 'reactivate']);
+        Route::get('/customers/{customer}/rental-history', [CustomerController::class, 'rentalHistory']);
+
+        // Customer Reports
+        Route::get('/customers/reports/generate', [CustomerController::class, 'report']);
+        Route::get('/customers/reports/pdf', [CustomerController::class, 'generatePDF']);
 
 
         // Inventory CRUD
@@ -77,4 +86,3 @@ Route::middleware('auth')->group(function () {
         Route::delete('/reservations/{id}', [ReservationController::class, 'destroy']);
     });
 });
-
