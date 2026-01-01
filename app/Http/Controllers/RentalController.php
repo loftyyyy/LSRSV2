@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Rental;
+use App\Models\RentalStatus;
 use App\Http\Requests\StoreRentalRequest;
 use App\Http\Requests\UpdateRentalRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -15,38 +18,34 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class RentalController extends Controller
 {
-
-
     /**
      * Display Reports Page
      */
-    public function report(Request $request):JsonResponse
+    public function report(Request $request): JsonResponse
     {
         $query = Rental::with(['customer', 'item', 'status', 'reservation', 'releasedBy', 'invoices.invoiceItems']);
 
         // Apply date range filters
-        if($request->has('date_from')){
+        if ($request->has('date_from')) {
             $query->where('released_date', '>=', Carbon::parse($request->get('date_from')));
         }
-        if($request->has('date_to')){
+        if ($request->has('date_to')) {
             $query->where('released_date', '<=', Carbon::parse($request->get('date_to')));
         }
 
         // Filter by status
-        if($request->has('status_id')){
+        if ($request->has('status_id')) {
             $query->where('status_id', $request->get('status_id'));
         }
 
         // Filter by rental status (active/returned/overdue)
-        if($request->has('rental_status')){
+        if ($request->has('rental_status')) {
             $rentalStatus = $request->get('rental_status');
-            if($rentalStatus === 'active'){
+            if ($rentalStatus === 'active') {
                 $query->whereNull('return_date')->where('due_date', '>=', Carbon::now());
-            }
-            elseif($rentalStatus === 'returned'){
+            } elseif ($rentalStatus === 'returned') {
                 $query->whereNotNull('return_date');
-            }
-            elseif($rentalStatus === 'overdue'){
+            } elseif ($rentalStatus === 'overdue') {
                 $query->whereNull('return_date')->where('due_date', '<', Carbon::now());
             }
         }
@@ -56,15 +55,36 @@ class RentalController extends Controller
         // Calculate Analytics
         $totalRentals = $rentals->count();
         $activeRentals = $rentals->whereNull('return_date')->where('due_date', '>=', Carbon::now())->count();
-        $returnedOnTimeRentals = $rentals->whereNotNull('return_date')->where('due_date', '<', Carbon::now())->count();
-        $returnedOverdueRentals = $rentals->whereNotNull('return_date')->where('due_date', '>', Carbon::now())->count();
+        $returnedRentals = $rentals->whereNotNull('return_date')->count();
+        $returnedOnTimeRentals = $rentals->filter(function ($rental) {
+            return $rental->return_date !== null &&
+                Carbon::parse($rental->return_date)->lessThanOrEqualTo(Carbon::parse($rental->due_date));
+        })->count();
+        $returnedOverdueRentals = $rentals->filter(function ($rental) {
+            return $rental->return_date !== null &&
+                Carbon::parse($rental->return_date)->greaterThan(Carbon::parse($rental->due_date));
+        })->count();
         $overdueRentals = $rentals->whereNull('return_date')->where('due_date', '<', Carbon::now())->count();
-
 
         // Calculate total penalties from invoice items
         $totalPenalties = $this->getTotalPenaltiesFromInvoices($rentals);
 
+        // Calculate revenue metrics
+        $totalRevenue = $this->getTotalRevenueFromInvoices($rentals);
 
+        return response()->json([
+            'summary' => [
+                'total_rentals' => $totalRentals,
+                'active_rentals' => $activeRentals,
+                'returned_rentals' => $returnedRentals,
+                'returned_on_time' => $returnedOnTimeRentals,
+                'returned_overdue' => $returnedOverdueRentals,
+                'overdue_rentals' => $overdueRentals,
+                'total_penalties' => $totalPenalties,
+                'total_revenue' => $totalRevenue,
+            ],
+            'rentals' => $rentals,
+        ]);
     }
 
     /**
@@ -74,11 +94,22 @@ class RentalController extends Controller
     {
         $rentalIds = $rentals->pluck('rental_id');
 
-        return InvoiceItem::whereIn('invoice_id', function($query) use ($rentalIds){
+        return InvoiceItem::whereIn('invoice_id', function ($query) use ($rentalIds) {
             $query->select('invoice_id')->from('invoices')->whereIn('rental_id', $rentalIds);
         })->whereIn('item_type', ['penalty', 'late_fee'])->sum('total_price');
     }
 
+    /**
+     * Get total revenue from invoices
+     */
+    private function getTotalRevenueFromInvoices($rentals): float
+    {
+        $rentalIds = $rentals->pluck('rental_id');
+
+        return Invoice::whereIn('rental_id', $rentalIds)
+            ->where('payment_status', 'paid')
+            ->sum('total_amount');
+    }
 
     /**
      * Create PDF for reports
@@ -88,13 +119,13 @@ class RentalController extends Controller
         // Get filtered request based on request parameters
         $query = Rental::with(['customer', 'item', 'status', 'reservation', 'releasedBy', 'invoices.invoiceItems']);
 
-        if($request->has('date_from')){
+        if ($request->has('date_from')) {
             $query->where('released_date', '>=', Carbon::parse($request->get('date_from')));
         }
-        if($request->has('date_to')){
+        if ($request->has('date_to')) {
             $query->where('released_date', '<=', Carbon::parse($request->get('date_to')));
         }
-        if($request->has('status_id')){
+        if ($request->has('status_id')) {
             $query->where('status_id', $request->get('status_id'));
         }
 
@@ -107,11 +138,12 @@ class RentalController extends Controller
             'returned_rentals' => $rentals->whereNotNull('return_date')->count(),
             'overdue_rentals' => $rentals->where('return_date', null)->where('due_date', '<', now())->count(),
             'total_penalties' => $this->getTotalPenaltiesFromInvoices($rentals),
+            'total_revenue' => $this->getTotalRevenueFromInvoices($rentals),
             'date_from' => $request->get('date_from', 'All'),
             'date_to' => $request->get('date_to', 'All'),
         ];
 
-                // Generate PDF using a view
+        // Generate PDF using a view
         $pdf = Pdf::loadView('rentals.report-pdf', [
             'rentals' => $rentals,
             'summary' => $summary,
@@ -119,15 +151,16 @@ class RentalController extends Controller
         ]);
 
         return $pdf->download('rental-report-' . now()->format('Y-m-d') . '.pdf');
-
     }
+
     /**
      * Display Rental Page
      */
-    public function showRentalPage():View
+    public function showRentalPage(): View
     {
         return view('rentals.index');
     }
+
     /**
      * Display a listing of the resource.
      */
@@ -144,10 +177,11 @@ class RentalController extends Controller
                         ->orWhere('last_name', 'like', "%{$search}%")
                         ->orWhere('email', 'like', "%{$search}%");
                 })
-                ->orWhereHas('item', function ($itemQuery) use ($search) {
-                    $itemQuery->where('sku', 'like', "%{$search}%")
-                        ->orWhere('name', 'like', "%{$search}%");
-                });
+                    ->orWhereHas('item', function ($itemQuery) use ($search) {
+                        $itemQuery->where('sku', 'like', "%{$search}%")
+                            ->orWhere('name', 'like', "%{$search}%");
+                    })
+                    ->orWhere('rental_id', 'like', "%{$search}%");
             });
         }
 
@@ -173,6 +207,8 @@ class RentalController extends Controller
                 $query->whereNull('return_date');
             } elseif ($rentalStatus === 'returned') {
                 $query->whereNotNull('return_date');
+            } elseif ($rentalStatus === 'overdue') {
+                $query->whereNull('return_date')->where('due_date', '<', Carbon::now());
             }
         }
 
@@ -225,11 +261,16 @@ class RentalController extends Controller
             'releasedBy',
             'returnedTo',
             'extendedBy',
-            'invoices'
+            'invoices.invoiceItems'
         ]);
 
+        // Add calculated penalty if overdue
+        $penalty = $this->calculatePenalty($rental);
+
         return response()->json([
-            'data' => $rental
+            'data' => $rental,
+            'calculated_penalty' => $penalty,
+            'is_overdue' => $rental->return_date === null && Carbon::parse($rental->due_date)->lessThan(Carbon::now())
         ]);
     }
 
@@ -270,12 +311,196 @@ class RentalController extends Controller
     }
 
     /**
+     * BUSINESS ACTIVITY: Clerk logs when a gown or suit is released to the customer
+     * Release an item to customer (converts reservation to rental)
+     */
+    public function releaseItem(Request $request): JsonResponse
+    {
+        $request->validate([
+            'reservation_id' => 'nullable|exists:reservations,reservation_id',
+            'item_id' => 'required|exists:inventories,item_id',
+            'customer_id' => 'required|exists:customers,customer_id',
+            'released_date' => 'required|date',
+            'due_date' => 'required|date|after:released_date',
+            'release_notes' => 'nullable|string',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            // Get the "Rented Out" status
+            $rentedStatus = RentalStatus::where('status_name', 'Rented Out')->first();
+            if (!$rentedStatus) {
+                return response()->json([
+                    'message' => 'Rented Out status not found in the system.'
+                ], 500);
+            }
+
+            // Create the rental record
+            $rental = Rental::create([
+                'reservation_id' => $request->reservation_id,
+                'item_id' => $request->item_id,
+                'customer_id' => $request->customer_id,
+                'released_by' => auth()->id(),
+                'released_date' => $request->released_date,
+                'due_date' => $request->due_date,
+                'original_due_date' => $request->due_date,
+                'status_id' => $rentedStatus->status_id,
+                'extension_count' => 0,
+            ]);
+
+            // Update reservation status if exists
+            if ($request->reservation_id) {
+                $reservation = \App\Models\Reservation::find($request->reservation_id);
+                if ($reservation) {
+                    $reservation->update(['reservation_status' => 'Completed']);
+                }
+            }
+
+            // Update item availability
+            $item = \App\Models\Inventory::find($request->item_id);
+            if ($item) {
+                $item->update(['availability_status' => 'Rented']);
+            }
+
+            DB::commit();
+
+            $rental->load(['customer', 'item', 'status', 'reservation', 'releasedBy']);
+
+            return response()->json([
+                'message' => 'Item released successfully to customer',
+                'data' => $rental
+            ], 201);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Failed to release item',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * BUSINESS ACTIVITY: Clerk records the return of rented items
+     * Process return and finalize penalties
+     */
+    public function processReturn(Rental $rental, Request $request): JsonResponse
+    {
+        $request->validate([
+            'return_date' => 'required|date',
+            'return_notes' => 'nullable|string',
+            'condition_notes' => 'nullable|string',
+        ]);
+
+        // Check if rental was already returned
+        if ($rental->return_date !== null) {
+            return response()->json([
+                'message' => 'This rental has already been returned.'
+            ], 422);
+        }
+
+        DB::beginTransaction();
+        try {
+            // Update rental with return information
+            $rental->update([
+                'return_date' => $request->input('return_date'),
+                'returned_to' => auth()->id(),
+                'return_notes' => $request->input('return_notes'),
+            ]);
+
+            // Calculate and create final penalty if returned late
+            $this->createOrUpdatePenaltyInvoice($rental);
+
+            // Update rental status to returned
+            $returnedStatus = RentalStatus::where('status_name', 'Returned')->first();
+            if ($returnedStatus) {
+                $rental->update(['status_id' => $returnedStatus->status_id]);
+            }
+
+            // Update item availability back to available
+            if ($rental->item) {
+                $rental->item->update(['availability_status' => 'Available']);
+            }
+
+            DB::commit();
+
+            $rental->load(['customer', 'item', 'status', 'invoices.invoiceItems']);
+
+            return response()->json([
+                'message' => 'Rental return processed successfully',
+                'data' => $rental,
+                'penalty_charged' => $this->calculatePenalty($rental)
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Failed to process return',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * BUSINESS ACTIVITY: System updates rental status
+     * Extend rental period
+     */
+    public function extendRental(Rental $rental, Request $request): JsonResponse
+    {
+        $request->validate([
+            'new_due_date' => 'required|date|after:due_date',
+            'extension_reason' => 'nullable|string',
+        ]);
+
+        // Check if rental was already returned
+        if ($rental->return_date !== null) {
+            return response()->json([
+                'message' => 'Cannot extend a rental that has already been returned.'
+            ], 422);
+        }
+
+        // Check if rental is overdue
+        if (Carbon::parse($rental->due_date)->lessThan(Carbon::now())) {
+            return response()->json([
+                'message' => 'Cannot extend an overdue rental. Please settle penalties first.'
+            ], 422);
+        }
+
+        DB::beginTransaction();
+        try {
+            $rental->update([
+                'due_date' => $request->new_due_date,
+                'extension_count' => $rental->extension_count + 1,
+                'extended_by' => auth()->id(),
+                'last_extended_at' => now(),
+                'extension_reason' => $request->extension_reason,
+            ]);
+
+            DB::commit();
+
+            $rental->load(['customer', 'item', 'status', 'extendedBy']);
+
+            return response()->json([
+                'message' => 'Rental extended successfully',
+                'data' => $rental
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Failed to extend rental',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Cancel a rental
      */
     public function cancel(Rental $rental): JsonResponse
     {
         // Check if rental was already returned
-        if($rental->return_date !== null){
+        if ($rental->return_date !== null) {
             return response()->json([
                 'message' => 'Cannot cancel a rental that has already been returned.'
             ], 422);
@@ -283,94 +508,107 @@ class RentalController extends Controller
 
         // Check if rental has invoices that are already paid
         $paidInvoices = $rental->invoices()->where('payment_status', 'paid')->count();
-        if($paidInvoices > 0){
+        if ($paidInvoices > 0) {
             return response()->json([
                 'message' => 'Cannot cancel rental. It has paid invoices associated with it.'
-
             ], 422);
         }
 
-        // Update the rental status to cancelled
-        $cancelledStatus = \App\Models\RentalStatus::where('status_name', 'Cancelled')->first();
-        if(!$cancelledStatus){
-            return response()->json([
-                'message' => 'Cancelled status not found in the system.'
-            ], 500);
+        DB::beginTransaction();
+        try {
+            // Update the rental status to cancelled
+            $cancelledStatus = RentalStatus::where('status_name', 'Cancelled')->first();
+            if (!$cancelledStatus) {
+                return response()->json([
+                    'message' => 'Cancelled status not found in the system.'
+                ], 500);
+            }
 
-        }
-
-        $rental->update([
-            'status_id' => $cancelledStatus->status_id,
-            'return_notes' => 'Rental cancelled on ' . now()->format('Y-m-d H:i:s')
-        ]);
-
-        // If there's a reservation, update its status too
-        if($rental->reservation){
-            $rental->reservation->update([
-                'reservation_status' => 'Cancelled'
+            $rental->update([
+                'status_id' => $cancelledStatus->status_id,
+                'return_notes' => 'Rental cancelled on ' . now()->format('Y-m-d H:i:s')
             ]);
-        }
 
-        $rental->load(['customer', 'item', 'status', 'reservation', 'releasedBy']);
-        return response()->json([
-            'message' => 'Rental cancelled successfully',
-            'data' => $rental
-        ]);
+            // If there's a reservation, update its status too
+            if ($rental->reservation) {
+                $rental->reservation->update([
+                    'reservation_status' => 'Cancelled'
+                ]);
+            }
+
+            // Update item availability back to available
+            if ($rental->item) {
+                $rental->item->update(['availability_status' => 'Available']);
+            }
+
+            DB::commit();
+
+            $rental->load(['customer', 'item', 'status', 'reservation', 'releasedBy']);
+
+            return response()->json([
+                'message' => 'Rental cancelled successfully',
+                'data' => $rental
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Failed to cancel rental',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
+     * BUSINESS ACTIVITY: System automatically identifies overdue rentals
      * Does overdue check for each rental
      */
     public function checkOverdue(Rental $rental): void
     {
         // Check if rental hasn't been returned
-        if($rental->return_date === null){
+        if ($rental->return_date === null) {
             $now = Carbon::now();
             $dueDate = Carbon::parse($rental->due_date);
 
             // if Rental is overdue
-            if($now->greaterThan($dueDate)){
-                $overdueStatus = \App\Models\RentalStatus::where('status_name', 'Overdue')->first();
+            if ($now->greaterThan($dueDate)) {
+                $overdueStatus = RentalStatus::where('status_name', 'Overdue')->first();
 
-                if($overdueStatus && $rental->status_id !== $overdueStatus->status_id){
+                if ($overdueStatus && $rental->status_id !== $overdueStatus->status_id) {
                     $rental->update([
                         'status_id' => $overdueStatus->status_id,
                     ]);
                 }
 
-
-
                 // Calculate and create/update penalty invoice
                 $this->createOrUpdatePenaltyInvoice($rental);
             }
-
         }
     }
 
     /**
-     * Calculates penalties for late returns ( A helper function )
+     * BUSINESS ACTIVITY: System calculates penalties for late returns
+     * Calculates penalties for late returns (A helper function)
      */
     public function calculatePenalty(Rental $rental): float
     {
-
-        if($rental->return_date !== null) {
+        if ($rental->return_date !== null) {
             $returnDate = Carbon::parse($rental->return_date);
-            $dueDate =  Carbon::parse($rental->due_date);
+            $dueDate = Carbon::parse($rental->due_date);
 
             // If returned on time or early, no penalty
-            if($returnDate->lessThanOrEqualTo($dueDate)) {
+            if ($returnDate->lessThanOrEqualTo($dueDate)) {
                 return 0;
             }
 
             // Calculate days late
             $daysLate = $returnDate->diffInDays($dueDate);
         } else {
-
             // Rental is still active
             $now = Carbon::now();
             $dueDate = Carbon::parse($rental->due_date);
 
-            if($now->lessThanOrEqualTo($dueDate)) {
+            if ($now->lessThanOrEqualTo($dueDate)) {
                 return 0;
             }
 
@@ -380,17 +618,12 @@ class RentalController extends Controller
         $penaltyPerDay = 50.00;
         $penalty = $daysLate * $penaltyPerDay;
 
-        // Optional, I could add a grace period (first day could be free)
-        //
-        //
-
         return $penalty;
     }
 
     /**
-     * @param Rental $rental
-     * @return void
-     * Create or update penalty invoice for an overdue rental. Stores the penalty in the invoice_items table
+     * Create or update penalty invoice for an overdue rental
+     * Stores the penalty in the invoice_items table
      */
     private function createOrUpdatePenaltyInvoice(Rental $rental): void
     {
@@ -405,12 +638,12 @@ class RentalController extends Controller
             $invoice = Invoice::firstOrCreate(
                 [
                     'rental_id' => $rental->rental_id,
-                    'invoice_type' => 'penalty' // or 'rental' depending on your design
+                    'invoice_type' => 'penalty'
                 ],
                 [
                     'customer_id' => $rental->customer_id,
                     'invoice_date' => now(),
-                    'due_date' => now()->addDays(7), // 7 days to pay penalty
+                    'due_date' => now()->addDays(7),
                     'subtotal' => 0,
                     'tax_amount' => 0,
                     'total_amount' => 0,
@@ -459,45 +692,10 @@ class RentalController extends Controller
             ]);
         });
     }
-    /**
-     * @param Rental $rental
-     * @param Request $request
-     * @return JsonResponse
-     * Process return and finalize penalties
-     * Call this when a rental is being returned
-     */
-    public function processReturn(Rental $rental, Request $request): JsonResponse
-    {
-        DB::transaction(function () use ($rental, $request) {
-            // Update rental with return information
-            $rental->update([
-                'return_date' => $request->input('return_date', now()),
-                'returned_to' => auth()->id(),
-                'return_notes' => $request->input('return_notes')
-            ]);
-
-            // Calculate and create final penalty if returned late
-            $this->createOrUpdatePenaltyInvoice($rental);
-
-            // Update rental status to returned
-            $returnedStatus = \App\Models\RentalStatus::where('status_name', 'returned')->first();
-            if($returnedStatus) {
-                $rental->update(['status_id' => $returnedStatus->status_id]);
-            }
-        });
-
-        $rental->load(['customer', 'item', 'status', 'invoices.invoiceItems']);
-
-        return response()->json([
-            'message' =>'Rental return processed successfully',
-            'data' => $rental,
-            'penalty_charged' => $this->calculatePenalty($rental)
-        ]);
-    }
 
     /**
-     * @return JsonResponse
-     * Checks all the rentals and identifies overdue rentals
+     * BUSINESS ACTIVITY: System automatically identifies overdue rentals
+     * Checks all the rentals and identifies overdue rentals (Batch process)
      */
     public function batchCheckOverdue(): JsonResponse
     {
@@ -510,7 +708,7 @@ class RentalController extends Controller
 
             $this->checkOverdue($rental);
 
-            if($wasOverdue) {
+            if ($wasOverdue) {
                 $overDueCount++;
                 $penaltiesCreated++;
             }
@@ -522,7 +720,109 @@ class RentalController extends Controller
             'overdue' => $overDueCount,
             'penalties_created_or_updated' => $penaltiesCreated
         ]);
-
     }
 
+    /**
+     * BUSINESS ACTIVITY: Admin/clerk reviews rental history
+     * Get rental history for a specific customer
+     */
+    public function customerHistory(Request $request, $customerId): JsonResponse
+    {
+        $query = Rental::with(['item', 'status', 'releasedBy', 'returnedTo', 'invoices'])
+            ->where('customer_id', $customerId);
+
+        // Additional filters
+        if ($request->has('status_id')) {
+            $query->where('status_id', $request->get('status_id'));
+        }
+
+        if ($request->has('date_from')) {
+            $query->where('released_date', '>=', $request->get('date_from'));
+        }
+
+        if ($request->has('date_to')) {
+            $query->where('released_date', '<=', $request->get('date_to'));
+        }
+
+        $rentals = $query->orderBy('released_date', 'desc')->get();
+
+        // Calculate customer statistics
+        $statistics = [
+            'total_rentals' => $rentals->count(),
+            'active_rentals' => $rentals->whereNull('return_date')->count(),
+            'completed_rentals' => $rentals->whereNotNull('return_date')->count(),
+            'overdue_count' => $rentals->where('return_date', null)->filter(function ($rental) {
+                return Carbon::parse($rental->due_date)->lessThan(Carbon::now());
+            })->count(),
+            'total_penalties' => $this->getTotalPenaltiesFromInvoices($rentals),
+        ];
+
+        return response()->json([
+            'customer_id' => $customerId,
+            'statistics' => $statistics,
+            'rentals' => $rentals
+        ]);
+    }
+
+    /**
+     * BUSINESS ACTIVITY: Admin/clerk reviews rental history
+     * Get rental history for a specific item
+     */
+    public function itemHistory(Request $request, $itemId): JsonResponse
+    {
+        $query = Rental::with(['customer', 'status', 'releasedBy', 'returnedTo', 'invoices'])
+            ->where('item_id', $itemId);
+
+        // Additional filters
+        if ($request->has('date_from')) {
+            $query->where('released_date', '>=', $request->get('date_from'));
+        }
+
+        if ($request->has('date_to')) {
+            $query->where('released_date', '<=', $request->get('date_to'));
+        }
+
+        $rentals = $query->orderBy('released_date', 'desc')->get();
+
+        // Calculate item statistics
+        $statistics = [
+            'total_rentals' => $rentals->count(),
+            'current_status' => $rentals->whereNull('return_date')->first() ? 'Rented' : 'Available',
+            'times_rented' => $rentals->whereNotNull('return_date')->count(),
+            'times_overdue' => $rentals->filter(function ($rental) {
+                return $rental->return_date !== null &&
+                    Carbon::parse($rental->return_date)->greaterThan(Carbon::parse($rental->due_date));
+            })->count(),
+        ];
+
+        return response()->json([
+            'item_id' => $itemId,
+            'statistics' => $statistics,
+            'rentals' => $rentals
+        ]);
+    }
+
+    /**
+     * Get all overdue rentals
+     */
+    public function getOverdueRentals(Request $request): JsonResponse
+    {
+        $query = Rental::with(['customer', 'item', 'status', 'releasedBy'])
+            ->whereNull('return_date')
+            ->where('due_date', '<', Carbon::now());
+
+        $perPage = $request->get('per_page', 15);
+        $overdueRentals = $query->orderBy('due_date', 'asc')->paginate($perPage);
+
+        // Calculate total penalty for all overdue rentals
+        $totalPendingPenalties = 0;
+        foreach ($overdueRentals as $rental) {
+            $totalPendingPenalties += $this->calculatePenalty($rental);
+        }
+
+        return response()->json([
+            'overdue_rentals' => $overdueRentals,
+            'total_pending_penalties' => $totalPendingPenalties
+        ]);
+    }
 }

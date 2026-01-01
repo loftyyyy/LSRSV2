@@ -108,9 +108,16 @@ Route::middleware('auth')->group(function () {
         // Rental CRUD
         Route::get('/rentals', [RentalController::class, 'index']);
         Route::post('/rentals', [RentalController::class, 'store']);
-        Route::get('/rentals/{id}', [RentalController::class, 'show']);
-        Route::put('/rentals/{id}', [RentalController::class, 'update']);
-        Route::delete('/rentals/{id}', [RentalController::class, 'destroy']);
+        Route::get('/rentals/{rental}', [RentalController::class, 'show']);
+        Route::put('/rentals/{rental}', [RentalController::class, 'update']);
+        Route::delete('/rentals/{rental}', [RentalController::class, 'destroy']);
+
+        // Additional Rental Actions
+
+        // Rental Reports
+        Route::get('/rentals/reports/generate', [RentalController::class, 'report']);
+        Route::get('/rentals/reports/pdf', [RentalController::class, 'generatePDF']);
+
 
         // Reservation CRUD
         Route::get('/reservations', [ReservationController::class, 'index']);
