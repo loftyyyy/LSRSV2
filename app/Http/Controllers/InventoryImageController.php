@@ -8,43 +8,73 @@ use App\Http\Requests\StoreInventoryImageRequest;
 use App\Http\Requests\UpdateInventoryImageRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 class InventoryImageController
 {
     /**
      * Display a listing of the resource.
      */
-    public function index(Inventory  $inventory)
+    public function index(Inventory $inventory): JsonResponse
     {
         $images = $inventory->images()
             ->orderBy('is_primary', 'desc')
             ->orderBy('display_order', 'asc')
             ->get();
 
+        $groupedByView = $images->groupBy('view_type');
+
         return response()->json([
-            'data' => $images
+            'data' => $images,
+            'grouped_by_view' => $groupedByView,
+            'summary' => [
+                'total' => $images->count(),
+                'primary' => $images->where('is_primary', true)->first(),
+                'by_view_type' => [
+                    'front' => $groupedByView->get('front', collect())->count(),
+                    'back' => $groupedByView->get('back', collect())->count(),
+                    'side' => $groupedByView->get('side', collect())->count(),
+                    'detail' => $groupedByView->get('detail', collect())->count(),
+                    'full' => $groupedByView->get('full', collect())->count(),
+                ],
+                'missing_required_views' => $this->getMissingRequiredViews($inventory)
+            ]
         ]);
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Store newly created resources in storage.
      */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request, Inventory  $inventory): JsonResponse
+    public function store(Request $request, Inventory $inventory): JsonResponse
     {
         $request->validate([
             'images' => 'required|array|max:10',
             'images.*' => 'required|image|mimes:jpg,jpeg,png,webp|max:5120', // 5MB max
-            'view_types' => 'nullable|array',
-            'view_types.*' => 'nullable|string|in:front,back,side,detail,full'
+            'view_types' => 'required|array',
+            'view_types.*' => 'required|string|in:front,back,side,detail,full',
+            'captions' => 'nullable|array',
+            'captions.*' => 'nullable|string|max:255'
         ]);
+
+        // Validate that images and view_types have the same count
+        if (count($request->file('images')) !== count($request->view_types)) {
+            return response()->json([
+                'message' => 'Each image must have a corresponding view type'
+            ], 422);
+        }
+
+        // Check for duplicate view types in the request
+        $requestViewTypes = $request->view_types;
+        $existingViewTypes = $inventory->images()->pluck('view_type')->toArray();
+
+        $duplicates = array_intersect($requestViewTypes, $existingViewTypes);
+        if (!empty($duplicates)) {
+            return response()->json([
+                'message' => 'The following view types already exist for this item: ' . implode(', ', $duplicates),
+                'duplicate_views' => array_values($duplicates)
+            ], 422);
+        }
 
         $uploadedImages = [];
         $existingImagesCount = $inventory->images()->count();
@@ -59,14 +89,16 @@ class InventoryImageController
             // Store image in public disk under inventory folder
             $path = $image->storeAs('inventory/' . $inventory->item_id, $filename, 'public');
 
-            // Get view type if provided
-            $viewType = $request->view_types[$index] ?? null;
+            // Get view type and caption
+            $viewType = $request->view_types[$index];
+            $caption = $request->captions[$index] ?? null;
 
             // Create image record
             $inventoryImage = $inventory->images()->create([
                 'image_path' => $path,
                 'image_url' => Storage::url($path),
                 'view_type' => $viewType,
+                'caption' => $caption,
                 'is_primary' => $shouldSetPrimary && $index === 0,
                 'display_order' => $existingImagesCount + $index + 1,
                 'file_size' => $image->getSize(),
@@ -76,9 +108,15 @@ class InventoryImageController
             $uploadedImages[] = $inventoryImage;
         }
 
+        // Check if all required views are now complete
+        $missingViews = $this->getMissingRequiredViews($inventory);
+        $isComplete = empty($missingViews);
+
         return response()->json([
             'message' => count($uploadedImages) . ' image(s) uploaded successfully',
-            'data' => $uploadedImages
+            'data' => $uploadedImages,
+            'inventory_images_complete' => $isComplete,
+            'missing_required_views' => $missingViews
         ], 201);
     }
 
@@ -100,14 +138,6 @@ class InventoryImageController
     }
 
     /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(InventoryImage $inventoryImage)
-    {
-        //
-    }
-
-    /**
      * Update image details (view type, display order, etc.)
      */
     public function update(Request $request, Inventory $inventory, InventoryImage $image): JsonResponse
@@ -124,6 +154,20 @@ class InventoryImageController
             'display_order' => 'nullable|integer|min:1',
             'caption' => 'nullable|string|max:255'
         ]);
+
+        // If changing view_type, check for duplicates
+        if ($request->has('view_type') && $request->view_type !== $image->view_type) {
+            $existsViewType = $inventory->images()
+                ->where('view_type', $request->view_type)
+                ->where('image_id', '!=', $image->image_id)
+                ->exists();
+
+            if ($existsViewType) {
+                return response()->json([
+                    'message' => "An image with view type '{$request->view_type}' already exists for this item"
+                ], 422);
+            }
+        }
 
         $image->update($request->only(['view_type', 'display_order', 'caption']));
 
@@ -146,6 +190,7 @@ class InventoryImageController
         }
 
         $wasPrimary = $image->is_primary;
+        $viewType = $image->view_type;
 
         // Delete the physical file
         if (Storage::disk('public')->exists($image->image_path)) {
@@ -166,10 +211,16 @@ class InventoryImageController
             }
         }
 
+        // Check remaining required views
+        $missingViews = $this->getMissingRequiredViews($inventory);
+
         return response()->json([
-            'message' => 'Image deleted successfully'
+            'message' => 'Image deleted successfully',
+            'deleted_view_type' => $viewType,
+            'missing_required_views' => $missingViews
         ]);
     }
+
     /**
      * Set an image as primary/main image
      */
@@ -241,14 +292,15 @@ class InventoryImageController
         // Delete all image records
         $inventory->images()->delete();
 
-        // Optionally delete the entire folder
+        // Delete the entire folder
         $folderPath = 'inventory/' . $inventory->item_id;
         if (Storage::disk('public')->exists($folderPath)) {
             Storage::disk('public')->deleteDirectory($folderPath);
         }
 
         return response()->json([
-            'message' => 'All images deleted successfully'
+            'message' => 'All images deleted successfully',
+            'missing_required_views' => ['front', 'back', 'side']
         ]);
     }
 
@@ -262,7 +314,7 @@ class InventoryImageController
             ->first();
 
         if (!$primaryImage) {
-            // If no primary image set, get the first one
+            // If no primary image set, get the first one by display order
             $primaryImage = $inventory->images()
                 ->orderBy('display_order', 'asc')
                 ->first();
@@ -279,7 +331,8 @@ class InventoryImageController
             'data' => $primaryImage
         ]);
     }
-     /**
+
+    /**
      * Get images by view type (front, back, side, etc.)
      */
     public function getByViewType(Inventory $inventory, string $viewType): JsonResponse
@@ -298,7 +351,9 @@ class InventoryImageController
             ->get();
 
         return response()->json([
-            'data' => $images
+            'data' => $images,
+            'view_type' => $viewType,
+            'count' => $images->count()
         ]);
     }
 
@@ -341,6 +396,7 @@ class InventoryImageController
             'data' => $image
         ]);
     }
+
     /**
      * Bulk delete multiple images
      */
@@ -384,33 +440,130 @@ class InventoryImageController
             }
         }
 
+        $missingViews = $this->getMissingRequiredViews($inventory);
+
         return response()->json([
             'message' => "{$deletedCount} image(s) deleted successfully",
-            'deleted_count' => $deletedCount
+            'deleted_count' => $deletedCount,
+            'missing_required_views' => $missingViews
         ]);
     }
-      /**
-     * Get inventory items with their primary images
-     */
-    public function getInventoryWithImages(Request $request): JsonResponse
-    {
-        $query = Inventory::with(['images' => function ($q) {
-            $q->where('is_primary', true)
-              ->orWhereIn('image_id', function ($subQ) {
-                  $subQ->selectRaw('MIN(image_id)')
-                       ->from('inventory_images')
-                       ->groupBy('item_id');
-              });
-        }]);
 
-        // Apply filters if provided
-        if ($request->has('item_type')) {
-            $query->where('item_type', $request->get('item_type'));
+    /**
+     * Validate that required views (front, back, side) are present
+     */
+    public function validateRequiredViews(Inventory $inventory): JsonResponse
+    {
+        $missingViews = $this->getMissingRequiredViews($inventory);
+        $isComplete = empty($missingViews);
+
+        $images = $inventory->images()
+            ->orderBy('is_primary', 'desc')
+            ->orderBy('display_order', 'asc')
+            ->get();
+
+        return response()->json([
+            'is_complete' => $isComplete,
+            'missing_views' => $missingViews,
+            'existing_views' => $images->pluck('view_type')->toArray(),
+            'total_images' => $images->count(),
+            'message' => $isComplete
+                ? 'All required image views are present'
+                : 'Missing required views: ' . implode(', ', $missingViews)
+        ]);
+    }
+
+    /**
+     * Upload or update specific view type images
+     */
+    public function uploadByViewType(Request $request, Inventory $inventory, string $viewType): JsonResponse
+    {
+        $validViewTypes = ['front', 'back', 'side', 'detail', 'full'];
+
+        if (!in_array($viewType, $validViewTypes)) {
+            return response()->json([
+                'message' => 'Invalid view type. Must be one of: ' . implode(', ', $validViewTypes)
+            ], 400);
         }
 
-        $perPage = $request->get('per_page', 15);
-        $inventories = $query->paginate($perPage);
+        $request->validate([
+            'image' => 'required|image|mimes:jpg,jpeg,png,webp|max:5120',
+            'caption' => 'nullable|string|max:255',
+            'replace_existing' => 'nullable|boolean'
+        ]);
 
-        return response()->json($inventories);
+        $replaceExisting = $request->get('replace_existing', false);
+
+        // Check if image with this view type already exists
+        $existingImage = $inventory->images()
+            ->where('view_type', $viewType)
+            ->first();
+
+        if ($existingImage && !$replaceExisting) {
+            return response()->json([
+                'message' => "An image with view type '{$viewType}' already exists. Set 'replace_existing' to true to replace it.",
+                'existing_image' => $existingImage
+            ], 422);
+        }
+
+        $image = $request->file('image');
+        $filename = Str::uuid() . '.' . $image->getClientOriginalExtension();
+        $path = $image->storeAs('inventory/' . $inventory->item_id, $filename, 'public');
+
+        if ($existingImage && $replaceExisting) {
+            // Delete old file
+            if (Storage::disk('public')->exists($existingImage->image_path)) {
+                Storage::disk('public')->delete($existingImage->image_path);
+            }
+
+            // Update existing record
+            $existingImage->update([
+                'image_path' => $path,
+                'image_url' => Storage::url($path),
+                'caption' => $request->get('caption', $existingImage->caption),
+                'file_size' => $image->getSize(),
+                'mime_type' => $image->getMimeType()
+            ]);
+
+            $inventoryImage = $existingImage;
+            $message = "Image for view type '{$viewType}' replaced successfully";
+        } else {
+            // Create new record
+            $existingCount = $inventory->images()->count();
+            $shouldSetPrimary = $existingCount === 0;
+
+            $inventoryImage = $inventory->images()->create([
+                'image_path' => $path,
+                'image_url' => Storage::url($path),
+                'view_type' => $viewType,
+                'caption' => $request->get('caption'),
+                'is_primary' => $shouldSetPrimary,
+                'display_order' => $existingCount + 1,
+                'file_size' => $image->getSize(),
+                'mime_type' => $image->getMimeType()
+            ]);
+
+            $message = "Image for view type '{$viewType}' uploaded successfully";
+        }
+
+        $missingViews = $this->getMissingRequiredViews($inventory);
+
+        return response()->json([
+            'message' => $message,
+            'data' => $inventoryImage,
+            'missing_required_views' => $missingViews,
+            'inventory_images_complete' => empty($missingViews)
+        ], $existingImage ? 200 : 201);
+    }
+
+    /**
+     * Helper: Get missing required views for an inventory item
+     */
+    private function getMissingRequiredViews(Inventory $inventory): array
+    {
+        $requiredViews = ['front', 'back', 'side'];
+        $existingViews = $inventory->images()->pluck('view_type')->toArray();
+
+        return array_values(array_diff($requiredViews, $existingViews));
     }
 }
