@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateInventoryRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class InventoryController extends Controller
@@ -15,7 +16,7 @@ class InventoryController extends Controller
     /**
      * Display Reports Page
      */
-    public function report(Request $request):JsonResponse
+    public function report(Request $request): JsonResponse
     {
         $reportType = $request->get('report_type', 'inventory_summary');
 
@@ -29,13 +30,12 @@ class InventoryController extends Controller
         };
 
         return response()->json($reportData);
-
     }
 
     /**
      * Create PDF for reports
      */
-    public function generatePDF(Request $request):JsonResponse
+    public function generatePDF(Request $request): JsonResponse
     {
         $reportType = $request->get('report_type', 'inventory_summary');
         $reportData = match ($reportType) {
@@ -54,8 +54,8 @@ class InventoryController extends Controller
         ]);
 
         return $pdf->download("inventory_report_{$reportType}_" . now()->format('Y-m-d') . ".pdf");
-
     }
+
     /**
      * Display Inventory Page
      */
@@ -63,12 +63,22 @@ class InventoryController extends Controller
     {
         return view('inventories.index');
     }
+
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request): JsonResponse
     {
-        $query = Inventory::with(['status']);
+        // Load primary image with inventory items
+        $query = Inventory::with(['status', 'images' => function ($q) {
+            $q->where('is_primary', true)
+                ->orWhereIn('image_id', function ($subQ) {
+                    $subQ->selectRaw('MIN(image_id)')
+                        ->from('inventory_images')
+                        ->groupBy('item_id')
+                        ->havingRaw('MIN(is_primary) = 0');
+                });
+        }]);
 
         // Search functionality
         if ($request->has('search')) {
@@ -97,6 +107,15 @@ class InventoryController extends Controller
             $query->where('status_id', $request->get('status_id'));
         }
 
+        // Filter items with/without images
+        if ($request->has('has_images')) {
+            if ($request->get('has_images') === 'true') {
+                $query->has('images');
+            } else {
+                $query->doesntHave('images');
+            }
+        }
+
         // Sort
         $sortBy = $request->get('sort_by', 'created_at');
         $sortOrder = $request->get('sort_order', 'desc');
@@ -115,12 +134,16 @@ class InventoryController extends Controller
     public function store(StoreInventoryRequest $request): JsonResponse
     {
         $inventory = Inventory::create($request->validated());
-
         $inventory->load('status');
 
         return response()->json([
-            'message' => 'Inventory item created successfully',
-            'data' => $inventory
+            'message' => 'Inventory item created successfully. You can now upload images.',
+            'data' => $inventory,
+            'next_step' => [
+                'action' => 'upload_images',
+                'endpoint' => route('inventories.images.store', $inventory->item_id),
+                'required_views' => ['front', 'back', 'side']
+            ]
         ], 201);
     }
 
@@ -129,10 +152,34 @@ class InventoryController extends Controller
      */
     public function show(Inventory $inventory): JsonResponse
     {
-        $inventory->load(['status', 'rentals', 'reservationItems', 'invoiceItems', 'images']);
+        $inventory->load([
+            'status',
+            'rentals',
+            'reservationItems',
+            'invoiceItems',
+            'images' => function ($q) {
+                $q->orderBy('is_primary', 'desc')
+                    ->orderBy('display_order', 'asc');
+            }
+        ]);
+
+        // Group images by view type for easy access
+        $imagesByView = $inventory->images->groupBy('view_type');
 
         return response()->json([
-            'data' => $inventory
+            'data' => $inventory,
+            'images_summary' => [
+                'total_images' => $inventory->images->count(),
+                'primary_image' => $inventory->images->where('is_primary', true)->first(),
+                'by_view_type' => [
+                    'front' => $imagesByView->get('front', collect())->count(),
+                    'back' => $imagesByView->get('back', collect())->count(),
+                    'side' => $imagesByView->get('side', collect())->count(),
+                    'detail' => $imagesByView->get('detail', collect())->count(),
+                    'full' => $imagesByView->get('full', collect())->count(),
+                ],
+                'missing_required_views' => $this->getMissingRequiredViews($inventory)
+            ]
         ]);
     }
 
@@ -142,7 +189,6 @@ class InventoryController extends Controller
     public function update(UpdateInventoryRequest $request, Inventory $inventory): JsonResponse
     {
         $inventory->update($request->validated());
-
         $inventory->load('status');
 
         return response()->json([
@@ -176,20 +222,37 @@ class InventoryController extends Controller
             ], 422);
         }
 
+        // Delete all associated images
+        $images = $inventory->images;
+        foreach ($images as $image) {
+            if (Storage::disk('public')->exists($image->image_path)) {
+                Storage::disk('public')->delete($image->image_path);
+            }
+        }
+        $inventory->images()->delete();
+
+        // Delete the inventory folder
+        $folderPath = 'inventory/' . $inventory->item_id;
+        if (Storage::disk('public')->exists($folderPath)) {
+            Storage::disk('public')->deleteDirectory($folderPath);
+        }
+
         $inventory->delete();
 
         return response()->json([
-            'message' => 'Inventory item deleted successfully'
+            'message' => 'Inventory item and all associated images deleted successfully'
         ]);
     }
 
-     /**
+    /**
      * Get available inventory items for rental
      * Items that are not currently rented or reserved
      */
     public function getAvailableItems(Request $request): JsonResponse
     {
-        $query = Inventory::with(['status'])
+        $query = Inventory::with(['status', 'images' => function ($q) {
+            $q->where('is_primary', true);
+        }])
             ->whereHas('status', function ($q) {
                 $q->where('status_name', 'available');
             });
@@ -235,6 +298,7 @@ class InventoryController extends Controller
             'data' => $items
         ]);
     }
+
     /**
      * Update inventory status
      */
@@ -253,7 +317,7 @@ class InventoryController extends Controller
         ]);
     }
 
-     /**
+    /**
      * Update inventory condition
      */
     public function updateCondition(Request $request, Inventory $inventory): JsonResponse
@@ -271,7 +335,7 @@ class InventoryController extends Controller
         ]);
     }
 
-     /**
+    /**
      * Get inventory statistics and dashboard data
      */
     public function getStatistics(): JsonResponse
@@ -299,17 +363,20 @@ class InventoryController extends Controller
                 })
                 ->groupBy('item_type')
                 ->having('count', '<', 5)
-                ->get()
+                ->get(),
+            'items_without_images' => Inventory::doesntHave('images')->count(),
+            'items_missing_required_views' => $this->getItemsMissingRequiredViews()
         ];
 
         return response()->json($stats);
     }
-     /**
+
+    /**
      * Get inventory summary report
      */
     private function getInventorySummaryReport(Request $request): array
     {
-        $query = Inventory::with(['status']);
+        $query = Inventory::with(['status', 'images']);
 
         if ($request->has('item_type')) {
             $query->where('item_type', $request->get('item_type'));
@@ -323,7 +390,10 @@ class InventoryController extends Controller
             'total_count' => $inventories->count(),
             'total_value' => $inventories->sum('rental_price'),
             'by_status' => $inventories->groupBy('status.status_name'),
-            'by_condition' => $inventories->groupBy('condition')
+            'by_condition' => $inventories->groupBy('condition'),
+            'items_with_complete_images' => $inventories->filter(function ($item) {
+                return $this->hasCompleteImages($item);
+            })->count()
         ];
     }
 
@@ -332,7 +402,7 @@ class InventoryController extends Controller
      */
     private function getAvailabilityReport(Request $request): array
     {
-        $availableItems = Inventory::with(['status'])
+        $availableItems = Inventory::with(['status', 'images'])
             ->whereHas('status', function ($q) {
                 $q->where('status_name', 'available');
             })
@@ -352,7 +422,7 @@ class InventoryController extends Controller
      */
     private function getRentalHistoryReport(Request $request): array
     {
-        $query = Inventory::with(['rentals.customer']);
+        $query = Inventory::with(['rentals.customer', 'images']);
 
         if ($request->has('start_date') && $request->has('end_date')) {
             $query->whereHas('rentals', function ($q) use ($request) {
@@ -379,7 +449,7 @@ class InventoryController extends Controller
      */
     private function getConditionReport(Request $request): array
     {
-        $items = Inventory::with(['status'])->get();
+        $items = Inventory::with(['status', 'images'])->get();
 
         return [
             'title' => 'Condition Report',
@@ -394,7 +464,7 @@ class InventoryController extends Controller
      */
     private function getRevenueByItemReport(Request $request): array
     {
-        $query = Inventory::with(['rentals', 'invoiceItems']);
+        $query = Inventory::with(['rentals', 'invoiceItems', 'images']);
 
         if ($request->has('start_date') && $request->has('end_date')) {
             $startDate = $request->get('start_date');
@@ -444,7 +514,8 @@ class InventoryController extends Controller
             'updated_count' => $updated
         ]);
     }
-     /**
+
+    /**
      * Check item availability for specific dates
      */
     public function checkAvailability(Request $request, Inventory $inventory): JsonResponse
@@ -494,4 +565,67 @@ class InventoryController extends Controller
         ]);
     }
 
+    /**
+     * Get items missing required image views
+     */
+    public function getItemsMissingImages(): JsonResponse
+    {
+        $items = Inventory::with(['images', 'status'])
+            ->get()
+            ->filter(function ($item) {
+                return !$this->hasCompleteImages($item);
+            })
+            ->map(function ($item) {
+                return [
+                    'item' => $item,
+                    'missing_views' => $this->getMissingRequiredViews($item)
+                ];
+            });
+
+        return response()->json([
+            'data' => $items->values(),
+            'total_items_missing_images' => $items->count()
+        ]);
+    }
+
+    /**
+     * Helper: Check if item has all required image views
+     */
+    private function hasCompleteImages(Inventory $inventory): bool
+    {
+        $requiredViews = ['front', 'back', 'side'];
+        $existingViews = $inventory->images->pluck('view_type')->toArray();
+
+        foreach ($requiredViews as $view) {
+            if (!in_array($view, $existingViews)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Helper: Get missing required views for an item
+     */
+    private function getMissingRequiredViews(Inventory $inventory): array
+    {
+        $requiredViews = ['front', 'back', 'side'];
+        $existingViews = $inventory->images->pluck('view_type')->toArray();
+
+        return array_values(array_diff($requiredViews, $existingViews));
+    }
+
+    /**
+     * Helper: Get count of items missing required views
+     */
+    private function getItemsMissingRequiredViews(): int
+    {
+        return Inventory::with('images')
+            ->get()
+            ->filter(function ($item) {
+                return !$this->hasCompleteImages($item);
+            })
+            ->count();
+    }
 }
