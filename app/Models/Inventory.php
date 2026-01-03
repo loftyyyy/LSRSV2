@@ -49,7 +49,7 @@ class Inventory extends Model
 
     public function images()
     {
-        return $this->hasMany(InventoryImage::class);
+        return $this->hasMany(InventoryImage::class, 'item_id', 'item_id');
     }
 
     /**
