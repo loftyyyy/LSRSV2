@@ -12,18 +12,16 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('inventory_images', function (Blueprint $table) {
-            $table->id('image_id'); // Changed from inventory_image_id
-            $table->foreignId('item_id') // Changed from inventory_id
-            ->constrained('inventories', 'item_id') // Specify the column name
-            ->cascadeOnDelete();
+            $table->id('image_id');
+            $table->foreignId('item_id')->constrained('inventories', 'item_id')->cascadeOnDelete();
             $table->string('image_path');
-            $table->string('image_url'); // Added: Public URL for the image
-            $table->enum('view_type', ['front', 'back', 'side', 'detail', 'full'])->nullable(); // Added
-            $table->string('caption')->nullable(); // Added: Optional description
+            $table->string('image_url');
+            $table->enum('view_type', ['front', 'back', 'side', 'detail', 'full'])->nullable();
+            $table->string('caption')->nullable();
             $table->boolean('is_primary')->default(false);
-            $table->integer('display_order')->default(0); // Added: For ordering images
-            $table->unsignedBigInteger('file_size')->nullable(); // Added: File size in bytes
-            $table->string('mime_type')->nullable(); // Added: e.g., image/jpeg
+            $table->integer('display_order')->default(0);
+            $table->unsignedBigInteger('file_size')->nullable();
+            $table->string('mime_type')->nullable();
             $table->timestamps();
 
             // Indexes for better query performance
