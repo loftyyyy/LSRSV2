@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\InventoryImageController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\RentalController;
@@ -80,6 +81,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/inventories/{inventory}/availability', [InventoryController::class, 'checkAvailability']);
         Route::put('/inventories/{inventory}/status', [InventoryController::class, 'updateStatus']);
         Route::put('/inventories/{inventory}/condition', [InventoryController::class, 'updateCondition']);
+
+        // Inventory Image
+        Route::get('/inventories/missing-images', [InventoryController::class, 'getItemsMissingImages']);
+        Route::get('/{inventory}/images', [InventoryImageController::class, 'index']);
+
 
 
         // ============================================
