@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 
 class ReservationItemController extends Controller
 {
+
     /**
      * Display a listing of the resource.
      */
@@ -92,4 +93,5 @@ class ReservationItemController extends Controller
             'message' => 'Reservation item deleted successfully'
         ]);
     }
+
 }
