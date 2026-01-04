@@ -94,4 +94,5 @@ class InvoiceItemController extends Controller
             'message' => 'Invoice item deleted successfully'
         ]);
     }
+
 }
