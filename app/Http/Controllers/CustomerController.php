@@ -11,6 +11,7 @@ use Illuminate\View\View;
 
 class CustomerController extends Controller
 {
+
     /**
      * Display Reports for Customer
      */
