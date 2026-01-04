@@ -18,6 +18,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class RentalController extends Controller
 {
+
     /**
      * Display Reports Page
      */
