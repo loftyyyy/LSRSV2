@@ -649,4 +649,5 @@ class ReservationController extends Controller
             'data' => $reservation
         ]);
     }
+
 }
