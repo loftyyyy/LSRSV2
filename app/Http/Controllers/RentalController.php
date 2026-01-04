@@ -826,4 +826,5 @@ class RentalController extends Controller
             'total_pending_penalties' => $totalPendingPenalties
         ]);
     }
+
 }
