@@ -13,7 +13,6 @@ use Illuminate\View\View;
 class PaymentController extends Controller
 {
 
-
     /**
      * Display Reports Page
      */
