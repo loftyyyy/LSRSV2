@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Storage;
 
 class InventoryImageController
 {
+
     /**
      * Display a listing of the resource.
      */
