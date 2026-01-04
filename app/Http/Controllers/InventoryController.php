@@ -13,6 +13,7 @@ use Illuminate\View\View;
 
 class InventoryController extends Controller
 {
+
     /**
      * Display Reports Page
      */
