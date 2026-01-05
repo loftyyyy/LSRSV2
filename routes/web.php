@@ -12,7 +12,7 @@ use App\Http\Controllers\ReservationController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/landing', function () {
-    return view('welcome');
+    return view('dashboard');
 });
 
 Route::get('/register', [AuthController::class,  'showRegisterForm'])->name('register');
