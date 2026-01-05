@@ -22,7 +22,7 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-Route::middleware('auth')->group(function () {
+// Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'showDashboardPage'])->name('dashboard');
     Route::get('/customers', [CustomerController::class, 'showCustomerPage'])->name('customers');
     Route::get('/inventories', [InventoryController::class, 'showInventoryPage'])->name('inventories');
@@ -190,4 +190,4 @@ Route::middleware('auth')->group(function () {
         Route::get('/payments/{payment}/receipt', [PaymentController::class, 'generateReceiptPDF']);
 
     });
-});
+// });

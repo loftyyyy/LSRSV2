@@ -14,43 +14,12 @@
         </div>
     </div>
 
-    {{-- Main navigation --}}
+    {{-- Main navigation (dynamic from config/navigation.php) --}}
     @php
-        $navItems = [
-            [
-                'label' => 'Dashboard',
-                'route' => 'dashboard',
-                'icon'  => 'layout-dashboard',
-            ],
-            [
-                'label' => 'Reservations',
-                'route' => 'reservations',
-                'icon'  => 'calendar',
-            ],
-            [
-                'label' => 'Rental Tracking',
-                'route' => 'rentals',
-                'icon'  => 'map',
-            ],
-            [
-                'label' => 'Customers',
-                'route' => 'customers',
-                'icon'  => 'users',
-            ],
-            [
-                'label' => 'Inventory',
-                'route' => 'inventories',
-                'icon'  => 'boxes',
-            ],
-            [
-                'label' => 'Payments',
-                'route' => 'payments',
-                'icon'  => 'credit-card',
-            ],
-        ];
+        $navItems = config('navigation.main', []);
     @endphp
 
-    <nav class="flex-1 px-3 py-4 space-y-1 text-sm">
+    <nav class="flex-1 px-3 py-4 space-y-2 text-sm">
         @foreach ($navItems as $item)
             @php
                 $isActive = request()->routeIs($item['route'] . '*');
@@ -64,12 +33,11 @@
                             : 'text-neutral-300 hover:bg-neutral-900 hover:text-white' }}"
                 style="font-family: 'Geist', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;"
             >
-                <span class="flex items-center justify-center h-8 w-8 rounded-lg
-                            {{ $isActive ? 'bg-violet-500/80 text-white' : 'bg-neutral-900 text-neutral-400 group-hover:text-neutral-100' }}">
+                <span class="flex items-center justify-center h-8 w-8 text-white">
                     <x-icon :name="$item['icon']" class="h-4 w-4" />
                 </span>
 
-                <span class="truncate text-[13px] font-medium">
+                <span class="truncate text-[13px] font-semibold">
                     {{ $item['label'] }}
                 </span>
             </a>
