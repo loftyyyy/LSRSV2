@@ -39,28 +39,28 @@
                         type="button"
                         class="inline-flex items-center gap-2 rounded-xl border border-neutral-800 bg-neutral-950/80 px-3.5 py-2 text-neutral-200 hover:border-neutral-600 hover:bg-neutral-900 transition"
                     >
-                        <span class="inline-flex h-5 w-5 items-center justify-center rounded-md bg-neutral-900 text-neutral-400">
-                            <x-icon name="chart-column" class="h-3.5 w-3.5" />
+                        <span class="inline-flex h-5 w-5 items-center justify-center rounded-md  text-white">
+                            <x-icon name="chart-column" class="h-4 w-4" />
                         </span>
-                        <span class="text-[11px] font-medium tracking-wide">Reports</span>
+                        <span class="text-[14px] font-medium tracking-wide">Reports</span>
                     </button>
 
                     <button
                         type="button"
                         class="inline-flex items-center gap-2 rounded-xl border border-neutral-800 bg-neutral-950/80 px-3.5 py-2 text-neutral-200 hover:border-neutral-600 hover:bg-neutral-900 transition"
                     >
-                        <span class="inline-flex h-5 w-5 items-center justify-center rounded-md bg-neutral-900 text-neutral-400">
-                            <x-icon name="eye" class="h-3.5 w-3.5" />
+                        <span class="inline-flex h-5 w-5 items-center justify-center rounded-md  text-white">
+                            <x-icon name="eye" class="h-4 w-4" />
                         </span>
-                        <span class="text-[11px] font-medium tracking-wide">Browse Items</span>
+                        <span class="text-[14px] font-medium tracking-wide">Browse Items</span>
                     </button>
 
                     <button
                         type="button"
-                        class="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2 text-[11px] font-medium tracking-wide text-white shadow-lg shadow-violet-600/40 hover:bg-violet-500 transition"
+                        class="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2 text-[14px] font-medium tracking-wide text-black shadow-lg shadow-violet-600/40 hover:bg-violet-500 transition"
                     >
-                        <span class="inline-flex h-5 w-5 items-center justify-center rounded-md bg-white/10">
-                            <x-icon name="plus" class="h-3.5 w-3.5" />
+                        <span class="inline-flex h-5 w-5 items-center justify-center rounded-md  text-black">
+                            <x-icon name="plus" class="h-4 w-4" />
                         </span>
                         <span>New Reservation</span>
                     </button>
