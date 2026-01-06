@@ -34,7 +34,7 @@
                 style="font-family: 'Geist', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;"
             >
                 <span class="flex items-center justify-center h-8 w-8 text-white">
-                    <x-icon :name="$item['icon']" class="h-4 w-4" />
+                    <x-icon :name="$item['icon']" class="h-6 w-6" />
                 </span>
 
                 <span class="truncate text-[13px] font-semibold">
