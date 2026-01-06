@@ -12,6 +12,6 @@ class DashboardController extends Controller
      */
     public function showDashboardPage()
     {
-        return view('dashboard');
+        return view('dashboard.index');
     }
 }
