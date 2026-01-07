@@ -134,7 +134,6 @@
             const sunIcon = document.getElementById('iconSun');
 
             if (dark) {
-                // 🌙 Dark mode ON → knob RIGHT
                 knob.style.transform = 'translateX(16px)';
 
                 track.classList.add('bg-black/80');
@@ -146,10 +145,10 @@
                 modeLabel.textContent = 'Dark Mode';
                 modeStatus.textContent = 'On';
 
+                // Change the icon to moon
                 moonIcon.classList.remove('hidden');
                 sunIcon.classList.add('hidden');
             } else {
-                // ☀️ Light mode ON → knob LEFT
                 knob.style.transform = 'translateX(0)';
 
                 track.classList.remove('bg-black/80');
@@ -161,6 +160,7 @@
                 modeLabel.textContent = 'Light Mode';
                 modeStatus.textContent = 'On';
 
+                // Change the icon to sun
                 moonIcon.classList.add('hidden');
                 sunIcon.classList.remove('hidden');
             }
