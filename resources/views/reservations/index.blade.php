@@ -117,7 +117,7 @@
                                     <th class="py-2.5 pr-4 font-medium">Pickup</th>
                                     <th class="py-2.5 pr-4 font-medium">Return</th>
                                     <th class="py-2.5 pr-4 font-medium">Status</th>
-                                    <th class="py-2.5 pr-4 font-medium text-right">Amount</th>
+                                    <th class="py-2.5 pr-4 font-medium text-right whitespace-nowrap">Amount</th>
                                     <th class="py-2.5 pl-2 font-medium text-right">Actions</th>
                                 </tr>
                             </thead>
@@ -140,12 +140,12 @@
                                         2025-11-17
                                     </td>
                                     <td class="py-3.5 pr-4">
-                                        <span class="inline-flex items-center rounded-full bg-emerald-500/15 px-3 py-1 text-[11px] font-medium text-emerald-300 border border-emerald-500/40">
+                                        <span class="inline-flex items-center rounded-full bg-emerald-500/15 px-2 py-1 text-[11px] font-medium text-emerald-300 border border-emerald-500/40">
                                             <span class="mr-1.5 h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
                                             Confirmed
                                         </span>
                                     </td>
-                                    <td class="py-3.5 pr-4 text-right text-neutral-100">
+                                    <td class="py-3.5 pr-4 text-right text-neutral-100 whitespace-nowrap">
                                         $450
                                     </td>
                                     <td class="py-3.5 pl-2 text-right text-neutral-400">
@@ -154,82 +154,6 @@
                                                 <x-icon name="edit" class="h-3.5 w-3.5" />
                                             </button>
                                             <button class="rounded-lg bg-red-500/5 p-1.5 text-red-400 hover:bg-red-500/15 hover:text-red-300 transition" aria-label="Delete">
-                                                <x-icon name="trash" class="h-3.5 w-3.5" />
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-
-                                {{-- Row 2 --}}
-                                <tr class="border-b border-neutral-900/60 hover:bg-white/5 transition">
-                                    <td class="py-3.5 pr-4 text-neutral-500" style="font-family: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;">
-                                        #002
-                                    </td>
-                                    <td class="py-3.5 pr-4 text-neutral-100">
-                                        Michael Chen
-                                    </td>
-                                    <td class="py-3.5 pr-4 text-neutral-300">
-                                        Designer Suit
-                                    </td>
-                                    <td class="py-3.5 pr-4 text-neutral-300">
-                                        2025-11-14
-                                    </td>
-                                    <td class="py-3.5 pr-4 text-neutral-300">
-                                        2025-11-16
-                                    </td>
-                                    <td class="py-3.5 pr-4">
-                                        <span class="inline-flex items-center rounded-full bg-amber-400/15 px-3 py-1 text-[11px] font-medium text-amber-200 border border-amber-400/40">
-                                            <span class="mr-1.5 h-1.5 w-1.5 rounded-full bg-amber-300"></span>
-                                            Pending
-                                        </span>
-                                    </td>
-                                    <td class="py-3.5 pr-4 text-right text-neutral-100">
-                                        $200
-                                    </td>
-                                    <td class="py-3.5 pl-2 text-right text-neutral-400">
-                                        <div class="inline-flex items-center gap-2">
-                                            <button class="rounded-lg bg-neutral-900/80 p-1.5 hover:bg-neutral-800 transition" aria-label="Edit">
-                                                <x-icon name="edit" class="h-3.5 w-3.5" />
-                                            </button>
-                                            <button class="rounded-lg bg-red-500/5 p-1.5 text-red-400 hover:bg-red-500/15 hover:text-red-300 transition" aria-label="Delete">
-                                                <x-icon name="trash" class="h-3.5 w-3.5" />
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-
-                                {{-- Row 3 --}}
-                                <tr class="hover:bg-white/5 transition">
-                                    <td class="py-3.5 pr-4 text-neutral-500" style="font-family: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;">
-                                        #003
-                                    </td>
-                                    <td class="py-3.5 pr-4 text-neutral-100">
-                                        Emma Wilson
-                                    </td>
-                                    <td class="py-3.5 pr-4 text-neutral-300">
-                                        Evening Dress
-                                    </td>
-                                    <td class="py-3.5 pr-4 text-neutral-300">
-                                        2025-11-13
-                                    </td>
-                                    <td class="py-3.5 pr-4 text-neutral-300">
-                                        2025-11-14
-                                    </td>
-                                    <td class="py-3.5 pr-4">
-                                        <span class="inline-flex items-center rounded-full bg-emerald-500/15 px-3 py-1 text-[11px] font-medium text-emerald-300 border border-emerald-500/40">
-                                            <span class="mr-1.5 h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
-                                            Confirmed
-                                        </span>
-                                    </td>
-                                    <td class="py-3.5 pr-4 text-right text-neutral-100">
-                                        $320
-                                    </td>
-                                    <td class="py-3.5 pl-2 text-right text-neutral-400">
-                                        <div class="inline-flex items-center gap-2">
-                                            <button class="rounded-lg bg-neutral-900/80 p-1.5 hover:bg-neutral-800 transition" aria-label="Edit">
-                                                <x-icon name="edit" class="h-3.5 w-3.5" />
-                                            </button>
-                                            <button class="rounded-lg p-1.5 text-red-400 hover:bg-violet-600 hover:text-red-300 transition" aria-label="Delete">
                                                 <x-icon name="trash" class="h-3.5 w-3.5" />
                                             </button>
                                         </div>
