@@ -53,13 +53,16 @@
         >
             <span class="flex items-center gap-2">
                 <span class="inline-flex h-6 w-10 items-center rounded-full bg-black/80 px-0.5">
-                    <span class="inline-flex h-5 w-5 translate-x-0 rounded-full bg-violet-500 shadow-sm"></span>
+                    <span class="flex h-5 w-5 items-center justify-center rounded-full bg-violet-500 shadow-sm text-white">
+                        <x-icon name="moon" class="h-3 w-3" />
+                    </span>
                 </span>
                 <span>Dark Mode</span>
             </span>
             <span class="text-[10px] uppercase tracking-[0.16em] text-neutral-500">
                 Always on
             </span>
+
         </button>
 
         <form method="POST" action="{{ route('logout') }}">
