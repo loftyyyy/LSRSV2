@@ -117,7 +117,7 @@
                                     <th class="py-2.5 pr-4 font-medium">Pickup</th>
                                     <th class="py-2.5 pr-4 font-medium">Return</th>
                                     <th class="py-2.5 pr-4 font-medium">Status</th>
-                                    <th class="py-2.5 pr-4 font-medium text-left whitespace-nowrap">Amount</th>
+                                    <th class="py-2.5 pr-4 font-medium text-left ">Amount</th>
                                     <th class="py-2.5 pl-2 font-medium text-left">Actions</th>
                                 </tr>
                             </thead>
@@ -145,15 +145,15 @@
                                             Confirmed
                                         </span>
                                     </td>
-                                    <td class="py-3.5 pr-4 text-left text-neutral-100 whitespace-nowrap">
+                                    <td class="py-3.5 pr-4 text-left text-neutral-100">
                                         $450
                                     </td>
                                     <td class="py-3.5 pl-2 text-left text-neutral-400">
                                         <div class="inline-flex items-center gap-2">
-                                            <button class="rounded-lg bg-neutral-900/80 p-1.5 hover:bg-neutral-800 transition" aria-label="Edit">
+                                            <button class="rounded-lg p-1.5 hover:bg-violet-600 transition" aria-label="Edit">
                                                 <x-icon name="edit" class="h-3.5 w-3.5" />
                                             </button>
-                                            <button class="rounded-lg bg-red-500/5 p-1.5 text-red-400 hover:bg-red-500/15 hover:text-red-300 transition" aria-label="Delete">
+                                            <button class="rounded-lg p-1.5 text-red-400 hover:bg-red-500/15 hover:text-red-300 transition" aria-label="Delete">
                                                 <x-icon name="trash" class="h-3.5 w-3.5" />
                                             </button>
                                         </div>
