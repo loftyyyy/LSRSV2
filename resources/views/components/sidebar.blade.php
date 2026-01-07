@@ -48,12 +48,12 @@
     <div class="px-4 pb-5 pt-2 border-t border-neutral-800 space-y-3 text-xs text-neutral-400">
         <button
             type="button"
-            class="flex w-full items-center justify-between rounded-xl bg-neutral-900/70 px-3 py-2 text-[11px] font-medium text-neutral-200 hover:bg-neutral-800 transition"
+            class="flex w-full items-center justify-between rounded-xl px-3 py-2 text-[11px] font-medium text-neutral-200 hover:bg-neutral-800 transition"
             style="font-family: 'Geist', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;"
         >
             <span class="flex items-center gap-2">
                 <span class="inline-flex h-6 w-10 items-center rounded-full bg-black/80 px-0.5">
-                    <span class="flex h-5 w-5 items-center justify-center rounded-full bg-violet-500 shadow-sm text-white">
+                    <span class="flex h-5 w-5 items-center justify-center rounded-full bg-violet-500 shadow-sm text-black">
                         <x-icon name="moon" class="h-3 w-3" />
                     </span>
                 </span>
