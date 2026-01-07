@@ -48,21 +48,28 @@
     <div class="px-4 pb-5 pt-2 border-t border-neutral-800 space-y-3 text-xs text-neutral-400">
         <button
             type="button"
+            id="darkModeToggle"
+            onclick="toggleDarkMode()"
             class="flex w-full items-center justify-between rounded-xl px-3 py-2 text-[11px] font-medium text-neutral-200 hover:bg-neutral-800 transition"
             style="font-family: 'Geist', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;"
         >
             <span class="flex items-center gap-2">
-                <span class="inline-flex h-6 w-10 items-center rounded-full bg-black/80 px-0.5">
-                    <span class="flex h-5 w-5 items-center justify-center rounded-full bg-violet-500 shadow-sm text-black">
-                        <x-icon name="moon" class="h-3 w-3" />
+                <span class="inline-flex h-6 w-10 items-center rounded-full bg-black/80 px-0.5 relative transition-all duration-300" id="toggleTrack">
+                    <span class="flex h-5 w-5 items-center justify-center rounded-full bg-violet-500 shadow-sm text-black transition-transform duration-300 ease-in-out" id="toggleKnob">
+                         <span id="iconMoon" class="block">
+                             <x-icon name="moon" class="h-3 w-3" />
+                         </span>
+
+                        <span id="iconSun" class="hidden">
+                            <x-icon name="sun" class="h-3 w-3" />
+                        </span>
                     </span>
                 </span>
-                <span>Dark Mode</span>
+                <span id="modeLabel">Dark Mode</span>
             </span>
-            <span class="text-[10px] uppercase tracking-[0.16em] text-neutral-500">
-                Always on
+            <span class="text-[10px] uppercase tracking-[0.16em] text-neutral-500" id="modeStatus">
+                On
             </span>
-
         </button>
 
         <form method="POST" action="{{ route('logout') }}">
@@ -85,6 +92,70 @@
         rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap"
     >
+
+    {{-- Dark Mode Toggle Script --}}
+    <script>
+        // Get saved preference or default to dark mode
+        let isDarkMode = localStorage.getItem('darkMode') !== 'false';
+
+        // Apply initial state on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            updateToggleUI(isDarkMode);
+
+            // Initialize document theme
+            if (isDarkMode) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        function toggleDarkMode() {
+            console.log("pressed");
+            isDarkMode = !isDarkMode;
+            localStorage.setItem('darkMode', isDarkMode);
+            updateToggleUI(isDarkMode);
+
+            // Apply theme to document
+            if (isDarkMode) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        }
+
+        function updateToggleUI(dark) {
+            const knob = document.getElementById('toggleKnob');
+            const track = document.getElementById('toggleTrack');
+            const modeLabel = document.getElementById('modeLabel');
+            const modeStatus = document.getElementById('modeStatus');
+            const iconContainer = document.getElementById('toggleIcon');
+
+            if (dark) {
+                // Dark mode ON
+                knob.style.transform = 'translateX(0)';
+                track.classList.add('bg-black/80');
+                track.classList.remove('bg-amber-500/20');
+                knob.classList.add('bg-violet-500');
+                knob.classList.remove('bg-amber-400');
+                modeLabel.textContent = 'Dark Mode';
+                modeStatus.textContent = 'On';
+
+                // Change icon to moon
+                iconContainer.setAttribute('name', 'moon');
+            } else {
+                // Light mode ON
+                knob.style.transform = 'translateX(16px)';
+                track.classList.remove('bg-black/80');
+                track.classList.add('bg-amber-500/20');
+                knob.classList.remove('bg-violet-500');
+                knob.classList.add('bg-amber-400');
+                modeLabel.textContent = 'Light Mode';
+                modeStatus.textContent = 'On';
+
+                // Change icon to sun
+                iconContainer.setAttribute('name', 'sun');
+            }
+        }
+    </script>
 </aside>
-
-
