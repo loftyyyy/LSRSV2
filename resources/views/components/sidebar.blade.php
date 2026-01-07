@@ -96,33 +96,33 @@
 
     {{-- Dark Mode Toggle Script --}}
     <script>
-        // Get saved preference or default to dark mode
-        let isDarkMode = localStorage.getItem('darkMode') !== 'false';
+        let isDarkMode;
 
-        // Apply initial state on page load
-        window.addEventListener('DOMContentLoaded', function() {
+        // 1️⃣ Determine initial mode
+        const savedMode = localStorage.getItem('darkMode');
+
+        if (savedMode !== null) {
+            // User preference exists
+            isDarkMode = savedMode === 'true';
+        } else {
+            // No saved preference → follow OS / browser
+            isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        }
+
+        // 2️⃣ Apply theme immediately (prevents flicker)
+        document.documentElement.classList.toggle('dark', isDarkMode);
+
+        // 3️⃣ Apply UI state on load
+        window.addEventListener('DOMContentLoaded', function () {
             updateToggleUI(isDarkMode);
-
-            // Initialize document theme
-            if (isDarkMode) {
-                document.documentElement.classList.add('dark');
-            } else {
-                document.documentElement.classList.remove('dark');
-            }
         });
 
         function toggleDarkMode() {
-            console.log("pressed");
             isDarkMode = !isDarkMode;
             localStorage.setItem('darkMode', isDarkMode);
-            updateToggleUI(isDarkMode);
 
-            // Apply theme to document
-            if (isDarkMode) {
-                document.documentElement.classList.add('dark');
-            } else {
-                document.documentElement.classList.remove('dark');
-            }
+            updateToggleUI(isDarkMode);
+            document.documentElement.classList.toggle('dark', isDarkMode);
         }
 
         function updateToggleUI(dark) {
@@ -134,32 +134,33 @@
             const sunIcon = document.getElementById('iconSun');
 
             if (dark) {
-                // Dark mode ON
-                knob.style.transform = 'translateX(0)';
+                // 🌙 Dark mode ON → knob RIGHT
+                knob.style.transform = 'translateX(16px)';
+
                 track.classList.add('bg-black/80');
                 track.classList.remove('bg-amber-500/20');
+
                 knob.classList.add('bg-violet-500');
                 knob.classList.remove('bg-amber-400');
+
                 modeLabel.textContent = 'Dark Mode';
                 modeStatus.textContent = 'On';
 
-                // Change icon to crescent moon
                 moonIcon.classList.remove('hidden');
                 sunIcon.classList.add('hidden');
-
-
-
             } else {
-                // Light mode ON
-                knob.style.transform = 'translateX(16px)';
+                // ☀️ Light mode ON → knob LEFT
+                knob.style.transform = 'translateX(0)';
+
                 track.classList.remove('bg-black/80');
                 track.classList.add('bg-amber-500/20');
+
                 knob.classList.remove('bg-violet-500');
                 knob.classList.add('bg-amber-400');
+
                 modeLabel.textContent = 'Light Mode';
                 modeStatus.textContent = 'On';
 
-                // Change icon to sun
                 moonIcon.classList.add('hidden');
                 sunIcon.classList.remove('hidden');
             }
