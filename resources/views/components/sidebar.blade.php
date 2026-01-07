@@ -63,6 +63,7 @@
                         <span id="iconSun" class="hidden">
                             <x-icon name="sun" class="h-3 w-3" />
                         </span>
+
                     </span>
                 </span>
                 <span id="modeLabel">Dark Mode</span>
@@ -129,7 +130,8 @@
             const track = document.getElementById('toggleTrack');
             const modeLabel = document.getElementById('modeLabel');
             const modeStatus = document.getElementById('modeStatus');
-            const iconContainer = document.getElementById('toggleIcon');
+            const moonIcon = document.getElementById('iconMoon');
+            const sunIcon = document.getElementById('iconSun');
 
             if (dark) {
                 // Dark mode ON
@@ -141,8 +143,12 @@
                 modeLabel.textContent = 'Dark Mode';
                 modeStatus.textContent = 'On';
 
-                // Change icon to moon
-                iconContainer.setAttribute('name', 'moon');
+                // Change icon to crescent moon
+                moonIcon.classList.remove('hidden');
+                sunIcon.classList.add('hidden');
+
+
+
             } else {
                 // Light mode ON
                 knob.style.transform = 'translateX(16px)';
@@ -154,7 +160,8 @@
                 modeStatus.textContent = 'On';
 
                 // Change icon to sun
-                iconContainer.setAttribute('name', 'sun');
+                moonIcon.classList.add('hidden');
+                sunIcon.classList.remove('hidden');
             }
         }
     </script>
