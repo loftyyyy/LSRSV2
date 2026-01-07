@@ -111,20 +111,20 @@
                         <table class="min-w-full text-left text-xs text-neutral-300">
                             <thead class="text-[11px] uppercase tracking-[0.18em] text-neutral-500">
                                 <tr class="border-b border-neutral-900/80">
-                                    <th class="py-2.5 pr-4 font-medium">ID</th>
+                                    <th class="py-2.5 pr-4 pl-4 font-medium">ID</th>
                                     <th class="py-2.5 pr-4 font-medium">Customer</th>
                                     <th class="py-2.5 pr-4 font-medium">Item</th>
                                     <th class="py-2.5 pr-4 font-medium">Pickup</th>
                                     <th class="py-2.5 pr-4 font-medium">Return</th>
                                     <th class="py-2.5 pr-4 font-medium">Status</th>
-                                    <th class="py-2.5 pr-4 font-medium text-right whitespace-nowrap">Amount</th>
-                                    <th class="py-2.5 pl-2 font-medium text-right">Actions</th>
+                                    <th class="py-2.5 pr-4 font-medium text-left whitespace-nowrap">Amount</th>
+                                    <th class="py-2.5 pl-2 font-medium text-left">Actions</th>
                                 </tr>
                             </thead>
                             <tbody class="text-[13px]">
                                 {{-- Row 1 --}}
                                 <tr class="border-b border-neutral-900/60 hover:bg-white/5 transition">
-                                    <td class="py-3.5 pr-4 text-neutral-500" style="font-family: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;">
+                                    <td class="py-3.5 pr-4 pl-4 text-neutral-500" style="font-family: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;">
                                         #001
                                     </td>
                                     <td class="py-3.5 pr-4 text-neutral-100">
@@ -136,19 +136,19 @@
                                     <td class="py-3.5 pr-4 text-neutral-300">
                                         2025-11-15
                                     </td>
-                                    <td class="py-3.5 pr-4 text-neutral-300">
+                                    <td class="py-3.5 pr-2 text-neutral-300">
                                         2025-11-17
                                     </td>
-                                    <td class="py-3.5 pr-4">
+                                    <td class="py-3.5 pr-2">
                                         <span class="inline-flex items-center rounded-full bg-emerald-500/15 px-2 py-1 text-[11px] font-medium text-emerald-300 border border-emerald-500/40">
                                             <span class="mr-1.5 h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
                                             Confirmed
                                         </span>
                                     </td>
-                                    <td class="py-3.5 pr-4 text-right text-neutral-100 whitespace-nowrap">
+                                    <td class="py-3.5 pr-4 text-left text-neutral-100 whitespace-nowrap">
                                         $450
                                     </td>
-                                    <td class="py-3.5 pl-2 text-right text-neutral-400">
+                                    <td class="py-3.5 pl-2 text-left text-neutral-400">
                                         <div class="inline-flex items-center gap-2">
                                             <button class="rounded-lg bg-neutral-900/80 p-1.5 hover:bg-neutral-800 transition" aria-label="Edit">
                                                 <x-icon name="edit" class="h-3.5 w-3.5" />
