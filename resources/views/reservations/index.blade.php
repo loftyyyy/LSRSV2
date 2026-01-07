@@ -37,7 +37,7 @@
                 <div class="flex items-center gap-3 text-xs">
                     <button
                         type="button"
-                        class="inline-flex items-center gap-2 rounded-xl border border-neutral-800 bg-neutral-950/80 px-3.5 py-2 text-neutral-200 hover:border-neutral-600 hover:bg-neutral-900 transition"
+                        class="inline-flex items-center gap-2 rounded-xl border border-neutral-800 bg-neutral-950/80 px-3.5 py-2 text-neutral-200 hover:bg-violet-600 hover:bg-neutral-900 transition"
                     >
                         <span class="inline-flex h-5 w-5 items-center justify-center rounded-md  text-white">
                             <x-icon name="chart-column" class="h-4 w-4" />
@@ -47,7 +47,7 @@
 
                     <button
                         type="button"
-                        class="inline-flex items-center gap-2 rounded-xl border border-neutral-800 bg-neutral-950/80 px-3.5 py-2 text-neutral-200 hover:border-neutral-600 hover:bg-neutral-900 transition"
+                        class="inline-flex items-center gap-2 rounded-xl border border-neutral-800 bg-neutral-950/80 px-3.5 py-2 text-neutral-200 hover:border-neutral-600 hover:bg-violet-600 transition"
                     >
                         <span class="inline-flex h-5 w-5 items-center justify-center rounded-md  text-white">
                             <x-icon name="eye" class="h-4 w-4" />
@@ -229,7 +229,7 @@
                                             <button class="rounded-lg bg-neutral-900/80 p-1.5 hover:bg-neutral-800 transition" aria-label="Edit">
                                                 <x-icon name="edit" class="h-3.5 w-3.5" />
                                             </button>
-                                            <button class="rounded-lg bg-red-500/5 p-1.5 text-red-400 hover:bg-red-500/15 hover:text-red-300 transition" aria-label="Delete">
+                                            <button class="rounded-lg p-1.5 text-red-400 hover:bg-violet-600 hover:text-red-300 transition" aria-label="Delete">
                                                 <x-icon name="trash" class="h-3.5 w-3.5" />
                                             </button>
                                         </div>
