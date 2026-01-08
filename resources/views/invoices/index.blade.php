@@ -25,10 +25,10 @@
             <div class="flex items-center justify-between gap-4">
                 <div>
                     <h1 class="text-3xl font-semibold tracking-tight text-white">
-                        Inventory Management
+                        Invoice
                     </h1>
                     <p class="mt-1 text-sm text-neutral-400" style="font-family: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;">
-                        Manage rental items and stock levels
+                        Track Invoices
                     </p>
                 </div>
             </div>
