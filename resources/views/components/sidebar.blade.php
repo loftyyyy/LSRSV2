@@ -1,14 +1,14 @@
-<aside class="flex flex-col h-screen w-64 bg-[#0b0b0b] border-r border-neutral-800 text-neutral-100">
+<aside class="flex flex-col h-screen w-64 bg-white dark:bg-black/95 border-r border-neutral-200 dark:border-neutral-800 text-neutral-900 dark:text-neutral-100 transition-colors duration-200">
     {{-- Brand --}}
-    <div class="flex items-center gap-3 px-6 h-20 border-b border-neutral-800">
-        <div class="flex items-center justify-center h-10 w-10 rounded-2xl bg-violet-600 text-sm font-semibold tracking-tight">
+    <div class="flex items-center gap-3 px-6 h-20 border-b border-neutral-200 dark:border-neutral-800">
+        <div class="flex items-center justify-center h-10 w-10 rounded-2xl bg-violet-600 text-sm font-semibold tracking-tight text-white">
             LS
         </div>
         <div class="flex flex-col">
-            <span class="text-sm font-semibold tracking-tight" style="font-family: 'Geist', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
+            <span class="text-sm font-semibold tracking-tight text-neutral-900 dark:text-white" style="font-family: 'Geist', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
                 Love &amp; Styles
             </span>
-            <span class="text-xs text-neutral-400" style="font-family: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;">
+            <span class="text-xs text-neutral-500 dark:text-neutral-400" style="font-family: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;">
                 Rental System
             </span>
         </div>
@@ -19,7 +19,7 @@
         $navItems = config('navigation.main', []);
     @endphp
 
-    <nav class="flex-1 px-3 py-4 space-y-2 text-sm">
+    <nav class="flex-1 px-3 py-4 space-y-2 text-sm overflow-y-auto">
         @foreach ($navItems as $item)
             @php
                 $isActive = request()->routeIs($item['route'] . '*');
@@ -27,13 +27,13 @@
 
             <a
                 href="{{ route($item['route']) }}"
-                class="group flex items-center gap-3 px-3 py-2.5 rounded-xl transition
+                class="group flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200
                        {{ $isActive
-                            ? 'bg-violet-600 text-black shadow-[0_0_0_1px_rgba(167,139,250,0.7)]'
-                            : 'text-neutral-300 hover:bg-neutral-900 hover:text-white' }}"
+                            ? 'bg-violet-600 text-white shadow-[0_0_0_1px_rgba(167,139,250,0.7)]'
+                            : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-900 hover:text-neutral-900 dark:hover:text-white' }}"
                 style="font-family: 'Geist', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;"
             >
-                <span class="flex items-center justify-center h-8 w-8 {{$isActive ? 'text-black' : 'text-white'}} ">
+                <span class="flex items-center justify-center h-8 w-8 {{ $isActive ? 'text-white' : 'text-neutral-700 dark:text-white' }}">
                     <x-icon :name="$item['icon']" class="h-6 w-6" />
                 </span>
 
@@ -45,42 +45,43 @@
     </nav>
 
     {{-- Footer actions --}}
-    <div class="px-4 pb-5 pt-2 border-t border-neutral-800 space-y-3 text-xs text-neutral-400">
+    <div class="px-4 pb-5 pt-2 border-t border-neutral-200 dark:border-neutral-800 space-y-3 text-xs">
+        {{-- Dark/Light Mode Toggle --}}
         <button
             type="button"
             id="darkModeToggle"
             onclick="toggleDarkMode()"
-            class="flex w-full items-center justify-between rounded-xl px-3 py-2 text-[11px] font-medium text-neutral-200 hover:bg-neutral-800 transition"
+            class="flex w-full items-center justify-between rounded-xl px-3 py-2 text-[11px] font-medium text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all duration-200"
             style="font-family: 'Geist', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;"
         >
             <span class="flex items-center gap-2">
-                <span class="inline-flex h-6 w-10 items-center rounded-full bg-black/80 px-0.5 relative transition-all duration-300" id="toggleTrack">
-                    <span class="flex h-5 w-5 items-center justify-center rounded-full bg-violet-500 shadow-sm text-black transition-transform duration-300 ease-in-out" id="toggleKnob">
-                         <span id="iconMoon" class="block">
-                             <x-icon name="moon" class="h-3 w-3" />
-                         </span>
-
-                        <span id="iconSun" class="hidden">
-                            <x-icon name="sun" class="h-3 w-3" />
+                <span class="inline-flex h-6 w-10 items-center rounded-full bg-amber-500/20 dark:bg-violet-600/20 px-0.5 relative transition-all duration-300" id="toggleTrack">
+                    <span class="flex h-5 w-5 items-center justify-center rounded-full bg-amber-400 dark:bg-violet-500 shadow-sm text-black dark:text-white transition-all duration-300 ease-in-out" id="toggleKnob" style="transform: translateX(16px);">
+                        <span id="iconMoon" class="block dark:block">
+                            <x-icon name="moon" class="h-3 w-3" />
                         </span>
 
+                        <span id="iconSun" class="hidden dark:hidden">
+                            <x-icon name="sun" class="h-3 w-3" />
+                        </span>
                     </span>
                 </span>
-                <span id="modeLabel">Dark Mode</span>
+                <span id="modeLabel" class="text-neutral-700 dark:text-neutral-200">Dark Mode</span>
             </span>
-            <span class="text-[10px] uppercase tracking-[0.16em] text-neutral-500" id="modeStatus">
+            <span class="text-[10px] uppercase tracking-[0.16em] text-neutral-500 dark:text-neutral-500" id="modeStatus">
                 On
             </span>
         </button>
 
+        {{-- Logout Button --}}
         <form method="POST" action="{{ route('logout') }}">
             @csrf
             <button
                 type="submit"
-                class="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-[12px] font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 transition"
+                class="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-[12px] font-medium text-red-600 dark:text-red-400 hover:bg-red-500/10 hover:text-red-500 dark:hover:text-red-300 transition-all duration-200"
                 style="font-family: 'Geist', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;"
             >
-                <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-red-500/10 text-red-400">
+                <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-red-500/10 text-red-600 dark:text-red-400">
                     <x-icon name="logout" class="h-4 w-4" />
                 </span>
                 <span>Logout</span>
@@ -98,19 +99,24 @@
     <script>
         let isDarkMode;
 
-        // 1️⃣ Determine initial mode
+        // 1️⃣ Determine initial mode - Default to DARK MODE
         const savedMode = localStorage.getItem('darkMode');
 
         if (savedMode !== null) {
             // User preference exists
             isDarkMode = savedMode === 'true';
         } else {
-            // No saved preference → follow OS / browser
-            isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            // Default to dark mode (as per your requirement)
+            isDarkMode = true;
+            localStorage.setItem('darkMode', 'true');
         }
 
         // 2️⃣ Apply theme immediately (prevents flicker)
-        document.documentElement.classList.toggle('dark', isDarkMode);
+        if (isDarkMode) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
 
         // 3️⃣ Apply UI state on load
         window.addEventListener('DOMContentLoaded', function () {
@@ -119,10 +125,15 @@
 
         function toggleDarkMode() {
             isDarkMode = !isDarkMode;
-            localStorage.setItem('darkMode', isDarkMode);
+            localStorage.setItem('darkMode', isDarkMode.toString());
+
+            if (isDarkMode) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
 
             updateToggleUI(isDarkMode);
-            document.documentElement.classList.toggle('dark', isDarkMode);
         }
 
         function updateToggleUI(dark) {
@@ -134,33 +145,23 @@
             const sunIcon = document.getElementById('iconSun');
 
             if (dark) {
+                // Dark Mode Active
                 knob.style.transform = 'translateX(16px)';
-
-                track.classList.add('bg-black/80');
-                track.classList.remove('bg-amber-500/20');
-
-                knob.classList.add('bg-violet-500');
-                knob.classList.remove('bg-amber-400');
 
                 modeLabel.textContent = 'Dark Mode';
                 modeStatus.textContent = 'On';
 
-                // Change the icon to moon
+                // Show moon icon
                 moonIcon.classList.remove('hidden');
                 sunIcon.classList.add('hidden');
             } else {
+                // Light Mode Active
                 knob.style.transform = 'translateX(0)';
-
-                track.classList.remove('bg-black/80');
-                track.classList.add('bg-amber-500/20');
-
-                knob.classList.remove('bg-violet-500');
-                knob.classList.add('bg-amber-400');
 
                 modeLabel.textContent = 'Light Mode';
                 modeStatus.textContent = 'On';
 
-                // Change the icon to sun
+                // Show sun icon
                 moonIcon.classList.add('hidden');
                 sunIcon.classList.remove('hidden');
             }
