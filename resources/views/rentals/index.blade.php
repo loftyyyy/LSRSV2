@@ -59,14 +59,14 @@
             ['label' => 'Overdue', 'value' => '1', 'color' => 'text-red-400'],
             ['label' => 'Late Penalties', 'value' => '$NaN', 'color' => 'text-violet-400'],
         ] as $stat)
-            <div class="rounded-2xl border border-neutral-900 bg-neutral-950/60 p-6 shadow-[0_18px_60px_rgba(0,0,0,0.65)]">
+            <x-card>
                 <div class="text-sm text-neutral-400 mb-2">
                     {{ $stat['label'] }}
                 </div>
                 <div class="text-3xl font-semibold {{ $stat['color'] }}">
                     {{ $stat['value'] }}
                 </div>
-            </div>
+            </x-card>
         @endforeach
     </section>
 
