@@ -33,7 +33,7 @@
                             : 'text-neutral-700 dark:text-neutral-300 hover:bg-violet-200 dark:hover:bg-neutral-900 hover:text-neutral-900 dark:hover:text-neutral-100' }}"
                 style="font-family: 'Geist', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;"
             >
-                <span class="flex items-center justify-center h-8 w-8 {{ $isActive ? 'dark:text-neutral-900 text-neutral-100' : 'text-neutral-700 dark:text-neutral-100' }}">
+                <span class="flex items-center justify-center h-8 w-8 {{ $isActive ? 'dark:text-neutral-900 text-neutral-100' : 'text-neutral-900 dark:text-neutral-100' }}">
                     <x-icon :name="$item['icon']" class="h-6 w-6" />
                 </span>
 
@@ -51,7 +51,7 @@
             type="button"
             id="darkModeToggle"
             onclick="toggleDarkMode()"
-            class="flex w-full items-center justify-between rounded-xl px-3 py-2 text-[11px] font-medium text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all duration-200"
+            class="flex w-full items-center justify-between rounded-xl px-3 py-2 text-[11px] font-medium text-neutral-700 dark:text-neutral-200 hover:bg-neutral-200 dark:hover:bg-neutral-800 transition-all duration-200"
             style="font-family: 'Geist', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;"
         >
             <span class="flex items-center gap-2">
