@@ -1,4 +1,4 @@
-<aside class="flex flex-col h-screen w-64 bg-black/95 border-r border-neutral-800 text-neutral-100">
+<aside class="flex flex-col h-screen w-64 bg-[#0b0b0b] border-r border-neutral-800 text-neutral-100">
     {{-- Brand --}}
     <div class="flex items-center gap-3 px-6 h-20 border-b border-neutral-800">
         <div class="flex items-center justify-center h-10 w-10 rounded-2xl bg-violet-600 text-sm font-semibold tracking-tight">
@@ -29,11 +29,11 @@
                 href="{{ route($item['route']) }}"
                 class="group flex items-center gap-3 px-3 py-2.5 rounded-xl transition
                        {{ $isActive
-                            ? 'bg-violet-600 text-white shadow-[0_0_0_1px_rgba(167,139,250,0.7)]'
+                            ? 'bg-violet-600 text-black shadow-[0_0_0_1px_rgba(167,139,250,0.7)]'
                             : 'text-neutral-300 hover:bg-neutral-900 hover:text-white' }}"
                 style="font-family: 'Geist', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;"
             >
-                <span class="flex items-center justify-center h-8 w-8 text-white">
+                <span class="flex items-center justify-center h-8 w-8 {{$isActive ? 'text-black' : 'text-white'}} ">
                     <x-icon :name="$item['icon']" class="h-6 w-6" />
                 </span>
 
