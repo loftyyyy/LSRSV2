@@ -71,7 +71,7 @@
 
     {{-- Filters + table --}}
     <section class="flex-1">
-        <div class="rounded-2xl border border-neutral-900 bg-neutral-950/60 shadow-[0_18px_60px_rgba(0,0,0,0.65)] backdrop-blur-sm">
+        <div class="rounded-2xl border dark:border-neutral-900 border-neutral-100 bg-neutral-950/60 shadow-[0_18px_60px_rgba(0,0,0,0.65)] backdrop-blur-sm">
             {{-- Search & filters --}}
             <div class="border-b border-neutral-900 px-6 py-4">
                 <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">

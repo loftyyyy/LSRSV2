@@ -20,11 +20,12 @@
 <body class="min-h-screen bg-black text-neutral-50 flex font-geist">
 <x-sidebar />
 
-<main class="flex-1 flex flex-col px-10 py-8 overflow-x-hidden overflow-y-auto bg-gradient-to-b from-black via-black to-neutral-950 transition-colors">
+<main class="flex-1 flex flex-col px-10 py-8 overflow-x-hidden overflow-y-auto bg-gradient-to-b from-black via-black to-neutral-950">
+    {{-- Header --}}
     <header class="mb-8">
         <div class="flex items-center justify-between gap-4">
             <div>
-                <h1 class="text-3xl font-semibold tracking-tight">
+                <h1 class="text-3xl font-semibold tracking-tight text-white">
                     Rental Tracking
                 </h1>
                 <p class="mt-1 text-sm text-neutral-400 font-geist-mono">
@@ -32,87 +33,86 @@
                 </p>
             </div>
 
-            <div class="flex items-center gap-3">
-                <button class="px-4 py-2 text-sm font-medium rounded-lg hover:bg-neutral-800 transition-colors flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                    </svg>
-                    Reports
+            <div class="flex items-center gap-3 text-xs">
+                <button
+                    class="inline-flex items-center gap-2 rounded-xl border border-neutral-800 bg-neutral-950/80 px-3.5 py-2 text-neutral-200 hover:bg-neutral-900 transition"
+                >
+                    <x-icon name="chart-column" class="h-4 w-4 text-white" />
+                    <span class="text-[14px] font-medium tracking-wide">Reports</span>
                 </button>
 
-                <button class="px-4 py-2 text-sm font-medium rounded-lg bg-purple-600 hover:bg-purple-700 transition-colors flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M12 4v16m8-8H4"/>
-                    </svg>
-                    Log Return
+                <button
+                    class="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2 text-[14px] font-medium tracking-wide text-black shadow-lg shadow-violet-600/40 hover:bg-violet-500 transition"
+                >
+                    <x-icon name="plus" class="h-4 w-4 text-black" />
+                    <span>Log Return</span>
                 </button>
             </div>
         </div>
     </header>
 
-    <!-- Stats Grid -->
-    <div class="grid grid-cols-4 gap-6 mb-8">
-        <div class="bg-neutral-900 rounded-xl p-6 border border-neutral-800">
-            <div class="text-sm text-neutral-400 mb-2">Active Rentals</div>
-            <div class="text-3xl font-semibold">3</div>
-        </div>
+    {{-- Stats --}}
+    <section class="grid grid-cols-4 gap-6 mb-8">
+        @foreach ([
+            ['label' => 'Active Rentals', 'value' => '3', 'color' => 'text-white'],
+            ['label' => 'Due This Week', 'value' => '3', 'color' => 'text-amber-400'],
+            ['label' => 'Overdue', 'value' => '1', 'color' => 'text-red-400'],
+            ['label' => 'Late Penalties', 'value' => '$NaN', 'color' => 'text-violet-400'],
+        ] as $stat)
+            <div class="rounded-2xl border border-neutral-900 bg-neutral-950/60 p-6 shadow-[0_18px_60px_rgba(0,0,0,0.65)]">
+                <div class="text-sm text-neutral-400 mb-2">
+                    {{ $stat['label'] }}
+                </div>
+                <div class="text-3xl font-semibold {{ $stat['color'] }}">
+                    {{ $stat['value'] }}
+                </div>
+            </div>
+        @endforeach
+    </section>
 
-        <div class="bg-neutral-900 rounded-xl p-6 border border-neutral-800">
-            <div class="text-sm text-neutral-400 mb-2">Due This Week</div>
-            <div class="text-3xl font-semibold text-orange-500">3</div>
-        </div>
-
-        <div class="bg-neutral-900 rounded-xl p-6 border border-neutral-800">
-            <div class="text-sm text-neutral-400 mb-2">Overdue</div>
-            <div class="text-3xl font-semibold text-red-500">1</div>
-        </div>
-
-        <div class="bg-neutral-900 rounded-xl p-6 border border-neutral-800">
-            <div class="text-sm text-neutral-400 mb-2">Late Penalties</div>
-            <div class="text-3xl font-semibold text-purple-500">$NaN</div>
-        </div>
-    </div>
-
-    <!-- Active Rentals -->
-    <div class="bg-neutral-900 rounded-xl border border-neutral-800 p-6">
+    {{-- Active Rentals --}}
+    <section class="rounded-2xl border border-neutral-900 bg-neutral-950/60 p-6 shadow-[0_18px_60px_rgba(0,0,0,0.65)]">
         <div class="flex items-center justify-between mb-6">
-            <h2 class="text-xl font-semibold">Active Rentals</h2>
+            <h2 class="text-xl font-semibold tracking-tight text-white">
+                Active Rentals
+            </h2>
 
             <div class="relative">
-                <input
-                    type="text"
-                    placeholder="Search by customer, item, or ID..."
-                    class="w-80 px-4 py-2 pl-10 rounded-lg bg-neutral-800 border border-neutral-700 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-                >
-                <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400"
-                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                </svg>
+                <div class="flex items-center gap-3 rounded-2xl bg-black/60 px-4 py-2.5 border border-neutral-800 focus-within:border-neutral-500 transition">
+                    <x-icon name="search" class="h-4 w-4 text-neutral-500" />
+                    <input
+                        type="text"
+                        placeholder="Search by customer, item, or ID..."
+                        class="w-72 bg-transparent text-xs text-neutral-100 placeholder:text-neutral-500 focus:outline-none"
+                    >
+                </div>
             </div>
         </div>
 
         <div class="space-y-3">
-            <!-- Rental Card -->
-            <div class="bg-neutral-800/50 rounded-lg p-4 border border-neutral-700 hover:border-neutral-600 transition cursor-pointer">
+            {{-- Rental Card --}}
+            <div class="rounded-xl border border-neutral-900 bg-neutral-950/60 p-4 hover:bg-white/5 transition cursor-pointer">
                 <div class="flex items-center justify-between">
                     <div>
-                        <h3 class="font-semibold text-base">Sarah Johnson</h3>
-                        <div class="text-sm text-neutral-400">Wedding Gown</div>
+                        <h3 class="font-semibold text-neutral-100">
+                            Sarah Johnson
+                        </h3>
+                        <div class="text-sm text-neutral-300">
+                            Wedding Gown
+                        </div>
                         <div class="text-xs text-neutral-500 font-geist-mono">
-                            Pickup: 2025-11-10 | Due: 2025-11-14 | Fee: $450
+                            Pickup: 2025-11-10 · Due: 2025-11-14 · Fee: $450
                         </div>
                     </div>
 
-                    <span class="px-3 py-1 rounded-md text-xs font-medium bg-blue-500/20 text-blue-400 border border-blue-500/30">
-                            Active
-                        </span>
+                    <span class="inline-flex items-center rounded-full bg-emerald-500/15 px-2 py-1 text-[11px] font-medium text-emerald-300 border border-emerald-500/40">
+                        <span class="mr-1.5 h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
+                        Active
+                    </span>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
 </main>
 </body>
 </html>
