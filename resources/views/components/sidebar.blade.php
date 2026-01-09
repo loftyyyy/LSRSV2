@@ -155,7 +155,7 @@
                 knob.style.transform = 'translateX(0)';
 
                 modeLabel.textContent = 'Light Mode';
-                modeStatus.textContent = 'On';
+                modeStatus.textContent = 'Off';
 
                 // Show sun icon
                 moonIcon.classList.add('hidden');
