@@ -1,4 +1,4 @@
-<aside class="flex flex-col h-screen w-64 bg-white dark:bg-black/95 border-r border-neutral-200 dark:border-neutral-800 text-neutral-900 dark:text-neutral-100 transition-colors duration-200">
+<aside class="flex flex-col h-screen w-64 bg-white dark:bg-[#0b0b0b] border-r border-neutral-200 dark:border-neutral-800 text-neutral-900 dark:text-neutral-100 transition-colors duration-200">
     {{-- Brand --}}
     <div class="flex items-center gap-3 px-6 h-20 border-b border-neutral-200 dark:border-neutral-800">
         <div class="flex items-center justify-center h-10 w-10 rounded-2xl bg-violet-600 text-sm font-semibold tracking-tight text-white">
@@ -29,11 +29,11 @@
                 href="{{ route($item['route']) }}"
                 class="group flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200
                        {{ $isActive
-                            ? 'bg-violet-600 text-white shadow-[0_0_0_1px_rgba(167,139,250,0.7)]'
-                            : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-900 hover:text-neutral-900 dark:hover:text-white' }}"
+                            ? 'bg-violet-600 dark:text-neutral-900 text-neutral-100 shadow-[0_0_0_1px_rgba(167,139,250,0.7)]'
+                            : 'text-neutral-700 dark:text-neutral-300 hover:bg-violet-200 dark:hover:bg-neutral-900 hover:text-neutral-900 dark:hover:text-neutral-100' }}"
                 style="font-family: 'Geist', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;"
             >
-                <span class="flex items-center justify-center h-8 w-8 {{ $isActive ? 'text-white' : 'text-neutral-700 dark:text-white' }}">
+                <span class="flex items-center justify-center h-8 w-8 {{ $isActive ? 'dark:text-neutral-900 text-neutral-100' : 'text-neutral-700 dark:text-neutral-100' }}">
                     <x-icon :name="$item['icon']" class="h-6 w-6" />
                 </span>
 
@@ -95,11 +95,9 @@
         href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap"
     >
 
-    {{-- Dark Mode Toggle Script --}}
     <script>
         let isDarkMode;
 
-        // 1️⃣ Determine initial mode - Default to DARK MODE
         const savedMode = localStorage.getItem('darkMode');
 
         if (savedMode !== null) {
@@ -111,14 +109,12 @@
             localStorage.setItem('darkMode', 'true');
         }
 
-        // 2️⃣ Apply theme immediately (prevents flicker)
         if (isDarkMode) {
             document.documentElement.classList.add('dark');
         } else {
             document.documentElement.classList.remove('dark');
         }
 
-        // 3️⃣ Apply UI state on load
         window.addEventListener('DOMContentLoaded', function () {
             updateToggleUI(isDarkMode);
         });
