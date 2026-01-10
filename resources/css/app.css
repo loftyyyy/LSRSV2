@@ -22,3 +22,31 @@
     font-family: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco,
     Consolas, 'Liberation Mono', 'Courier New', monospace;
 }
+
+/* Smooth theme transition */
+html,
+body {
+    transition:
+        background-color 300ms ease,
+        color 300ms ease;
+}
+
+/* Common surfaces */
+.theme-transition,
+.theme-transition * {
+    transition:
+        background-color 300ms ease,
+        color 300ms ease,
+        border-color 300ms ease,
+        box-shadow 300ms ease;
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    html,
+    body,
+    .theme-transition,
+    .theme-transition * {
+        transition: none !important;
+    }
+}
