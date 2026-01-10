@@ -45,7 +45,7 @@
                     <span class="text-[14px] font-medium tracking-wide">Browse Items</span>
                 </button>
 
-                <button type="button" class="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2 text-[14px] font-medium tracking-wide text-white dark:text-black shadow-lg hover:bg-violet-500 transition-colors duration-300 ease-in-out">
+                <button type="button" class="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2 text-[14px] font-medium tracking-wide text-white dark:text-black shadow-lg  hover:text-black dark:hover:text-white hover:bg-violet-500 transition-colors duration-300 ease-in-out">
                     <span class="inline-flex h-5 w-5 items-center justify-center rounded-md">
                         <x-icon name="plus" class="h-4 w-4" />
                     </span>
