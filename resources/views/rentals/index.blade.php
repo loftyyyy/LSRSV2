@@ -17,34 +17,71 @@
     @endif
 </head>
 
-<body class="min-h-screen bg-black text-neutral-50 flex font-geist">
+<body
+    class="
+        min-h-screen flex font-geist
+        bg-neutral-100 text-neutral-900
+        dark:bg-black dark:text-neutral-50
+        transition-colors duration-200
+    "
+>
 <x-sidebar />
 
-<main class="flex-1 flex flex-col px-10 py-8 overflow-x-hidden overflow-y-auto bg-gradient-to-b from-black via-black to-neutral-950">
+<main
+    class="
+        flex-1 flex flex-col px-10 py-8 overflow-x-hidden overflow-y-auto
+        bg-gradient-to-b
+        from-neutral-100 via-neutral-100 to-neutral-200
+        dark:from-black dark:via-black dark:to-neutral-950
+    "
+>
     {{-- Header --}}
     <header class="mb-8">
         <div class="flex items-center justify-between gap-4">
             <div>
-                <h1 class="text-3xl font-semibold tracking-tight text-white">
+                <h1
+                    class="
+                        text-3xl font-semibold tracking-tight
+                        text-neutral-900 dark:text-white
+                    "
+                >
                     Rental Tracking
                 </h1>
-                <p class="mt-1 text-sm text-neutral-400 font-geist-mono">
+                <p
+                    class="
+                        mt-1 text-sm font-geist-mono
+                        text-neutral-500 dark:text-neutral-400
+                    "
+                >
                     Monitor active rentals and return dates
                 </p>
             </div>
 
             <div class="flex items-center gap-3 text-xs">
                 <button
-                    class="inline-flex items-center gap-2 rounded-xl border border-neutral-800 bg-neutral-950/80 px-3.5 py-2 text-neutral-200 hover:bg-neutral-900 transition"
+                    class="
+                        inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-[14px] font-medium
+                        border border-neutral-300 bg-white text-neutral-700
+                        hover:bg-neutral-100
+                        dark:border-neutral-800 dark:bg-neutral-950/80 dark:text-neutral-200
+                        dark:hover:bg-neutral-900
+                        transition
+                    "
                 >
-                    <x-icon name="chart-column" class="h-4 w-4 text-white" />
-                    <span class="text-[14px] font-medium tracking-wide">Reports</span>
+                    <x-icon name="chart-column" class="h-4 w-4" />
+                    <span>Reports</span>
                 </button>
 
                 <button
-                    class="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2 text-[14px] font-medium tracking-wide text-black shadow-lg shadow-violet-600/40 hover:bg-violet-500 transition"
+                    class="
+                        inline-flex items-center gap-2 rounded-xl px-4 py-2 text-[14px] font-medium
+                        bg-violet-600 text-black
+                        hover:bg-violet-500
+                        shadow-lg shadow-violet-600/40
+                        transition
+                    "
                 >
-                    <x-icon name="plus" class="h-4 w-4 text-black" />
+                    <x-icon name="plus" class="h-4 w-4" />
                     <span>Log Return</span>
                 </button>
             </div>
@@ -54,59 +91,102 @@
     {{-- Stats --}}
     <section class="grid grid-cols-4 gap-6 mb-8">
         @foreach ([
-            ['label' => 'Active Rentals', 'value' => '3', 'color' => 'text-white'],
-            ['label' => 'Due This Week', 'value' => '3', 'color' => 'text-amber-400'],
-            ['label' => 'Overdue', 'value' => '1', 'color' => 'text-red-400'],
-            ['label' => 'Late Penalties', 'value' => '$NaN', 'color' => 'text-violet-400'],
+            ['label' => 'Active Rentals', 'value' => '3', 'color' => 'text-neutral-900 dark:text-white'],
+            ['label' => 'Due This Week', 'value' => '3', 'color' => 'text-amber-500'],
+            ['label' => 'Overdue', 'value' => '1', 'color' => 'text-red-500'],
+            ['label' => 'Late Penalties', 'value' => '$NaN', 'color' => 'text-violet-600'],
         ] as $stat)
-            <x-card>
-                <div class="text-sm text-neutral-400 mb-2">
+            <div
+                class="
+                    rounded-2xl p-6
+                    border border-neutral-200 bg-white
+                    dark:border-neutral-900 dark:bg-neutral-950/60
+                    shadow-sm dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)]
+                "
+            >
+                <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2">
                     {{ $stat['label'] }}
                 </div>
                 <div class="text-3xl font-semibold {{ $stat['color'] }}">
                     {{ $stat['value'] }}
                 </div>
-            </x-card>
+            </div>
         @endforeach
     </section>
 
     {{-- Active Rentals --}}
-    <section class="rounded-2xl border border-neutral-900 bg-neutral-950/60 p-6 shadow-[0_18px_60px_rgba(0,0,0,0.65)]">
+    <section
+        class="
+            rounded-2xl p-6
+            border border-neutral-200 bg-white
+            dark:border-neutral-900 dark:bg-neutral-950/60
+        "
+    >
         <div class="flex items-center justify-between mb-6">
-            <h2 class="text-xl font-semibold tracking-tight text-white">
+            <h2
+                class="
+                    text-xl font-semibold tracking-tight
+                    text-neutral-900 dark:text-white
+                "
+            >
                 Active Rentals
             </h2>
 
             <div class="relative">
-                <div class="flex items-center gap-3 rounded-2xl bg-black/60 px-4 py-2.5 border border-neutral-800 focus-within:border-neutral-500 transition">
+                <div
+                    class="
+                        flex items-center gap-3 rounded-2xl px-4 py-2.5
+                        border border-neutral-300 bg-white
+                        focus-within:border-neutral-500
+                        dark:border-neutral-800 dark:bg-black/60
+                        transition
+                    "
+                >
                     <x-icon name="search" class="h-4 w-4 text-neutral-500" />
                     <input
                         type="text"
                         placeholder="Search by customer, item, or ID..."
-                        class="w-72 bg-transparent text-xs text-neutral-100 placeholder:text-neutral-500 focus:outline-none"
+                        class="
+                            w-72 bg-transparent text-xs
+                            text-neutral-700 placeholder:text-neutral-400
+                            dark:text-neutral-100 dark:placeholder:text-neutral-500
+                            focus:outline-none
+                        "
                     >
                 </div>
             </div>
         </div>
 
         <div class="space-y-3">
-            {{-- Rental Card --}}
-            <div class="rounded-xl border border-neutral-900 bg-neutral-950/60 p-4 hover:bg-white/5 transition cursor-pointer">
+            <div
+                class="
+                    rounded-xl p-4 cursor-pointer transition
+                    border border-neutral-200 bg-white hover:bg-neutral-100
+                    dark:border-neutral-900 dark:bg-neutral-950/60 dark:hover:bg-white/5
+                "
+            >
                 <div class="flex items-center justify-between">
                     <div>
-                        <h3 class="font-semibold text-neutral-100">
+                        <h3 class="font-semibold text-neutral-900 dark:text-neutral-100">
                             Sarah Johnson
                         </h3>
-                        <div class="text-sm text-neutral-300">
+                        <div class="text-sm text-neutral-600 dark:text-neutral-300">
                             Wedding Gown
                         </div>
-                        <div class="text-xs text-neutral-500 font-geist-mono">
+                        <div class="text-xs font-geist-mono text-neutral-500">
                             Pickup: 2025-11-10 · Due: 2025-11-14 · Fee: $450
                         </div>
                     </div>
 
-                    <span class="inline-flex items-center rounded-full bg-emerald-500/15 px-2 py-1 text-[11px] font-medium text-emerald-300 border border-emerald-500/40">
-                        <span class="mr-1.5 h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
+                    <span
+                        class="
+                            inline-flex items-center rounded-full px-2 py-1 text-[11px] font-medium
+                            border
+                            bg-emerald-500/15 text-emerald-600 border-emerald-500/40
+                            dark:text-emerald-300
+                        "
+                    >
+                        <span class="mr-1.5 h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
                         Active
                     </span>
                 </div>
