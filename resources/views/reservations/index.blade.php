@@ -60,7 +60,7 @@
         @foreach ([
             ['label' => 'Total Reservations ', 'value' => '3', 'color' => 'text-neutral-900 dark:text-white'],
             ['label' => 'Active Reservations', 'value' => '3', 'color' => 'text-amber-500'],
-            ['label' => 'Total Items Reserved', 'value' => '1', 'color' => 'text-red-500'],
+            ['label' => 'Total Items Reserved', 'value' => '1', 'color' => 'text-green-500'],
             ['label' => 'Estimated Revenue', 'value' => '₱101', 'color' => 'text-violet-600'],
         ] as $stat)
             <div class="rounded-2xl p-6 border border-neutral-200 bg-white dark:border-neutral-900 dark:bg-neutral-950/60 shadow-sm dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
