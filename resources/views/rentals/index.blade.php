@@ -80,8 +80,7 @@
                 <!-- Filter with toggle icons -->
                 <div class="relative" id="filter-dropdown">
                     <button id="filter-button" class="flex items-center gap-2 rounded-2xl px-3 py-2 text-xs border border-neutral-300 bg-white text-neutral-700 dark:border-neutral-800 dark:bg-black/60 dark:text-neutral-100 focus:outline-none transition-colors duration-300 ease-in-out">
-                        <span>Filter Status</span>
-                        <!-- Icon wrappers for JS toggling -->
+                        <span id="filter-button-text">Filter Status</span>
                         <span id="icon-down" class="h-3 w-3 transition-transform duration-300 ease-in-out">
                             <x-icon name="arrow-down" class="h-3 w-3" />
                         </span>
@@ -99,44 +98,6 @@
                         </ul>
                     </div>
                 </div>
-
-                <script>
-                    const filterButton = document.getElementById('filter-button');
-                    const filterMenu = document.getElementById('filter-menu');
-                    const iconDown = document.getElementById('icon-down');
-                    const iconUp = document.getElementById('icon-up');
-
-                    let isOpen = false;
-
-                    filterButton.addEventListener('click', () => {
-                        isOpen = !isOpen;
-
-                        // Toggle dropdown
-                        filterMenu.classList.toggle('opacity-0', !isOpen);
-                        filterMenu.classList.toggle('scale-95', !isOpen);
-                        filterMenu.classList.toggle('pointer-events-none', !isOpen);
-                        filterMenu.classList.toggle('opacity-100', isOpen);
-                        filterMenu.classList.toggle('scale-100', isOpen);
-                        filterMenu.classList.toggle('pointer-events-auto', isOpen);
-
-                        // Toggle icons
-                        iconDown.classList.toggle('hidden', isOpen);
-                        iconUp.classList.toggle('hidden', !isOpen);
-                    });
-
-                    // Close dropdown when clicking outside
-                    document.addEventListener('click', (e) => {
-                        if (!filterButton.contains(e.target) && !filterMenu.contains(e.target) && isOpen) {
-                            isOpen = false;
-
-                            filterMenu.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
-                            filterMenu.classList.remove('opacity-100', 'scale-100', 'pointer-events-auto');
-
-                            iconDown.classList.remove('hidden');
-                            iconUp.classList.add('hidden');
-                        }
-                    });
-                </script>
             </div>
         </div>
 
@@ -167,16 +128,18 @@
 
 <script>
     const filterButton = document.getElementById('filter-button');
+    const filterButtonText = document.getElementById('filter-button-text');
     const filterMenu = document.getElementById('filter-menu');
     const iconDown = document.getElementById('icon-down');
     const iconUp = document.getElementById('icon-up');
 
     let isOpen = false;
 
-    filterButton.addEventListener('click', () => {
+    // Toggle dropdown
+    filterButton.addEventListener('click', (e) => {
+        e.stopPropagation(); // Prevent triggering document click
         isOpen = !isOpen;
 
-        // Toggle dropdown
         filterMenu.classList.toggle('opacity-0', !isOpen);
         filterMenu.classList.toggle('scale-95', !isOpen);
         filterMenu.classList.toggle('pointer-events-none', !isOpen);
@@ -184,16 +147,29 @@
         filterMenu.classList.toggle('scale-100', isOpen);
         filterMenu.classList.toggle('pointer-events-auto', isOpen);
 
-        // Toggle icons
         iconDown.classList.toggle('hidden', isOpen);
         iconUp.classList.toggle('hidden', !isOpen);
     });
 
-    // Close dropdown when clicking outside
-    document.addEventListener('click', (e) => {
-        if (!filterButton.contains(e.target) && !filterMenu.contains(e.target) && isOpen) {
+    // Update filter button text when a status is clicked
+    filterMenu.querySelectorAll('li').forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent triggering document click
+            filterButtonText.textContent = item.textContent;
             isOpen = false;
 
+            filterMenu.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+            filterMenu.classList.remove('opacity-100', 'scale-100', 'pointer-events-auto');
+
+            iconDown.classList.remove('hidden');
+            iconUp.classList.add('hidden');
+        });
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', () => {
+        if (isOpen) {
+            isOpen = false;
             filterMenu.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
             filterMenu.classList.remove('opacity-100', 'scale-100', 'pointer-events-auto');
 
