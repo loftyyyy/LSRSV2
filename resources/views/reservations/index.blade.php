@@ -55,6 +55,25 @@
         </div>
     </header>
 
+    {{-- Stats --}}
+    <section class="grid grid-cols-4 gap-6 mb-8">
+        @foreach ([
+            ['label' => 'Total Reservations ', 'value' => '3', 'color' => 'text-neutral-900 dark:text-white'],
+            ['label' => 'Active Reservations', 'value' => '3', 'color' => 'text-amber-500'],
+            ['label' => 'Total Items Reserved', 'value' => '1', 'color' => 'text-red-500'],
+            ['label' => 'Estimated Revenue', 'value' => '₱101', 'color' => 'text-violet-600'],
+        ] as $stat)
+            <div class="rounded-2xl p-6 border border-neutral-200 bg-white dark:border-neutral-900 dark:bg-neutral-950/60 shadow-sm dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
+                <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
+                    {{ $stat['label'] }}
+                </div>
+                <div class="text-3xl font-semibold {{ $stat['color'] }} transition-colors duration-300 ease-in-out">
+                    {{ $stat['value'] }}
+                </div>
+            </div>
+        @endforeach
+    </section>
+
     {{-- Filters + table --}}
     <section class="flex-1">
         <div class="rounded-2xl border border-neutral-200 bg-white shadow-sm dark:border-neutral-900 dark:bg-neutral-950/60 dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
