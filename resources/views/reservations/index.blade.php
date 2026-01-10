@@ -31,14 +31,14 @@
             </div>
 
             <div class="flex items-center gap-3 text-xs">
-                <button type="button" class="inline-flex items-center gap-2 rounded-xl border border-neutral-300 bg-white px-3.5 py-2 text-neutral-700 hover:bg-violet-600 dark:border-neutral-800 dark:bg-neutral-950/80 dark:text-neutral-200  transition-colors duration-300 ease-in-out">
+                <button type="button" class="inline-flex items-center gap-2 rounded-xl border border-neutral-300 bg-white px-3.5 py-2 text-neutral-700 hover:bg-violet-600 dark:border-neutral-800 dark:bg-neutral-950/80 dark:text-neutral-200 transition-colors duration-300 ease-in-out">
                     <span class="inline-flex h-5 w-5 items-center justify-center rounded-md">
                         <x-icon name="chart-column" class="h-4 w-4" />
                     </span>
                     <span class="text-[14px] font-medium tracking-wide">Reports</span>
                 </button>
 
-                <button type="button" class="inline-flex items-center gap-2 rounded-xl border border-neutral-300 bg-white px-3.5 py-2 text-neutral-700 hover:bg-violet-600 dark:border-neutral-800 dark:bg-neutral-950/80 dark:text-neutral-200  transition-colors duration-300 ease-in-out">
+                <button type="button" class="inline-flex items-center gap-2 rounded-xl border border-neutral-300 bg-white px-3.5 py-2 text-neutral-700 hover:bg-violet-600 dark:border-neutral-800 dark:bg-neutral-950/80 dark:text-neutral-200 transition-colors duration-300 ease-in-out">
                     <span class="inline-flex h-5 w-5 items-center justify-center rounded-md">
                         <x-icon name="eye" class="h-4 w-4" />
                     </span>
@@ -69,14 +69,26 @@
                     </div>
 
                     <div class="flex items-center gap-3">
-                        <div class="relative">
-                            <select class="appearance-none rounded-2xl border border-neutral-300 bg-white px-3 pr-8 py-2 text-[11px] font-medium text-neutral-700 focus:outline-none focus:border-neutral-500 dark:border-neutral-800 dark:bg-black/70 dark:text-neutral-200 transition-colors duration-300 ease-in-out">
-                                <option>All Status</option>
-                                <option>Confirmed</option>
-                                <option>Pending</option>
-                                <option>Cancelled</option>
-                            </select>
-                            <span class="pointer-events-none absolute inset-y-0 right-2 flex items-center text-neutral-500 text-xs">▾</span>
+                        <!-- Custom Filter Dropdown -->
+                        <div class="relative" id="filter-dropdown">
+                            <button id="filter-button" class="flex items-center gap-2 rounded-2xl px-3 py-2 text-xs border border-neutral-300 bg-white text-neutral-700 dark:border-neutral-800 dark:bg-black/60 dark:text-neutral-100 focus:outline-none transition-colors duration-300 ease-in-out">
+                                <span id="filter-button-text">Filter Status</span>
+                                <span id="icon-down" class="h-3 w-3 transition-transform duration-300 ease-in-out">
+                                    <x-icon name="arrow-down" class="h-3 w-3" />
+                                </span>
+                                <span id="icon-up" class="hidden h-3 w-3 transition-transform duration-300 ease-in-out">
+                                    <x-icon name="arrow-up" class="h-3 w-3" />
+                                </span>
+                            </button>
+
+                            <div id="filter-menu" class="absolute right-0 mt-2 w-48 rounded-xl border border-neutral-300 bg-white dark:border-neutral-800 dark:bg-black/60 shadow-lg z-50 overflow-hidden opacity-0 scale-95 pointer-events-none transition-all duration-200 ease-in-out">
+                                <ul class="flex flex-col text-xs">
+                                    <li class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">All Status</li>
+                                    <li class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">Confirmed</li>
+                                    <li class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">Pending</li>
+                                    <li class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">Cancelled</li>
+                                </ul>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -107,10 +119,10 @@
                             <td class="py-3.5 pr-4 text-neutral-600 dark:text-neutral-300 font-geist-mono">2025-11-15</td>
                             <td class="py-3.5 pr-2 text-neutral-600 dark:text-neutral-300 font-geist-mono">2025-11-17</td>
                             <td class="py-3.5 pr-2">
-                                    <span class="inline-flex items-center rounded-full bg-emerald-500/15 px-2 py-1 text-[11px] font-medium text-emerald-600 border border-emerald-500/40 dark:text-emerald-300 transition-colors duration-300 ease-in-out">
-                                        <span class="mr-1.5 h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
-                                        Confirmed
-                                    </span>
+                                <span class="inline-flex items-center rounded-full bg-emerald-500/15 px-2 py-1 text-[11px] font-medium text-emerald-600 border border-emerald-500/40 dark:text-emerald-300 transition-colors duration-300 ease-in-out">
+                                    <span class="mr-1.5 h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                                    Confirmed
+                                </span>
                             </td>
                             <td class="py-3.5 pr-4 text-left text-neutral-900 dark:text-neutral-100 font-geist-mono">$450</td>
                             <td class="py-3.5 pl-2 text-left text-neutral-500 dark:text-neutral-400">
@@ -131,5 +143,58 @@
         </div>
     </section>
 </main>
+
+<script>
+    const filterButton = document.getElementById('filter-button');
+    const filterButtonText = document.getElementById('filter-button-text');
+    const filterMenu = document.getElementById('filter-menu');
+    const iconDown = document.getElementById('icon-down');
+    const iconUp = document.getElementById('icon-up');
+
+    let isOpen = false;
+
+    // Toggle dropdown
+    filterButton.addEventListener('click', (e) => {
+        e.stopPropagation();
+        isOpen = !isOpen;
+
+        filterMenu.classList.toggle('opacity-0', !isOpen);
+        filterMenu.classList.toggle('scale-95', !isOpen);
+        filterMenu.classList.toggle('pointer-events-none', !isOpen);
+        filterMenu.classList.toggle('opacity-100', isOpen);
+        filterMenu.classList.toggle('scale-100', isOpen);
+        filterMenu.classList.toggle('pointer-events-auto', isOpen);
+
+        iconDown.classList.toggle('hidden', isOpen);
+        iconUp.classList.toggle('hidden', !isOpen);
+    });
+
+    // Update filter button text when a status is clicked
+    filterMenu.querySelectorAll('li').forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.stopPropagation();
+            filterButtonText.textContent = item.textContent;
+            isOpen = false;
+
+            filterMenu.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+            filterMenu.classList.remove('opacity-100', 'scale-100', 'pointer-events-auto');
+
+            iconDown.classList.remove('hidden');
+            iconUp.classList.add('hidden');
+        });
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', () => {
+        if (isOpen) {
+            isOpen = false;
+            filterMenu.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+            filterMenu.classList.remove('opacity-100', 'scale-100', 'pointer-events-auto');
+
+            iconDown.classList.remove('hidden');
+            iconUp.classList.add('hidden');
+        }
+    });
+</script>
 </body>
 </html>
