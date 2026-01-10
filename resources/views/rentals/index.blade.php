@@ -70,11 +70,73 @@
                 Active Rentals
             </h2>
 
-            <div class="relative">
+            <div class="relative flex items-center gap-3">
+                <!-- Search -->
                 <div class="flex items-center gap-3 rounded-2xl px-4 py-2.5 border border-neutral-300 bg-white focus-within:border-neutral-500 dark:border-neutral-800 dark:bg-black/60 transition-colors duration-300 ease-in-out">
                     <x-icon name="search" class="h-4 w-4 text-neutral-500 transition-colors duration-300 ease-in-out" />
                     <input type="text" placeholder="Search by customer, item, or ID..." class="w-72 bg-transparent text-xs text-neutral-700 placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500 focus:outline-none transition-colors duration-300 ease-in-out">
                 </div>
+
+                <!-- Filter with toggle icons -->
+                <div class="relative" id="filter-dropdown">
+                    <button id="filter-button" class="flex items-center gap-2 rounded-2xl px-3 py-2 text-xs border border-neutral-300 bg-white text-neutral-700 dark:border-neutral-800 dark:bg-black/60 dark:text-neutral-100 focus:outline-none transition-colors duration-300 ease-in-out">
+                        <span>Filter Status</span>
+                        <!-- Icon wrappers for JS toggling -->
+                        <span id="icon-down" class="h-3 w-3 transition-transform duration-300 ease-in-out">
+                            <x-icon name="arrow-down" class="h-3 w-3" />
+                        </span>
+                        <span id="icon-up" class="hidden h-3 w-3 transition-transform duration-300 ease-in-out">
+                            <x-icon name="arrow-up" class="h-3 w-3" />
+                        </span>
+                    </button>
+
+                    <div id="filter-menu" class="absolute right-0 mt-2 w-48 rounded-xl border border-neutral-300 bg-white dark:border-neutral-800 dark:bg-black/60 shadow-lg z-50 overflow-hidden opacity-0 scale-95 pointer-events-none transition-all duration-200 ease-in-out">
+                        <ul class="flex flex-col text-xs">
+                            <li class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">All Statuses</li>
+                            <li class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">Active</li>
+                            <li class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">Due Soon</li>
+                            <li class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">Overdue</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <script>
+                    const filterButton = document.getElementById('filter-button');
+                    const filterMenu = document.getElementById('filter-menu');
+                    const iconDown = document.getElementById('icon-down');
+                    const iconUp = document.getElementById('icon-up');
+
+                    let isOpen = false;
+
+                    filterButton.addEventListener('click', () => {
+                        isOpen = !isOpen;
+
+                        // Toggle dropdown
+                        filterMenu.classList.toggle('opacity-0', !isOpen);
+                        filterMenu.classList.toggle('scale-95', !isOpen);
+                        filterMenu.classList.toggle('pointer-events-none', !isOpen);
+                        filterMenu.classList.toggle('opacity-100', isOpen);
+                        filterMenu.classList.toggle('scale-100', isOpen);
+                        filterMenu.classList.toggle('pointer-events-auto', isOpen);
+
+                        // Toggle icons
+                        iconDown.classList.toggle('hidden', isOpen);
+                        iconUp.classList.toggle('hidden', !isOpen);
+                    });
+
+                    // Close dropdown when clicking outside
+                    document.addEventListener('click', (e) => {
+                        if (!filterButton.contains(e.target) && !filterMenu.contains(e.target) && isOpen) {
+                            isOpen = false;
+
+                            filterMenu.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+                            filterMenu.classList.remove('opacity-100', 'scale-100', 'pointer-events-auto');
+
+                            iconDown.classList.remove('hidden');
+                            iconUp.classList.add('hidden');
+                        }
+                    });
+                </script>
             </div>
         </div>
 
@@ -102,5 +164,43 @@
         </div>
     </section>
 </main>
+
+<script>
+    const filterButton = document.getElementById('filter-button');
+    const filterMenu = document.getElementById('filter-menu');
+    const iconDown = document.getElementById('icon-down');
+    const iconUp = document.getElementById('icon-up');
+
+    let isOpen = false;
+
+    filterButton.addEventListener('click', () => {
+        isOpen = !isOpen;
+
+        // Toggle dropdown
+        filterMenu.classList.toggle('opacity-0', !isOpen);
+        filterMenu.classList.toggle('scale-95', !isOpen);
+        filterMenu.classList.toggle('pointer-events-none', !isOpen);
+        filterMenu.classList.toggle('opacity-100', isOpen);
+        filterMenu.classList.toggle('scale-100', isOpen);
+        filterMenu.classList.toggle('pointer-events-auto', isOpen);
+
+        // Toggle icons
+        iconDown.classList.toggle('hidden', isOpen);
+        iconUp.classList.toggle('hidden', !isOpen);
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!filterButton.contains(e.target) && !filterMenu.contains(e.target) && isOpen) {
+            isOpen = false;
+
+            filterMenu.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+            filterMenu.classList.remove('opacity-100', 'scale-100', 'pointer-events-auto');
+
+            iconDown.classList.remove('hidden');
+            iconUp.classList.add('hidden');
+        }
+    });
+</script>
 </body>
 </html>
