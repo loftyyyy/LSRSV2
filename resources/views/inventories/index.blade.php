@@ -113,12 +113,12 @@
                     <table class="min-w-full text-left text-xs text-neutral-600 dark:text-neutral-300 transition-colors duration-300 ease-in-out">
                         <thead class="text-[11px] uppercase tracking-[0.18em] text-neutral-500">
                         <tr class="border-b border-neutral-200 dark:border-neutral-900/80">
-                            <th class="py-2.5 pr-4 pl-4 font-medium">ID</th>
-                            <th class="py-2.5 pr-4 font-medium">Name</th>
-                            <th class="py-2.5 pr-4 font-medium">Email</th>
-                            <th class="py-2.5 pr-4 font-medium">Phone</th>
-                            <th class="py-2.5 pr-4 font-medium">Address</th>
-                            <th class="py-2.5 pr-4 font-medium">Total Rentals</th>
+                            <th class="py-2.5 pr-4 pl-4 font-medium">Item</th>
+                            <th class="py-2.5 pr-4 font-medium">SKU</th>
+                            <th class="py-2.5 pr-4 font-medium">Category</th>
+                            <th class="py-2.5 pr-4 font-medium">Qty</th>
+                            <th class="py-2.5 pr-4 font-medium">Fee</th>
+                            <th class="py-2.5 pr-4 font-medium">Condition</th>
                             <th class="py-2.5 pr-4 font-medium text-left">Status</th>
                             <th class="py-2.5 pl-2 font-medium text-left">Actions</th>
                         </tr>
@@ -126,16 +126,16 @@
 
                         <tbody class="text-[13px]">
                         <tr class="border-b border-neutral-200 hover:bg-neutral-100 dark:border-neutral-900/60 dark:hover:bg-white/5 transition-colors duration-300 ease-in-out">
-                            <td class="py-3.5 pr-4 pl-4 text-neutral-500 font-geist-mono">#001</td>
-                            <td class="py-3.5 pr-4 text-neutral-900 dark:text-neutral-100">Sarah Johnson</td>
-                            <td class="py-3.5 pr-4 text-neutral-600 dark:text-neutral-300">sjohnson@gmail.com</td>
-                            <td class="py-3.5 pr-4 text-neutral-600 dark:text-neutral-300 font-geist-mono">09923423</td>
-                            <td class="py-3.5 pr-2 text-neutral-600 dark:text-neutral-300 font-geist-mono">115 Boulevard</td>
-                            <td class="py-3.5 pr-4 text-left text-neutral-900 dark:text-neutral-100 font-geist-mono">5</td>
+                            <td class="py-3.5 pr-4 pl-4 text-neutral-500 font-geist-mono">Wedding Gown - Ivory</td>
+                            <td class="py-3.5 pr-4 text-neutral-900 dark:text-neutral-100">WG-001</td>
+                            <td class="py-3.5 pr-4 text-neutral-600 dark:text-neutral-300">Wedding</td>
+                            <td class="py-3.5 pr-4 text-neutral-600 dark:text-neutral-300 font-geist-mono">5</td>
+                            <td class="py-3.5 pr-2 text-neutral-600 dark:text-neutral-300 font-geist-mono">₱540</td>
+                            <td class="py-3.5 pr-4 text-left text-neutral-900 dark:text-neutral-100 font-geist-mono">Excellent</td>
                             <td class="py-3.5 pr-2">
                                 <span class="inline-flex items-center rounded-full bg-emerald-500/15 px-2 py-1 text-[11px] font-medium text-emerald-600 border border-emerald-500/40 dark:text-emerald-300 transition-colors duration-300 ease-in-out">
                                     <span class="mr-1.5 h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
-                                    Active
+                                    Available
                                 </span>
                             </td>
                             <td class="py-3.5 pl-2 text-left text-neutral-500 dark:text-neutral-400">
