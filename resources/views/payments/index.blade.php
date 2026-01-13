@@ -68,44 +68,43 @@
 
 
     {{-- Filters + table --}}
-    <section class="flex-1">
-        <div class="rounded-2xl border border-neutral-200 bg-white shadow-sm dark:border-neutral-900 dark:bg-neutral-950/60 dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
-            {{-- Search & filters --}}
-            <div class="border-b border-neutral-200 px-6 py-4 dark:border-neutral-900 transition-colors duration-300 ease-in-out">
-                <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                    <div class="flex-1">
-                        <div class="flex items-center gap-3 rounded-2xl bg-white px-4 py-2.5 border border-neutral-300 focus-within:border-neutral-500 dark:border-neutral-800 dark:bg-black/60 transition-colors duration-300 ease-in-out">
-                            <x-icon name="search" class="h-4 w-4 text-neutral-500 transition-colors duration-300 ease-in-out" />
-                            <input type="text" placeholder="Search by name, SKU, or category..." class="w-full bg-transparent text-xs text-neutral-700 placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500 focus:outline-none transition-colors duration-300 ease-in-out">
-                        </div>
-                    </div>
+    <section class="rounded-2xl p-6 border border-neutral-200 bg-white dark:border-neutral-900 dark:bg-neutral-950/60 transition-colors duration-300 ease-in-out">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-semibold tracking-tight text-neutral-900 dark:text-white transition-colors duration-300 ease-in-out">
+                Payments and Invoices
+            </h2>
 
-                    <div class="flex items-center gap-3">
-                        <!-- Custom Filter Dropdown -->
-                        <div class="relative" id="filter-dropdown">
-                            <button id="filter-button" class="flex items-center gap-2 rounded-2xl px-3 py-2 text-xs border border-neutral-300 bg-white text-neutral-700 dark:border-neutral-800 dark:bg-black/60 dark:text-neutral-100 focus:outline-none transition-colors duration-300 ease-in-out">
-                                <span id="filter-button-text">Filter Status</span>
-                                <span id="icon-down" class="h-3 w-3 transition-transform duration-300 ease-in-out">
-                                    <x-icon name="arrow-down" class="h-3 w-3" />
-                                </span>
-                                <span id="icon-up" class="hidden h-3 w-3 transition-transform duration-300 ease-in-out">
-                                    <x-icon name="arrow-up" class="h-3 w-3" />
-                                </span>
-                            </button>
+            <div class="relative flex items-center gap-3">
+                <!-- Search -->
+                <div class="flex items-center gap-3 rounded-2xl px-4 py-2.5 border border-neutral-300 bg-white focus-within:border-neutral-500 dark:border-neutral-800 dark:bg-black/60 transition-colors duration-300 ease-in-out">
+                    <x-icon name="search" class="h-4 w-4 text-neutral-500 transition-colors duration-300 ease-in-out" />
+                    <input type="text" placeholder="Search by customer, item, or ID..." class="w-72 bg-transparent text-xs text-neutral-700 placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500 focus:outline-none transition-colors duration-300 ease-in-out">
+                </div>
 
-                            <div id="filter-menu" class="absolute right-0 mt-2 w-48 rounded-xl border border-neutral-300 bg-white dark:border-neutral-800 dark:bg-black/60 shadow-lg z-50 overflow-hidden opacity-0 scale-95 pointer-events-none transition-all duration-200 ease-in-out">
-                                <ul class="flex flex-col text-xs">
-                                    <li class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">All Status</li>
-                                    <li class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">Good</li>
-                                    <li class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">Damaged</li>
-                                    <li class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">Under Repair</li>
-                                    <li class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">Retired</li>
-                                </ul>
-                            </div>
-                        </div>
+                <!-- Filter with toggle icons -->
+                <div class="relative" id="filter-dropdown">
+                    <button id="filter-button" class="flex items-center gap-2 rounded-2xl px-3 py-2 text-xs border border-neutral-300 bg-white text-neutral-700 dark:border-neutral-800 dark:bg-black/60 dark:text-neutral-100 focus:outline-none transition-colors duration-300 ease-in-out">
+                        <span id="filter-button-text">Filter Status</span>
+                        <span id="icon-down" class="h-3 w-3 transition-transform duration-300 ease-in-out">
+                            <x-icon name="arrow-down" class="h-3 w-3" />
+                        </span>
+                        <span id="icon-up" class="hidden h-3 w-3 transition-transform duration-300 ease-in-out">
+                            <x-icon name="arrow-up" class="h-3 w-3" />
+                        </span>
+                    </button>
+
+                    <div id="filter-menu" class="absolute right-0 mt-2 w-48 rounded-xl border border-neutral-300 bg-white dark:border-neutral-800 dark:bg-black/60 shadow-lg z-50 overflow-hidden opacity-0 scale-95 pointer-events-none transition-all duration-200 ease-in-out">
+                        <ul class="flex flex-col text-xs">
+                            <li class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">All Status</li>
+                            <li class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">Good</li>
+                            <li class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">Damaged</li>
+                            <li class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">Under Repair</li>
+                            <li class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">Retired</li>
+                        </ul>
                     </div>
                 </div>
             </div>
+        </div>
 
             {{-- Table --}}
             <div class="px-6 py-4">
