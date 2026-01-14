@@ -149,7 +149,6 @@
                     </table>
                 </div>
             </div>
-        </div>
     </section>
 </main>
 
