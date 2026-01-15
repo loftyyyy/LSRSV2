@@ -38,12 +38,6 @@ return [
             'route' => 'payments',
             'icon'  => 'credit-card',
         ],
-        [
-            'key'   => 'invoices',
-            'label' => 'Invoices',
-            'route' => 'invoices',
-            'icon'  => 'receipt',
-        ],
     ],
 ];
 
