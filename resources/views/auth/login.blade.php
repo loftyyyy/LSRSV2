@@ -87,8 +87,12 @@
                     onclick="togglePassword()"
                     class="text-neutral-400 dark:text-neutral-600 hover:text-neutral-600 dark:hover:text-neutral-400 ml-2 p-1 transition-colors"
                 >
-                    <x-icon name="eye" id="eyeOpen" class="h-4 w-4" />
-                    <x-icon name="eye-off" id="eyeClosed" class="h-4 w-4 hidden" />
+                    <span id="eyeOpen">
+                        <x-icon name="eye" class="h-4 w-4" />
+                    </span>
+                    <span id="eyeClosed" class="hidden">
+                        <x-icon name="eye-off" class="h-4 w-4" />
+                    </span>
                 </button>
             </div>
         </div>
@@ -141,6 +145,17 @@
         // Update UI after DOM is ready
         window.addEventListener('DOMContentLoaded', function () {
             updateToggleUI(isDarkMode);
+            
+            // Initialize password toggle state
+            const passwordInput = document.getElementById('passwordInput');
+            const eyeOpen = document.getElementById('eyeOpen');
+            const eyeClosed = document.getElementById('eyeClosed');
+            
+            // Ensure proper initial state
+            if (passwordInput.type === 'password') {
+                eyeOpen.classList.remove('hidden');
+                eyeClosed.classList.add('hidden');
+            }
         });
 
         function toggleDarkMode() {
@@ -183,12 +198,17 @@
             const eyeOpen = document.getElementById('eyeOpen');
             const eyeClosed = document.getElementById('eyeClosed');
 
-            const isPassword = passwordInput.type === 'password';
-
-            passwordInput.type = isPassword ? 'text' : 'password';
-
-            eyeOpen.classList.toggle('hidden', !isPassword);
-            eyeClosed.classList.toggle('hidden', isPassword);
+            if (passwordInput.type === 'password') {
+                // Show password
+                passwordInput.type = 'text';
+                eyeOpen.classList.add('hidden');
+                eyeClosed.classList.remove('hidden');
+            } else {
+                // Hide password
+                passwordInput.type = 'password';
+                eyeOpen.classList.remove('hidden');
+                eyeClosed.classList.add('hidden');
+            }
         }
     </script>
 
