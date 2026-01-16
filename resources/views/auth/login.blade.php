@@ -87,7 +87,8 @@
                     onclick="togglePassword()"
                     class="text-neutral-400 dark:text-neutral-600 hover:text-neutral-600 dark:hover:text-neutral-400 ml-2 p-1 transition-colors"
                 >
-                    <x-icon name="eye" id="eyeIcon" class="h-4 w-4" />
+                    <x-icon name="eye" id="eyeOpen" class="h-4 w-4" />
+                    <x-icon name="eye-off" id="eyeClosed" class="h-4 w-4 hidden" />
                 </button>
             </div>
         </div>
@@ -179,14 +180,15 @@
         // Password visibility toggle
         function togglePassword() {
             const passwordInput = document.getElementById('passwordInput');
-            const eyeIcon = document.getElementById('eyeIcon');
+            const eyeOpen = document.getElementById('eyeOpen');
+            const eyeClosed = document.getElementById('eyeClosed');
 
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                // You could change to eye-slash icon if available, for now we'll keep same icon
-            } else {
-                passwordInput.type = 'password';
-            }
+            const isPassword = passwordInput.type === 'password';
+
+            passwordInput.type = isPassword ? 'text' : 'password';
+
+            eyeOpen.classList.toggle('hidden', !isPassword);
+            eyeClosed.classList.toggle('hidden', isPassword);
         }
     </script>
 
