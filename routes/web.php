@@ -17,9 +17,11 @@ Route::get('/landing', function () {
 
 Route::get('/register', [AuthController::class,  'showRegisterForm'])->name('register');
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
+Route::get('/forgot-password', [AuthController::class, 'showForgotPasswordForm'])->name('password.request');
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/forgot-password', [AuthController::class, 'sendResetLinkEmail'])->name('password.email');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
  Route::middleware('auth')->group(function () {

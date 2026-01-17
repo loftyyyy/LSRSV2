@@ -105,9 +105,9 @@
 
             <!-- Forgot password -->
             <div class="text-right mb-6">
-                <a href="#" class="text-sm text-violet-600 dark:text-purple-400 hover:underline transition-colors">
+                <button type="button" onclick="showForgotPasswordModal()" class="text-sm text-violet-600 dark:text-purple-400 hover:underline transition-colors">
                     Forgot password?
-                </a>
+                </button>
             </div>
 
             <!-- Button -->
@@ -221,7 +221,102 @@
                 eyeClosed.classList.add('hidden');
             }
         }
+
+        // Forgot password modal functions
+        function showForgotPasswordModal() {
+            const forgotPasswordModal = document.getElementById('forgotPasswordModal');
+            const loginEmail = document.querySelector('input[name="email"]');
+            const forgotPasswordEmail = document.getElementById('forgotPasswordEmail');
+            
+            // Copy email from login field if it has a value
+            if (loginEmail && loginEmail.value && forgotPasswordEmail) {
+                forgotPasswordEmail.value = loginEmail.value;
+            }
+            
+            // Show the modal
+            forgotPasswordModal.classList.remove('hidden');
+            
+            // Prevent body scroll when modal is open
+            document.body.style.overflow = 'hidden';
+        }
+
+        function hideForgotPasswordModal() {
+            const forgotPasswordModal = document.getElementById('forgotPasswordModal');
+            
+            // Hide the modal
+            forgotPasswordModal.classList.add('hidden');
+            
+            // Restore body scroll
+            document.body.style.overflow = 'auto';
+        }
     </script>
+
+<!-- Forgot Password Modal -->
+    <div id="forgotPasswordModal" class="hidden fixed inset-0 z-50 overflow-y-auto">
+        <!-- Modal backdrop -->
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <!-- Background overlay -->
+            <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75 dark:bg-gray-900 dark:bg-opacity-75" onclick="hideForgotPasswordModal()"></div>
+
+            <!-- Modal panel -->
+            <div class="inline-block w-full max-w-md p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white dark:bg-gradient-to-b dark:from-zinc-900 dark:to-black border border-neutral-200 dark:border-zinc-800 shadow-2xl rounded-2xl">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-neutral-900 dark:text-white">
+                        Reset your password
+                    </h3>
+                    <button type="button" onclick="hideForgotPasswordModal()" class="text-neutral-400 dark:text-neutral-600 hover:text-neutral-600 dark:hover:text-neutral-400 transition-colors text-xl leading-none">
+                        ×
+                    </button>
+                </div>
+                
+                <p class="text-sm text-neutral-600 dark:text-gray-400 mb-6">
+                    Enter your email address and we'll send you a link to reset your password.
+                </p>
+
+                <form id="forgotPasswordFormElement" method="POST" action="{{ route('password.email') }}">
+                    @csrf
+                    <div class="mb-4">
+                        <label class="text-sm text-neutral-700 dark:text-gray-300 block mb-2">Email Address</label>
+                        <div class="flex items-center bg-neutral-50 dark:bg-black border border-neutral-200 dark:border-zinc-800 rounded-lg px-3 transition-colors">
+                            <div class="text-neutral-400 dark:text-neutral-600 pr-2">
+                                <x-icon name="mail"/>
+                            </div>
+                            <input
+                                type="email"
+                                name="email"
+                                required
+                                id="forgotPasswordEmail"
+                                placeholder="your@business.com"
+                                class="w-full bg-transparent py-3 text-sm text-neutral-900 dark:text-white placeholder-neutral-500 dark:placeholder-gray-500 focus:outline-none"
+                            />
+                        </div>
+                        @error('email')
+                            <p class="mt-1 text-xs text-red-600 dark:text-red-400">
+                                {{ $message }}
+                            </p>
+                        @enderror
+                    </div>
+
+                    <div class="flex gap-3">
+                        <button type="submit" class="flex-1 bg-violet-600 hover:bg-violet-700 dark:bg-purple-600 dark:hover:bg-purple-700 transition rounded-lg py-3 font-medium text-white">
+                            Send Reset Link
+                        </button>
+                        <button type="button" onclick="hideForgotPasswordModal()" class="px-4 py-3 text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200 border border-neutral-200 dark:border-neutral-700 rounded-lg transition-colors">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+
+                @if (session('status'))
+                    <div class="mt-4 p-3 bg-green-100 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                        <p class="text-sm text-green-800 dark:text-green-200">
+                            {{ session('status') }}
+                        </p>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
 
 </body>
 </html>
