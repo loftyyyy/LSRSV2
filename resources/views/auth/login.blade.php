@@ -48,75 +48,86 @@
 
     <div class="w-full max-w-md bg-white dark:bg-gradient-to-b dark:from-zinc-900 dark:to-black border border-neutral-200 dark:border-zinc-800 rounded-2xl p-6 sm:p-8 shadow-xl">
 
-<h2 class="text-xl font-semibold mb-1 text-neutral-900 dark:text-white">Welcome Back</h2>
-        <p class="text-sm text-neutral-600 dark:text-gray-400 mb-6">
-            Sign in to access your rental management dashboard
-        </p>
+            <h2 class="text-xl font-semibold mb-1 text-neutral-900 dark:text-white">Welcome Back</h2>
+            <p class="text-sm text-neutral-600 dark:text-gray-400 mb-6">
+                Sign in to access your rental management dashboard
+            </p>
 
-        <!-- Email -->
-        <div class="mb-4">
-            <label class="text-sm text-neutral-700 dark:text-gray-300 block mb-2">Email Address</label>
-            <div class="flex items-center bg-neutral-50 dark:bg-black border border-neutral-200 dark:border-zinc-800 rounded-lg px-3 transition-colors">
-                <div class="text-neutral-400 dark:text-neutral-600 pr-2">
-                    <x-icon name="mail"/>
+        <form method="POST" action="{{route('login')}}">
+            @csrf
+            <!-- Email -->
+            <div class="mb-4">
+                <label class="text-sm text-neutral-700 dark:text-gray-300 block mb-2">Email Address</label>
+                <div class="flex items-center bg-neutral-50 dark:bg-black border border-neutral-200 dark:border-zinc-800 rounded-lg px-3 transition-colors">
+                    <div class="text-neutral-400 dark:text-neutral-600 pr-2">
+                        <x-icon name="mail"/>
+                    </div>
+                    <input
+                        type="email"
+                        name="email"
+                        required
+                        placeholder="your@business.com"
+                        class="w-full bg-transparent py-3 text-sm text-neutral-900 dark:text-white placeholder-neutral-500 dark:placeholder-gray-500 focus:outline-none"
+                    />
                 </div>
-                <input
-                    type="email"
-                    placeholder="your@business.com"
-                    class="w-full bg-transparent py-3 text-sm text-neutral-900 dark:text-white placeholder-neutral-500 dark:placeholder-gray-500 focus:outline-none"
-                />
             </div>
-        </div>
 
-        <!-- Password -->
-        <div class="mb-2">
-            <label class="text-sm text-neutral-700 dark:text-gray-300 block mb-2">Password</label>
-            <div class="flex items-center bg-neutral-50 dark:bg-black border border-neutral-200 dark:border-zinc-800 rounded-lg px-3 transition-colors">
-                <div class="text-neutral-400 dark:text-neutral-600 pr-2">
-                    <x-icon name="lock"/>
+            <!-- Password -->
+            <div class="mb-2">
+                <label class="text-sm text-neutral-700 dark:text-gray-300 block mb-2">Password</label>
+                <div class="flex items-center bg-neutral-50 dark:bg-black border border-neutral-200 dark:border-zinc-800 rounded-lg px-3 transition-colors">
+                    <div class="text-neutral-400 dark:text-neutral-600 pr-2">
+                        <x-icon name="lock"/>
+                    </div>
+                    <input
+                        type="password"
+                        name="password"
+                        required
+                        id="passwordInput"
+                        placeholder="••••••••"
+                        class="w-full bg-transparent py-3 text-sm text-neutral-900 dark:text-white placeholder-neutral-500 dark:placeholder-gray-500 focus:outline-none"
+                    />
+                    <button
+                        type="button"
+                        id="passwordToggle"
+                        onclick="togglePassword()"
+                        class="text-neutral-400 dark:text-neutral-600 hover:text-neutral-600 dark:hover:text-neutral-400 ml-2 p-1 transition-colors"
+                    >
+                        <span id="eyeOpen">
+                            <x-icon name="eye" class="h-4 w-4" />
+                        </span>
+                        <span id="eyeClosed" class="hidden">
+                            <x-icon name="eye-off" class="h-4 w-4" />
+                        </span>
+                    </button>
                 </div>
-                <input
-                    type="password"
-                    id="passwordInput"
-                    placeholder="••••••••"
-                    class="w-full bg-transparent py-3 text-sm text-neutral-900 dark:text-white placeholder-neutral-500 dark:placeholder-gray-500 focus:outline-none"
-                />
-                <button
-                    type="button"
-                    id="passwordToggle"
-                    onclick="togglePassword()"
-                    class="text-neutral-400 dark:text-neutral-600 hover:text-neutral-600 dark:hover:text-neutral-400 ml-2 p-1 transition-colors"
-                >
-                    <span id="eyeOpen">
-                        <x-icon name="eye" class="h-4 w-4" />
-                    </span>
-                    <span id="eyeClosed" class="hidden">
-                        <x-icon name="eye-off" class="h-4 w-4" />
-                    </span>
-                </button>
             </div>
-        </div>
 
-        <!-- Forgot password -->
-        <div class="text-right mb-6">
-            <a href="#" class="text-sm text-violet-600 dark:text-purple-400 hover:underline transition-colors">
-                Forgot password?
-            </a>
-        </div>
+            <!-- Forgot password -->
+            <div class="text-right mb-6">
+                <a href="#" class="text-sm text-violet-600 dark:text-purple-400 hover:underline transition-colors">
+                    Forgot password?
+                </a>
+            </div>
 
-        <!-- Button -->
-        <button
-            class="w-full bg-violet-600 hover:bg-violet-700 dark:bg-purple-600 dark:hover:bg-purple-700 transition rounded-lg py-3 font-medium text-white flex items-center justify-center gap-2"
-        >
-            Sign In →
-        </button>
+            <!-- Button -->
+            <button type="submit" class="w-full bg-violet-600 hover:bg-violet-700 dark:bg-purple-600 dark:hover:bg-purple-700 transition rounded-lg py-3 font-medium text-white flex items-center justify-center gap-2">
+                Sign In
+            </button>
+            @error('email')
+            <p class="mt-1 text-xs text-red-600 dark:text-red-400">
+                {{ $message }}
+            </p>
+            @enderror
 
-        <hr class="border-neutral-200 dark:border-zinc-800 my-6">
+        </form>
 
-        <p class="text-center text-sm text-neutral-600 dark:text-gray-400">
-            Don't have access?
-            <span class="text-neutral-800 dark:text-gray-300">Contact your system administrator</span>
-        </p>
+            <hr class="border-neutral-200 dark:border-zinc-800 my-6">
+
+            <p class="text-center text-sm text-neutral-600 dark:text-gray-400">
+                Don't have access?
+                <span class="text-neutral-800 dark:text-gray-300">Contact your system administrator</span>
+            </p>
 
     </div>
 
@@ -145,12 +156,12 @@
         // Update UI after DOM is ready
         window.addEventListener('DOMContentLoaded', function () {
             updateToggleUI(isDarkMode);
-            
+
             // Initialize password toggle state
             const passwordInput = document.getElementById('passwordInput');
             const eyeOpen = document.getElementById('eyeOpen');
             const eyeClosed = document.getElementById('eyeClosed');
-            
+
             // Ensure proper initial state
             if (passwordInput.type === 'password') {
                 eyeOpen.classList.remove('hidden');

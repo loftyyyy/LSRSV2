@@ -23,6 +23,26 @@
     Consolas, 'Liberation Mono', 'Courier New', monospace;
 }
 
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+    transition: background-color 9999s ease-in-out 0s;
+}
+
+/* Light mode */
+html:not(.dark) input:-webkit-autofill {
+    -webkit-text-fill-color: #171717; /* neutral-900 */
+    -webkit-box-shadow: 0 0 0px 1000px #fafafa inset; /* neutral-50 */
+}
+
+/* Dark mode */
+.dark input:-webkit-autofill {
+    -webkit-text-fill-color: #ffffff;
+    -webkit-box-shadow: 0 0 0px 1000px #000000 inset;
+}
+
 /* Smooth theme transition */
 html,
 body {
