@@ -18,8 +18,12 @@ class OtpService {
     public function verifyOtp(String $email, String $otp): Boolean
     {
         $key = "otp:" . $email;
-
         $value = Redis::get($key);
+
+        if($value === null){
+            return false;
+        }
+
         return $value === $otp;
     }
 
