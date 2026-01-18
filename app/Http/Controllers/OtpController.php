@@ -111,39 +111,69 @@ class OtpController extends Controller
         }
 
     }
-    public function verifyOtp(Request $request): JsonResponse
+
+    public function verifyOtp(Request $request, OtpService $otpService): JsonResponse
     {
-        try{
-            $validated = $request->validate([
-                'email' => ['required', 'email'],
-                'otp' => ['required', 'digits:6'],
-            ]);
+        $validated = $request->validate([
+            'email' => ['required', 'email'],
+            'otp' => ['required', 'digits:6'],
+        ]);
 
-            // Check if user exists
-            $user = User::where('email', $validated['email'])->first();
+        $result = $otpService->verifyOtp($validated['email'], $validated['otp']);
 
-            if (!$user) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Invalid OTP or email.'
-                ], 422);
-            }
+        if ($result === 1) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Password reset OTP confirmed.'
+            ], 200);
+        }
 
-            $otpService = new OtpService();
-            $validOTP = $otpService->verifyOtp($validated['email'], $validated['otp']);
-
-            if($validOTP){
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Password reset OTP confirmed.'
-                ], 200);
-            }
-
+        if ($result === -1) {
             return response()->json([
                 'success' => false,
-                'message' => 'Invalid OTP.'
-            ], 422);
+                'message' => 'Too many OTP attempts. Please request a new code.'
+            ], 429);
+        }
 
+        return response()->json([
+            'success' => false,
+            'message' => 'Invalid OTP or email.'
+        ], 422);
+    }
+
+//    public function verifyOtp(Request $request): JsonResponse
+//    {
+//        try{
+//            $validated = $request->validate([
+//                'email' => ['required', 'email'],
+//                'otp' => ['required', 'digits:6'],
+//            ]);
+//
+//            // Check if user exists
+//            $user = User::where('email', $validated['email'])->first();
+//
+//            if (!$user) {
+//                return response()->json([
+//                    'success' => false,
+//                    'message' => 'Invalid OTP or email.'
+//                ], 422);
+//            }
+//
+//            $otpService = new OtpService();
+//            $validOTP = $otpService->verifyOtp($validated['email'], $validated['otp']);
+//
+//            if($validOTP){
+//                return response()->json([
+//                    'success' => true,
+//                    'message' => 'Password reset OTP confirmed.'
+//                ], 200);
+//            }
+//
+//            return response()->json([
+//                'success' => false,
+//                'message' => 'Invalid OTP.'
+//            ], 422);
+//
 
         }catch (ValidationException $e){
             return response()->json([

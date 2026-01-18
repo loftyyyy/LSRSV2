@@ -29,62 +29,86 @@ class OtpService {
 
     // Improved version:
 
+    public function verifyOtp(string $email, string $otp, int $maxAttempts = 5, int $ttlSeconds = 300): int
+    {
+        $otpKey = "otp:" . $email;
+        $attemptsKey = "otp_attempts:" . $email;
+
+        // Lua script for atomic verification + attempt limiting
+        $lua = <<<LUA
+            local otpKey = KEYS[1]
+            local attemptsKey = KEYS[2]
+
+            local providedOtp = ARGV[1]
+            local maxAttempts = tonumber(ARGV[2])
+            local ttl = tonumber(ARGV[3])
+
+            local storedOtp = redis.call("GET", otpKey)
+            if not storedOtp then
+                return 0
+            end
+
+            -- Increment attempts
+            local attempts = redis.call("INCR", attemptsKey)
+            if attempts == 1 then
+                redis.call("EXPIRE", attemptsKey, ttl)
+            end
+
+            -- Too many attempts
+            if attempts > maxAttempts then
+                redis.call("DEL", otpKey)
+                redis.call("DEL", attemptsKey)
+                return -1
+            end
+
+            -- Correct OTP
+            if storedOtp == providedOtp then
+                redis.call("DEL", otpKey)
+                redis.call("DEL", attemptsKey)
+                return 1
+            end
+
+            -- Incorrect OTP
+            return 0
+        LUA;
+
+        try {
+            // Execute Lua script atomically
+            $result = Redis::eval($lua, 2, $otpKey, $attemptsKey, $otp, $maxAttempts, $ttlSeconds);
+            return (int) $result;
+        } catch (\Throwable $e) {
+            // Redis failure -> treat as invalid OTP
+            return 0;
+        }
+    }
 //    public function verifyOtp(string $email, string $otp): bool
 //    {
 //        $key = "otp:" . $email;
 //
-//        $lua = <<<LUA
-//        local key = KEYS[1]
-//        local providedOtp = ARGV[1]
-//
-//        local storedOtp = redis.call("GET", key)
-//        if not storedOtp then
-//            return 0
-//        end
-//
-//        if storedOtp == providedOtp then
-//            redis.call("DEL", key)
-//            return 1
-//        end
-//
-//        return 0
-//    LUA;
-//
 //        try {
-//            $result = Redis::eval($lua, 1, $key, $otp);
-//            return $result === 1;
-//        } catch (\Throwable $e) {
+//            $storedOtp = Redis::get($key);
+//        } catch (\Exception $e) {
+//            $storedOtp = Cache::get($key);
+//        }
+//
+//        if ($storedOtp === null) {
 //            return false;
 //        }
+//
+//        // Constant-time comparison
+//        if (!hash_equals($storedOtp, $otp)) {
+//            return false;
+//        }
+//
+//        // Invalidate OTP after successful use
+//        try {
+//            Redis::del($key);
+//        } catch (\Exception $e) {
+//            Cache::forget($key);
+//        }
+//
+//        return true;
 //    }
-    public function verifyOtp(string $email, string $otp): bool
-    {
-        $key = "otp:" . $email;
-
-        try {
-            $storedOtp = Redis::get($key);
-        } catch (\Exception $e) {
-            $storedOtp = Cache::get($key);
-        }
-
-        if ($storedOtp === null) {
-            return false;
-        }
-
-        // Constant-time comparison
-        if (!hash_equals($storedOtp, $otp)) {
-            return false;
-        }
-
-        // Invalidate OTP after successful use
-        try {
-            Redis::del($key);
-        } catch (\Exception $e) {
-            Cache::forget($key);
-        }
-
-        return true;
-    }
 
     public function deleteOtp(String $email): void
     {
