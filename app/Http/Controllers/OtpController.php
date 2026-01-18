@@ -116,7 +116,7 @@ class OtpController extends Controller
         try{
             $validated = $request->validate([
                 'email' => ['required', 'email'],
-                'otp' => ['required'],
+                'otp' => ['required', 'digits:6'],
             ]);
 
             // Check if user exists
@@ -132,11 +132,20 @@ class OtpController extends Controller
             }
 
             $otpService = new OtpService();
-            $otpService->verifyOtp($validated['email'], $validated['otp']);
+            $validOTP = $otpService->verifyOtp($validated['email'], $validated['otp']);
+
+            if($validOTP !== null){
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Password reset OTP confirmed.'
+                ], 200);
+            }
+
             return response()->json([
-                'success' => true,
-                'message' => 'Password reset OTP confirmed.'
-            ], 200);
+                'success' => false,
+                'message' => 'Invalid OTP.'
+            ], 422);
+
 
         }catch (ValidationException $e){
             return response()->json([
@@ -151,9 +160,6 @@ class OtpController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
-
-
-
 
     }
 

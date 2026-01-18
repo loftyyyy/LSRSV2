@@ -27,23 +27,33 @@ class OtpService {
         return $key;
     }
 
-    public function verifyOtp(String $email, String $otp): bool
+    public function verifyOtp(string $email, string $otp): bool
     {
         $key = "otp:" . $email;
-        $value = null;
 
-        // Try Redis first, fallback to Cache
         try {
-            $value = Redis::get($key);
+            $storedOtp = Redis::get($key);
         } catch (\Exception $e) {
-            $value = Cache::get($key);
+            $storedOtp = Cache::get($key);
         }
 
-        if($value === null){
+        if ($storedOtp === null) {
             return false;
         }
 
-        return $value === $otp;
+        // Constant-time comparison
+        if (!hash_equals($storedOtp, $otp)) {
+            return false;
+        }
+
+        // Invalidate OTP after successful use
+        try {
+            Redis::del($key);
+        } catch (\Exception $e) {
+            Cache::forget($key);
+        }
+
+        return true;
     }
 
     public function deleteOtp(String $email): void
