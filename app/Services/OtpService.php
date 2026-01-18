@@ -27,6 +27,36 @@ class OtpService {
         return $key;
     }
 
+    // Improved version:
+
+//    public function verifyOtp(string $email, string $otp): bool
+//    {
+//        $key = "otp:" . $email;
+//
+//        $lua = <<<LUA
+//        local key = KEYS[1]
+//        local providedOtp = ARGV[1]
+//
+//        local storedOtp = redis.call("GET", key)
+//        if not storedOtp then
+//            return 0
+//        end
+//
+//        if storedOtp == providedOtp then
+//            redis.call("DEL", key)
+//            return 1
+//        end
+//
+//        return 0
+//    LUA;
+//
+//        try {
+//            $result = Redis::eval($lua, 1, $key, $otp);
+//            return $result === 1;
+//        } catch (\Throwable $e) {
+//            return false;
+//        }
+//    }
     public function verifyOtp(string $email, string $otp): bool
     {
         $key = "otp:" . $email;

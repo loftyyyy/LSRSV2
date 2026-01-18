@@ -125,16 +125,14 @@ class OtpController extends Controller
             if (!$user) {
                 return response()->json([
                     'success' => false,
-                    'errors' => [
-                        'email' => ['The provided credentials do not match our records.']
-                    ]
+                    'message' => 'Invalid OTP or email.'
                 ], 422);
             }
 
             $otpService = new OtpService();
             $validOTP = $otpService->verifyOtp($validated['email'], $validated['otp']);
 
-            if($validOTP !== null){
+            if($validOTP){
                 return response()->json([
                     'success' => true,
                     'message' => 'Password reset OTP confirmed.'
