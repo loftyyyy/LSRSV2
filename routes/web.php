@@ -9,20 +9,30 @@ use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\RentalController;
 use App\Http\Controllers\ReservationController;
+use App\Http\Controllers\OtpController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/landing', function () {
     return view('landing');
 });
 
-Route::get('/register', [AuthController::class,  'showRegisterForm'])->name('register');
-Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
-Route::get('/forgot-password', [AuthController::class, 'showForgotPasswordForm'])->name('password.request');
+Route::middleware(['web'])->group(function () {
+    Route::get('/register', [AuthController::class,  'showRegisterForm'])->name('register');
+    Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
+    Route::get('/forgot-password', [AuthController::class, 'showForgotPasswordForm'])->name('password.request');
 
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
-Route::post('/forgot-password', [AuthController::class, 'sendResetLinkEmail'])->name('password.email');
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+    Route::prefix('otp')->group(function () {
+        Route::post('/generate-otp', [OtpController::class, 'generateOtp']);
+        Route::post('/verify-otp', [OtpController::class, 'verifyOtp']);
+        Route::post('/resend-otp', [OtpController::class, 'resendOtp']);
+        Route::post('/delete-otp', [OtpController::class, 'deleteOtp']);
+    });
+
+});
 
  Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'showDashboardPage'])->name('dashboard');
