@@ -13,34 +13,50 @@ use Illuminate\Validation\ValidationException;
 class OtpController extends Controller
 {
 
-    public function generateOtp(Request $request): RedirectResponse
+    public function generateOtp(Request $request): JsonResponse
     {
         try {
+            // Validate email input
             $validated = $request->validate([
                 'email' => ['required', 'email'],
             ]);
 
+            // Check if user exists
             $user = User::where('email', $validated['email'])->first();
 
             if (!$user) {
-                return back()->withErrors([
-                    'email' => 'The provided credentials do not match our records.'
-                ]);
+                return response()->json([
+                    'success' => false,
+                    'errors' => [
+                        'email' => ['The provided credentials do not match our records.']
+                    ]
+                ], 422); // 422 Unprocessable Entity for validation errors
             }
 
+            // Generate OTP and send email
             $otpService = new OtpService();
             $otp = $otpService->generateOtp($validated['email']);
             $otpService->sendEmail($otp, $user);
 
-            return back()->with('status', 'Password reset OTP has been sent to your email.');
+            return response()->json([
+                'success' => true,
+                'message' => 'Password reset OTP has been sent to your email.'
+            ], 200);
 
         } catch (ValidationException $e) {
-
-            return back()->withErrors($e->errors());
+            // Return validation errors as JSON
+            return response()->json([
+                'success' => false,
+                'errors' => $e->errors()
+            ], 422);
 
         } catch (\Throwable $e) {
-
-            return back()->with('error', 'Something went wrong. Please try again later. ' . $e->getMessage());
+            // Return general error as JSON
+            return response()->json([
+                'success' => false,
+                'message' => 'Something went wrong. Please try again later.',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 

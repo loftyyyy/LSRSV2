@@ -71,7 +71,10 @@
                     name="email"
                     required
                     placeholder="your@business.com"
-                    class="w-full bg-transparent py-3 text-sm focus:outline-none"
+                    class="w-full bg-transparent py-3 text-sm
+           text-neutral-900 dark:text-neutral-100
+           placeholder-neutral-400 dark:placeholder-neutral-500
+           focus:outline-none"
                 />
             </div>
         </div>
@@ -87,7 +90,10 @@
                     name="password"
                     required
                     placeholder="••••••••"
-                    class="w-full bg-transparent py-3 text-sm focus:outline-none"
+                    class="w-full bg-transparent py-3 text-sm
+           text-neutral-900 dark:text-neutral-100
+           placeholder-neutral-400 dark:placeholder-neutral-500
+           focus:outline-none"
                 />
                 <button type="button" onclick="togglePassword()" class="ml-2">
                         <span id="eyeOpen">
@@ -132,7 +138,11 @@
             id="forgotPasswordEmail"
             type="email"
             placeholder="your@business.com"
-            class="w-full mb-1 px-3 py-3 border border-gray-300 rounded-lg transition-colors duration-200"
+            class="w-full mb-1 px-3 py-3 border rounded-lg
+           bg-white dark:bg-zinc-900
+           text-neutral-900 dark:text-neutral-100
+           placeholder-neutral-400 dark:placeholder-neutral-500
+           transition-colors duration-200"
         />
 
         <!-- Error message goes here -->
@@ -185,23 +195,30 @@
         document.getElementById('forgotPasswordModal').classList.add('hidden');
     }
 
-    function showMessage(type, error){
-        const errorText = document.getElementById('forgotPasswordEmailError');
+    function showMessage(type, content) {
+        const message = document.getElementById('forgotPasswordEmailError');
         const forgotEmailInput = document.getElementById('forgotPasswordEmail');
 
-        if(type === "failed"){
-            errorText.textContent = error;
-            errorText.classList.remove("hidden");
+        message.classList.add("hidden");
+        message.classList.remove("text-red-500", "text-green-500");
+        forgotEmailInput.classList.remove("border-red-500", "border-green-500");
+
+        if (type === "failed") {
+            message.textContent = content;
+            message.classList.remove("hidden");
+            message.classList.add("text-red-500");
 
             forgotEmailInput.classList.add("border-red-500");
             forgotEmailInput.classList.remove("border-gray-300");
 
-        }else{
-            errorText.classList.add("hidden");
-            forgotEmailInput.classList.remove("border-red-500");
-            forgotEmailInput.classList.add("border-gray-300");
-        }
+        } else if (type === "success") {
+            message.textContent = content;
+            message.classList.remove("hidden");
+            message.classList.add("text-green-500");
 
+            forgotEmailInput.classList.add("border-green-500");
+            forgotEmailInput.classList.remove("border-gray-300");
+        }
     }
 
     function verifyEmail(email) {
@@ -225,17 +242,41 @@
             showMessage("failed", "Email contains invalid consecutive dots.");
         }
 
-        showMessage('success', 'Email is valid')
         return { valid: true, message: "Email is valid." };
     }
 
-    function generateOtp(){
-        const email = document.getElementById('forgotPasswordEmail').value;
-        if(!verifyEmail(email).valid){
-            showMessage('failed', "Something went wrong. Please Try Again")
+    async function generateOtp(){
+        try{
+            const email = document.getElementById('forgotPasswordEmail').value;
+            if(!verifyEmail(email).valid){
+                showMessage('failed', "Something went wrong. Please Try Again")
+            }
+
+            const response = await axios.post('otp/generate-otp', {email})
+
+            if(response.data.success){
+                showMessage("success", response.data.message);
+            } else{
+                showMessage("failed", response.data.errors.email[0]);
+
+            }
+
+        }catch(e){
+            if(e.response){
+                const status = e.response.status;
+                const data = e.response.data;
+
+                if(status === 422){
+                    showMessage("failed", data.errors.email[0]);
+                }else if(status === 500){
+                    showMessage("failed" ,data.message);
+                }
+            }else{
+                showMessage("failed", "Network error:". e.message)
+            }
+
         }
 
-        axios.post('otp/generate-otp', {email})
     }
 </script>
 </body>
