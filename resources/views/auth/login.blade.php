@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Login · Love &amp; Styles</title>
+    <title>Login · Love & Styles</title>
 
     {{-- Favicon --}}
     <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any">
@@ -24,16 +24,17 @@
     @endif
 </head>
 
-<body class="min-h-screen flex flex-col justify-center items-center font-geist bg-neutral-100 text-neutral-900 dark:bg-black dark:text-neutral-50 transition-colors duration-300 ease-in-out px-4 py-8">
+<body class="min-h-screen font-geist bg-gradient-to-br from-neutral-50 via-white to-neutral-100 dark:from-black dark:via-[#0a0a0a] dark:to-[#0f0f12] text-neutral-900 dark:text-neutral-50 px-4 py-10">
+<div class="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(124,58,237,0.12),transparent_30%),radial-gradient(circle_at_80%_0%,rgba(14,165,233,0.12),transparent_25%),radial-gradient(circle_at_50%_90%,rgba(59,130,246,0.12),transparent_22%)] pointer-events-none"></div>
 
 {{-- Theme Toggle --}}
-<div class="absolute top-6 right-6">
+<div class="fixed top-6 right-6 z-20">
     <button
         type="button"
         onclick="toggleDarkMode()"
-        class="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-neutral-700 dark:text-neutral-200 bg-white/80 dark:bg-black/80 border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-900 transition-all duration-200 backdrop-blur-sm"
+        class="flex items-center gap-2 rounded-full px-3 py-2 text-xs font-medium text-neutral-700 dark:text-neutral-200 bg-white/70 dark:bg-white/10 border border-neutral-200/70 dark:border-white/10 shadow-sm hover:shadow transition-all duration-200 backdrop-blur"
     >
-        <span class="inline-flex h-5 w-8 items-center rounded-full bg-amber-500/20 dark:bg-violet-600/20 px-0.5 relative transition-all duration-300">
+        <span class="inline-flex h-5 w-9 items-center rounded-full bg-amber-500/20 dark:bg-violet-600/25 px-0.5 relative transition-all duration-300">
             <span
                 id="toggleKnob"
                 class="flex h-4 w-4 items-center justify-center rounded-full bg-amber-400 dark:bg-violet-500 shadow-sm text-black dark:text-white transition-all duration-300 ease-in-out"
@@ -50,665 +51,566 @@
     </button>
 </div>
 
-{{-- Login Card --}}
-<div class="w-full max-w-md bg-white dark:bg-gradient-to-b dark:from-zinc-900 dark:to-black border border-neutral-200 dark:border-zinc-800 rounded-2xl p-6 sm:p-8 shadow-xl">
-
-    <h2 class="text-xl font-semibold mb-1">Welcome Back</h2>
-    <p class="text-sm text-neutral-600 dark:text-gray-400 mb-6">
-        Sign in to access your rental management dashboard
-    </p>
-
-    <form method="POST" action="{{ route('login') }}">
-        @csrf
-
-        {{-- Email --}}
-        <div class="mb-4">
-            <label class="block mb-2 text-sm">Email Address</label>
-            <div class="flex items-center bg-neutral-50 dark:bg-black border rounded-lg px-3">
-                <x-icon name="mail" class="text-neutral-400 mr-2" />
-                <input
-                    type="email"
-                    name="email"
-                    required
-                    placeholder="your@business.com"
-                    class="w-full bg-transparent py-3 text-sm
-           text-neutral-900 dark:text-neutral-100
-           placeholder-neutral-400 dark:placeholder-neutral-500
-           focus:outline-none"
-                />
-            </div>
-        </div>
-
-        {{-- Password --}}
-        <div class="mb-2">
-            <label class="block mb-2 text-sm">Password</label>
-            <div class="flex items-center bg-neutral-50 dark:bg-black border rounded-lg px-3">
-                <x-icon name="lock" class="text-neutral-400 mr-2" />
-                <input
-                    id="passwordInput"
-                    type="password"
-                    name="password"
-                    required
-                    placeholder="••••••••"
-                    class="w-full bg-transparent py-3 text-sm
-           text-neutral-900 dark:text-neutral-100
-           placeholder-neutral-400 dark:placeholder-neutral-500
-           focus:outline-none"
-                />
-                <button type="button" onclick="togglePassword()" class="ml-2">
-                    <span id="eyeOpen">
-                        <x-icon name="eye" class="h-4 w-4" />
-                    </span>
-                    <span id="eyeClosed" class="hidden">
-                        <x-icon name="eye-off" class="h-4 w-4" />
-                    </span>
-                </button>
-            </div>
-        </div>
-
-        {{-- Forgot --}}
-        <div class="text-right mb-6">
-            <button type="button" onclick="showForgotPasswordModal()" class="text-sm text-violet-600 hover:underline">
-                Forgot password?
-            </button>
-        </div>
-
-        <button type="submit" class="w-full bg-violet-600 hover:bg-violet-700 rounded-lg py-3 text-white font-medium">
-            Sign In
-        </button>
-    </form>
-
-    <hr class="my-6">
-
-    <p class="text-center text-sm text-neutral-600">
-        Don't have access?
-        <span class="text-neutral-800">Contact your system administrator</span>
-    </p>
-</div>
-
-{{-- Forgot Password Modal --}}
-<div id="forgotPasswordModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-zinc-900 rounded-2xl p-6 w-full max-w-md shadow-2xl">
-
-        {{-- Step 1: Email Entry --}}
-        <div id="step1" class="step-content">
-            <div class="flex justify-between items-center mb-4">
-                <div>
-                    <h3 class="text-lg font-semibold">Reset your password</h3>
-                    <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">Step 1 of 3</p>
+<main class="relative z-10 max-w-6xl mx-auto">
+    <div class="grid lg:grid-cols-2 gap-8 items-center">
+        <div class="hidden lg:block">
+            <div class="relative overflow-hidden rounded-3xl border border-white/50 dark:border-white/10 bg-gradient-to-br from-violet-600 via-indigo-600 to-blue-600 text-white shadow-2xl">
+                <div class="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.7),transparent_40%),radial-gradient(circle_at_80%_0%,rgba(255,255,255,0.6),transparent_38%)]"></div>
+                <div class="relative p-10 space-y-8">
+                    <div class="inline-flex items-center gap-3 px-3 py-2 rounded-full bg-white/10 border border-white/20 text-xs uppercase tracking-wide">
+                        <span class="h-2 w-2 rounded-full bg-emerald-300 animate-pulse"></span>
+                        Secure Access Portal
+                    </div>
+                    <h1 class="text-3xl font-semibold leading-tight">
+                        Manage rentals with a clean, consistent interface.
+                    </h1>
+                    <p class="text-white/80 text-sm leading-relaxed max-w-xl">
+                        Stay on-brand across all screens. Use your dashboard to track rentals, customers, invoices, and more with a cohesive look and feel.
+                    </p>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="rounded-2xl bg-white/10 border border-white/15 p-4">
+                            <p class="text-xs text-white/70 mb-2">Reliability</p>
+                            <p class="text-lg font-semibold">Uptime-first</p>
+                            <p class="text-xs text-white/60">Resilient OTP, fast access, audited logs.</p>
+                        </div>
+                        <div class="rounded-2xl bg-white/10 border border-white/15 p-4">
+                            <p class="text-xs text-white/70 mb-2">Security</p>
+                            <p class="text-lg font-semibold">Strong auth</p>
+                            <p class="text-xs text-white/60">Time-boxed codes, lockouts, encrypted data.</p>
+                        </div>
+                    </div>
                 </div>
-                <button onclick="closeModal()" class="text-2xl text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200">×</button>
-            </div>
-
-            <p class="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
-                Enter your email address and we'll send you a verification code.
-            </p>
-
-            <input
-                id="forgotPasswordEmail"
-                type="email"
-                placeholder="your@business.com"
-                class="w-full mb-1 px-3 py-3 border rounded-lg
-                       bg-white dark:bg-zinc-900
-                       text-neutral-900 dark:text-neutral-100
-                       placeholder-neutral-400 dark:placeholder-neutral-500
-                       transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-violet-500"
-            />
-
-            <p id="step1Error" class="text-red-500 text-xs mb-4 min-h-[16px]"></p>
-
-            <div class="flex gap-3">
-                <button
-                    id="sendOtpBtn"
-                    class="flex-1 bg-violet-600 hover:bg-violet-700 disabled:bg-neutral-300 disabled:cursor-not-allowed text-white py-3 rounded-lg font-medium transition-colors duration-200"
-                    onclick="generateOtp()"
-                >
-                    Send Code
-                </button>
-                <button onclick="closeModal()" class="px-4 py-3 border rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors duration-200">
-                    Cancel
-                </button>
             </div>
         </div>
 
-        {{-- Step 2: OTP Entry --}}
-        <div id="step2" class="step-content hidden">
-            <div class="flex justify-between items-center mb-4">
-                <div>
-                    <h3 class="text-lg font-semibold">Enter verification code</h3>
-                    <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">Step 2 of 3</p>
+        <div class="relative">
+            <div class="absolute -inset-4 blur-3xl bg-gradient-to-r from-violet-500/20 via-blue-500/15 to-emerald-400/10 dark:from-violet-500/15 dark:via-blue-500/10 dark:to-emerald-400/10"></div>
+            <div class="relative w-full bg-white/80 dark:bg-neutral-950/80 backdrop-blur border border-neutral-200/80 dark:border-neutral-800 rounded-3xl shadow-xl">
+                <div class="p-6 sm:p-8">
+                    <div class="flex items-start justify-between mb-6">
+                        <div>
+                            <p class="text-xs uppercase tracking-[0.2em] text-neutral-500 dark:text-neutral-500">Welcome back</p>
+                            <h2 class="text-2xl font-semibold mt-1">Sign in to dashboard</h2>
+                            <p class="text-sm text-neutral-600 dark:text-neutral-400 mt-2">Access rentals, customers, invoices, and analytics.</p>
+                        </div>
+                        <div class="h-11 w-11 rounded-2xl bg-gradient-to-br from-violet-500 to-blue-500 text-white grid place-items-center shadow-md">
+                            <x-icon name="lock" class="h-5 w-5" />
+                        </div>
+                    </div>
+
+                    <form method="POST" action="{{ route('login') }}" class="space-y-4">
+                        @csrf
+
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium">Email address</label>
+                            <div class="flex items-center bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded-xl px-3 shadow-sm focus-within:border-violet-500 focus-within:ring-2 focus-within:ring-violet-100 dark:focus-within:ring-violet-500/30 transition">
+                                <x-icon name="mail" class="text-neutral-400 mr-2" />
+                                <input
+                                    type="email"
+                                    name="email"
+                                    required
+                                    autocomplete="email"
+                                    placeholder="you@business.com"
+                                    class="w-full bg-transparent py-3 text-sm text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none"
+                                />
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between">
+                                <label class="text-sm font-medium">Password</label>
+                                <button type="button" onclick="openForgotModal()" class="text-xs font-medium text-violet-600 hover:text-violet-700 dark:text-violet-400">Forgot password?</button>
+                            </div>
+                            <div class="flex items-center bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded-xl px-3 shadow-sm focus-within:border-violet-500 focus-within:ring-2 focus-within:ring-violet-100 dark:focus-within:ring-violet-500/30 transition">
+                                <x-icon name="lock" class="text-neutral-400 mr-2" />
+                                <input
+                                    id="passwordInput"
+                                    type="password"
+                                    name="password"
+                                    required
+                                    autocomplete="current-password"
+                                    placeholder="••••••••"
+                                    class="w-full bg-transparent py-3 text-sm text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none"
+                                />
+                                <button type="button" onclick="togglePassword()" class="ml-2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200">
+                                    <span id="eyeOpen">
+                                        <x-icon name="eye" class="h-4 w-4" />
+                                    </span>
+                                    <span id="eyeClosed" class="hidden">
+                                        <x-icon name="eye-off" class="h-4 w-4" />
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full bg-gradient-to-r from-violet-600 via-indigo-600 to-blue-600 hover:from-violet-700 hover:via-indigo-700 hover:to-blue-700 rounded-xl py-3 text-white font-semibold shadow-lg shadow-violet-600/20 transition-transform hover:translate-y-[-1px]">
+                            Sign in
+                        </button>
+                    </form>
+
+                    <div class="mt-8 flex items-center gap-3 text-xs text-neutral-500 dark:text-neutral-500">
+                        <span class="h-px flex-1 bg-neutral-200 dark:bg-neutral-800"></span>
+                        <span class="uppercase tracking-[0.2em]">Access</span>
+                        <span class="h-px flex-1 bg-neutral-200 dark:bg-neutral-800"></span>
+                    </div>
+
+                    <p class="mt-4 text-center text-sm text-neutral-600 dark:text-neutral-400">
+                        Need access? <span class="text-neutral-900 dark:text-neutral-100 font-medium">Contact your system administrator</span>
+                    </p>
                 </div>
-                <button onclick="closeModal()" class="text-2xl text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200">×</button>
             </div>
+        </div>
+    </div>
+</main>
 
-            <p class="text-sm text-neutral-600 dark:text-neutral-400 mb-2">
-                We've sent a 6-digit code to <span id="displayEmail" class="font-medium text-neutral-900 dark:text-neutral-100"></span>
-            </p>
-
-            <div class="flex items-center gap-2 mb-4">
-                <p class="text-xs text-neutral-500">Code expires in:</p>
-                <span id="timer" class="text-xs font-mono font-semibold text-violet-600">05:00</span>
+{{-- OTP / Forgot password modal --}}
+<div id="otpModal" class="hidden fixed inset-0 z-50 flex items-center justify-center px-4 py-6 bg-black/60 backdrop-blur-sm">
+    <div class="w-full max-w-2xl bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-3xl shadow-2xl overflow-hidden">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/80 dark:bg-neutral-900/50">
+            <div>
+                <p class="text-xs uppercase tracking-[0.2em] text-neutral-500 dark:text-neutral-500">Password recovery</p>
+                <h3 class="text-lg font-semibold">Verify with one-time code</h3>
             </div>
-
-            <input
-                id="otpCode"
-                type="text"
-                maxlength="6"
-                placeholder="000000"
-                class="w-full mb-1 px-3 py-3 border rounded-lg text-center text-lg font-mono tracking-widest
-                       bg-white dark:bg-zinc-900
-                       text-neutral-900 dark:text-neutral-100
-                       placeholder-neutral-400 dark:placeholder-neutral-500
-                       transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-violet-500"
-                oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-            />
-
-            <p id="step2Error" class="text-red-500 text-xs mb-4 min-h-[16px]"></p>
-
-            <div class="flex gap-3 mb-3">
-                <button
-                    id="verifyOtpBtn"
-                    class="flex-1 bg-violet-600 hover:bg-violet-700 disabled:bg-neutral-300 disabled:cursor-not-allowed text-white py-3 rounded-lg font-medium transition-colors duration-200"
-                    onclick="verifyOtp()"
-                >
-                    Verify Code
-                </button>
-                <button onclick="goToStep(1)" class="px-4 py-3 border rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors duration-200">
-                    Back
-                </button>
-            </div>
-
-            <button
-                id="resendBtn"
-                onclick="resendOtp()"
-                class="w-full text-sm text-violet-600 hover:underline disabled:text-neutral-400 disabled:no-underline disabled:cursor-not-allowed"
-                disabled
-            >
-                Resend code (<span id="resendTimer">60</span>s)
-            </button>
+            <button onclick="closeOtpModal()" class="text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 text-xl">×</button>
         </div>
 
-        {{-- Step 3: New Password Entry --}}
-        <div id="step3" class="step-content hidden">
-            <div class="flex justify-between items-center mb-4">
-                <div>
-                    <h3 class="text-lg font-semibold">Create new password</h3>
-                    <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">Step 3 of 3</p>
-                </div>
-                <button onclick="closeModal()" class="text-2xl text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200">×</button>
+        <div class="px-6 py-5 space-y-4">
+            <div class="flex items-center gap-2 text-xs font-medium text-neutral-600 dark:text-neutral-400">
+                <span id="stepBadge1" class="step-badge inline-flex h-7 w-7 items-center justify-center rounded-full border border-neutral-200 dark:border-neutral-800 bg-neutral-200 text-neutral-700 font-semibold">1</span>
+                <span>Email</span>
+                <span class="h-px flex-1 bg-neutral-200 dark:bg-neutral-800"></span>
+                <span id="stepBadge2" class="step-badge inline-flex h-7 w-7 items-center justify-center rounded-full border border-neutral-200 dark:border-neutral-800 bg-neutral-200 text-neutral-700 font-semibold opacity-60">2</span>
+                <span class="opacity-80">Code</span>
+                <span class="h-px flex-1 bg-neutral-200 dark:bg-neutral-800"></span>
+                <span id="stepBadge3" class="step-badge inline-flex h-7 w-7 items-center justify-center rounded-full border border-neutral-200 dark:border-neutral-800 bg-neutral-200 text-neutral-700 font-semibold opacity-60">3</span>
+                <span class="opacity-80">Reset</span>
             </div>
 
-            <p class="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
-                Create a strong password for your account.
-            </p>
-
-            <div class="mb-3">
-                <label class="block mb-2 text-sm">New Password</label>
-                <div class="flex items-center bg-neutral-50 dark:bg-black border rounded-lg px-3">
-                    <input
-                        id="newPassword"
-                        type="password"
-                        placeholder="••••••••"
-                        class="w-full bg-transparent py-3 text-sm
-                               text-neutral-900 dark:text-neutral-100
-                               placeholder-neutral-400 dark:placeholder-neutral-500
-                               focus:outline-none"
-                    />
-                    <button type="button" onclick="toggleNewPassword()" class="ml-2">
-                        <span id="newEyeOpen">
-                            <x-icon name="eye" class="h-4 w-4" />
-                        </span>
-                        <span id="newEyeClosed" class="hidden">
-                            <x-icon name="eye-off" class="h-4 w-4" />
-                        </span>
+            {{-- Step 1 --}}
+            <div id="otpStep1" class="space-y-4">
+                <div class="bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-4">
+                    <p class="text-sm text-neutral-700 dark:text-neutral-300">
+                        Enter the email linked to your account. We'll send a 6-digit code to verify it's you.
+                    </p>
+                </div>
+                <div class="space-y-2">
+                    <label class="text-sm font-medium">Email address</label>
+                    <div class="flex items-center bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded-xl px-3 focus-within:border-violet-500 focus-within:ring-2 focus-within:ring-violet-100 dark:focus-within:ring-violet-500/30 transition">
+                        <x-icon name="mail" class="text-neutral-400 mr-2" />
+                        <input
+                            id="fpEmail"
+                            type="email"
+                            placeholder="you@business.com"
+                            class="w-full bg-transparent py-3 text-sm text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none"
+                        />
+                    </div>
+                    <p id="otpStep1Msg" class="text-xs min-h-[18px] text-red-500"></p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button id="otpSendBtn" onclick="handleSendOtp()" class="flex-1 bg-violet-600 hover:bg-violet-700 text-white font-semibold rounded-xl py-3 shadow-lg shadow-violet-600/20 transition">
+                        Send code
+                    </button>
+                    <button onclick="closeOtpModal()" class="px-4 py-3 rounded-xl border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-50 dark:hover:bg-neutral-900 transition">
+                        Cancel
                     </button>
                 </div>
             </div>
 
-            <div class="mb-1">
-                <label class="block mb-2 text-sm">Confirm Password</label>
-                <div class="flex items-center bg-neutral-50 dark:bg-black border rounded-lg px-3">
+            {{-- Step 2 --}}
+            <div id="otpStep2" class="hidden space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-neutral-800 dark:text-neutral-100">Enter verification code</p>
+                        <p class="text-xs text-neutral-500">Sent to <span id="otpDisplayEmail" class="font-semibold text-neutral-800 dark:text-neutral-100"></span></p>
+                    </div>
+                    <div class="text-xs font-mono text-violet-600 dark:text-violet-400">
+                        Expires in <span id="otpCountdown">05:00</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded-xl px-3 focus-within:border-violet-500 focus-within:ring-2 focus-within:ring-violet-100 dark:focus-within:ring-violet-500/30 transition">
+                    <x-icon name="key" class="text-neutral-400 mr-2" />
                     <input
-                        id="confirmPassword"
-                        type="password"
-                        placeholder="••••••••"
-                        class="w-full bg-transparent py-3 text-sm
-                               text-neutral-900 dark:text-neutral-100
-                               placeholder-neutral-400 dark:placeholder-neutral-500
-                               focus:outline-none"
+                        id="otpCodeInput"
+                        type="text"
+                        maxlength="6"
+                        inputmode="numeric"
+                        autocomplete="one-time-code"
+                        placeholder="000000"
+                        class="w-full bg-transparent py-3 text-center text-lg font-geist-mono tracking-[0.4em] text-neutral-900 dark:text-neutral-50 placeholder-neutral-400 dark:placeholder-neutral-600 focus:outline-none"
+                        oninput="this.value = this.value.replace(/[^0-9]/g, '')"
                     />
-                    <button type="button" onclick="toggleConfirmPassword()" class="ml-2">
-                        <span id="confirmEyeOpen">
-                            <x-icon name="eye" class="h-4 w-4" />
-                        </span>
-                        <span id="confirmEyeClosed" class="hidden">
-                            <x-icon name="eye-off" class="h-4 w-4" />
-                        </span>
+                </div>
+                <p id="otpStep2Msg" class="text-xs min-h-[18px] text-red-500"></p>
+
+                <div class="flex items-center gap-3">
+                    <button id="otpVerifyBtn" onclick="handleVerifyOtp()" class="flex-1 bg-violet-600 hover:bg-violet-700 text-white font-semibold rounded-xl py-3 shadow-lg shadow-violet-600/20 transition">
+                        Verify code
+                    </button>
+                    <button onclick="setOtpStep(1)" class="px-4 py-3 rounded-xl border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-50 dark:hover:bg-neutral-900 transition">
+                        Back
+                    </button>
+                </div>
+
+                <button id="otpResendBtn" onclick="handleResendOtp()" class="w-full text-sm text-violet-600 dark:text-violet-400 font-medium hover:underline disabled:text-neutral-400 disabled:no-underline disabled:cursor-not-allowed" disabled>
+                    Resend code in <span id="otpResendCountdown">60</span>s
+                </button>
+            </div>
+
+            {{-- Step 3 --}}
+            <div id="otpStep3" class="hidden space-y-4">
+                <div class="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-2xl p-4 flex items-center gap-3">
+                    <div class="h-10 w-10 rounded-full bg-white dark:bg-emerald-800/50 text-emerald-700 dark:text-emerald-200 grid place-items-center">
+                        <x-icon name="check-circle" class="h-5 w-5" />
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-emerald-700 dark:text-emerald-200">Code verified</p>
+                        <p class="text-xs text-emerald-700/80 dark:text-emerald-200/80">Create a new password to finish.</p>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-sm font-medium">New password</label>
+                    <div class="flex items-center bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded-xl px-3 focus-within:border-violet-500 focus-within:ring-2 focus-within:ring-violet-100 dark:focus-within:ring-violet-500/30 transition">
+                        <x-icon name="lock" class="text-neutral-400 mr-2" />
+                        <input
+                            id="otpNewPassword"
+                            type="password"
+                            placeholder="••••••••"
+                            class="w-full bg-transparent py-3 text-sm text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none"
+                        />
+                        <button type="button" onclick="toggleFieldVisibility('otpNewPassword', 'otpNewEyeOpen', 'otpNewEyeClosed')" class="ml-2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200">
+                            <span id="otpNewEyeOpen"><x-icon name="eye" class="h-4 w-4" /></span>
+                            <span id="otpNewEyeClosed" class="hidden"><x-icon name="eye-off" class="h-4 w-4" /></span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-sm font-medium">Confirm password</label>
+                    <div class="flex items-center bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded-xl px-3 focus-within:border-violet-500 focus-within:ring-2 focus-within:ring-violet-100 dark:focus-within:ring-violet-500/30 transition">
+                        <x-icon name="lock" class="text-neutral-400 mr-2" />
+                        <input
+                            id="otpConfirmPassword"
+                            type="password"
+                            placeholder="••••••••"
+                            class="w-full bg-transparent py-3 text-sm text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none"
+                        />
+                        <button type="button" onclick="toggleFieldVisibility('otpConfirmPassword', 'otpConfirmEyeOpen', 'otpConfirmEyeClosed')" class="ml-2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200">
+                            <span id="otpConfirmEyeOpen"><x-icon name="eye" class="h-4 w-4" /></span>
+                            <span id="otpConfirmEyeClosed" class="hidden"><x-icon name="eye-off" class="h-4 w-4" /></span>
+                        </button>
+                    </div>
+                </div>
+                <p id="otpStep3Msg" class="text-xs min-h-[18px] text-red-500"></p>
+
+                <div class="flex items-center gap-3">
+                    <button id="otpResetBtn" onclick="handleResetPassword()" class="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold rounded-xl py-3 shadow-lg shadow-emerald-500/20 transition">
+                        Reset password
+                    </button>
+                    <button onclick="setOtpStep(2)" class="px-4 py-3 rounded-xl border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-50 dark:hover:bg-neutral-900 transition">
+                        Back
                     </button>
                 </div>
             </div>
-
-            <p id="step3Error" class="text-red-500 text-xs mb-4 min-h-[16px]"></p>
-
-            <div class="flex gap-3">
-                <button
-                    id="resetPasswordBtn"
-                    class="flex-1 bg-violet-600 hover:bg-violet-700 disabled:bg-neutral-300 disabled:cursor-not-allowed text-white py-3 rounded-lg font-medium transition-colors duration-200"
-                    onclick="resetPassword()"
-                >
-                    Reset Password
-                </button>
-                <button onclick="goToStep(2)" class="px-4 py-3 border rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors duration-200">
-                    Back
-                </button>
-            </div>
         </div>
-
     </div>
 </div>
 
-{{-- Scripts --}}
 <script>
-    // Dark mode
+    // Theme toggle
     let isDarkMode = localStorage.getItem('darkMode') !== 'false';
     if (isDarkMode) {
         document.documentElement.classList.add('dark');
     }
-
     function toggleDarkMode() {
         isDarkMode = !isDarkMode;
         localStorage.setItem('darkMode', isDarkMode);
         document.documentElement.classList.toggle('dark', isDarkMode);
-
         document.getElementById('modeLabel').textContent = isDarkMode ? 'Dark' : 'Light';
         document.getElementById('iconMoon').classList.toggle('hidden', !isDarkMode);
         document.getElementById('iconSun').classList.toggle('hidden', isDarkMode);
-
-        document.getElementById('toggleKnob').style.transform =
-            isDarkMode ? 'translateX(12px)' : 'translateX(0)';
+        document.getElementById('toggleKnob').style.transform = isDarkMode ? 'translateX(14px)' : 'translateX(0)';
     }
 
+    // Password field toggles
     function togglePassword() {
         const input = document.getElementById('passwordInput');
-        document.getElementById('eyeOpen').classList.toggle('hidden', input.type === 'text');
-        document.getElementById('eyeClosed').classList.toggle('hidden', input.type === 'password');
-        input.type = input.type === 'password' ? 'text' : 'password';
+        const isText = input.type === 'text';
+        input.type = isText ? 'password' : 'text';
+        document.getElementById('eyeOpen').classList.toggle('hidden', !isText);
+        document.getElementById('eyeClosed').classList.toggle('hidden', isText);
+    }
+    function toggleFieldVisibility(inputId, openId, closedId) {
+        const input = document.getElementById(inputId);
+        const isText = input.type === 'text';
+        input.type = isText ? 'password' : 'text';
+        document.getElementById(openId).classList.toggle('hidden', !isText);
+        document.getElementById(closedId).classList.toggle('hidden', isText);
     }
 
-    function toggleNewPassword() {
-        const input = document.getElementById('newPassword');
-        document.getElementById('newEyeOpen').classList.toggle('hidden', input.type === 'text');
-        document.getElementById('newEyeClosed').classList.toggle('hidden', input.type === 'password');
-        input.type = input.type === 'password' ? 'text' : 'password';
+    // OTP flow controller
+    const otpState = {
+        step: 1,
+        email: '',
+        otpTimer: null,
+        otpSeconds: 300,
+        resendTimer: null,
+        resendSeconds: 60,
+    };
+
+    const el = (id) => document.getElementById(id);
+    const setText = (id, text, color = 'text-red-500') => {
+        const node = el(id);
+        node.textContent = text || '';
+        node.classList.remove('text-red-500', 'text-emerald-500', 'text-neutral-500', 'text-green-500');
+        if (text) node.classList.add(color);
+    };
+
+    const setLoading = (btnId, isLoading, label, loadingLabel) => {
+        const btn = el(btnId);
+        if (!btn) return;
+        btn.disabled = !!isLoading;
+        btn.innerHTML = isLoading ? (loadingLabel || 'Please wait...') : label;
+    };
+
+    function openForgotModal() {
+        resetOtpFlow();
+        el('otpModal').classList.remove('hidden');
+        setOtpStep(1);
     }
 
-    function toggleConfirmPassword() {
-        const input = document.getElementById('confirmPassword');
-        document.getElementById('confirmEyeOpen').classList.toggle('hidden', input.type === 'text');
-        document.getElementById('confirmEyeClosed').classList.toggle('hidden', input.type === 'password');
-        input.type = input.type === 'password' ? 'text' : 'password';
+    function closeOtpModal() {
+        resetOtpFlow();
+        el('otpModal').classList.add('hidden');
     }
 
-    // OTP Recovery Flow
-    let currentStep = 1;
-    let userEmail = '';
-    let otpExpiryTimer = null;
-    let resendTimer = null;
-
-    function showForgotPasswordModal() {
-        document.getElementById('forgotPasswordModal').classList.remove('hidden');
-        goToStep(1);
-    }
-
-    function closeModal() {
-        document.getElementById('forgotPasswordModal').classList.add('hidden');
-        resetModal();
-    }
-
-    function resetModal() {
-        currentStep = 1;
-        userEmail = '';
+    function resetOtpFlow() {
         clearTimers();
-
-        // Clear all inputs
-        document.getElementById('forgotPasswordEmail').value = '';
-        document.getElementById('otpCode').value = '';
-        document.getElementById('newPassword').value = '';
-        document.getElementById('confirmPassword').value = '';
-
-        // Clear all errors
-        document.getElementById('step1Error').textContent = '';
-        document.getElementById('step2Error').textContent = '';
-        document.getElementById('step3Error').textContent = '';
-
-        // Reset all input states
-        resetInputState('forgotPasswordEmail');
-        resetInputState('otpCode');
+        otpState.step = 1;
+        otpState.email = '';
+        el('fpEmail').value = '';
+        el('otpCodeInput').value = '';
+        el('otpNewPassword').value = '';
+        el('otpConfirmPassword').value = '';
+        setText('otpStep1Msg', '');
+        setText('otpStep2Msg', '');
+        setText('otpStep3Msg', '');
+        setOtpStep(1);
     }
 
-    function goToStep(step) {
-        // Hide all steps
-        document.querySelectorAll('.step-content').forEach(el => el.classList.add('hidden'));
-
-        // Show current step
-        document.getElementById(`step${step}`).classList.remove('hidden');
-        currentStep = step;
-
-        // Clear errors when changing steps
-        document.getElementById(`step${step}Error`).textContent = '';
-
-        // Handle timers
-        if (step === 2) {
-            startOtpTimer();
-            startResendTimer();
-        } else {
+    function setOtpStep(step) {
+        otpState.step = step;
+        ['otpStep1','otpStep2','otpStep3'].forEach((id, index) => {
+            el(id).classList.toggle('hidden', index + 1 !== step);
+        });
+        [1,2,3].forEach((n) => {
+            const badge = el(`stepBadge${n}`);
+            badge.classList.toggle('opacity-60', n !== step);
+            badge.classList.toggle('bg-violet-600', n === step);
+            badge.classList.toggle('text-white', n === step);
+            badge.classList.toggle('bg-neutral-200', n !== step);
+            badge.classList.toggle('text-neutral-700', n !== step);
+        });
+        if (step !== 2) {
             clearTimers();
+            el('otpCountdown').textContent = '05:00';
+            el('otpResendCountdown').textContent = '60';
+            el('otpResendBtn').disabled = true;
         }
     }
 
     function clearTimers() {
-        if (otpExpiryTimer) {
-            clearInterval(otpExpiryTimer);
-            otpExpiryTimer = null;
-        }
-        if (resendTimer) {
-            clearInterval(resendTimer);
-            resendTimer = null;
-        }
+        if (otpState.otpTimer) clearInterval(otpState.otpTimer);
+        if (otpState.resendTimer) clearInterval(otpState.resendTimer);
+        otpState.otpTimer = null;
+        otpState.resendTimer = null;
+        otpState.otpSeconds = 300;
+        otpState.resendSeconds = 60;
     }
 
-    function startOtpTimer() {
-        let timeLeft = 300; // 5 minutes in seconds
-        const timerElement = document.getElementById('timer');
-
-        clearInterval(otpExpiryTimer);
-
-        otpExpiryTimer = setInterval(() => {
-            timeLeft--;
-            const minutes = Math.floor(timeLeft / 60);
-            const seconds = timeLeft % 60;
-            timerElement.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-
-            if (timeLeft <= 0) {
-                clearInterval(otpExpiryTimer);
-                timerElement.textContent = '00:00';
-                showError('step2Error', 'OTP has expired. Please request a new code.');
-                document.getElementById('verifyOtpBtn').disabled = true;
+    function startOtpCountdown() {
+        clearInterval(otpState.otpTimer);
+        otpState.otpSeconds = 300;
+        otpState.otpTimer = setInterval(() => {
+            otpState.otpSeconds--;
+            const m = String(Math.max(0, Math.floor(otpState.otpSeconds / 60))).padStart(2, '0');
+            const s = String(Math.max(0, otpState.otpSeconds % 60)).padStart(2, '0');
+            el('otpCountdown').textContent = `${m}:${s}`;
+            if (otpState.otpSeconds <= 0) {
+                clearTimers();
+                setText('otpStep2Msg', 'OTP expired. Please request a new code.');
+                el('otpVerifyBtn').disabled = true;
+                el('otpResendBtn').disabled = false;
             }
         }, 1000);
     }
 
-    function startResendTimer() {
-        let timeLeft = 60;
-        const resendBtn = document.getElementById('resendBtn');
-        const resendTimerElement = document.getElementById('resendTimer');
-
-        resendBtn.disabled = true;
-        clearInterval(resendTimer);
-
-        resendTimer = setInterval(() => {
-            timeLeft--;
-            resendTimerElement.textContent = timeLeft;
-
-            if (timeLeft <= 0) {
-                clearInterval(resendTimer);
-                resendBtn.disabled = false;
-                resendBtn.innerHTML = 'Resend code';
+    function startResendCountdown() {
+        clearInterval(otpState.resendTimer);
+        otpState.resendSeconds = 60;
+        el('otpResendBtn').disabled = true;
+        otpState.resendTimer = setInterval(() => {
+            otpState.resendSeconds--;
+            el('otpResendCountdown').textContent = otpState.resendSeconds;
+            if (otpState.resendSeconds <= 0) {
+                clearInterval(otpState.resendTimer);
+                el('otpResendBtn').disabled = false;
+                el('otpResendCountdown').textContent = '0';
             }
         }, 1000);
-    }
-
-    function showError(elementId, message) {
-        const errorElement = document.getElementById(elementId);
-        errorElement.textContent = message;
-    }
-
-    function clearError(elementId) {
-        document.getElementById(elementId).textContent = '';
-    }
-
-    function setInputState(inputId, state) {
-        const input = document.getElementById(inputId);
-        input.classList.remove('border-red-500', 'border-green-500');
-
-        if (state === 'error') {
-            input.classList.add('border-red-500');
-        } else if (state === 'success') {
-            input.classList.add('border-green-500');
-        }
-    }
-
-    function resetInputState(inputId) {
-        const input = document.getElementById(inputId);
-        input.classList.remove('border-red-500', 'border-green-500');
     }
 
     function validateEmail(email) {
-        if (!email || !email.trim()) {
-            return { valid: false, message: "Email cannot be empty" };
-        }
-
-        email = email.trim();
+        if (!email || !email.trim()) return 'Email cannot be empty';
+        const normalized = email.trim();
         const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-
-        if (!emailRegex.test(email)) {
-            return { valid: false, message: "Please enter a valid email address" };
-        }
-
-        const [local, domain] = email.split("@");
-        if (local.includes("..") || domain.includes("..")) {
-            return { valid: false, message: "Email contains invalid consecutive dots" };
-        }
-
-        return { valid: true, message: "Email is valid" };
+        if (!emailRegex.test(normalized)) return 'Please enter a valid email address';
+        const [local, domain] = normalized.split('@');
+        if (local.includes('..') || domain.includes('..')) return 'Email contains invalid consecutive dots';
+        return '';
     }
 
-    async function generateOtp() {
-        const emailInput = document.getElementById('forgotPasswordEmail');
-        const email = emailInput.value.trim();
-        const btn = document.getElementById('sendOtpBtn');
+    function validateOtp(otp) {
+        if (!otp) return 'Please enter the verification code';
+        if (otp.length !== 6) return 'Code must be 6 digits';
+        return '';
+    }
 
-        clearError('step1Error');
-        resetInputState('forgotPasswordEmail');
+    function validatePasswords(pw, confirm) {
+        if (!pw || !confirm) return 'Please fill in both password fields';
+        if (pw.length < 8) return 'Password must be at least 8 characters long';
+        if (pw !== confirm) return 'Passwords do not match';
+        return '';
+    }
 
-        // Validate email
-        const validation = validateEmail(email);
-        if (!validation.valid) {
-            showError('step1Error', validation.message);
-            setInputState('forgotPasswordEmail', 'error');
-            return;
-        }
-
+    async function apiPost(url, payload) {
         try {
-            btn.disabled = true;
-            btn.textContent = 'Sending...';
-
-            const response = await axios.post('/otp/generate-otp', { email });
-
-            if (response.data.success) {
-                userEmail = email;
-                document.getElementById('displayEmail').textContent = email;
-                setInputState('forgotPasswordEmail', 'success');
-
-                // Move to next step after a brief delay
-                setTimeout(() => {
-                    goToStep(2);
-                }, 500);
-            } else {
-                showError('step1Error', response.data.message || 'Failed to send code');
-                setInputState('forgotPasswordEmail', 'error');
-            }
-
+            return await axios.post(url, payload);
         } catch (error) {
-            handleApiError(error, 'step1Error', 'forgotPasswordEmail');
-        } finally {
-            btn.disabled = false;
-            btn.textContent = 'Send Code';
+            throw error.response || { status: 500, data: { message: 'Server error. Please try again.' } };
         }
     }
 
-    async function verifyOtp() {
-        const otpInput = document.getElementById('otpCode');
-        const otp = otpInput.value.trim();
-        const btn = document.getElementById('verifyOtpBtn');
+    async function handleSendOtp() {
+        const email = el('fpEmail').value.trim();
+        const error = validateEmail(email);
+        setText('otpStep1Msg', error);
+        if (error) return;
 
-        clearError('step2Error');
-        resetInputState('otpCode');
-
-        // Validate OTP
-        if (!otp) {
-            showError('step2Error', 'Please enter the verification code');
-            setInputState('otpCode', 'error');
-            return;
-        }
-
-        if (otp.length !== 6) {
-            showError('step2Error', 'Code must be 6 digits');
-            setInputState('otpCode', 'error');
-            return;
-        }
-
+        setLoading('otpSendBtn', true, 'Send code', 'Sending...');
         try {
-            btn.disabled = true;
-            btn.textContent = 'Verifying...';
+            const response = await apiPost('/otp/generate-otp', { email });
+            const data = response.data;
+            if (data.success) {
+                otpState.email = email;
+                el('otpDisplayEmail').textContent = email;
+                setText('otpStep1Msg', 'Code sent successfully', 'text-emerald-500');
+                el('otpVerifyBtn').disabled = false;
+                setOtpStep(2);
+                startOtpCountdown();
+                startResendCountdown();
+            } else {
+                setText('otpStep1Msg', data.message || 'Failed to send code');
+            }
+        } catch (err) {
+            const data = err.data || {};
+            const message = data.message || 'Server error. Please try again later.';
+            setText('otpStep1Msg', message);
+        } finally {
+            setLoading('otpSendBtn', false, 'Send code');
+        }
+    }
 
-            const response = await axios.post('/otp/verify-otp', {
-                email: userEmail,
-                otp: otp
-            });
+    async function handleVerifyOtp() {
+        const otp = el('otpCodeInput').value.trim();
+        const errMsg = validateOtp(otp);
+        setText('otpStep2Msg', errMsg);
+        if (errMsg) return;
 
-            if (response.data.success) {
-                setInputState('otpCode', 'success');
+        setLoading('otpVerifyBtn', true, 'Verify code', 'Verifying...');
+        try {
+            const response = await apiPost('/otp/verify-otp', { email: otpState.email, otp });
+            const data = response.data;
+            if (data.success) {
+                setText('otpStep2Msg', 'Code verified', 'text-emerald-500');
                 clearTimers();
-
-                // Move to next step after a brief delay
-                setTimeout(() => {
-                    goToStep(3);
-                }, 500);
+                setOtpStep(3);
             } else {
-                showError('step2Error', response.data.message || 'Invalid verification code');
-                setInputState('otpCode', 'error');
+                setText('otpStep2Msg', data.message || 'Invalid verification code');
             }
-
-        } catch (error) {
-            handleApiError(error, 'step2Error', 'otpCode');
-        } finally {
-            btn.disabled = false;
-            btn.textContent = 'Verify Code';
-        }
-    }
-
-    async function resendOtp() {
-        const btn = document.getElementById('resendBtn');
-
-        clearError('step2Error');
-
-        try {
-            btn.disabled = true;
-            btn.textContent = 'Sending...';
-
-            const response = await axios.post('/otp/generate-otp', { email: userEmail });
-
-            if (response.data.success) {
-                showError('step2Error', 'New code sent successfully!');
-                document.getElementById('step2Error').classList.remove('text-red-500');
-                document.getElementById('step2Error').classList.add('text-green-500');
-
-                // Clear the OTP input
-                document.getElementById('otpCode').value = '';
-                resetInputState('otpCode');
-
-                // Restart timers
-                startOtpTimer();
-                startResendTimer();
-            } else {
-                showError('step2Error', response.data.message || 'Failed to resend code');
-            }
-
-        } catch (error) {
-            handleApiError(error, 'step2Error', null);
-        }
-    }
-
-    async function resetPassword() {
-        const newPassword = document.getElementById('newPassword').value;
-        const confirmPassword = document.getElementById('confirmPassword').value;
-        const btn = document.getElementById('resetPasswordBtn');
-
-        clearError('step3Error');
-
-        // Validate passwords
-        if (!newPassword || !confirmPassword) {
-            showError('step3Error', 'Please fill in both password fields');
-            return;
-        }
-
-        if (newPassword.length < 8) {
-            showError('step3Error', 'Password must be at least 8 characters long');
-            return;
-        }
-
-        if (newPassword !== confirmPassword) {
-            showError('step3Error', 'Passwords do not match');
-            return;
-        }
-
-        try {
-            btn.disabled = true;
-            btn.textContent = 'Resetting...';
-
-            const response = await axios.post('/otp/reset-password', {
-                email: userEmail,
-                password: newPassword,
-                password_confirmation: confirmPassword
-            });
-
-            if (response.data.success) {
-                // Show success message
-                showError('step3Error', 'Password reset successfully! Redirecting...');
-                document.getElementById('step3Error').classList.remove('text-red-500');
-                document.getElementById('step3Error').classList.add('text-green-500');
-
-                // Close modal and redirect after a delay
-                setTimeout(() => {
-                    closeModal();
-                    window.location.href = '/login'; // Or wherever you want to redirect
-                }, 2000);
-            } else {
-                showError('step3Error', response.data.message || 'Failed to reset password');
-            }
-
-        } catch (error) {
-            handleApiError(error, 'step3Error', null);
-        } finally {
-            btn.disabled = false;
-            btn.textContent = 'Reset Password';
-        }
-    }
-
-    function handleApiError(error, errorElementId, inputId) {
-        if (error.response) {
-            const status = error.response.status;
-            const data = error.response.data;
-
+        } catch (err) {
+            const data = err.data || {};
+            const status = err.status;
             if (status === 422) {
-                // Validation errors
                 const firstError = data.errors ? Object.values(data.errors)[0][0] : data.message;
-                showError(errorElementId, firstError);
-                if (inputId) setInputState(inputId, 'error');
-            } else if (status === 404) {
-                showError(errorElementId, data.message || 'Resource not found');
-                if (inputId) setInputState(inputId, 'error');
-            } else if (status === 500) {
-                showError(errorElementId, 'Server error. Please try again later');
+                setText('otpStep2Msg', firstError || 'Invalid verification code');
+            } else if (status === 429) {
+                setText('otpStep2Msg', data.message || 'Too many attempts. Please request a new code.');
             } else {
-                showError(errorElementId, data.message || 'An error occurred');
-                if (inputId) setInputState(inputId, 'error');
+                setText('otpStep2Msg', data.message || 'Server error. Please try again later.');
             }
-        } else if (error.request) {
-            showError(errorElementId, 'Network error. Please check your connection');
-        } else {
-            showError(errorElementId, 'An unexpected error occurred');
+        } finally {
+            setLoading('otpVerifyBtn', false, 'Verify code');
+        }
+    }
+
+    async function handleResendOtp() {
+        if (!otpState.email) return;
+        setText('otpStep2Msg', '');
+        setLoading('otpResendBtn', true, 'Resend code', 'Sending...');
+        try {
+            const response = await apiPost('/otp/generate-otp', { email: otpState.email });
+            const data = response.data;
+            if (data.success) {
+                setText('otpStep2Msg', 'New code sent', 'text-emerald-500');
+                el('otpCodeInput').value = '';
+                el('otpVerifyBtn').disabled = false;
+                startOtpCountdown();
+                startResendCountdown();
+            } else {
+                setText('otpStep2Msg', data.message || 'Failed to resend code');
+            }
+        } catch (err) {
+            const data = err.data || {};
+            setText('otpStep2Msg', data.message || 'Server error. Please try again later.');
+        } finally {
+            setLoading('otpResendBtn', false, 'Resend code in <span id="otpResendCountdown">60</span>s');
+        }
+    }
+
+    async function handleResetPassword() {
+        const pw = el('otpNewPassword').value;
+        const confirm = el('otpConfirmPassword').value;
+        const err = validatePasswords(pw, confirm);
+        setText('otpStep3Msg', err);
+        if (err) return;
+
+        setLoading('otpResetBtn', true, 'Reset password', 'Saving...');
+        try {
+            const response = await apiPost('/otp/reset-password', {
+                email: otpState.email,
+                password: pw,
+                password_confirmation: confirm,
+            });
+            const data = response.data;
+            if (data.success) {
+                setText('otpStep3Msg', 'Password reset successfully! Redirecting...', 'text-emerald-500');
+                setTimeout(() => window.location.href = '/login', 1500);
+            } else {
+                setText('otpStep3Msg', data.message || 'Failed to reset password');
+            }
+        } catch (err) {
+            const data = err.data || {};
+            const status = err.status;
+            if (status === 422) {
+                const firstError = data.errors ? Object.values(data.errors)[0][0] : data.message;
+                setText('otpStep3Msg', firstError || 'Validation error');
+            } else {
+                setText('otpStep3Msg', data.message || 'Server error. Please try again later.');
+            }
+        } finally {
+            setLoading('otpResetBtn', false, 'Reset password');
         }
     }
 </script>

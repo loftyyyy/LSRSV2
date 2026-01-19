@@ -24,7 +24,9 @@ class OtpService {
             Cache::put($key, $otp, now()->addMinutes(5));
         }
 
-        return $key;
+        // Return the actual OTP so it can be emailed to the user
+
+        return $otp;
     }
 
     // Improved version:
@@ -125,7 +127,8 @@ class OtpService {
     public function sendEmail(String $otp, User $user): void
     {
         try {
-            Mail::to($user->email)->queue(new OtpMail($otp, $user));
+            // Send the email synchronously so it is dispatched immediately
+            Mail::to($user->email)->send(new OtpMail($otp, $user));
         } catch (\Exception $e) {
             // Log the error but don't expose it to user
             Log::error('Failed to send OTP email: ' . $e->getMessage());
