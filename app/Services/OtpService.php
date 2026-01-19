@@ -79,9 +79,45 @@ class OtpService {
             $result = Redis::eval($lua, 2, $otpKey, $attemptsKey, $otp, $maxAttempts, $ttlSeconds);
             return (int) $result;
         } catch (\Throwable $e) {
-            // Redis failure -> treat as invalid OTP
-            return 0;
+            // Redis failure -> fallback to Cache verification
+            return $this->verifyOtpWithCache($email, $otp, $maxAttempts, $ttlSeconds);
         }
+    }
+
+    private function verifyOtpWithCache(string $email, string $otp, int $maxAttempts = 5, int $ttlSeconds = 300): int
+    {
+        $otpKey = "otp:" . $email;
+        $attemptsKey = "otp_attempts:" . $email;
+
+        // Get stored OTP from cache
+        $storedOtp = Cache::get($otpKey);
+        if ($storedOtp === null) {
+            return 0; // OTP not found
+        }
+
+        // Get attempts from cache
+        $attempts = Cache::get($attemptsKey, 0);
+        $attempts++;
+
+        // Check max attempts
+        if ($attempts > $maxAttempts) {
+            Cache::forget($otpKey);
+            Cache::forget($attemptsKey);
+            return -1; // Too many attempts
+        }
+
+        // Store attempts with TTL
+        Cache::put($attemptsKey, $attempts, now()->addSeconds($ttlSeconds));
+
+        // Verify OTP
+        if (hash_equals($storedOtp, $otp)) {
+            // Success - delete OTP and attempts
+            Cache::forget($otpKey);
+            Cache::forget($attemptsKey);
+            return 1; // Valid OTP
+        }
+
+        return 0; // Invalid OTP
     }
 //    public function verifyOtp(string $email, string $otp): bool
 //    {
