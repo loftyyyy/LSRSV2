@@ -174,22 +174,22 @@ class OtpController extends Controller
 //                'message' => 'Invalid OTP.'
 //            ], 422);
 //
-
-        }catch (ValidationException $e){
-            return response()->json([
-                'success' => false,
-                'errors' => $e->errors()
-            ], 422);
-        } catch (\Throwable $e) {
-            // Return general error as JSON
-            return response()->json([
-                'success' => false,
-                'message' => 'Something went wrong. Please try again later.',
-                'error' => $e->getMessage()
-            ], 500);
-        }
-
-    }
+//
+//        }catch (ValidationException $e){
+//            return response()->json([
+//                'success' => false,
+//                'errors' => $e->errors()
+//            ], 422);
+//        } catch (\Throwable $e) {
+//            // Return general error as JSON
+//            return response()->json([
+//                'success' => false,
+//                'message' => 'Something went wrong. Please try again later.',
+//                'error' => $e->getMessage()
+//            ], 500);
+//        }
+//
+//    }
 
 
 
