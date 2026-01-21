@@ -146,6 +146,11 @@
                         <button type="submit" class="w-full bg-gradient-to-r from-violet-600 via-indigo-600 to-blue-600 hover:from-violet-700 hover:via-indigo-700 hover:to-blue-700 rounded-xl py-3 text-white font-semibold shadow-lg shadow-violet-600/20 transition-transform hover:translate-y-[-1px]">
                             Sign in
                         </button>
+                        @error('email')
+                        <p class="text-xs text-red-600 dark:text-red-400 mt-1">
+                            {{ $message }}
+                        </p>
+                        @enderror
                     </form>
 
                     <div class="mt-8 flex items-center gap-3 text-xs text-neutral-500 dark:text-neutral-500">
