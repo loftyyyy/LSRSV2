@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -78,22 +79,32 @@ class AuthController extends Controller
         return view('auth.forgot-password');
     }
 
-    /**
-     * Send password reset link.
-     */
-    public function sendResetLinkEmail(Request $request): RedirectResponse
+    public function resetPassword(Request $request): JsonResponse
     {
         $request->validate([
-            'email' => ['required', 'email'],
+            'current_password' => ['required'],
+            'new_password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
-        $status = Password::sendResetLink(
-            $request->only('email')
-        );
+        $user = auth()->user();
 
-        return $status === Password::RESET_LINK_SENT
-            ? back()->with(['status' => __($status)])
-            : back()->withErrors(['email' => __($status)]);
+        if(!Hash::check($request['current_password'], $user['password'])) {
+            return response()->json([
+                'message' => 'Current password is incorrect',
+            ], 422);
+        }
+
+        if($request['new_password'] === $request['current_password']) {
+            return response()->json([
+                'message' => 'New Password cannot be same as your current password',
+            ], 422);
+        }
+
+        $user->update(['password' => Hash::make($request['new_password'])]);
+
+        return response()->json([
+            'message' => 'New password has been changed successfully',
+        ],200);
     }
 
     /**
