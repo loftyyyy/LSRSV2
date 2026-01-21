@@ -477,10 +477,10 @@
         return '';
     }
 
-    function validatePasswords(pw, confirm) {
-        if (!pw || !confirm) return 'Please fill in both password fields';
-        if (pw.length < 8) return 'Password must be at least 8 characters long';
-        if (pw !== confirm) return 'Passwords do not match';
+    function validatePasswords(currentP, newP) {
+        if (!currentP || !newP) return 'Please fill in both password fields';
+        if (newP.length < 8) return 'Password must be at least 8 characters long';
+        if (currentP !== newP) return 'Passwords do not match';
         return '';
     }
 
@@ -580,18 +580,17 @@
     }
 
     async function handleResetPassword() {
-        const pw = el('otpCurrentPassword').value;
-        const confirm = el('otpNewPassword').value;
-        const err = validatePasswords(pw, confirm);
+        const currentPassword = el('otpCurrentPassword').value;
+        const newPassword = el('otpNewPassword').value;
+        const err = validatePasswords(currentPassword, newPassword);
         setText('otpStep3Msg', err);
         if (err) return;
 
         setLoading('otpResetBtn', true, 'Reset password', 'Saving...');
         try {
             const response = await apiPost('/otp/reset-password', {
-                email: otpState.email,
-                password: pw,
-                password_confirmation: confirm,
+                current_password: currentPassword ,
+
             });
             const data = response.data;
             if (data.success) {
