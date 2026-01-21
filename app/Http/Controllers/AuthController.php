@@ -82,11 +82,19 @@ class AuthController extends Controller
     public function resetPassword(Request $request): JsonResponse
     {
         $request->validate([
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'email' => ['required', 'email'],
+            'password' => ['required', 'string', 'min:8'],
             'confirm_password' => ['required', 'string', 'min:8'],
         ]);
 
-        $user = auth()->user();
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User not found',
+            ], 404);
+        }
 
         if($request['password'] !== $request['confirm_password']) {
             return response()->json([

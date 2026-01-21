@@ -591,7 +591,7 @@
             const response = await apiPost('/otp/reset-password', {
                 email: otpState.email,
                 password: pw,
-                password_confirmation: confirm,
+                confirm_password: confirm,
             });
             const data = response.data;
             if (data.success) {
