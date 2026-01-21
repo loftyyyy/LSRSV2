@@ -137,7 +137,7 @@ class OtpController extends Controller
 
         return response()->json([
             'success' => false,
-            'message' => 'Invalid OTP or email.'
+            'message' => 'Invalid OTP'
         ], 422);
     }
 
