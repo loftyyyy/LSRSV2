@@ -270,11 +270,11 @@
                 </div>
 
                 <div class="space-y-2">
-                    <label class="text-sm font-medium">New password</label>
+                    <label class="text-sm font-medium">Current password</label>
                     <div class="flex items-center bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded-xl px-3 focus-within:border-violet-500 focus-within:ring-2 focus-within:ring-violet-100 dark:focus-within:ring-violet-500/30 transition">
                         <x-icon name="lock" class="text-neutral-400 mr-2" />
                         <input
-                            id="otpNewPassword"
+                            id="otpCurrentPassword"
                             type="password"
                             placeholder="••••••••"
                             class="w-full bg-transparent py-3 text-sm text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none"
@@ -287,11 +287,11 @@
                 </div>
 
                 <div class="space-y-2">
-                    <label class="text-sm font-medium">Confirm password</label>
+                    <label class="text-sm font-medium">New password</label>
                     <div class="flex items-center bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded-xl px-3 focus-within:border-violet-500 focus-within:ring-2 focus-within:ring-violet-100 dark:focus-within:ring-violet-500/30 transition">
                         <x-icon name="lock" class="text-neutral-400 mr-2" />
                         <input
-                            id="otpConfirmPassword"
+                            id="otpNewPassword"
                             type="password"
                             placeholder="••••••••"
                             class="w-full bg-transparent py-3 text-sm text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none"
@@ -580,8 +580,8 @@
     }
 
     async function handleResetPassword() {
-        const pw = el('otpNewPassword').value;
-        const confirm = el('otpConfirmPassword').value;
+        const pw = el('otpCurrentPassword').value;
+        const confirm = el('otpNewPassword').value;
         const err = validatePasswords(pw, confirm);
         setText('otpStep3Msg', err);
         if (err) return;
