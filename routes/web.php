@@ -12,18 +12,12 @@ use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\OtpController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/landing', function () {
-    return view('landing');
-});
-
-Route::middleware(['web'])->group(function () {
+Route::middleware(['guest'])->group(function () {
     Route::get('/register', [AuthController::class,  'showRegisterForm'])->name('register');
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
-    Route::get('/forgot-password', [AuthController::class, 'showForgotPasswordForm'])->name('password.request');
 
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
-    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
     Route::prefix('otp')->group(function () {
         Route::post('/generate-otp', [OtpController::class, 'generateOtp']);
@@ -35,6 +29,8 @@ Route::middleware(['web'])->group(function () {
 
 });
 
+
+
  Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'showDashboardPage'])->name('dashboard');
     Route::get('/customers', [CustomerController::class, 'showCustomerPage'])->name('customers');
@@ -43,6 +39,8 @@ Route::middleware(['web'])->group(function () {
     Route::get('/rentals', [RentalController::class, 'showRentalPage'])->name('rentals');
     Route::get('/invoices', [InvoiceController::class, 'showInvoicePage'])->name('invoices');
     Route::get('/payments', [PaymentController::class, 'showPaymentPage'])->name('payments');
+
+     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
     // Internal API endpoints (session-authenticated)
     Route::prefix('api')->group(function () {
