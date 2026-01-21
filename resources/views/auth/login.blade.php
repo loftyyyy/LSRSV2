@@ -270,11 +270,11 @@
                 </div>
 
                 <div class="space-y-2">
-                    <label class="text-sm font-medium">Current password</label>
+                    <label class="text-sm font-medium">New password</label>
                     <div class="flex items-center bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded-xl px-3 focus-within:border-violet-500 focus-within:ring-2 focus-within:ring-violet-100 dark:focus-within:ring-violet-500/30 transition">
                         <x-icon name="lock" class="text-neutral-400 mr-2" />
                         <input
-                            id="otpCurrentPassword"
+                            id="otpNewPassword"
                             type="password"
                             placeholder="••••••••"
                             class="w-full bg-transparent py-3 text-sm text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none"
@@ -287,11 +287,11 @@
                 </div>
 
                 <div class="space-y-2">
-                    <label class="text-sm font-medium">New password</label>
+                    <label class="text-sm font-medium">Confirm password</label>
                     <div class="flex items-center bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded-xl px-3 focus-within:border-violet-500 focus-within:ring-2 focus-within:ring-violet-100 dark:focus-within:ring-violet-500/30 transition">
                         <x-icon name="lock" class="text-neutral-400 mr-2" />
                         <input
-                            id="otpNewPassword"
+                            id="otpConfirmPassword"
                             type="password"
                             placeholder="••••••••"
                             class="w-full bg-transparent py-3 text-sm text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none"
@@ -477,10 +477,10 @@
         return '';
     }
 
-    function validatePasswords(currentP, newP) {
-        if (!currentP || !newP) return 'Please fill in both password fields';
-        if (newP.length < 8) return 'Password must be at least 8 characters long';
-        if (currentP !== newP) return 'Passwords do not match';
+    function validatePasswords(pw, confirm) {
+        if (!pw || !confirm) return 'Please fill in both password fields';
+        if (pw.length < 8) return 'Password must be at least 8 characters long';
+        if (pw !== confirm) return 'Passwords do not match';
         return '';
     }
 
@@ -580,17 +580,18 @@
     }
 
     async function handleResetPassword() {
-        const currentPassword = el('otpCurrentPassword').value;
-        const newPassword = el('otpNewPassword').value;
-        const err = validatePasswords(currentPassword, newPassword);
+        const pw = el('otpNewPassword').value;
+        const confirm = el('otpConfirmPassword').value;
+        const err = validatePasswords(pw, confirm);
         setText('otpStep3Msg', err);
         if (err) return;
 
         setLoading('otpResetBtn', true, 'Reset password', 'Saving...');
         try {
             const response = await apiPost('/otp/reset-password', {
-                current_password: currentPassword ,
-
+                email: otpState.email,
+                password: pw,
+                password_confirmation: confirm,
             });
             const data = response.data;
             if (data.success) {

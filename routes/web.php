@@ -30,6 +30,7 @@ Route::middleware(['web'])->group(function () {
         Route::post('/verify-otp', [OtpController::class, 'verifyOtp']);
         Route::post('/resend-otp', [OtpController::class, 'resendOtp']);
         Route::post('/delete-otp', [OtpController::class, 'deleteOtp']);
+        Route::post('/reset-password', [AuthController::class, 'resetPassword']);
     });
 
 });
