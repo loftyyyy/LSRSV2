@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('email');
             $table->string('contact_number');
             $table->string('address');
-            $table->json('measurement');
+            $table->json('measurement')->nullable();
             $table->foreignId('status_id')->constrained('customer_statuses', 'status_id')->cascadeOnDelete();
             $table->timestamps();
         });
