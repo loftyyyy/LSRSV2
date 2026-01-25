@@ -27,7 +27,7 @@ class StoreCustomerRequest extends FormRequest
             'email' => ['required', 'email', 'max:255', 'unique:customers,email'],
             'contact_number' => ['required', 'string', 'max:255'],
             'address' => ['required', 'string'],
-            'measurement' => ['required', 'array'],
+            'measurement' => ['nullable', 'array'],
             'status_id' => ['required', 'exists:customer_statuses,status_id'],
         ];
     }

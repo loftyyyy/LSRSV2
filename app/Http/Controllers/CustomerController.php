@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateCustomerRequest;
 use App\Models\CustomerStatus;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class CustomerController extends Controller
@@ -167,19 +168,46 @@ class CustomerController extends Controller
      */
     public function store(StoreCustomerRequest $request): JsonResponse
     {
-        $activeStatusId = CustomerStatus::where('status_name', 'active')->value('status_id');
+        try {
+            DB::beginTransaction();
 
-        $customer = Customer::create([
-            $request->validated(),
-            'status_id' => $activeStatusId,
-            ]);
+            $activeStatusId = CustomerStatus::where('status_name', 'active')
+                ->value('status_id');
 
-        $customer->load('status');
+            if (!$activeStatusId) {
+                return response()->json([
+                    'message' => 'Active customer status not found.'
+                ], 422);
+            }
 
-        return response()->json([
-            'message' => 'Customer created successfully',
-            'data' => $customer
-        ], 201);
+            $customer = Customer::create(
+                array_merge(
+                    $request->validated(),
+                    ['status_id' => $activeStatusId]
+                )
+            );
+
+            $customer->load('status');
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Customer created successfully',
+                'data' => $customer
+            ], 201);
+
+        } catch (Throwable $e) {
+            DB::rollBack();
+
+            report($e); // logs to laravel.log
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create customer.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

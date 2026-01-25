@@ -13,6 +13,8 @@
         {{-- Form --}}
         <form id="addCustomerForm" class="px-8 py-6 space-y-5">
             @csrf
+            {{-- Hidden status field set to Active (1) --}}
+            <input type="hidden" name="status_id" value="1">
 
             <div class="grid grid-cols-3 gap-6">
                 {{-- Personal Information Column --}}
@@ -94,27 +96,11 @@
                 {{-- Status & Address Column --}}
                 <div class="space-y-4">
                     <div class="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                        <x-icon name="flag" class="h-4 w-4" />
-                        <span>Status & Address</span>
+                        <x-icon name="map-pin" class="h-4 w-4" />
+                        <span>Address</span>
                     </div>
 
                     <div class="space-y-3">
-                        <div class="space-y-2">
-                            <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Status</label>
-                            <div class="flex items-center rounded-2xl bg-white px-3 py-2.5 border border-neutral-300 focus-within:border-neutral-500 dark:border-neutral-800 dark:bg-black/60 transition-colors duration-300 ease-in-out">
-                                <x-icon name="flag" class="h-4 w-4 text-neutral-500 mr-2 transition-colors duration-300 ease-in-out" />
-                                <select
-                                    name="status_id"
-                                    required
-                                    class="w-full bg-transparent text-xs text-neutral-700 dark:text-neutral-100 focus:outline-none transition-colors duration-300 ease-in-out"
-                                >
-                                    <option value="" class="text-neutral-700">Select Status</option>
-                                    <option value="1" class="text-neutral-700">Active</option>
-                                    <option value="2" class="text-neutral-700">Inactive</option>
-                                </select>
-                            </div>
-                        </div>
-
                         <div class="space-y-2">
                             <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Address</label>
                             <div class="flex items-center rounded-2xl bg-white px-3 py-2.5 border border-neutral-300 focus-within:border-neutral-500 dark:border-neutral-800 dark:bg-black/60 transition-colors duration-300 ease-in-out">
@@ -253,12 +239,12 @@
         transform: translateZ(0);
         backface-visibility: hidden;
     }
-    
+
     #addCustomerModal .max-w-6xl {
         will-change: transform;
         transform: translateZ(0);
     }
-    
+
     /* Fix select dropdown appearance */
     select {
         background-color: transparent;
@@ -271,25 +257,25 @@
         -moz-appearance: none;
         appearance: none;
     }
-    
+
     .dark select {
         background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
     }
-    
+
     /* Custom number input spinner styling */
     input[type="number"] {
         -webkit-appearance: textfield;
         -moz-appearance: textfield;
         appearance: textfield;
     }
-    
+
     input[type="number"]::-webkit-outer-spin-button,
     input[type="number"]::-webkit-inner-spin-button {
         -webkit-appearance: none;
         appearance: none;
         margin: 0;
     }
-    
+
     /* Custom increment buttons */
     .measurement-spinner {
         position: relative;
@@ -297,11 +283,11 @@
         align-items: center;
         width: 100%;
     }
-    
+
     .measurement-spinner input {
         flex: 1;
     }
-    
+
     .spinner-buttons {
         position: absolute;
         right: 0.25rem;
@@ -310,7 +296,7 @@
         gap: 0;
         height: 100%;
     }
-    
+
     .spinner-btn {
         display: inline-flex;
         align-items: center;
@@ -326,15 +312,15 @@
         transition: color 0.2s;
         flex: 1;
     }
-    
+
     .dark .spinner-btn {
         color: #9ca3af;
     }
-    
+
     .spinner-btn:hover {
         color: #374151;
     }
-    
+
     .dark .spinner-btn:hover {
         color: #d1d5db;
     }
@@ -442,9 +428,6 @@
         if (!formData.get('address')?.trim()) {
             errors.push('Address is required');
         }
-        if (!formData.get('status_id')) {
-            errors.push('Status is required');
-        }
 
         return errors;
     }
@@ -492,18 +475,10 @@
                 measurement: Object.keys(measurements).length > 0 ? measurements : null
             };
 
-            const response = await fetch('/api/customers', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                },
-                body: JSON.stringify(payload)
-            });
+            const response = await axios.post('/api/customers', payload);
+            const data = response.data;
 
-            const data = await response.json();
-
-            if (response.ok && data.success) {
+            if (data.success) {
                 showSuccess('Customer added successfully!');
 
                 // Close modal after success
@@ -517,7 +492,9 @@
             }
         } catch (error) {
             console.error('Error adding customer:', error);
-            showError('Network error. Please check your connection and try again.');
+            console.error('Error response:', error.response);
+            const errorMessage = error.response?.data?.message || error.message || 'Network error. Please check your connection and try again.';
+            showError(errorMessage);
         } finally {
             addCustomerModalState.isSubmitting = false;
             updateSubmitButton();
@@ -545,17 +522,17 @@
             const inputName = this.getAttribute('data-input');
             const action = this.getAttribute('data-action');
             const input = document.querySelector(`input[name="${inputName}"]`);
-            
+
             if (input) {
                 const currentValue = parseFloat(input.value) || 0;
                 const step = parseFloat(input.step) || 1;
-                
+
                 if (action === 'up') {
                     input.value = (currentValue + step).toFixed(1);
                 } else if (action === 'down') {
                     input.value = Math.max(0, currentValue - step).toFixed(1);
                 }
-                
+
                 // Trigger input event for form tracking
                 input.dispatchEvent(new Event('input', { bubbles: true }));
             }
