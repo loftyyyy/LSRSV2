@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Customer;
 use App\Http\Requests\StoreCustomerRequest;
 use App\Http\Requests\UpdateCustomerRequest;
+use App\Models\CustomerStatus;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -166,7 +167,12 @@ class CustomerController extends Controller
      */
     public function store(StoreCustomerRequest $request): JsonResponse
     {
-        $customer = Customer::create($request->validated());
+        $activeStatusId = CustomerStatus::where('status_name', 'active')->value('status_id');
+
+        $customer = Customer::create([
+            $request->validated(),
+            'status_id' => $activeStatusId,
+            ]);
 
         $customer->load('status');
 
