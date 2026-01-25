@@ -44,7 +44,7 @@
                         <span>Reports</span>
                     </button>
 
-                    <button class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-[14px] font-medium bg-violet-600 text-white dark:hover:text-white hover:text-black dark:text-black hover:bg-violet-500 shadow-violet-600/40 transition-colors duration-300 ease-in-out">
+                    <button onclick="openAddCustomerModal()" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-[14px] font-medium bg-violet-600 text-white dark:hover:text-white hover:text-black dark:text-black hover:bg-violet-500 shadow-violet-600/40 transition-colors duration-300 ease-in-out">
                         <x-icon name="plus" class="h-4 w-4" />
                         <span>Add Customer</span>
                     </button>
@@ -214,5 +214,9 @@
         }
     });
 </script>
+
+{{-- Include Add Customer Modal --}}
+@include('customers.partials.add-customer-modal')
+
 </body>
 </html>
