@@ -13,11 +13,12 @@ use App\Http\Controllers\OtpController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['guest'])->group(function () {
-    Route::get('/register', [AuthController::class,  'showRegisterForm'])->name('register');
-    Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 
+    Route::get('/register', [AuthController::class,  'showRegisterForm'])->name('register');
+    Route::get('/', [AuthController::class, 'showLoginForm'])->name('loginForm');
+    Route::get('/login', [AuthController::class, 'showLoginForm'])->name('loginForm');
     Route::post('/register', [AuthController::class, 'register']);
-    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/login', [AuthController::class, 'login'])->name('login');
 
     Route::prefix('otp')->group(function () {
         Route::post('/generate-otp', [OtpController::class, 'generateOtp']);
