@@ -128,40 +128,43 @@ class CustomerController extends Controller
         return view('customers.index');
     }
 
-    /**
-     * Display a listing of the resource.
-     */
-    public function index(Request $request): JsonResponse
-    {
-        $query = Customer::with(['status']);
+     /**
+      * Display a listing of the resource.
+      */
+     public function index(Request $request): JsonResponse
+     {
+         $query = Customer::with(['status']);
 
-        // Search functionality
-        if ($request->has('search')) {
-            $search = $request->get('search');
-            $query->where(function ($q) use ($search) {
-                $q->where('first_name', 'like', "%{$search}%")
-                    ->orWhere('last_name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%")
-                    ->orWhere('contact_number', 'like', "%{$search}%");
-            });
-        }
+         // Search functionality
+         if ($request->has('search')) {
+             $search = $request->get('search');
+             $query->where(function ($q) use ($search) {
+                 $q->where('first_name', 'like', "%{$search}%")
+                     ->orWhere('last_name', 'like', "%{$search}%")
+                     ->orWhere('email', 'like', "%{$search}%")
+                     ->orWhere('contact_number', 'like', "%{$search}%");
+             });
+         }
 
-        // Filter by status
-        if ($request->has('status_id')) {
-            $query->where('status_id', $request->get('status_id'));
-        }
+         // Filter by status
+         if ($request->has('status_id')) {
+             $query->where('status_id', $request->get('status_id'));
+         }
 
-        // Include rental history count if requested
-        if ($request->get('include_history', false)) {
-            $query->withCount(['rentals', 'reservations']);
-        }
+         // Include rental history count if requested
+         if ($request->has('include_history') && $request->get('include_history') !== 'false') {
+             $query->withCount(['rentals', 'reservations']);
+         }
 
-        // Pagination
-        $perPage = $request->get('per_page', 15);
-        $customers = $query->paginate($perPage);
+         // Order by most recent first
+         $query->orderBy('created_at', 'desc');
 
-        return response()->json($customers);
-    }
+         // Pagination
+         $perPage = $request->get('per_page', 15);
+         $customers = $query->paginate($perPage);
+
+         return response()->json($customers);
+     }
 
     /**
      * Store a newly created resource in storage.
