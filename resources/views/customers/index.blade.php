@@ -469,10 +469,10 @@
                     <td class="py-3.5 pl-2 text-left text-neutral-500 dark:text-neutral-400">
                         <div class="inline-flex items-center gap-2">
                             <button class="edit-customer-btn rounded-lg p-1.5 hover:bg-violet-600 hover:text-white transition-colors duration-300 ease-in-out" aria-label="Edit" title="Edit customer" data-customer-id="${customer.customer_id}">
-                                <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-7-4l7-7m0 0v5m0-5h-5"/></svg>
+                                <x-icon name="edit" class="h-3.5 w-3.5" />
                             </button>
-                            <button class="delete-customer-btn rounded-lg p-1.5 text-red-500 hover:bg-red-500/15 hover:text-red-400 transition-colors duration-300 ease-in-out" aria-label="Delete" title="Delete customer" data-customer-id="${customer.customer_id}">
-                                <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                            <button class="change-status-btn rounded-lg p-1.5 text-amber-600 hover:bg-amber-500/15 hover:text-amber-500 transition-colors duration-300 ease-in-out dark:text-amber-500 dark:hover:bg-amber-900/25" aria-label="Change Status" title="Change customer status" data-customer-id="${customer.customer_id}">
+                                <x-icon name="archive" class="h-3.5 w-3.5" />
                             </button>
                         </div>
                     </td>
@@ -480,7 +480,7 @@
                 tbody.appendChild(row);
             });
 
-            // Attach event listeners to edit and delete buttons
+            // Attach event listeners to edit and change status buttons
             document.querySelectorAll('.edit-customer-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     e.preventDefault();
@@ -489,11 +489,11 @@
                 });
             });
 
-            document.querySelectorAll('.delete-customer-btn').forEach(btn => {
+            document.querySelectorAll('.change-status-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     e.preventDefault();
                     const customerId = btn.getAttribute('data-customer-id');
-                    deleteCustomer(customerId);
+                    openChangeStatusModal(customerId);
                 });
             });
 
@@ -572,7 +572,43 @@
         }
     }
 
-    // Delete customer
+    // Open change status modal
+    async function openChangeStatusModal(customerId) {
+        try {
+            // Fetch customer data to get current status
+            const response = await axios.get(`/api/customers/${customerId}`);
+            const customer = response.data.data;
+            const newStatus = customer.status_id === 1 ? 2 : 1;
+            const statusName = newStatus === 1 ? 'Active' : 'Inactive';
+            
+            // Store customer info for later use
+            window.pendingStatusChange = {
+                customerId: customerId,
+                currentStatus: customer.status_id,
+                newStatus: newStatus,
+                customerName: `${customer.first_name} ${customer.last_name}`
+            };
+
+            // If changing to inactive, require password confirmation
+            if (newStatus === 2) {
+                showPasswordConfirmationModal(statusName);
+            } else {
+                // If changing to active, allow without password
+                await changeCustomerStatus(customerId, newStatus);
+            }
+        } catch (error) {
+            console.error('Error fetching customer for status change:', error);
+            alert('Failed to load customer data');
+        }
+    }
+
+    // Show password confirmation modal (defined in edit modal include)
+    // This function is called from openChangeStatusModal
+    // The modal is already defined in edit-customer-modal.blade.php
+
+    // Change customer status (from edit modal)
+    // This function is called after password verification
+
     async function deleteCustomer(customerId) {
         if (confirm('Are you sure you want to delete this customer? This action cannot be undone.')) {
             try {

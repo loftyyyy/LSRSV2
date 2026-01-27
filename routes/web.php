@@ -47,6 +47,11 @@ Route::middleware(['guest'])->group(function () {
     Route::prefix('api')->group(function () {
 
         // ============================================
+        // AUTH ROUTES
+        // ============================================
+        Route::post('/verify-password', [AuthController::class, 'verifyPassword']);
+
+        // ============================================
         // CUSTOMER ROUTES
         // ============================================
 

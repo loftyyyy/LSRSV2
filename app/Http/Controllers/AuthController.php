@@ -113,9 +113,31 @@ class AuthController extends Controller
 
 
     /**
+     * Verify the current user's password
+     */
+    public function verifyPassword(Request $request): JsonResponse
+    {
+        $request->validate([
+            'password' => ['required', 'string'],
+        ]);
+
+        if (Hash::check($request->password, Auth::user()->password)) {
+            return response()->json([
+                'valid' => true,
+                'message' => 'Password verified successfully'
+            ]);
+        }
+
+        return response()->json([
+            'valid' => false,
+            'message' => 'Password verification failed'
+        ], 401);
+    }
+
+    /**
      * Handle user logout.
      */
-    public function logout(Request $request): RedirectResponse
+     public function logout(Request $request): RedirectResponse
     {
         Auth::logout();
         $request->session()->invalidate();
