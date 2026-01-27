@@ -589,13 +589,13 @@
                 customerName: `${customer.first_name} ${customer.last_name}`
             };
 
-            // If changing to inactive, require password confirmation
-            if (newStatus === 2) {
-                showPasswordConfirmationModal(statusName);
-            } else {
-                // If changing to active, allow without password
-                await changeCustomerStatus(customerId, newStatus);
-            }
+             // If changing to inactive, require password confirmation
+             if (newStatus === 2) {
+                 showPasswordConfirmationModal(statusName, newStatus);
+             } else {
+                 // If changing to active, allow without password
+                 await changeCustomerStatus(customerId, newStatus);
+             }
         } catch (error) {
             console.error('Error fetching customer for status change:', error);
             alert('Failed to load customer data');
