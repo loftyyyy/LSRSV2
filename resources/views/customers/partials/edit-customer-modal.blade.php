@@ -604,15 +604,10 @@
          `;
 
          document.body.appendChild(modal);
-         console.log('Password confirmation modal appended to DOM');
 
          // Handle confirm button
          document.getElementById('confirmPasswordBtn').addEventListener('click', async function() {
              const password = document.getElementById('passwordConfirmationInput').value;
-             
-             console.log('Password confirmation clicked');
-             console.log('Current customer ID:', editCustomerModalState.currentCustomerId);
-             console.log('Current customer status:', editCustomerModalState.currentCustomerStatus);
              
              if (!password.trim()) {
                  const errorDiv = document.getElementById('passwordConfirmationError');
