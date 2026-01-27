@@ -375,15 +375,11 @@
             }
 
             const url = `/api/customers?${params.toString()}`;
-            console.log('Fetching customers from:', url);
 
             const response = await axios.get(url);
             const data = response.data;
 
-            console.log('API Response:', data);
-
             if (!data.data || !Array.isArray(data.data)) {
-                console.warn('Unexpected response format:', data);
                 showEmptyState('No customers found.');
                 hideLoadingState();
                 customerState.isLoading = false;

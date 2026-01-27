@@ -354,12 +354,8 @@
 
         try {
             // Fetch customer data
-            console.log('Attempting to fetch customer with ID:', customerId);
             const response = await axios.get(`/api/customers/${customerId}`);
-            console.log('Customer fetch response:', response);
             const customer = response.data.data;
-
-            console.log('Customer data:', customer);
 
             editCustomerModalState.currentCustomerStatus = customer.status_id;
 
@@ -384,10 +380,6 @@
                 document.getElementById('editFirstName').focus();
             }, 100);
         } catch (error) {
-            console.error('Error loading customer:', error);
-            console.error('Error response:', error.response);
-            console.error('Error message:', error.message);
-            console.error('Status code:', error.response?.status);
             const errorMsg = error.response?.data?.message || error.message || 'Failed to load customer data';
             showEditError(errorMsg);
         }
@@ -544,27 +536,16 @@
      // Handle change status button
      document.getElementById('changeStatusBtn').addEventListener('click', function(e) {
          e.preventDefault();
-         console.log('Change status button clicked');
-         console.log('editCustomerModalState:', editCustomerModalState);
-         console.log('Current status ID:', editCustomerModalState.currentCustomerStatus);
-         console.log('Current customer ID:', editCustomerModalState.currentCustomerId);
          
          const newStatus = editCustomerModalState.currentCustomerStatus === 1 ? 2 : 1;
          const statusName = newStatus === 1 ? 'Active' : 'Inactive';
-         
-         console.log('New status will be:', newStatus);
-         console.log('Status name:', statusName);
 
          // Require password confirmation for both deactivate and reactivate
-         console.log('Showing password confirmation modal for status change to:', statusName);
          showPasswordConfirmationModal(statusName, newStatus);
      });
 
      // Show password confirmation modal
      function showPasswordConfirmationModal(newStatusName, newStatus) {
-         console.log('showPasswordConfirmationModal called with status:', newStatusName);
-         console.log('showPasswordConfirmationModal newStatus parameter:', newStatus);
-         
          const modal = document.createElement('div');
          modal.id = 'passwordConfirmationModal';
          modal.className = 'fixed inset-0 z-[51] flex items-center justify-center px-2 py-6 bg-black/60 backdrop-blur-sm';
@@ -644,33 +625,23 @@
              document.getElementById('confirmPasswordBtnText').classList.add('hidden');
              document.getElementById('confirmPasswordBtnLoading').classList.remove('hidden');
 
-             try {
-                 // Verify password with backend
-                 console.log('Sending password verification request to /api/verify-password');
-                 const response = await axios.post('/api/verify-password', { password });
-                 
-                 console.log('Password verification response:', response);
-                 console.log('Response data:', response.data);
-                 
-                  if (response.data.valid) {
-                      console.log('Password is valid, proceeding with status change');
-                      console.log('Using newStatus from modal parameter:', newStatus);
-                      closePasswordConfirmationModal();
-                      await changeCustomerStatus(newStatus);
-                 } else {
-                     console.log('Password verification returned invalid');
-                     const errorDiv = document.getElementById('passwordConfirmationError');
-                     errorDiv.querySelector('p').textContent = 'Invalid password. Please try again.';
-                     errorDiv.classList.remove('hidden');
-                 }
-             } catch (error) {
-                 console.error('Error verifying password:', error);
-                 console.error('Error status:', error.response?.status);
-                 console.error('Error data:', error.response?.data);
-                 const errorDiv = document.getElementById('passwordConfirmationError');
-                 errorDiv.querySelector('p').textContent = error.response?.data?.message || 'Error verifying password. Please try again.';
-                 errorDiv.classList.remove('hidden');
-             } finally {
+              try {
+                  // Verify password with backend
+                  const response = await axios.post('/api/verify-password', { password });
+                  
+                   if (response.data.valid) {
+                       closePasswordConfirmationModal();
+                       await changeCustomerStatus(newStatus);
+                  } else {
+                      const errorDiv = document.getElementById('passwordConfirmationError');
+                      errorDiv.querySelector('p').textContent = 'Invalid password. Please try again.';
+                      errorDiv.classList.remove('hidden');
+                  }
+              } catch (error) {
+                  const errorDiv = document.getElementById('passwordConfirmationError');
+                  errorDiv.querySelector('p').textContent = error.response?.data?.message || 'Error verifying password. Please try again.';
+                  errorDiv.classList.remove('hidden');
+              } finally {
                  this.disabled = false;
                  document.getElementById('confirmPasswordBtnText').classList.remove('hidden');
                  document.getElementById('confirmPasswordBtnLoading').classList.add('hidden');
@@ -706,58 +677,44 @@
         }
     }
 
-     // Change customer status
-     async function changeCustomerStatus(newStatus) {
-         try {
-             // Handle both cases: called from edit modal or from table button
-             const customerId = editCustomerModalState.currentCustomerId || window.pendingStatusChange?.customerId;
-             
-             console.log('changeCustomerStatus called');
-             console.log('Customer ID:', customerId);
-             console.log('New status:', newStatus);
+      // Change customer status
+      async function changeCustomerStatus(newStatus) {
+          try {
+              // Handle both cases: called from edit modal or from table button
+              const customerId = editCustomerModalState.currentCustomerId || window.pendingStatusChange?.customerId;
+              
+              if (!customerId) {
+                  throw new Error('Customer ID not found');
+              }
 
-             if (!customerId) {
-                 throw new Error('Customer ID not found');
-             }
+               const endpoint = newStatus === 2 ? 'deactivate' : 'reactivate';
+              const url = `/api/customers/${customerId}/${endpoint}`;
+              
+              const response = await axios.post(url);
 
-              const endpoint = newStatus === 2 ? 'deactivate' : 'reactivate';
-             const url = `/api/customers/${customerId}/${endpoint}`;
-             console.log('Sending request to:', url);
-             
-             const response = await axios.post(url);
-             
-             console.log('Status change response:', response);
-             console.log('Response status:', response.status);
+              // Update modal state if called from edit modal
+              if (editCustomerModalState.currentCustomerId) {
+                  editCustomerModalState.currentCustomerStatus = newStatus;
+                  showEditSuccess(`Customer ${newStatus === 1 ? 'activated' : 'deactivated'} successfully!`);
 
-             // Update modal state if called from edit modal
-             if (editCustomerModalState.currentCustomerId) {
-                 console.log('Called from edit modal, updating state');
-                 editCustomerModalState.currentCustomerStatus = newStatus;
-                 showEditSuccess(`Customer ${newStatus === 1 ? 'activated' : 'deactivated'} successfully!`);
-
-                 // Close modal after success and refresh table
-                 setTimeout(() => {
-                     console.log('Closing edit modal and refreshing table');
-                     closeEditCustomerModal();
-                     fetchCustomers();
-                     fetchStats();
-                 }, 1500);
-             } else {
-                 // Called from table button - just refresh table without modal
-                 console.log('Called from table button');
-                 window.pendingStatusChange = null;
-                 closePasswordConfirmationModal();
-                 fetchCustomers();
-                 fetchStats();
-             }
-         } catch (error) {
-             console.error('Error changing customer status:', error);
-             console.error('Error response status:', error.response?.status);
-             console.error('Error response data:', error.response?.data);
-             const errorMessage = error.response?.data?.message || error.message || 'Failed to change customer status';
-             showEditError(errorMessage);
-         }
-     }
+                  // Close modal after success and refresh table
+                  setTimeout(() => {
+                      closeEditCustomerModal();
+                      fetchCustomers();
+                      fetchStats();
+                  }, 1500);
+              } else {
+                  // Called from table button - just refresh table without modal
+                  window.pendingStatusChange = null;
+                  closePasswordConfirmationModal();
+                  fetchCustomers();
+                  fetchStats();
+              }
+          } catch (error) {
+              const errorMessage = error.response?.data?.message || error.message || 'Failed to change customer status';
+              showEditError(errorMessage);
+          }
+      }
 
     // Close modal on escape key
     document.addEventListener('keydown', function(e) {
