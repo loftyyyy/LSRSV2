@@ -93,6 +93,21 @@
                                 />
                             </div>
                         </div>
+
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Address</label>
+                            <div class="flex items-center rounded-2xl bg-white px-3 py-2.5 border border-neutral-300 focus-within:border-neutral-500 dark:border-neutral-800 dark:bg-black/60 transition-colors duration-300 ease-in-out">
+                                <x-icon name="map-pin" class="h-4 w-4 text-neutral-500 mr-2 transition-colors duration-300 ease-in-out" />
+                                <input
+                                    type="text"
+                                    id="editAddress"
+                                    name="address"
+                                    required
+                                    placeholder="123 Main St, City"
+                                    class="w-full bg-transparent text-xs text-neutral-700 placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500 focus:outline-none transition-colors duration-300 ease-in-out"
+                                />
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -339,8 +354,12 @@
 
         try {
             // Fetch customer data
+            console.log('Attempting to fetch customer with ID:', customerId);
             const response = await axios.get(`/api/customers/${customerId}`);
+            console.log('Customer fetch response:', response);
             const customer = response.data.data;
+
+            console.log('Customer data:', customer);
 
             editCustomerModalState.currentCustomerStatus = customer.status_id;
 
@@ -366,7 +385,11 @@
             }, 100);
         } catch (error) {
             console.error('Error loading customer:', error);
-            showEditError('Failed to load customer data');
+            console.error('Error response:', error.response);
+            console.error('Error message:', error.message);
+            console.error('Status code:', error.response?.status);
+            const errorMsg = error.response?.data?.message || error.message || 'Failed to load customer data';
+            showEditError(errorMsg);
         }
     }
 

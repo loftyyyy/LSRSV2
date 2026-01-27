@@ -27,7 +27,7 @@ class UpdateCustomerRequest extends FormRequest
             'email' => ['sometimes', 'required', 'email', 'max:255', 'unique:customers,email,' . $this->route('customer')->customer_id . ',customer_id'],
             'contact_number' => ['sometimes', 'required', 'string', 'max:255'],
             'address' => ['sometimes', 'required', 'string'],
-            'measurement' => ['sometimes', 'required', 'array'],
+            'measurement' => ['sometimes', 'nullable', 'array'],
             'status_id' => ['sometimes', 'required', 'exists:customer_statuses,status_id'],
         ];
     }
