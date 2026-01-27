@@ -555,15 +555,9 @@
          console.log('New status will be:', newStatus);
          console.log('Status name:', statusName);
 
-         // If changing to inactive, require password confirmation
-         if (newStatus === 2) {
-             console.log('Showing password confirmation modal for deactivation');
-             showPasswordConfirmationModal(statusName, newStatus);
-         } else {
-             // If changing to active, allow without password
-             console.log('Changing to active without password');
-             changeCustomerStatus(newStatus);
-         }
+         // Require password confirmation for both deactivate and reactivate
+         console.log('Showing password confirmation modal for status change to:', statusName);
+         showPasswordConfirmationModal(statusName, newStatus);
      });
 
      // Show password confirmation modal

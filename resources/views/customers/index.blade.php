@@ -581,21 +581,16 @@
             const newStatus = customer.status_id === 1 ? 2 : 1;
             const statusName = newStatus === 1 ? 'Active' : 'Inactive';
             
-            // Store customer info for later use
-            window.pendingStatusChange = {
-                customerId: customerId,
-                currentStatus: customer.status_id,
-                newStatus: newStatus,
-                customerName: `${customer.first_name} ${customer.last_name}`
-            };
+             // Store customer info for later use
+             window.pendingStatusChange = {
+                 customerId: customerId,
+                 currentStatus: customer.status_id,
+                 newStatus: newStatus,
+                 customerName: `${customer.first_name} ${customer.last_name}`
+             };
 
-             // If changing to inactive, require password confirmation
-             if (newStatus === 2) {
-                 showPasswordConfirmationModal(statusName, newStatus);
-             } else {
-                 // If changing to active, allow without password
-                 await changeCustomerStatus(customerId, newStatus);
-             }
+             // Require password confirmation for both deactivate and reactivate
+             showPasswordConfirmationModal(statusName, newStatus);
         } catch (error) {
             console.error('Error fetching customer for status change:', error);
             alert('Failed to load customer data');
