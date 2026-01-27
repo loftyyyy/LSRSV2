@@ -545,7 +545,9 @@
      document.getElementById('changeStatusBtn').addEventListener('click', function(e) {
          e.preventDefault();
          console.log('Change status button clicked');
+         console.log('editCustomerModalState:', editCustomerModalState);
          console.log('Current status ID:', editCustomerModalState.currentCustomerStatus);
+         console.log('Current customer ID:', editCustomerModalState.currentCustomerId);
          
          const newStatus = editCustomerModalState.currentCustomerStatus === 1 ? 2 : 1;
          const statusName = newStatus === 1 ? 'Active' : 'Inactive';
@@ -556,17 +558,18 @@
          // If changing to inactive, require password confirmation
          if (newStatus === 2) {
              console.log('Showing password confirmation modal for deactivation');
-             showPasswordConfirmationModal(statusName);
+             showPasswordConfirmationModal(statusName, newStatus);
          } else {
              // If changing to active, allow without password
              console.log('Changing to active without password');
              changeCustomerStatus(newStatus);
-        }
-    });
+         }
+     });
 
      // Show password confirmation modal
-     function showPasswordConfirmationModal(newStatusName) {
+     function showPasswordConfirmationModal(newStatusName, newStatus) {
          console.log('showPasswordConfirmationModal called with status:', newStatusName);
+         console.log('showPasswordConfirmationModal newStatus parameter:', newStatus);
          
          const modal = document.createElement('div');
          modal.id = 'passwordConfirmationModal';
@@ -655,12 +658,11 @@
                  console.log('Password verification response:', response);
                  console.log('Response data:', response.data);
                  
-                 if (response.data.valid) {
-                     console.log('Password is valid, proceeding with status change');
-                     closePasswordConfirmationModal();
-                     const newStatus = editCustomerModalState.currentCustomerStatus === 1 ? 2 : 1;
-                     console.log('New status will be:', newStatus);
-                     await changeCustomerStatus(newStatus);
+                  if (response.data.valid) {
+                      console.log('Password is valid, proceeding with status change');
+                      console.log('Using newStatus from modal parameter:', newStatus);
+                      closePasswordConfirmationModal();
+                      await changeCustomerStatus(newStatus);
                  } else {
                      console.log('Password verification returned invalid');
                      const errorDiv = document.getElementById('passwordConfirmationError');
