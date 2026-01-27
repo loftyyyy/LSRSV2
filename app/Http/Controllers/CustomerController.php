@@ -129,38 +129,67 @@ class CustomerController extends Controller
     }
 
      /**
-      * Display a listing of the resource.
+      * Get customer statistics
       */
-     public function index(Request $request): JsonResponse
-     {
-         $query = Customer::with(['status']);
+      public function stats(): JsonResponse
+      {
+          return response()->json([
+              'total_customers' => Customer::count(),
+              'active_customers' => Customer::whereHas('status', function ($q) {
+                  $q->where('status_name', 'active');
+              })->count(),
+              'inactive_customers' => Customer::whereHas('status', function ($q) {
+                  $q->where('status_name', 'inactive');
+              })->count(),
+              'customers_with_rentals' => Customer::whereHas('rentals')->count(),
+          ]);
+      }
 
-         // Search functionality
-         if ($request->has('search')) {
-             $search = $request->get('search');
-             $query->where(function ($q) use ($search) {
-                 $q->where('first_name', 'like', "%{$search}%")
-                     ->orWhere('last_name', 'like', "%{$search}%")
-                     ->orWhere('email', 'like', "%{$search}%")
-                     ->orWhere('contact_number', 'like', "%{$search}%");
-             });
-         }
+      /**
+       * Display a listing of the resource.
+       */
+       public function index(Request $request): JsonResponse
+      {
+          $query = Customer::with(['status']);
 
-         // Filter by status
-         if ($request->has('status_id')) {
-             $query->where('status_id', $request->get('status_id'));
-         }
+          // Search functionality
+          if ($request->has('search')) {
+              $search = $request->get('search');
+              $query->where(function ($q) use ($search) {
+                  $q->where('first_name', 'like', "%{$search}%")
+                      ->orWhere('last_name', 'like', "%{$search}%")
+                      ->orWhere('email', 'like', "%{$search}%")
+                      ->orWhere('contact_number', 'like', "%{$search}%");
+              });
+          }
 
-         // Include rental history count if requested
-         if ($request->has('include_history') && $request->get('include_history') !== 'false') {
-             $query->withCount(['rentals', 'reservations']);
-         }
+          // Filter by status
+          if ($request->has('status_id')) {
+              $query->where('status_id', $request->get('status_id'));
+          }
 
-         // Order by most recent first
-         $query->orderBy('created_at', 'desc');
+          // Include rental history count if requested
+          if ($request->has('include_history') && $request->get('include_history') !== 'false') {
+              $query->withCount(['rentals', 'reservations']);
+          }
 
-         // Pagination
-         $perPage = $request->get('per_page', 15);
+          // Sorting functionality
+          $sortBy = $request->get('sort_by', 'created_at');
+          $sortOrder = $request->get('sort_order', 'desc');
+          
+          // Validate sort parameters
+          $allowedSortColumns = ['first_name', 'last_name', 'email', 'contact_number', 'created_at', 'rentals_count'];
+          if (!in_array($sortBy, $allowedSortColumns)) {
+              $sortBy = 'created_at';
+          }
+          if (!in_array($sortOrder, ['asc', 'desc'])) {
+              $sortOrder = 'desc';
+          }
+
+          $query->orderBy($sortBy, $sortOrder);
+
+          // Pagination
+          $perPage = $request->get('per_page', 15);
          $customers = $query->paginate($perPage);
 
          return response()->json($customers);

@@ -136,11 +136,37 @@
                             <thead class="text-[11px] uppercase tracking-[0.18em] text-neutral-500">
                             <tr class="border-b border-neutral-200 dark:border-neutral-900/80">
                                 <th class="py-2.5 pr-4 pl-4 font-medium">ID</th>
-                                <th class="py-2.5 pr-4 font-medium">Name</th>
-                                <th class="py-2.5 pr-4 font-medium">Email</th>
-                                <th class="py-2.5 pr-4 font-medium">Phone</th>
+                                <th class="py-2.5 pr-4 font-medium cursor-pointer hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors" onclick="toggleSort('first_name')">
+                                    <div class="flex items-center gap-1.5">
+                                        <span>Name</span>
+                                        <span class="sort-indicator text-[10px]"></span>
+                                    </div>
+                                </th>
+                                <th class="py-2.5 pr-4 font-medium cursor-pointer hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors" onclick="toggleSort('email')">
+                                    <div class="flex items-center gap-1.5">
+                                        <span>Email</span>
+                                        <span class="sort-indicator text-[10px]"></span>
+                                    </div>
+                                </th>
+                                <th class="py-2.5 pr-4 font-medium cursor-pointer hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors" onclick="toggleSort('contact_number')">
+                                    <div class="flex items-center gap-1.5">
+                                        <span>Phone</span>
+                                        <span class="sort-indicator text-[10px]"></span>
+                                    </div>
+                                </th>
                                 <th class="py-2.5 pr-4 font-medium">Address</th>
-                                <th class="py-2.5 pr-4 font-medium">Total Rentals</th>
+                                <th class="py-2.5 pr-4 font-medium cursor-pointer hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors" onclick="toggleSort('created_at')">
+                                    <div class="flex items-center gap-1.5">
+                                        <span>Created Date</span>
+                                        <span class="sort-indicator text-[10px]"></span>
+                                    </div>
+                                </th>
+                                <th class="py-2.5 pr-4 font-medium cursor-pointer hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors" onclick="toggleSort('rentals_count')">
+                                    <div class="flex items-center gap-1.5">
+                                        <span>Total Rentals</span>
+                                        <span class="sort-indicator text-[10px]"></span>
+                                    </div>
+                                </th>
                                 <th class="py-2.5 pr-4 font-medium text-left">Status</th>
                                 <th class="py-2.5 pl-2 font-medium text-left">Actions</th>
                             </tr>
@@ -187,10 +213,17 @@
         perPage: 15,
         searchQuery: '',
         statusFilter: '',
+        sortBy: 'created_at',
+        sortOrder: 'desc',
         totalPages: 1,
         totalCount: 0,
         isLoading: false,
-        allCustomers: [] // Cache all customers for stats
+        allCustomers: [],
+        // Stats tracking (always shows total, not filtered)
+        totalCustomersCount: 0,
+        activeCustomersCount: 0,
+        inactiveCustomersCount: 0,
+        customersWithRentalsCount: 0
     };
 
     // Debounce timer for search
@@ -212,7 +245,8 @@
         customerState.searchQuery = '';
         customerState.statusFilter = '';
 
-        // Initial load
+        // Load stats and customers
+        fetchStats();
         fetchCustomers();
 
         // Search with debounce
@@ -293,6 +327,29 @@
     document.addEventListener('turbo:load', initializeCustomerPage);
     document.addEventListener('turbo:render', initializeCustomerPage);
 
+    // Fetch total stats (always gets unfiltered counts)
+    async function fetchStats() {
+        try {
+            const response = await axios.get('/api/customers/stats');
+            const data = response.data;
+
+            // Store total counts regardless of current filters
+            customerState.totalCustomersCount = data.total_customers || 0;
+            customerState.activeCustomersCount = data.active_customers || 0;
+            customerState.inactiveCustomersCount = data.inactive_customers || 0;
+            customerState.customersWithRentalsCount = data.customers_with_rentals || 0;
+
+            // Update KPI displays
+            document.getElementById('totalCustomersCount').textContent = customerState.totalCustomersCount;
+            document.getElementById('activeCustomersCount').textContent = customerState.activeCustomersCount;
+            document.getElementById('inactiveCustomersCount').textContent = customerState.inactiveCustomersCount;
+            document.getElementById('customersWithRentalsCount').textContent = customerState.customersWithRentalsCount;
+
+        } catch (error) {
+            console.error('Error fetching stats:', error);
+        }
+    }
+
     // Fetch customers from API
     async function fetchCustomers() {
         if (customerState.isLoading) return;
@@ -304,7 +361,9 @@
             const params = new URLSearchParams({
                 page: customerState.currentPage,
                 per_page: customerState.perPage,
-                include_history: 'true'
+                include_history: 'true',
+                sort_by: customerState.sortBy,
+                sort_order: customerState.sortOrder
             });
 
             if (customerState.searchQuery) {
@@ -338,6 +397,7 @@
             renderTable(data.data);
             updatePagination(data);
             updateStats();
+            updateSortIndicators();
             hideLoadingState();
 
         } catch (error) {
@@ -360,11 +420,20 @@
             tbody.innerHTML = '';
 
             if (customers.length === 0) {
-                showEmptyState('No customers found');
+                // Show custom message based on search or filter
+                let emptyMessage = 'No customers found';
+                
+                if (customerState.searchQuery) {
+                    emptyMessage = `No matches found for "${customerState.searchQuery}"`;
+                } else if (customerState.statusFilter) {
+                    emptyMessage = 'No customers with this status';
+                }
+
+                showEmptyState(emptyMessage);
                 return;
             }
 
-            customers.forEach(customer => {
+             customers.forEach(customer => {
                 const statusColor = customer.status?.status_name === 'active'
                     ? 'bg-emerald-500/15 text-emerald-600 border-emerald-500/40 dark:text-emerald-300'
                     : 'bg-red-500/15 text-red-600 border-red-500/40 dark:text-red-300';
@@ -372,6 +441,14 @@
                 const statusBgColor = customer.status?.status_name === 'active'
                     ? 'bg-emerald-500'
                     : 'bg-red-500';
+
+                // Format created date
+                const createdDate = new Date(customer.created_at);
+                const formattedDate = createdDate.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
 
                 const row = document.createElement('tr');
                 row.className = 'border-b border-neutral-200 hover:bg-neutral-100 dark:border-neutral-900/60 dark:hover:bg-white/5 transition-colors duration-300 ease-in-out';
@@ -381,6 +458,7 @@
                     <td class="py-3.5 pr-4 text-neutral-600 dark:text-neutral-300">${customer.email}</td>
                     <td class="py-3.5 pr-4 text-neutral-600 dark:text-neutral-300 font-geist-mono">${customer.contact_number}</td>
                     <td class="py-3.5 pr-2 text-neutral-600 dark:text-neutral-300 font-geist-mono">${customer.address}</td>
+                    <td class="py-3.5 pr-4 text-neutral-600 dark:text-neutral-300 font-geist-mono text-xs">${formattedDate}</td>
                     <td class="py-3.5 pr-4 text-left text-neutral-900 dark:text-neutral-100 font-geist-mono">${customer.rentals_count || 0}</td>
                     <td class="py-3.5 pr-2">
                         <span class="inline-flex items-center rounded-full ${statusColor} px-2 py-1 text-[11px] font-medium border transition-colors duration-300 ease-in-out">
@@ -390,16 +468,33 @@
                     </td>
                     <td class="py-3.5 pl-2 text-left text-neutral-500 dark:text-neutral-400">
                         <div class="inline-flex items-center gap-2">
-                            <button class="rounded-lg p-1.5 hover:bg-violet-600 hover:text-white transition-colors duration-300 ease-in-out" aria-label="Edit" title="Edit customer">
+                            <button class="edit-customer-btn rounded-lg p-1.5 hover:bg-violet-600 hover:text-white transition-colors duration-300 ease-in-out" aria-label="Edit" title="Edit customer" data-customer-id="${customer.customer_id}">
                                 <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-7-4l7-7m0 0v5m0-5h-5"/></svg>
                             </button>
-                            <button class="rounded-lg p-1.5 text-red-500 hover:bg-red-500/15 hover:text-red-400 transition-colors duration-300 ease-in-out" aria-label="Delete" title="Delete customer">
+                            <button class="delete-customer-btn rounded-lg p-1.5 text-red-500 hover:bg-red-500/15 hover:text-red-400 transition-colors duration-300 ease-in-out" aria-label="Delete" title="Delete customer" data-customer-id="${customer.customer_id}">
                                 <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                             </button>
                         </div>
                     </td>
                 `;
                 tbody.appendChild(row);
+            });
+
+            // Attach event listeners to edit and delete buttons
+            document.querySelectorAll('.edit-customer-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const customerId = btn.getAttribute('data-customer-id');
+                    openEditCustomerModal(customerId);
+                });
+            });
+
+            document.querySelectorAll('.delete-customer-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const customerId = btn.getAttribute('data-customer-id');
+                    deleteCustomer(customerId);
+                });
             });
 
             document.getElementById('customersTableBody').style.opacity = '1';
@@ -431,14 +526,9 @@
 
     // Update stats
     function updateStats() {
-        // For now, fetch all customers to calculate stats
-        // In production, you might want a separate stats endpoint
-        document.getElementById('totalCustomersCount').textContent = customerState.totalCount;
-
-        //TODO: HEHEHE
-        // These would need a separate API call or calculation
-        // For now, show total and let user filter
-
+        // Stats are now fetched separately in fetchStats()
+        // This keeps the KPI always showing total counts regardless of search/filter
+        // Do nothing here - stats are already updated by fetchStats()
     }
 
     // Show empty state
@@ -481,10 +571,73 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     }
+
+    // Delete customer
+    async function deleteCustomer(customerId) {
+        if (confirm('Are you sure you want to delete this customer? This action cannot be undone.')) {
+            try {
+                await axios.delete(`/api/customers/${customerId}`);
+                fetchCustomers();
+                fetchStats();
+            } catch (error) {
+                console.error('Error deleting customer:', error);
+                alert('Failed to delete customer. ' + (error.response?.data?.message || error.message));
+            }
+        }
+    }
+
+    // Toggle sort on column header click
+    function toggleSort(column) {
+        customerState.currentPage = 1;
+        
+        if (customerState.sortBy === column) {
+            // Toggle sort order if same column clicked
+            customerState.sortOrder = customerState.sortOrder === 'asc' ? 'desc' : 'asc';
+        } else {
+            // Set new column and default to ascending
+            customerState.sortBy = column;
+            customerState.sortOrder = 'asc';
+        }
+        
+        fetchCustomers();
+    }
+
+    // Update sort indicators on headers
+    function updateSortIndicators() {
+        // Clear all indicators
+        document.querySelectorAll('.sort-indicator').forEach(indicator => {
+            indicator.textContent = '';
+        });
+
+        // Find the column header that matches current sort
+        const headers = document.querySelectorAll('thead th');
+        headers.forEach(header => {
+            const btn = header.querySelector('[onclick]');
+            if (!btn) return;
+
+            const onclickAttr = btn.getAttribute('onclick');
+            if (!onclickAttr) return;
+
+            const columnMatch = onclickAttr.match(/toggleSort\('(\w+)'\)/);
+            if (!columnMatch) return;
+
+            const column = columnMatch[1];
+            if (column === customerState.sortBy) {
+                const indicator = header.querySelector('.sort-indicator');
+                if (indicator) {
+                    indicator.textContent = customerState.sortOrder === 'asc' ? '↑' : '↓';
+                    indicator.style.fontWeight = '600';
+                }
+            }
+        });
+    }
 </script>
 
 {{-- Include Add Customer Modal --}}
 @include('customers.partials.add-customer-modal')
+
+{{-- Include Edit Customer Modal --}}
+@include('customers.partials.edit-customer-modal')
 
 </body>
 </html>
