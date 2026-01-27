@@ -724,7 +724,7 @@
                  throw new Error('Customer ID not found');
              }
 
-             const endpoint = newStatus === 1 ? 'reactivate' : 'deactivate';
+              const endpoint = newStatus === 2 ? 'deactivate' : 'reactivate';
              const url = `/api/customers/${customerId}/${endpoint}`;
              console.log('Sending request to:', url);
              
