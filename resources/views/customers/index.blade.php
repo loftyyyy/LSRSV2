@@ -196,11 +196,21 @@
     // Debounce timer for search
     let searchDebounceTimer;
 
-    // Initialize on page load
-    document.addEventListener('DOMContentLoaded', function() {
+    // Initialize customer page
+    function initializeCustomerPage() {
         const searchInput = document.getElementById('searchInput');
         const filterMenu = document.getElementById('filter-menu');
         const filterButtonText = document.getElementById('filter-button-text');
+
+        // Guard against missing elements
+        if (!searchInput || !filterMenu) {
+            return;
+        }
+
+        // Reset state when page is loaded
+        customerState.currentPage = 1;
+        customerState.searchQuery = '';
+        customerState.statusFilter = '';
 
         // Initial load
         fetchCustomers();
@@ -210,7 +220,7 @@
             clearTimeout(searchDebounceTimer);
             customerState.searchQuery = e.target.value;
             customerState.currentPage = 1;
-            
+
             searchDebounceTimer = setTimeout(() => {
                 fetchCustomers();
             }, 300);
@@ -234,7 +244,54 @@
                 fetchCustomers();
             });
         });
-    });
+
+        // Initialize filter dropdown
+        initializeFilterDropdown();
+    }
+
+    // Initialize filter dropdown
+    function initializeFilterDropdown() {
+        const filterButton = document.getElementById('filter-button');
+        const filterMenu = document.getElementById('filter-menu');
+        const iconDown = document.getElementById('icon-down');
+        const iconUp = document.getElementById('icon-up');
+
+        if (!filterButton || !filterMenu) {
+            return;
+        }
+
+        let isOpen = false;
+
+        filterButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            isOpen = !isOpen;
+
+            filterMenu.classList.toggle('opacity-0', !isOpen);
+            filterMenu.classList.toggle('scale-95', !isOpen);
+            filterMenu.classList.toggle('pointer-events-none', !isOpen);
+            filterMenu.classList.toggle('opacity-100', isOpen);
+            filterMenu.classList.toggle('scale-100', isOpen);
+            filterMenu.classList.toggle('pointer-events-auto', isOpen);
+
+            iconDown.classList.toggle('hidden', isOpen);
+            iconUp.classList.toggle('hidden', !isOpen);
+        });
+
+        document.addEventListener('click', () => {
+            if (isOpen) {
+                isOpen = false;
+                filterMenu.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+                filterMenu.classList.remove('opacity-100', 'scale-100', 'pointer-events-auto');
+                iconDown.classList.remove('hidden');
+                iconUp.classList.add('hidden');
+            }
+        });
+    }
+
+    // Listen to both DOMContentLoaded and Turbo events
+    document.addEventListener('DOMContentLoaded', initializeCustomerPage);
+    document.addEventListener('turbo:load', initializeCustomerPage);
+    document.addEventListener('turbo:render', initializeCustomerPage);
 
     // Fetch customers from API
     async function fetchCustomers() {
@@ -287,7 +344,7 @@
             console.error('Error fetching customers:', error);
             console.error('Error status:', error.response?.status);
             console.error('Error data:', error.response?.data);
-            
+
             const errorMessage = error.response?.data?.message || error.message || 'Failed to load customers. Please try again.';
             showEmptyState(errorMessage);
             hideLoadingState();
@@ -308,10 +365,10 @@
             }
 
             customers.forEach(customer => {
-                const statusColor = customer.status?.status_name === 'active' 
-                    ? 'bg-emerald-500/15 text-emerald-600 border-emerald-500/40 dark:text-emerald-300' 
+                const statusColor = customer.status?.status_name === 'active'
+                    ? 'bg-emerald-500/15 text-emerald-600 border-emerald-500/40 dark:text-emerald-300'
                     : 'bg-red-500/15 text-red-600 border-red-500/40 dark:text-red-300';
-                
+
                 const statusBgColor = customer.status?.status_name === 'active'
                     ? 'bg-emerald-500'
                     : 'bg-red-500';
@@ -377,9 +434,11 @@
         // For now, fetch all customers to calculate stats
         // In production, you might want a separate stats endpoint
         document.getElementById('totalCustomersCount').textContent = customerState.totalCount;
-        
+
+        //TODO: HEHEHE
         // These would need a separate API call or calculation
         // For now, show total and let user filter
+
     }
 
     // Show empty state
@@ -422,39 +481,6 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     }
-
-    // Old filter dropdown code (keep for UI toggle)
-    const filterButton = document.getElementById('filter-button');
-    const filterMenu = document.getElementById('filter-menu');
-    const iconDown = document.getElementById('icon-down');
-    const iconUp = document.getElementById('icon-up');
-
-    let isOpen = false;
-
-    filterButton.addEventListener('click', (e) => {
-        e.stopPropagation();
-        isOpen = !isOpen;
-
-        filterMenu.classList.toggle('opacity-0', !isOpen);
-        filterMenu.classList.toggle('scale-95', !isOpen);
-        filterMenu.classList.toggle('pointer-events-none', !isOpen);
-        filterMenu.classList.toggle('opacity-100', isOpen);
-        filterMenu.classList.toggle('scale-100', isOpen);
-        filterMenu.classList.toggle('pointer-events-auto', isOpen);
-
-        iconDown.classList.toggle('hidden', isOpen);
-        iconUp.classList.toggle('hidden', !isOpen);
-    });
-
-    document.addEventListener('click', () => {
-        if (isOpen) {
-            isOpen = false;
-            filterMenu.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
-            filterMenu.classList.remove('opacity-100', 'scale-100', 'pointer-events-auto');
-            iconDown.classList.remove('hidden');
-            iconUp.classList.add('hidden');
-        }
-    });
 </script>
 
 {{-- Include Add Customer Modal --}}
