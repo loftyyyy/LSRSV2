@@ -546,7 +546,7 @@
         e.preventDefault();
         const newStatus = editCustomerModalState.currentCustomerStatus === 1 ? 2 : 1;
         const statusName = newStatus === 1 ? 'Active' : 'Inactive';
-        
+
         // If changing to inactive, require password confirmation
         if (newStatus === 2) {
             showPasswordConfirmationModal(statusName);
@@ -620,7 +620,7 @@
         // Handle confirm button
         document.getElementById('confirmPasswordBtn').addEventListener('click', async function() {
             const password = document.getElementById('passwordConfirmationInput').value;
-            
+
             if (!password.trim()) {
                 const errorDiv = document.getElementById('passwordConfirmationError');
                 errorDiv.querySelector('p').textContent = 'Please enter your password';
@@ -635,7 +635,7 @@
             try {
                 // Verify password with backend
                 const response = await axios.post('/api/verify-password', { password });
-                
+
                 if (response.data.valid) {
                     closePasswordConfirmationModal();
                     const newStatus = editCustomerModalState.currentCustomerStatus === 1 ? 2 : 1;
@@ -691,14 +691,14 @@
         try {
             // Handle both cases: called from edit modal or from table button
             const customerId = editCustomerModalState.currentCustomerId || window.pendingStatusChange?.customerId;
-            
+
             if (!customerId) {
                 throw new Error('Customer ID not found');
             }
 
             const endpoint = newStatus === 1 ? 'reactivate' : 'deactivate';
             const response = await axios.post(`/api/customers/${customerId}/${endpoint}`);
-            
+
             // Update modal state if called from edit modal
             if (editCustomerModalState.currentCustomerId) {
                 editCustomerModalState.currentCustomerStatus = newStatus;
