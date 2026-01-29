@@ -176,7 +176,7 @@ class CustomerController extends Controller
           // Sorting functionality
           $sortBy = $request->get('sort_by', 'created_at');
           $sortOrder = $request->get('sort_order', 'desc');
-          
+
           // Validate sort parameters
           $allowedSortColumns = ['first_name', 'last_name', 'email', 'contact_number', 'created_at', 'rentals_count'];
           if (!in_array($sortBy, $allowedSortColumns)) {
@@ -361,6 +361,7 @@ class CustomerController extends Controller
             'message' => 'Customer reactivated successfully',
             'data' => $customer
         ]);
+
     }
 
     /**
