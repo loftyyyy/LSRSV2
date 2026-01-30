@@ -133,55 +133,74 @@
 </main>
 
 <script>
-    const filterButton = document.getElementById('filter-button');
-    const filterButtonText = document.getElementById('filter-button-text');
-    const filterMenu = document.getElementById('filter-menu');
-    const iconDown = document.getElementById('icon-down');
-    const iconUp = document.getElementById('icon-up');
-
-    let isOpen = false;
-
-    // Toggle dropdown
-    filterButton.addEventListener('click', (e) => {
-        e.stopPropagation(); // Prevent triggering document click
-        isOpen = !isOpen;
-
-        filterMenu.classList.toggle('opacity-0', !isOpen);
-        filterMenu.classList.toggle('scale-95', !isOpen);
-        filterMenu.classList.toggle('pointer-events-none', !isOpen);
-        filterMenu.classList.toggle('opacity-100', isOpen);
-        filterMenu.classList.toggle('scale-100', isOpen);
-        filterMenu.classList.toggle('pointer-events-auto', isOpen);
-
-        iconDown.classList.toggle('hidden', isOpen);
-        iconUp.classList.toggle('hidden', !isOpen);
-    });
-
-    // Update filter button text when a status is clicked
-    filterMenu.querySelectorAll('li').forEach(item => {
-        item.addEventListener('click', (e) => {
-            e.stopPropagation(); // Prevent triggering document click
-            filterButtonText.textContent = item.textContent;
-            isOpen = false;
-
-            filterMenu.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
-            filterMenu.classList.remove('opacity-100', 'scale-100', 'pointer-events-auto');
-
-            iconDown.classList.remove('hidden');
-            iconUp.classList.add('hidden');
-        });
-    });
-
-    // Close dropdown when clicking outside
-    document.addEventListener('click', () => {
-        if (isOpen) {
-            isOpen = false;
-            filterMenu.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
-            filterMenu.classList.remove('opacity-100', 'scale-100', 'pointer-events-auto');
-
-            iconDown.classList.remove('hidden');
-            iconUp.classList.add('hidden');
+    document.addEventListener('turbo:load', function initializeRentalFilters() {
+        // Guard check to prevent duplicate initialization
+        if (globalThis.rentalFiltersInitialized) {
+            return;
         }
+        globalThis.rentalFiltersInitialized = true;
+
+        // Use IIFE to scope variables and prevent redeclaration issues
+        (function() {
+            var filterButton = document.getElementById('filter-button');
+            var filterButtonText = document.getElementById('filter-button-text');
+            var filterMenu = document.getElementById('filter-menu');
+            var iconDown = document.getElementById('icon-down');
+            var iconUp = document.getElementById('icon-up');
+
+            var isOpen = false;
+
+            // Toggle dropdown
+            filterButton?.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent triggering document click
+                isOpen = !isOpen;
+
+                filterMenu.classList.toggle('opacity-0', !isOpen);
+                filterMenu.classList.toggle('scale-95', !isOpen);
+                filterMenu.classList.toggle('pointer-events-none', !isOpen);
+                filterMenu.classList.toggle('opacity-100', isOpen);
+                filterMenu.classList.toggle('scale-100', isOpen);
+                filterMenu.classList.toggle('pointer-events-auto', isOpen);
+
+                iconDown.classList.toggle('hidden', isOpen);
+                iconUp.classList.toggle('hidden', !isOpen);
+            });
+
+            // Update filter button text when a status is clicked
+            filterMenu?.querySelectorAll('li').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Prevent triggering document click
+                    filterButtonText.textContent = item.textContent;
+                    isOpen = false;
+
+                    filterMenu.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+                    filterMenu.classList.remove('opacity-100', 'scale-100', 'pointer-events-auto');
+
+                    iconDown.classList.remove('hidden');
+                    iconUp.classList.add('hidden');
+                });
+            });
+
+            // Close dropdown when clicking outside (function needs to be named to allow removal)
+            function closeOnClickOutside() {
+                if (isOpen) {
+                    isOpen = false;
+                    filterMenu.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+                    filterMenu.classList.remove('opacity-100', 'scale-100', 'pointer-events-auto');
+
+                    iconDown.classList.remove('hidden');
+                    iconUp.classList.add('hidden');
+                }
+            }
+
+            document.addEventListener('click', closeOnClickOutside);
+
+            // Cleanup on page leave
+            document.addEventListener('turbo:before-visit', function cleanup() {
+                globalThis.rentalFiltersInitialized = false;
+                document.removeEventListener('click', closeOnClickOutside);
+            }, { once: true });
+        })();
     });
 </script>
 </body>
