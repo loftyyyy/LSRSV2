@@ -242,9 +242,9 @@
 
     // Initialize customer page
     function initializeCustomerPage() {
-        const searchInput = document.getElementById('searchInput');
-        const filterMenu = document.getElementById('filter-menu');
-        const filterButtonText = document.getElementById('filter-button-text');
+        var searchInput = document.getElementById('searchInput');
+        var filterMenu = document.getElementById('filter-menu');
+        var filterButtonText = document.getElementById('filter-button-text');
 
         // Guard against missing elements
         if (!searchInput || !filterMenu) {
@@ -285,7 +285,7 @@
         // Filter by status
         filterMenu.querySelectorAll('li').forEach(item => {
             item.addEventListener('click', function(e) {
-                const statusText = item.textContent.trim();
+                var statusText = item.textContent.trim();
                 filterButtonText.textContent = statusText;
 
                 if (statusText === 'All Status') {
@@ -305,18 +305,24 @@
         initializeFilterDropdown();
     }
 
-    // Initialize filter dropdown
+    // Initialize filter dropdown (only setup listeners if not already done)
     function initializeFilterDropdown() {
-        const filterButton = document.getElementById('filter-button');
-        const filterMenu = document.getElementById('filter-menu');
-        const iconDown = document.getElementById('icon-down');
-        const iconUp = document.getElementById('icon-up');
+        var filterButton = document.getElementById('filter-button');
+        var filterMenu = document.getElementById('filter-menu');
+        var iconDown = document.getElementById('icon-down');
+        var iconUp = document.getElementById('icon-up');
 
         if (!filterButton || !filterMenu) {
             return;
         }
 
-        let isOpen = false;
+        // Only attach event listeners once per visit
+        if (globalThis.filterDropdownInitialized) {
+            return;
+        }
+        globalThis.filterDropdownInitialized = true;
+
+        var isOpen = false;
 
         filterButton.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -349,11 +355,22 @@
     document.addEventListener('turbo:load', initializeCustomerPage);
     document.addEventListener('turbo:render', initializeCustomerPage);
 
+    // Clean up when leaving the page (reset flags and abort requests)
+    document.addEventListener('turbo:before-visit', function() {
+        // Reset filter dropdown flag so it can be re-initialized on next visit
+        globalThis.filterDropdownInitialized = false;
+        
+        // Abort any pending requests
+        if (globalThis.customerState && globalThis.customerState.abortController) {
+            globalThis.customerState.abortController.abort();
+        }
+    });
+
     // Fetch customer statuses (dynamically populate status ID mappings)
     async function fetchStatuses() {
         try {
-            const response = await axios.get('/api/customers/statuses');
-            const statuses = response.data.statuses || [];
+            var response = await axios.get('/api/customers/statuses');
+            var statuses = response.data.statuses || [];
 
             // Build mappings for status names to IDs
             statuses.forEach(status => {
@@ -377,10 +394,10 @@
     // Fetch total stats (always gets unfiltered counts)
     async function fetchStats() {
         try {
-            const response = await axios.get('/api/customers/stats', {
+            var response = await axios.get('/api/customers/stats', {
                 signal: globalThis.customerState.abortController.signal
             });
-            const data = response.data;
+            var data = response.data;
 
             // Store total counts regardless of current filters
             globalThis.customerState.totalCustomersCount = data.total_customers || 0;
@@ -413,7 +430,7 @@
         showLoadingState();
 
         try {
-            const params = new URLSearchParams({
+            var params = new URLSearchParams({
                 page: globalThis.customerState.currentPage,
                 per_page: globalThis.customerState.perPage,
                 include_history: 'true',
@@ -429,12 +446,12 @@
                 params.append('status_id', globalThis.customerState.statusFilter);
             }
 
-            const url = `/api/customers?${params.toString()}`;
+            var url = `/api/customers?${params.toString()}`;
 
-            const response = await axios.get(url, {
+            var response = await axios.get(url, {
                 signal: globalThis.customerState.abortController.signal
             });
-            const data = response.data;
+            var data = response.data;
 
             if (!data.data || !Array.isArray(data.data)) {
                 showEmptyState('No customers found.');
@@ -466,7 +483,7 @@
              console.error('Error status:', error.response?.status);
              console.error('Error data:', error.response?.data);
 
-             const errorMessage = error.response?.data?.message || error.message || 'Failed to load customers. Please try again.';
+             var errorMessage = error.response?.data?.message || error.message || 'Failed to load customers. Please try again.';
              showErrorNotification(errorMessage);
              showEmptyState(errorMessage);
              hideLoadingState();
@@ -477,15 +494,15 @@
 
      // Update search indicators
      function updateSearchIndicators() {
-         const searchIndicatorsDiv = document.getElementById('searchIndicators');
-         const query = globalThis.customerState.searchQuery.trim().toLowerCase();
+         var searchIndicatorsDiv = document.getElementById('searchIndicators');
+         var query = globalThis.customerState.searchQuery.trim().toLowerCase();
 
          if (!query) {
              searchIndicatorsDiv.innerHTML = '';
              return;
          }
 
-         const indicators = [];
+         var indicators = [];
 
          // Determine what fields match
          if (!isNaN(query) && query !== '') {
@@ -514,7 +531,7 @@
      // Render table rows
      function renderTable(customers) {
         try {
-            const tbody = document.getElementById('customersTableBody');
+            var tbody = document.getElementById('customersTableBody');
             tbody.innerHTML = '';
 
             if (customers.length === 0) {
@@ -532,23 +549,23 @@
             }
 
              customers.forEach(customer => {
-                const statusColor = customer.status?.status_name === 'active'
+                var statusColor = customer.status?.status_name === 'active'
                     ? 'bg-emerald-500/15 text-emerald-600 border-emerald-500/40 dark:text-emerald-300'
                     : 'bg-red-500/15 text-red-600 border-red-500/40 dark:text-red-300';
 
-                const statusBgColor = customer.status?.status_name === 'active'
+                var statusBgColor = customer.status?.status_name === 'active'
                     ? 'bg-emerald-500'
                     : 'bg-red-500';
 
                 // Format created date
-                const createdDate = new Date(customer.created_at);
-                const formattedDate = createdDate.toLocaleDateString('en-US', {
+                var createdDate = new Date(customer.created_at);
+                var formattedDate = createdDate.toLocaleDateString('en-US', {
                     year: 'numeric',
                     month: 'short',
                     day: 'numeric'
                 });
 
-                const row = document.createElement('tr');
+                var row = document.createElement('tr');
                 row.className = 'border-b border-neutral-200 hover:bg-neutral-100 dark:border-neutral-900/60 dark:hover:bg-white/5 transition-colors duration-300 ease-in-out';
                 row.innerHTML = `
                     <td class="py-3.5 pr-4 pl-4 text-neutral-500 font-geist-mono">#${String(customer.customer_id).padStart(3, '0')}</td>
@@ -582,7 +599,7 @@
             document.querySelectorAll('.edit-customer-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     e.preventDefault();
-                    const customerId = btn.getAttribute('data-customer-id');
+                    var customerId = btn.getAttribute('data-customer-id');
                     openEditCustomerModal(customerId);
                 });
             });
@@ -590,7 +607,7 @@
             document.querySelectorAll('.change-status-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     e.preventDefault();
-                    const customerId = btn.getAttribute('data-customer-id');
+                    var customerId = btn.getAttribute('data-customer-id');
                     openChangeStatusModal(customerId);
                 });
             });
@@ -606,12 +623,12 @@
 
     // Update pagination controls
     function updatePagination(data) {
-        const prevBtn = document.getElementById('prevBtn');
-        const nextBtn = document.getElementById('nextBtn');
-        const pageInfo = document.getElementById('pageInfo');
-        const pageStart = document.getElementById('pageStart');
-        const pageEnd = document.getElementById('pageEnd');
-        const pageTotal = document.getElementById('pageTotal');
+        var prevBtn = document.getElementById('prevBtn');
+        var nextBtn = document.getElementById('nextBtn');
+        var pageInfo = document.getElementById('pageInfo');
+        var pageStart = document.getElementById('pageStart');
+        var pageEnd = document.getElementById('pageEnd');
+        var pageTotal = document.getElementById('pageTotal');
 
         prevBtn.disabled = !data.links[0].url;
         nextBtn.disabled = !data.links[data.links.length - 1].url;
@@ -646,8 +663,8 @@
 
     // Show loading state with skeleton
     function showLoadingState() {
-        const tbody = document.getElementById('customersTableBody');
-        const skeletonRows = Array.from({length: 5}, () => `
+        var tbody = document.getElementById('customersTableBody');
+        var skeletonRows = Array.from({length: 5}, () => `
             <tr class="border-b border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-900/50 transition-colors animate-pulse">
                 <td class="px-4 py-3"><div class="h-4 bg-neutral-300 dark:bg-neutral-700 rounded w-1/2"></div></td>
                 <td class="px-4 py-3"><div class="h-4 bg-neutral-300 dark:bg-neutral-700 rounded w-3/4"></div></td>
@@ -667,14 +684,14 @@
     // Hide loading state
     function hideLoadingState() {
         hideEmptyState();
-        const tbody = document.getElementById('customersTableBody');
+        var tbody = document.getElementById('customersTableBody');
         tbody.style.opacity = '1';
     }
 
     // Show error notification (user-facing)
     function showErrorNotification(message) {
         // Create a temporary notification element
-        const notification = document.createElement('div');
+        var notification = document.createElement('div');
         notification.className = 'fixed top-4 right-4 max-w-sm bg-red-100 border border-red-300 dark:bg-red-900 dark:border-red-700 rounded-lg px-5 py-4 shadow-xl z-[999] flex items-start gap-3 animate-in slide-in-from-top-2';
         notification.innerHTML = `
             <svg class="h-5 w-5 text-red-700 dark:text-red-200 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
@@ -722,10 +739,10 @@
     async function openChangeStatusModal(customerId) {
         try {
             // Fetch customer data to get current status
-            const response = await axios.get(`/api/customers/${customerId}`);
-            const customer = response.data.data;
-            const newStatus = customer.status_id === 1 ? 2 : 1;
-            const statusName = newStatus === 1 ? 'Active' : 'Inactive';
+            var response = await axios.get(`/api/customers/${customerId}`);
+            var customer = response.data.data;
+            var newStatus = customer.status_id === 1 ? 2 : 1;
+            var statusName = newStatus === 1 ? 'Active' : 'Inactive';
 
              // Store customer info for later use
              window.pendingStatusChange = {
@@ -758,7 +775,7 @@
                 fetchStats();
             } catch (error) {
                 console.error('Error deleting customer:', error);
-                const errorMsg = error.response?.data?.message || error.message || 'Failed to delete customer.';
+                var errorMsg = error.response?.data?.message || error.message || 'Failed to delete customer.';
                 showErrorNotification(errorMsg);
             }
         }
@@ -788,20 +805,20 @@
         });
 
         // Find the column header that matches current sort
-        const headers = document.querySelectorAll('thead th');
+        var headers = document.querySelectorAll('thead th');
         headers.forEach(header => {
-            const btn = header.querySelector('[onclick]');
+            var btn = header.querySelector('[onclick]');
             if (!btn) return;
 
-            const onclickAttr = btn.getAttribute('onclick');
+            var onclickAttr = btn.getAttribute('onclick');
             if (!onclickAttr) return;
 
-            const columnMatch = onclickAttr.match(/toggleSort\('(\w+)'\)/);
+            var columnMatch = onclickAttr.match(/toggleSort\('(\w+)'\)/);
             if (!columnMatch) return;
 
-            const column = columnMatch[1];
+            var column = columnMatch[1];
             if (column === globalThis.customerState.sortBy) {
-                const indicator = header.querySelector('.sort-indicator');
+                var indicator = header.querySelector('.sort-indicator');
                 if (indicator) {
                     indicator.textContent = globalThis.customerState.sortOrder === 'asc' ? '↑' : '↓';
                     indicator.style.fontWeight = '600';

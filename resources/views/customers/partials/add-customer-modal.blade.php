@@ -341,7 +341,7 @@
     // Open modal
     function openAddCustomerModal() {
         globalThis.addCustomerModalState.isOpen = true;
-        const modal = document.getElementById('addCustomerModal');
+        var modal = document.getElementById('addCustomerModal');
         modal.classList.remove('hidden');
         modal.classList.add('flex');
 
@@ -358,7 +358,7 @@
     // Close modal
     function closeAddCustomerModal() {
         globalThis.addCustomerModalState.isOpen = false;
-        const modal = document.getElementById('addCustomerModal');
+        var modal = document.getElementById('addCustomerModal');
         modal.classList.add('hidden');
         modal.classList.remove('flex');
 
@@ -377,7 +377,7 @@
 
     // Show error message
     function showError(message) {
-        const errorDiv = document.getElementById('addCustomerError');
+        var errorDiv = document.getElementById('addCustomerError');
         errorDiv.querySelector('p').textContent = message;
         errorDiv.classList.remove('hidden');
         document.getElementById('addCustomerSuccess').classList.add('hidden');
@@ -385,7 +385,7 @@
 
     // Show success message
     function showSuccess(message) {
-        const successDiv = document.getElementById('addCustomerSuccess');
+        var successDiv = document.getElementById('addCustomerSuccess');
         successDiv.querySelector('p').textContent = message;
         successDiv.classList.remove('hidden');
         document.getElementById('addCustomerError').classList.add('hidden');
@@ -393,9 +393,9 @@
 
     // Update submit button state
     function updateSubmitButton() {
-        const btn = document.getElementById('addCustomerSubmitBtn');
-        const btnText = document.getElementById('addCustomerBtnText');
-        const btnLoading = document.getElementById('addCustomerBtnLoading');
+        var btn = document.getElementById('addCustomerSubmitBtn');
+        var btnText = document.getElementById('addCustomerBtnText');
+        var btnLoading = document.getElementById('addCustomerBtnLoading');
 
         if (globalThis.addCustomerModalState.isSubmitting) {
             btn.disabled = true;
@@ -410,7 +410,7 @@
 
     // Validate form
     function validateAddCustomerForm(formData) {
-        const errors = [];
+        var errors = [];
 
         // Required fields validation
         if (!formData.get('first_name')?.trim()) {
@@ -422,7 +422,7 @@
         if (!formData.get('email')?.trim()) {
             errors.push('Email is required');
         } else {
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(formData.get('email'))) {
                 errors.push('Please enter a valid email address');
             }
@@ -447,8 +447,8 @@
 
         hideMessages();
 
-        const formData = new FormData(this);
-        const errors = validateAddCustomerForm(formData);
+        var formData = new FormData(this);
+        var errors = validateAddCustomerForm(formData);
 
         if (errors.length > 0) {
             showError(errors[0]);
@@ -460,17 +460,17 @@
 
         try {
             // Prepare measurements data
-            const measurements = {};
-            const measurementInputs = this.querySelectorAll('input[name^="measurement["]');
+            var measurements = {};
+            var measurementInputs = this.querySelectorAll('input[name^="measurement["]');
             measurementInputs.forEach(input => {
                 if (input.value) {
-                    const key = input.name.match(/measurement\[(.+)\]/)[1];
+                    var key = input.name.match(/measurement\[(.+)\]/)[1];
                     measurements[key] = parseFloat(input.value);
                 }
             });
 
             // Prepare API payload
-            const payload = {
+            var payload = {
                 first_name: formData.get('first_name'),
                 last_name: formData.get('last_name'),
                 email: formData.get('email'),
@@ -480,8 +480,8 @@
                 measurement: Object.keys(measurements).length > 0 ? measurements : null
             };
 
-            const response = await axios.post('/api/customers', payload);
-            const data = response.data;
+            var response = await axios.post('/api/customers', payload);
+            var data = response.data;
 
             if (data.success) {
                 showSuccess('Customer added successfully!');
@@ -498,7 +498,7 @@
         } catch (error) {
             console.error('Error adding customer:', error);
             console.error('Error response:', error.response);
-            const errorMessage = error.response?.data?.message || error.message || 'Network error. Please check your connection and try again.';
+            var errorMessage = error.response?.data?.message || error.message || 'Network error. Please check your connection and try again.';
             showError(errorMessage);
         } finally {
             globalThis.addCustomerModalState.isSubmitting = false;
@@ -524,13 +524,13 @@
     document.querySelectorAll('.spinner-btn').forEach(button => {
         button.addEventListener('click', function(e) {
             e.preventDefault();
-            const inputName = this.getAttribute('data-input');
-            const action = this.getAttribute('data-action');
-            const input = document.querySelector(`input[name="${inputName}"]`);
+            var inputName = this.getAttribute('data-input');
+            var action = this.getAttribute('data-action');
+            var input = document.querySelector(`input[name="${inputName}"]`);
 
             if (input) {
-                const currentValue = parseFloat(input.value) || 0;
-                const step = parseFloat(input.step) || 1;
+                var currentValue = parseFloat(input.value) || 0;
+                var step = parseFloat(input.step) || 1;
 
                 if (action === 'up') {
                     input.value = (currentValue + step).toFixed(1);

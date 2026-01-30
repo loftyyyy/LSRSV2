@@ -351,7 +351,7 @@
     async function openEditCustomerModal(customerId) {
         globalThis.editCustomerModalState.isOpen = true;
         globalThis.editCustomerModalState.currentCustomerId = customerId;
-        const modal = document.getElementById('editCustomerModal');
+        var modal = document.getElementById('editCustomerModal');
         modal.classList.remove('hidden');
         modal.classList.add('flex');
 
@@ -359,8 +359,8 @@
 
         try {
             // Fetch customer data
-            const response = await axios.get(`/api/customers/${customerId}`);
-            const customer = response.data.data;
+            var response = await axios.get(`/api/customers/${customerId}`);
+            var customer = response.data.data;
 
             globalThis.editCustomerModalState.currentCustomerStatus = customer.status_id;
 
@@ -385,7 +385,7 @@
                 document.getElementById('editFirstName').focus();
             }, 100);
         } catch (error) {
-            const errorMsg = error.response?.data?.message || error.message || 'Failed to load customer data';
+            var errorMsg = error.response?.data?.message || error.message || 'Failed to load customer data';
             showEditError(errorMsg);
         }
     }
@@ -395,7 +395,7 @@
         globalThis.editCustomerModalState.isOpen = false;
         globalThis.editCustomerModalState.currentCustomerId = null;
         globalThis.editCustomerModalState.currentCustomerStatus = null;
-        const modal = document.getElementById('editCustomerModal');
+        var modal = document.getElementById('editCustomerModal');
         modal.classList.add('hidden');
         modal.classList.remove('flex');
 
@@ -414,7 +414,7 @@
 
     // Show error message
     function showEditError(message) {
-        const errorDiv = document.getElementById('editCustomerError');
+        var errorDiv = document.getElementById('editCustomerError');
         errorDiv.querySelector('p').textContent = message;
         errorDiv.classList.remove('hidden');
         document.getElementById('editCustomerSuccess').classList.add('hidden');
@@ -422,7 +422,7 @@
 
     // Show success message
     function showEditSuccess(message) {
-        const successDiv = document.getElementById('editCustomerSuccess');
+        var successDiv = document.getElementById('editCustomerSuccess');
         successDiv.querySelector('p').textContent = message;
         successDiv.classList.remove('hidden');
         document.getElementById('editCustomerError').classList.add('hidden');
@@ -430,9 +430,9 @@
 
     // Update submit button state
     function updateEditSubmitButton() {
-        const btn = document.getElementById('editCustomerSubmitBtn');
-        const btnText = document.getElementById('editCustomerBtnText');
-        const btnLoading = document.getElementById('editCustomerBtnLoading');
+        var btn = document.getElementById('editCustomerSubmitBtn');
+        var btnText = document.getElementById('editCustomerBtnText');
+        var btnLoading = document.getElementById('editCustomerBtnLoading');
 
         if (globalThis.editCustomerModalState.isSubmitting) {
             btn.disabled = true;
@@ -447,7 +447,7 @@
 
     // Validate form
     function validateEditCustomerForm(formData) {
-        const errors = [];
+        var errors = [];
 
         // Required fields validation
         if (!formData.get('first_name')?.trim()) {
@@ -459,7 +459,7 @@
         if (!formData.get('email')?.trim()) {
             errors.push('Email is required');
         } else {
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(formData.get('email'))) {
                 errors.push('Please enter a valid email address');
             }
@@ -484,8 +484,8 @@
 
         hideMessages();
 
-        const formData = new FormData(this);
-        const errors = validateEditCustomerForm(formData);
+        var formData = new FormData(this);
+        var errors = validateEditCustomerForm(formData);
 
         if (errors.length > 0) {
             showEditError(errors[0]);
@@ -497,17 +497,17 @@
 
         try {
             // Prepare measurements data
-            const measurements = {};
-            const measurementInputs = this.querySelectorAll('input[name^="measurement["]');
+            var measurements = {};
+            var measurementInputs = this.querySelectorAll('input[name^="measurement["]');
             measurementInputs.forEach(input => {
                 if (input.value) {
-                    const key = input.name.match(/measurement\[(.+)\]/)[1];
+                    var key = input.name.match(/measurement\[(.+)\]/)[1];
                     measurements[key] = parseFloat(input.value);
                 }
             });
 
             // Prepare API payload
-            const payload = {
+            var payload = {
                 first_name: formData.get('first_name'),
                 last_name: formData.get('last_name'),
                 email: formData.get('email'),
@@ -516,8 +516,8 @@
                 measurement: Object.keys(measurements).length > 0 ? measurements : null
             };
 
-            const response = await axios.put(`/api/customers/${globalThis.editCustomerModalState.currentCustomerId}`, payload);
-            const data = response.data;
+            var response = await axios.put(`/api/customers/${globalThis.editCustomerModalState.currentCustomerId}`, payload);
+            var data = response.data;
 
             showEditSuccess('Customer updated successfully!');
 
@@ -530,7 +530,7 @@
         } catch (error) {
             console.error('Error updating customer:', error);
             console.error('Error response:', error.response);
-            const errorMessage = error.response?.data?.message || error.message || 'Network error. Please check your connection and try again.';
+            var errorMessage = error.response?.data?.message || error.message || 'Network error. Please check your connection and try again.';
             showEditError(errorMessage);
         } finally {
             globalThis.editCustomerModalState.isSubmitting = false;
@@ -543,11 +543,11 @@
           e.preventDefault();
 
           // Use dynamic status IDs from customerState
-          const activeId = customerState.activeStatusId || 1;
-          const inactiveId = customerState.inactiveStatusId || 2;
+          var activeId = customerState.activeStatusId || 1;
+          var inactiveId = customerState.inactiveStatusId || 2;
 
-          const newStatus = globalThis.editCustomerModalState.currentCustomerStatus === activeId ? inactiveId : activeId;
-          const statusName = newStatus === activeId ? 'Active' : 'Inactive';
+          var newStatus = globalThis.editCustomerModalState.currentCustomerStatus === activeId ? inactiveId : activeId;
+          var statusName = newStatus === activeId ? 'Active' : 'Inactive';
 
           // Require password confirmation for both deactivate and reactivate
           showPasswordConfirmationModal(statusName, newStatus);
@@ -555,7 +555,7 @@
 
      // Show password confirmation modal
      function showPasswordConfirmationModal(newStatusName, newStatus) {
-         const modal = document.createElement('div');
+         var modal = document.createElement('div');
          modal.id = 'passwordConfirmationModal';
          modal.className = 'fixed inset-0 z-[51] flex items-center justify-center px-2 py-6 bg-black/60 backdrop-blur-sm';
         modal.innerHTML = `
@@ -616,10 +616,10 @@
 
          // Handle confirm button
          document.getElementById('confirmPasswordBtn').addEventListener('click', async function() {
-             const password = document.getElementById('passwordConfirmationInput').value;
+             var password = document.getElementById('passwordConfirmationInput').value;
 
              if (!password.trim()) {
-                 const errorDiv = document.getElementById('passwordConfirmationError');
+                 var errorDiv = document.getElementById('passwordConfirmationError');
                  errorDiv.querySelector('p').textContent = 'Please enter your password';
                  errorDiv.classList.remove('hidden');
                  return;
@@ -631,18 +631,18 @@
 
               try {
                   // Verify password with backend
-                  const response = await axios.post('/api/verify-password', { password });
+                  var response = await axios.post('/api/verify-password', { password });
 
                    if (response.data.valid) {
                        closePasswordConfirmationModal();
                        await changeCustomerStatus(newStatus);
                   } else {
-                      const errorDiv = document.getElementById('passwordConfirmationError');
+                      var errorDiv = document.getElementById('passwordConfirmationError');
                       errorDiv.querySelector('p').textContent = 'Invalid password. Please try again.';
                       errorDiv.classList.remove('hidden');
                   }
               } catch (error) {
-                  const errorDiv = document.getElementById('passwordConfirmationError');
+                  var errorDiv = document.getElementById('passwordConfirmationError');
                   errorDiv.querySelector('p').textContent = error.response?.data?.message || 'Error verifying password. Please try again.';
                   errorDiv.classList.remove('hidden');
               } finally {
@@ -675,7 +675,7 @@
 
     // Close password confirmation modal
     function closePasswordConfirmationModal() {
-        const modal = document.getElementById('passwordConfirmationModal');
+        var modal = document.getElementById('passwordConfirmationModal');
         if (modal) {
             modal.remove();
         }
@@ -685,16 +685,16 @@
       async function changeCustomerStatus(newStatus) {
           try {
               // Handle both cases: called from edit modal or from table button
-              const customerId = globalThis.editCustomerModalState.currentCustomerId || window.pendingStatusChange?.customerId;
+              var customerId = globalThis.editCustomerModalState.currentCustomerId || window.pendingStatusChange?.customerId;
 
               if (!customerId) {
                   throw new Error('Customer ID not found');
               }
 
-               const endpoint = newStatus === 2 ? 'deactivate' : 'reactivate';
-              const url = `/api/customers/${customerId}/${endpoint}`;
+               var endpoint = newStatus === 2 ? 'deactivate' : 'reactivate';
+              var url = `/api/customers/${customerId}/${endpoint}`;
 
-              const response = await axios.post(url);
+              var response = await axios.post(url);
 
               // Update modal state if called from edit modal
               if (globalThis.editCustomerModalState.currentCustomerId) {
@@ -715,7 +715,7 @@
                   fetchStats();
               }
           } catch (error) {
-              const errorMessage = error.response?.data?.message || error.message || 'Failed to change customer status';
+              var errorMessage = error.response?.data?.message || error.message || 'Failed to change customer status';
               showEditError(errorMessage);
           }
       }
@@ -738,13 +738,13 @@
     document.addEventListener('click', function(e) {
         if (e.target.classList.contains('spinner-btn')) {
             e.preventDefault();
-            const inputName = e.target.getAttribute('data-input');
-            const action = e.target.getAttribute('data-action');
-            const input = document.querySelector(`input[name="${inputName}"]`);
+            var inputName = e.target.getAttribute('data-input');
+            var action = e.target.getAttribute('data-action');
+            var input = document.querySelector(`input[name="${inputName}"]`);
 
             if (input) {
-                const currentValue = parseFloat(input.value) || 0;
-                const step = parseFloat(input.step) || 1;
+                var currentValue = parseFloat(input.value) || 0;
+                var step = parseFloat(input.step) || 1;
 
                 if (action === 'up') {
                     input.value = (currentValue + step).toFixed(1);
