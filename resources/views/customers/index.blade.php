@@ -98,9 +98,12 @@
                 <div class="border-b border-neutral-200 px-6 py-4 dark:border-neutral-900 transition-colors duration-300 ease-in-out">
                     <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                         <div class="flex-1">
-                            <div class="flex items-center gap-3 rounded-2xl bg-white px-4 py-2.5 border border-neutral-300 focus-within:border-neutral-500 dark:border-neutral-800 dark:bg-black/60 transition-colors duration-300 ease-in-out">
-                                <x-icon name="search" class="h-4 w-4 text-neutral-500 transition-colors duration-300 ease-in-out" />
-                                <input id="searchInput" type="text" placeholder="Search by customer, item, or ID..." class="w-full bg-transparent text-xs text-neutral-700 placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500 focus:outline-none transition-colors duration-300 ease-in-out">
+                            <div>
+                                <div class="flex items-center gap-3 rounded-2xl bg-white px-4 py-2.5 border border-neutral-300 focus-within:border-neutral-500 dark:border-neutral-800 dark:bg-black/60 transition-colors duration-300 ease-in-out">
+                                    <x-icon name="search" class="h-4 w-4 text-neutral-500 transition-colors duration-300 ease-in-out" />
+                                    <input id="searchInput" type="text" placeholder="Search by customer, email, or ID..." class="w-full bg-transparent text-xs text-neutral-700 placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500 focus:outline-none transition-colors duration-300 ease-in-out">
+                                </div>
+                                <div id="searchIndicators" class="mt-2 flex flex-wrap gap-1.5 px-0"></div>
                             </div>
                         </div>
 
@@ -263,16 +266,19 @@
             fetchCustomers();
         });
 
-        // Search with debounce
-        searchInput.addEventListener('input', function(e) {
-            clearTimeout(searchDebounceTimer);
-            customerState.searchQuery = e.target.value;
-            customerState.currentPage = 1;
+         // Search with debounce
+         searchInput.addEventListener('input', function(e) {
+             clearTimeout(searchDebounceTimer);
+             customerState.searchQuery = e.target.value;
+             customerState.currentPage = 1;
+             
+             // Update search indicators immediately
+             updateSearchIndicators();
 
-            searchDebounceTimer = setTimeout(() => {
-                fetchCustomers();
-            }, 300);
-        });
+             searchDebounceTimer = setTimeout(() => {
+                 fetchCustomers();
+             }, 300);
+         });
 
         // Filter by status
         filterMenu.querySelectorAll('li').forEach(item => {
@@ -465,10 +471,46 @@
         } finally {
             customerState.isLoading = false;
         }
-    }
+     }
 
-    // Render table rows
-    function renderTable(customers) {
+     // Update search indicators
+     function updateSearchIndicators() {
+         const searchIndicatorsDiv = document.getElementById('searchIndicators');
+         const query = customerState.searchQuery.trim().toLowerCase();
+         
+         if (!query) {
+             searchIndicatorsDiv.innerHTML = '';
+             return;
+         }
+         
+         const indicators = [];
+         
+         // Determine what fields match
+         if (!isNaN(query) && query !== '') {
+             // Numeric search - matches customer ID
+             indicators.push('Customer ID');
+         }
+         
+         // Check if it looks like an email
+         if (query.includes('@')) {
+             indicators.push('Email');
+         } else {
+             // Text search - could match name or contact
+             indicators.push('Name');
+             indicators.push('Contact');
+         }
+         
+         // Build the HTML for indicators
+         let html = '';
+         indicators.forEach(indicator => {
+             html += `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300 border border-violet-200 dark:border-violet-800/60">${indicator}</span>`;
+         });
+         
+         searchIndicatorsDiv.innerHTML = html;
+     }
+
+     // Render table rows
+     function renderTable(customers) {
         try {
             const tbody = document.getElementById('customersTableBody');
             tbody.innerHTML = '';

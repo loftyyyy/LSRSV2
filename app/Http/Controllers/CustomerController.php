@@ -163,16 +163,21 @@ class CustomerController extends Controller
        {
            $query = Customer::with(['status'])->withCount(['rentals', 'reservations']);
 
-          // Search functionality
-          if ($request->has('search')) {
-              $search = $request->get('search');
-              $query->where(function ($q) use ($search) {
-                  $q->where('first_name', 'like', "%{$search}%")
-                      ->orWhere('last_name', 'like', "%{$search}%")
-                      ->orWhere('email', 'like', "%{$search}%")
-                      ->orWhere('contact_number', 'like', "%{$search}%");
-              });
-          }
+           // Search functionality
+           if ($request->has('search')) {
+               $search = $request->get('search');
+               $query->where(function ($q) use ($search) {
+                   $q->where('first_name', 'like', "%{$search}%")
+                       ->orWhere('last_name', 'like', "%{$search}%")
+                       ->orWhere('email', 'like', "%{$search}%")
+                       ->orWhere('contact_number', 'like', "%{$search}%");
+                   
+                   // Search by customer_id if search is numeric
+                   if (is_numeric($search)) {
+                       $q->orWhere('customer_id', '=', (int) $search);
+                   }
+               });
+           }
 
            // Filter by status
            if ($request->has('status_id')) {
