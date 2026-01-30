@@ -334,13 +334,18 @@
 </style>
 
 <script>
-    // Modal state
-    let editCustomerModalState = {
-        isOpen: false,
-        isSubmitting: false,
-        currentCustomerId: null,
-        currentCustomerStatus: null
-    };
+    // Use globalThis to avoid redeclaration errors when Turbo navigates between pages
+    if (!globalThis.editCustomerModalState) {
+        globalThis.editCustomerModalState = {
+            isOpen: false,
+            isSubmitting: false,
+            currentCustomerId: null,
+            currentCustomerStatus: null
+        };
+    }
+
+    // Short reference for easier access
+    let editCustomerModalState = globalThis.editCustomerModalState;
 
     // Open modal and load customer data
     async function openEditCustomerModal(customerId) {

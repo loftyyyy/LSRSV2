@@ -210,30 +210,35 @@
 
 
 <script>
-    // Global state for customer data
-    let customerState = {
-        currentPage: 1,
-        perPage: 15,
-        searchQuery: '',
-        statusFilter: '',
-        sortBy: 'created_at',
-        sortOrder: 'desc',
-        totalPages: 1,
-        totalCount: 0,
-        isLoading: false,
-        allCustomers: [],
-        // Stats tracking (always shows total, not filtered)
-        totalCustomersCount: 0,
-        activeCustomersCount: 0,
-        inactiveCustomersCount: 0,
-        customersWithRentalsCount: 0,
-        // Dynamic status mappings
-        statuses: {},
-        activeStatusId: null,
-        inactiveStatusId: null,
-        // Request cancellation
-        abortController: null
-    };
+    // Use globalThis to avoid redeclaration errors when Turbo navigates between pages
+    if (!globalThis.customerState) {
+        globalThis.customerState = {
+            currentPage: 1,
+            perPage: 15,
+            searchQuery: '',
+            statusFilter: '',
+            sortBy: 'created_at',
+            sortOrder: 'desc',
+            totalPages: 1,
+            totalCount: 0,
+            isLoading: false,
+            allCustomers: [],
+            // Stats tracking (always shows total, not filtered)
+            totalCustomersCount: 0,
+            activeCustomersCount: 0,
+            inactiveCustomersCount: 0,
+            customersWithRentalsCount: 0,
+            // Dynamic status mappings
+            statuses: {},
+            activeStatusId: null,
+            inactiveStatusId: null,
+            // Request cancellation
+            abortController: null
+        };
+    }
+
+    // Short reference for easier access
+    let customerState = globalThis.customerState;
 
     // Debounce timer for search
     let searchDebounceTimer;

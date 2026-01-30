@@ -96,40 +96,43 @@
     >
 
     <script>
-        let isDarkMode;
+        // Use globalThis to store isDarkMode to prevent redeclaration on page navigation
+        if (!globalThis.isDarkMode) {
+            globalThis.isDarkMode = null;
+        }
 
         const savedMode = localStorage.getItem('darkMode');
 
         if (savedMode !== null) {
             // User preference exists
-            isDarkMode = savedMode === 'true';
+            globalThis.isDarkMode = savedMode === 'true';
         } else {
             // Default to dark mode (as per your requirement)
-            isDarkMode = true;
+            globalThis.isDarkMode = true;
             localStorage.setItem('darkMode', 'true');
         }
 
-        if (isDarkMode) {
+        if (globalThis.isDarkMode) {
             document.documentElement.classList.add('dark');
         } else {
             document.documentElement.classList.remove('dark');
         }
 
         window.addEventListener('DOMContentLoaded', function () {
-            updateToggleUI(isDarkMode);
+            updateToggleUI(globalThis.isDarkMode);
         });
 
         function toggleDarkMode() {
-            isDarkMode = !isDarkMode;
-            localStorage.setItem('darkMode', isDarkMode.toString());
+            globalThis.isDarkMode = !globalThis.isDarkMode;
+            localStorage.setItem('darkMode', globalThis.isDarkMode.toString());
 
-            if (isDarkMode) {
+            if (globalThis.isDarkMode) {
                 document.documentElement.classList.add('dark');
             } else {
                 document.documentElement.classList.remove('dark');
             }
 
-            updateToggleUI(isDarkMode);
+            updateToggleUI(globalThis.isDarkMode);
         }
 
         function updateToggleUI(dark) {

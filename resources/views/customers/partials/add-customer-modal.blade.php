@@ -327,11 +327,16 @@
 </style>
 
 <script>
-    // Modal state
-    let addCustomerModalState = {
-        isOpen: false,
-        isSubmitting: false
-    };
+    // Use globalThis to avoid redeclaration errors when Turbo navigates between pages
+    if (!globalThis.addCustomerModalState) {
+        globalThis.addCustomerModalState = {
+            isOpen: false,
+            isSubmitting: false
+        };
+    }
+
+    // Short reference for easier access
+    let addCustomerModalState = globalThis.addCustomerModalState;
 
     // Open modal
     function openAddCustomerModal() {
