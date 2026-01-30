@@ -345,12 +345,12 @@
     }
 
     // Short reference for easier access
-    let editCustomerModalState = globalThis.editCustomerModalState;
+    var editCustomerModalState = globalThis.editCustomerModalState;
 
     // Open modal and load customer data
     async function openEditCustomerModal(customerId) {
-        editCustomerModalState.isOpen = true;
-        editCustomerModalState.currentCustomerId = customerId;
+        globalThis.editCustomerModalState.isOpen = true;
+        globalThis.editCustomerModalState.currentCustomerId = customerId;
         const modal = document.getElementById('editCustomerModal');
         modal.classList.remove('hidden');
         modal.classList.add('flex');
@@ -362,7 +362,7 @@
             const response = await axios.get(`/api/customers/${customerId}`);
             const customer = response.data.data;
 
-            editCustomerModalState.currentCustomerStatus = customer.status_id;
+            globalThis.editCustomerModalState.currentCustomerStatus = customer.status_id;
 
             // Populate form
             document.getElementById('editCustomerId').value = customer.customer_id;
@@ -392,9 +392,9 @@
 
     // Close modal
     function closeEditCustomerModal() {
-        editCustomerModalState.isOpen = false;
-        editCustomerModalState.currentCustomerId = null;
-        editCustomerModalState.currentCustomerStatus = null;
+        globalThis.editCustomerModalState.isOpen = false;
+        globalThis.editCustomerModalState.currentCustomerId = null;
+        globalThis.editCustomerModalState.currentCustomerStatus = null;
         const modal = document.getElementById('editCustomerModal');
         modal.classList.add('hidden');
         modal.classList.remove('flex');
@@ -402,7 +402,7 @@
         // Reset form and state
         document.getElementById('editCustomerForm').reset();
         hideMessages();
-        editCustomerModalState.isSubmitting = false;
+        globalThis.editCustomerModalState.isSubmitting = false;
         updateEditSubmitButton();
     }
 
@@ -434,7 +434,7 @@
         const btnText = document.getElementById('editCustomerBtnText');
         const btnLoading = document.getElementById('editCustomerBtnLoading');
 
-        if (editCustomerModalState.isSubmitting) {
+        if (globalThis.editCustomerModalState.isSubmitting) {
             btn.disabled = true;
             btnText.classList.add('hidden');
             btnLoading.classList.remove('hidden');
@@ -478,7 +478,7 @@
     document.getElementById('editCustomerForm').addEventListener('submit', async function(e) {
         e.preventDefault();
 
-        if (editCustomerModalState.isSubmitting || !editCustomerModalState.currentCustomerId) {
+        if (globalThis.editCustomerModalState.isSubmitting || !globalThis.editCustomerModalState.currentCustomerId) {
             return;
         }
 
@@ -492,7 +492,7 @@
             return;
         }
 
-        editCustomerModalState.isSubmitting = true;
+        globalThis.editCustomerModalState.isSubmitting = true;
         updateEditSubmitButton();
 
         try {
@@ -516,7 +516,7 @@
                 measurement: Object.keys(measurements).length > 0 ? measurements : null
             };
 
-            const response = await axios.put(`/api/customers/${editCustomerModalState.currentCustomerId}`, payload);
+            const response = await axios.put(`/api/customers/${globalThis.editCustomerModalState.currentCustomerId}`, payload);
             const data = response.data;
 
             showEditSuccess('Customer updated successfully!');
@@ -533,7 +533,7 @@
             const errorMessage = error.response?.data?.message || error.message || 'Network error. Please check your connection and try again.';
             showEditError(errorMessage);
         } finally {
-            editCustomerModalState.isSubmitting = false;
+            globalThis.editCustomerModalState.isSubmitting = false;
             updateEditSubmitButton();
         }
     });
@@ -546,7 +546,7 @@
           const activeId = customerState.activeStatusId || 1;
           const inactiveId = customerState.inactiveStatusId || 2;
 
-          const newStatus = editCustomerModalState.currentCustomerStatus === activeId ? inactiveId : activeId;
+          const newStatus = globalThis.editCustomerModalState.currentCustomerStatus === activeId ? inactiveId : activeId;
           const statusName = newStatus === activeId ? 'Active' : 'Inactive';
 
           // Require password confirmation for both deactivate and reactivate
@@ -685,7 +685,7 @@
       async function changeCustomerStatus(newStatus) {
           try {
               // Handle both cases: called from edit modal or from table button
-              const customerId = editCustomerModalState.currentCustomerId || window.pendingStatusChange?.customerId;
+              const customerId = globalThis.editCustomerModalState.currentCustomerId || window.pendingStatusChange?.customerId;
 
               if (!customerId) {
                   throw new Error('Customer ID not found');
@@ -697,8 +697,8 @@
               const response = await axios.post(url);
 
               // Update modal state if called from edit modal
-              if (editCustomerModalState.currentCustomerId) {
-                  editCustomerModalState.currentCustomerStatus = newStatus;
+              if (globalThis.editCustomerModalState.currentCustomerId) {
+                  globalThis.editCustomerModalState.currentCustomerStatus = newStatus;
                   showEditSuccess(`Customer ${newStatus === 1 ? 'activated' : 'deactivated'} successfully!`);
 
                   // Close modal after success and refresh table
@@ -722,14 +722,14 @@
 
     // Close modal on escape key
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && editCustomerModalState.isOpen) {
+        if (e.key === 'Escape' && globalThis.editCustomerModalState.isOpen) {
             closeEditCustomerModal();
         }
     });
 
     // Close modal on backdrop click
     document.getElementById('editCustomerModal')?.addEventListener('click', function(e) {
-        if (e.target === this && editCustomerModalState.isOpen) {
+        if (e.target === this && globalThis.editCustomerModalState.isOpen) {
             closeEditCustomerModal();
         }
     });

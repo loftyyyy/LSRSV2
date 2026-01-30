@@ -237,11 +237,8 @@
         };
     }
 
-    // Short reference for easier access
-    let customerState = globalThis.customerState;
-
-    // Debounce timer for search
-    let searchDebounceTimer;
+    // Debounce timer for search (use var to allow redeclaration)
+    var searchDebounceTimer;
 
     // Initialize customer page
     function initializeCustomerPage() {
@@ -255,15 +252,15 @@
         }
 
         // Cancel any pending requests from previous navigation
-        if (customerState.abortController) {
-            customerState.abortController.abort();
+        if (globalThis.customerState.abortController) {
+            globalThis.customerState.abortController.abort();
         }
-        customerState.abortController = new AbortController();
+        globalThis.customerState.abortController = new AbortController();
 
         // Reset state when page is loaded
-        customerState.currentPage = 1;
-        customerState.searchQuery = '';
-        customerState.statusFilter = '';
+        globalThis.customerState.currentPage = 1;
+        globalThis.customerState.searchQuery = '';
+        globalThis.customerState.statusFilter = '';
 
         // Load statuses first, then stats and customers
         fetchStatuses().then(() => {
@@ -274,8 +271,8 @@
          // Search with debounce
          searchInput.addEventListener('input', function(e) {
              clearTimeout(searchDebounceTimer);
-             customerState.searchQuery = e.target.value;
-             customerState.currentPage = 1;
+             globalThis.customerState.searchQuery = e.target.value;
+             globalThis.customerState.currentPage = 1;
 
              // Update search indicators immediately
              updateSearchIndicators();
@@ -292,14 +289,14 @@
                 filterButtonText.textContent = statusText;
 
                 if (statusText === 'All Status') {
-                    customerState.statusFilter = '';
+                    globalThis.customerState.statusFilter = '';
                 } else if (statusText === 'Active') {
-                    customerState.statusFilter = String(customerState.activeStatusId);
+                    globalThis.customerState.statusFilter = String(globalThis.customerState.activeStatusId);
                 } else if (statusText === 'Inactive') {
-                    customerState.statusFilter = String(customerState.inactiveStatusId);
+                    globalThis.customerState.statusFilter = String(globalThis.customerState.inactiveStatusId);
                 }
 
-                customerState.currentPage = 1;
+                globalThis.customerState.currentPage = 1;
                 fetchCustomers();
             });
         });
@@ -360,20 +357,20 @@
 
             // Build mappings for status names to IDs
             statuses.forEach(status => {
-                customerState.statuses[status.status_id] = status.status_name;
+                globalThis.customerState.statuses[status.status_id] = status.status_name;
 
                 // Store active/inactive status IDs for later use
                 if (status.status_name.toLowerCase() === 'active') {
-                    customerState.activeStatusId = status.status_id;
+                    globalThis.customerState.activeStatusId = status.status_id;
                 } else if (status.status_name.toLowerCase() === 'inactive') {
-                    customerState.inactiveStatusId = status.status_id;
+                    globalThis.customerState.inactiveStatusId = status.status_id;
                 }
             });
         } catch (error) {
             console.error('Error fetching statuses:', error);
             // Fallback to default status IDs if API fails
-            customerState.activeStatusId = 1;
-            customerState.inactiveStatusId = 2;
+            globalThis.customerState.activeStatusId = 1;
+            globalThis.customerState.inactiveStatusId = 2;
         }
     }
 
@@ -381,21 +378,21 @@
     async function fetchStats() {
         try {
             const response = await axios.get('/api/customers/stats', {
-                signal: customerState.abortController.signal
+                signal: globalThis.customerState.abortController.signal
             });
             const data = response.data;
 
             // Store total counts regardless of current filters
-            customerState.totalCustomersCount = data.total_customers || 0;
-            customerState.activeCustomersCount = data.active_customers || 0;
-            customerState.inactiveCustomersCount = data.inactive_customers || 0;
-            customerState.customersWithRentalsCount = data.customers_with_rentals || 0;
+            globalThis.customerState.totalCustomersCount = data.total_customers || 0;
+            globalThis.customerState.activeCustomersCount = data.active_customers || 0;
+            globalThis.customerState.inactiveCustomersCount = data.inactive_customers || 0;
+            globalThis.customerState.customersWithRentalsCount = data.customers_with_rentals || 0;
 
             // Update KPI displays
-            document.getElementById('totalCustomersCount').textContent = customerState.totalCustomersCount;
-            document.getElementById('activeCustomersCount').textContent = customerState.activeCustomersCount;
-            document.getElementById('inactiveCustomersCount').textContent = customerState.inactiveCustomersCount;
-            document.getElementById('customersWithRentalsCount').textContent = customerState.customersWithRentalsCount;
+            document.getElementById('totalCustomersCount').textContent = globalThis.customerState.totalCustomersCount;
+            document.getElementById('activeCustomersCount').textContent = globalThis.customerState.activeCustomersCount;
+            document.getElementById('inactiveCustomersCount').textContent = globalThis.customerState.inactiveCustomersCount;
+            document.getElementById('customersWithRentalsCount').textContent = globalThis.customerState.customersWithRentalsCount;
 
          } catch (error) {
              // Don't show error if request was cancelled (user navigated away)
@@ -410,45 +407,45 @@
 
     // Fetch customers from API
     async function fetchCustomers() {
-        if (customerState.isLoading) return;
+        if (globalThis.customerState.isLoading) return;
 
-        customerState.isLoading = true;
+        globalThis.customerState.isLoading = true;
         showLoadingState();
 
         try {
             const params = new URLSearchParams({
-                page: customerState.currentPage,
-                per_page: customerState.perPage,
+                page: globalThis.customerState.currentPage,
+                per_page: globalThis.customerState.perPage,
                 include_history: 'true',
-                sort_by: customerState.sortBy,
-                sort_order: customerState.sortOrder
+                sort_by: globalThis.customerState.sortBy,
+                sort_order: globalThis.customerState.sortOrder
             });
 
-            if (customerState.searchQuery) {
-                params.append('search', customerState.searchQuery);
+            if (globalThis.customerState.searchQuery) {
+                params.append('search', globalThis.customerState.searchQuery);
             }
 
-            if (customerState.statusFilter) {
-                params.append('status_id', customerState.statusFilter);
+            if (globalThis.customerState.statusFilter) {
+                params.append('status_id', globalThis.customerState.statusFilter);
             }
 
             const url = `/api/customers?${params.toString()}`;
 
             const response = await axios.get(url, {
-                signal: customerState.abortController.signal
+                signal: globalThis.customerState.abortController.signal
             });
             const data = response.data;
 
             if (!data.data || !Array.isArray(data.data)) {
                 showEmptyState('No customers found.');
                 hideLoadingState();
-                customerState.isLoading = false;
+                globalThis.customerState.isLoading = false;
                 return;
             }
 
-            customerState.totalPages = data.last_page;
-            customerState.totalCount = data.total;
-            customerState.allCustomers = data.data;
+            globalThis.customerState.totalPages = data.last_page;
+            globalThis.customerState.totalCount = data.total;
+            globalThis.customerState.allCustomers = data.data;
 
             renderTable(data.data);
             updatePagination(data);
@@ -460,7 +457,7 @@
              // Don't show error if request was cancelled (user navigated away)
              if (error.name === 'AbortError' || error.code === 'ECONNABORTED' || error.code === 'ERR_CANCELED') {
                  console.log('Customers request cancelled (user navigated away)');
-                 customerState.isLoading = false;
+                 globalThis.customerState.isLoading = false;
                  hideLoadingState();
                  return;
              }
@@ -474,14 +471,14 @@
              showEmptyState(errorMessage);
              hideLoadingState();
          } finally {
-             customerState.isLoading = false;
+             globalThis.customerState.isLoading = false;
          }
       }
 
      // Update search indicators
      function updateSearchIndicators() {
          const searchIndicatorsDiv = document.getElementById('searchIndicators');
-         const query = customerState.searchQuery.trim().toLowerCase();
+         const query = globalThis.customerState.searchQuery.trim().toLowerCase();
 
          if (!query) {
              searchIndicatorsDiv.innerHTML = '';
@@ -524,9 +521,9 @@
                 // Show custom message based on search or filter
                 let emptyMessage = 'No customers found';
 
-                if (customerState.searchQuery) {
-                    emptyMessage = `No matches found for "${customerState.searchQuery}"`;
-                } else if (customerState.statusFilter) {
+                if (globalThis.customerState.searchQuery) {
+                    emptyMessage = `No matches found for "${globalThis.customerState.searchQuery}"`;
+                } else if (globalThis.customerState.statusFilter) {
                     emptyMessage = 'No customers with this status';
                 }
 
@@ -706,16 +703,16 @@
 
     // Pagination handlers
     function previousPage() {
-        if (customerState.currentPage > 1) {
-            customerState.currentPage--;
+        if (globalThis.customerState.currentPage > 1) {
+            globalThis.customerState.currentPage--;
             fetchCustomers();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     }
 
     function nextPage() {
-        if (customerState.currentPage < customerState.totalPages) {
-            customerState.currentPage++;
+        if (globalThis.customerState.currentPage < globalThis.customerState.totalPages) {
+            globalThis.customerState.currentPage++;
             fetchCustomers();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
@@ -769,15 +766,15 @@
 
     // Toggle sort on column header click
     function toggleSort(column) {
-        customerState.currentPage = 1;
+        globalThis.customerState.currentPage = 1;
 
-        if (customerState.sortBy === column) {
+        if (globalThis.customerState.sortBy === column) {
             // Toggle sort order if same column clicked
-            customerState.sortOrder = customerState.sortOrder === 'asc' ? 'desc' : 'asc';
+            globalThis.customerState.sortOrder = globalThis.customerState.sortOrder === 'asc' ? 'desc' : 'asc';
         } else {
             // Set new column and default to ascending
-            customerState.sortBy = column;
-            customerState.sortOrder = 'asc';
+            globalThis.customerState.sortBy = column;
+            globalThis.customerState.sortOrder = 'asc';
         }
 
         fetchCustomers();
@@ -803,10 +800,10 @@
             if (!columnMatch) return;
 
             const column = columnMatch[1];
-            if (column === customerState.sortBy) {
+            if (column === globalThis.customerState.sortBy) {
                 const indicator = header.querySelector('.sort-indicator');
                 if (indicator) {
-                    indicator.textContent = customerState.sortOrder === 'asc' ? '↑' : '↓';
+                    indicator.textContent = globalThis.customerState.sortOrder === 'asc' ? '↑' : '↓';
                     indicator.style.fontWeight = '600';
                 }
             }

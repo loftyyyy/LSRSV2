@@ -101,7 +101,7 @@
             globalThis.isDarkMode = null;
         }
 
-        const savedMode = localStorage.getItem('darkMode');
+        var savedMode = localStorage.getItem('darkMode');
 
         if (savedMode !== null) {
             // User preference exists

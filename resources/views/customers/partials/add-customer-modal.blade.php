@@ -336,11 +336,11 @@
     }
 
     // Short reference for easier access
-    let addCustomerModalState = globalThis.addCustomerModalState;
+    var addCustomerModalState = globalThis.addCustomerModalState;
 
     // Open modal
     function openAddCustomerModal() {
-        addCustomerModalState.isOpen = true;
+        globalThis.addCustomerModalState.isOpen = true;
         const modal = document.getElementById('addCustomerModal');
         modal.classList.remove('hidden');
         modal.classList.add('flex');
@@ -357,7 +357,7 @@
 
     // Close modal
     function closeAddCustomerModal() {
-        addCustomerModalState.isOpen = false;
+        globalThis.addCustomerModalState.isOpen = false;
         const modal = document.getElementById('addCustomerModal');
         modal.classList.add('hidden');
         modal.classList.remove('flex');
@@ -365,7 +365,7 @@
         // Reset form and state
         document.getElementById('addCustomerForm').reset();
         hideMessages();
-        addCustomerModalState.isSubmitting = false;
+        globalThis.addCustomerModalState.isSubmitting = false;
         updateSubmitButton();
     }
 
@@ -397,7 +397,7 @@
         const btnText = document.getElementById('addCustomerBtnText');
         const btnLoading = document.getElementById('addCustomerBtnLoading');
 
-        if (addCustomerModalState.isSubmitting) {
+        if (globalThis.addCustomerModalState.isSubmitting) {
             btn.disabled = true;
             btnText.classList.add('hidden');
             btnLoading.classList.remove('hidden');
@@ -441,7 +441,7 @@
     document.getElementById('addCustomerForm').addEventListener('submit', async function(e) {
         e.preventDefault();
 
-        if (addCustomerModalState.isSubmitting) {
+        if (globalThis.addCustomerModalState.isSubmitting) {
             return;
         }
 
@@ -455,7 +455,7 @@
             return;
         }
 
-        addCustomerModalState.isSubmitting = true;
+        globalThis.addCustomerModalState.isSubmitting = true;
         updateSubmitButton();
 
         try {
@@ -501,21 +501,21 @@
             const errorMessage = error.response?.data?.message || error.message || 'Network error. Please check your connection and try again.';
             showError(errorMessage);
         } finally {
-            addCustomerModalState.isSubmitting = false;
+            globalThis.addCustomerModalState.isSubmitting = false;
             updateSubmitButton();
         }
     });
 
     // Close modal on escape key
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && addCustomerModalState.isOpen) {
+        if (e.key === 'Escape' && globalThis.addCustomerModalState.isOpen) {
             closeAddCustomerModal();
         }
     });
 
     // Close modal on backdrop click
     document.getElementById('addCustomerModal').addEventListener('click', function(e) {
-        if (e.target === this && addCustomerModalState.isOpen) {
+        if (e.target === this && globalThis.addCustomerModalState.isOpen) {
             closeAddCustomerModal();
         }
     });
