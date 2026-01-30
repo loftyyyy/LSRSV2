@@ -223,7 +223,11 @@
         totalCustomersCount: 0,
         activeCustomersCount: 0,
         inactiveCustomersCount: 0,
-        customersWithRentalsCount: 0
+        customersWithRentalsCount: 0,
+        // Dynamic status mappings
+        statuses: {},
+        activeStatusId: null,
+        inactiveStatusId: null
     };
 
     // Debounce timer for search
@@ -245,9 +249,11 @@
         customerState.searchQuery = '';
         customerState.statusFilter = '';
 
-        // Load stats and customers
-        fetchStats();
-        fetchCustomers();
+        // Load statuses first, then stats and customers
+        fetchStatuses().then(() => {
+            fetchStats();
+            fetchCustomers();
+        });
 
         // Search with debounce
         searchInput.addEventListener('input', function(e) {
@@ -269,9 +275,9 @@
                 if (statusText === 'All Status') {
                     customerState.statusFilter = '';
                 } else if (statusText === 'Active') {
-                    customerState.statusFilter = '1'; // Active status ID
+                    customerState.statusFilter = String(customerState.activeStatusId);
                 } else if (statusText === 'Inactive') {
-                    customerState.statusFilter = '2'; // Inactive status ID
+                    customerState.statusFilter = String(customerState.inactiveStatusId);
                 }
 
                 customerState.currentPage = 1;
@@ -327,6 +333,31 @@
     document.addEventListener('turbo:load', initializeCustomerPage);
     document.addEventListener('turbo:render', initializeCustomerPage);
 
+    // Fetch customer statuses (dynamically populate status ID mappings)
+    async function fetchStatuses() {
+        try {
+            const response = await axios.get('/api/customers/statuses');
+            const statuses = response.data.statuses || [];
+            
+            // Build mappings for status names to IDs
+            statuses.forEach(status => {
+                customerState.statuses[status.status_id] = status.status_name;
+                
+                // Store active/inactive status IDs for later use
+                if (status.status_name.toLowerCase() === 'active') {
+                    customerState.activeStatusId = status.status_id;
+                } else if (status.status_name.toLowerCase() === 'inactive') {
+                    customerState.inactiveStatusId = status.status_id;
+                }
+            });
+        } catch (error) {
+            console.error('Error fetching statuses:', error);
+            // Fallback to default status IDs if API fails
+            customerState.activeStatusId = 1;
+            customerState.inactiveStatusId = 2;
+        }
+    }
+
     // Fetch total stats (always gets unfiltered counts)
     async function fetchStats() {
         try {
@@ -347,6 +378,7 @@
 
         } catch (error) {
             console.error('Error fetching stats:', error);
+            showErrorNotification('Failed to load customer statistics. Please refresh the page.');
         }
     }
 
@@ -402,6 +434,7 @@
             console.error('Error data:', error.response?.data);
 
             const errorMessage = error.response?.data?.message || error.message || 'Failed to load customers. Please try again.';
+            showErrorNotification(errorMessage);
             showEmptyState(errorMessage);
             hideLoadingState();
         } finally {
@@ -455,7 +488,7 @@
                     <td class="py-3.5 pr-4 text-neutral-600 dark:text-neutral-300 font-geist-mono">${customer.contact_number}</td>
                     <td class="py-3.5 pr-2 text-neutral-600 dark:text-neutral-300 font-geist-mono">${customer.address}</td>
                     <td class="py-3.5 pr-4 text-neutral-600 dark:text-neutral-300 font-geist-mono text-xs">${formattedDate}</td>
-                    <td class="py-3.5 pr-4 text-left text-neutral-900 dark:text-neutral-100 font-geist-mono">${customer.rentals_count || 0}</td>
+                    <td class="py-3.5 pr-4 text-center text-neutral-900 dark:text-neutral-100 font-geist-mono">${customer.rentals_count || 0}</td>
                     <td class="py-3.5 pr-2">
                         <span class="inline-flex items-center rounded-full ${statusColor} px-2 py-1 text-[11px] font-medium border transition-colors duration-300 ease-in-out">
                             <span class="mr-1.5 h-1.5 w-1.5 rounded-full ${statusBgColor}"></span>
@@ -551,6 +584,32 @@
         hideEmptyState();
     }
 
+    // Show error notification (user-facing)
+    function showErrorNotification(message) {
+        // Create a temporary notification element
+        const notification = document.createElement('div');
+        notification.className = 'fixed top-4 right-4 max-w-sm bg-red-50 border border-red-200 dark:bg-red-950/30 dark:border-red-800 rounded-lg px-4 py-3 shadow-lg z-[999] flex items-start gap-3';
+        notification.innerHTML = `
+            <svg class="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+            </svg>
+            <div class="flex-1">
+                <p class="text-sm font-medium text-red-800 dark:text-red-200">${message}</p>
+            </div>
+            <button onclick="this.parentElement.remove()" class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200 flex-shrink-0">
+                <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+            </button>
+        `;
+        document.body.appendChild(notification);
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            notification.remove();
+        }, 5000);
+    }
+
     // Pagination handlers
     function previousPage() {
         if (customerState.currentPage > 1) {
@@ -587,10 +646,10 @@
 
              // Require password confirmation for both deactivate and reactivate
              showPasswordConfirmationModal(statusName, newStatus);
-        } catch (error) {
-            console.error('Error fetching customer for status change:', error);
-            alert('Failed to load customer data');
-        }
+         } catch (error) {
+             console.error('Error fetching customer for status change:', error);
+             showErrorNotification('Failed to load customer data. Please try again.');
+         }
     }
 
     // Show password confirmation modal (defined in edit modal include)
@@ -608,7 +667,8 @@
                 fetchStats();
             } catch (error) {
                 console.error('Error deleting customer:', error);
-                alert('Failed to delete customer. ' + (error.response?.data?.message || error.message));
+                const errorMsg = error.response?.data?.message || error.message || 'Failed to delete customer.';
+                showErrorNotification(errorMsg);
             }
         }
     }

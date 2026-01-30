@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Reservation;
 use App\Models\Item;
+use App\Models\ReservationItem;
 use App\Http\Requests\StoreReservationRequest;
 use App\Http\Requests\UpdateReservationRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
@@ -587,13 +589,21 @@ class ReservationController extends Controller
             'cancelled_by' => Auth::id()
         ]);
 
+        // Update inventory status for all reserved items
+        // Change reserved items back to available
+        foreach ($reservation->items as $reservationItem) {
+            // Update the item's inventory status to available
+            $reservationItem->item()->update([
+                'status' => 'available'
+            ]);
+        }
+
         $reservation->load(['customer', 'status', 'reservedBy', 'items.item']);
 
         return response()->json([
             'message' => 'Reservation cancelled successfully',
             'data' => $reservation
         ]);
-        // TODO: Should update the inventory status (still didn't thought about the inventory status but it should go like (reserved, available, or other stuff)
     }
 
     /**

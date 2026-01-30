@@ -533,16 +533,20 @@
         }
     });
 
-     // Handle change status button
-     document.getElementById('changeStatusBtn').addEventListener('click', function(e) {
-         e.preventDefault();
-         
-         const newStatus = editCustomerModalState.currentCustomerStatus === 1 ? 2 : 1;
-         const statusName = newStatus === 1 ? 'Active' : 'Inactive';
+      // Handle change status button
+      document.getElementById('changeStatusBtn').addEventListener('click', function(e) {
+          e.preventDefault();
+          
+          // Use dynamic status IDs from customerState
+          const activeId = customerState.activeStatusId || 1;
+          const inactiveId = customerState.inactiveStatusId || 2;
+          
+          const newStatus = editCustomerModalState.currentCustomerStatus === activeId ? inactiveId : activeId;
+          const statusName = newStatus === activeId ? 'Active' : 'Inactive';
 
-         // Require password confirmation for both deactivate and reactivate
-         showPasswordConfirmationModal(statusName, newStatus);
-     });
+          // Require password confirmation for both deactivate and reactivate
+          showPasswordConfirmationModal(statusName, newStatus);
+      });
 
      // Show password confirmation modal
      function showPasswordConfirmationModal(newStatusName, newStatus) {

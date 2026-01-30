@@ -6,10 +6,12 @@ use App\Models\Customer;
 use App\Http\Requests\StoreCustomerRequest;
 use App\Http\Requests\UpdateCustomerRequest;
 use App\Models\CustomerStatus;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
+use Throwable;
 
 class CustomerController extends Controller
 {
@@ -72,7 +74,7 @@ class CustomerController extends Controller
     /**
      * Download PDF
      */
-    public function generatePDF(Request $request):JsonResponse
+    public function generatePDF(Request $request)
     {
         $startDate = $request->get('start_date');
         $endDate = $request->get('end_date');
@@ -126,9 +128,18 @@ class CustomerController extends Controller
     public function showCustomerPage(): View
     {
         return view('customers.index');
-    }
+       }
 
-     /**
+       /**
+        * Get all available customer statuses
+        */
+       public function statuses(): JsonResponse
+       {
+           $statuses = CustomerStatus::select('status_id', 'status_name')->get();
+           return response()->json(['statuses' => $statuses]);
+       }
+
+       /**
       * Get customer statistics
       */
       public function stats(): JsonResponse
@@ -149,8 +160,8 @@ class CustomerController extends Controller
        * Display a listing of the resource.
        */
        public function index(Request $request): JsonResponse
-      {
-          $query = Customer::with(['status']);
+       {
+           $query = Customer::with(['status'])->withCount(['rentals', 'reservations']);
 
           // Search functionality
           if ($request->has('search')) {
@@ -163,17 +174,12 @@ class CustomerController extends Controller
               });
           }
 
-          // Filter by status
-          if ($request->has('status_id')) {
-              $query->where('status_id', $request->get('status_id'));
-          }
+           // Filter by status
+           if ($request->has('status_id')) {
+               $query->where('status_id', $request->get('status_id'));
+           }
 
-          // Include rental history count if requested
-          if ($request->has('include_history') && $request->get('include_history') !== 'false') {
-              $query->withCount(['rentals', 'reservations']);
-          }
-
-          // Sorting functionality
+           // Sorting functionality
           $sortBy = $request->get('sort_by', 'created_at');
           $sortOrder = $request->get('sort_order', 'desc');
 
@@ -186,11 +192,11 @@ class CustomerController extends Controller
               $sortOrder = 'desc';
           }
 
-          $query->orderBy($sortBy, $sortOrder);
+           $query->orderBy($sortBy, $sortOrder);
 
-          // Pagination
-          $perPage = $request->get('per_page', 15);
-         $customers = $query->paginate($perPage);
+           // Pagination with validation
+           $perPage = min($request->get('per_page', 15), 100);
+          $customers = $query->paginate($perPage);
 
          return response()->json($customers);
      }

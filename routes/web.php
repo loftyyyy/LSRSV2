@@ -49,7 +49,7 @@ Route::middleware(['guest'])->group(function () {
         // ============================================
         // AUTH ROUTES
         // ============================================
-        Route::post('/verify-password', [AuthController::class, 'verifyPassword']);
+        Route::post('/verify-password', [AuthController::class, 'verifyPassword'])->middleware('throttle:5,15');
 
         // ============================================
         // CUSTOMER ROUTES
@@ -60,9 +60,10 @@ Route::middleware(['guest'])->group(function () {
          Route::get('/customers/reports/pdf', [CustomerController::class, 'generatePDF']);
 
          // Customer Stats
-         Route::get('/customers/stats', [CustomerController::class, 'stats']);
+        Route::get('/customers/stats', [CustomerController::class, 'stats']);
+        Route::get('/customers/statuses', [CustomerController::class, 'statuses']);
 
-         // Customer CRUD
+        // Customer CRUD
          Route::get('/customers', [CustomerController::class, 'index']);
         Route::post('/customers', [CustomerController::class, 'store']);
         Route::get('/customers/{customer}', [CustomerController::class, 'show']);
