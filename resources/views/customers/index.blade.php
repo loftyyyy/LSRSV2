@@ -227,7 +227,9 @@
         // Dynamic status mappings
         statuses: {},
         activeStatusId: null,
-        inactiveStatusId: null
+        inactiveStatusId: null,
+        // Request cancellation
+        abortController: null
     };
 
     // Debounce timer for search
@@ -243,6 +245,12 @@
         if (!searchInput || !filterMenu) {
             return;
         }
+
+        // Cancel any pending requests from previous navigation
+        if (customerState.abortController) {
+            customerState.abortController.abort();
+        }
+        customerState.abortController = new AbortController();
 
         // Reset state when page is loaded
         customerState.currentPage = 1;
@@ -361,7 +369,9 @@
     // Fetch total stats (always gets unfiltered counts)
     async function fetchStats() {
         try {
-            const response = await axios.get('/api/customers/stats');
+            const response = await axios.get('/api/customers/stats', {
+                signal: customerState.abortController.signal
+            });
             const data = response.data;
 
             // Store total counts regardless of current filters
@@ -377,6 +387,11 @@
             document.getElementById('customersWithRentalsCount').textContent = customerState.customersWithRentalsCount;
 
         } catch (error) {
+            // Don't show error if request was cancelled (user navigated away)
+            if (error.name === 'AbortError' || error.code === 'ECONNABORTED') {
+                console.log('Stats request cancelled (user navigated away)');
+                return;
+            }
             console.error('Error fetching stats:', error);
             showErrorNotification('Failed to load customer statistics. Please refresh the page.');
         }
@@ -408,7 +423,9 @@
 
             const url = `/api/customers?${params.toString()}`;
 
-            const response = await axios.get(url);
+            const response = await axios.get(url, {
+                signal: customerState.abortController.signal
+            });
             const data = response.data;
 
             if (!data.data || !Array.isArray(data.data)) {
@@ -429,6 +446,13 @@
             hideLoadingState();
 
         } catch (error) {
+            // Don't show error if request was cancelled (user navigated away)
+            if (error.name === 'AbortError' || error.code === 'ECONNABORTED') {
+                console.log('Customers request cancelled (user navigated away)');
+                customerState.isLoading = false;
+                return;
+            }
+
             console.error('Error fetching customers:', error);
             console.error('Error status:', error.response?.status);
             console.error('Error data:', error.response?.data);
@@ -588,15 +612,15 @@
     function showErrorNotification(message) {
         // Create a temporary notification element
         const notification = document.createElement('div');
-        notification.className = 'fixed top-4 right-4 max-w-sm bg-red-50 border border-red-200 dark:bg-red-950/30 dark:border-red-800 rounded-lg px-4 py-3 shadow-lg z-[999] flex items-start gap-3';
+        notification.className = 'fixed top-4 right-4 max-w-sm bg-red-100 border border-red-300 dark:bg-red-900 dark:border-red-700 rounded-lg px-5 py-4 shadow-xl z-[999] flex items-start gap-3 animate-in slide-in-from-top-2';
         notification.innerHTML = `
-            <svg class="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+            <svg class="h-5 w-5 text-red-700 dark:text-red-200 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
             </svg>
             <div class="flex-1">
-                <p class="text-sm font-medium text-red-800 dark:text-red-200">${message}</p>
+                <p class="text-sm font-semibold text-red-900 dark:text-red-50">${message}</p>
             </div>
-            <button onclick="this.parentElement.remove()" class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200 flex-shrink-0">
+            <button onclick="this.parentElement.remove()" class="text-red-700 dark:text-red-200 hover:text-red-900 dark:hover:text-red-50 flex-shrink-0 transition-colors">
                 <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
                 </svg>
@@ -606,7 +630,11 @@
         
         // Auto-remove after 5 seconds
         setTimeout(() => {
-            notification.remove();
+            notification.style.opacity = '0';
+            notification.style.transition = 'opacity 0.3s ease-out';
+            setTimeout(() => {
+                notification.remove();
+            }, 300);
         }, 5000);
     }
 
