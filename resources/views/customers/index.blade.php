@@ -346,11 +346,11 @@
         try {
             const response = await axios.get('/api/customers/statuses');
             const statuses = response.data.statuses || [];
-            
+
             // Build mappings for status names to IDs
             statuses.forEach(status => {
                 customerState.statuses[status.status_id] = status.status_name;
-                
+
                 // Store active/inactive status IDs for later use
                 if (status.status_name.toLowerCase() === 'active') {
                     customerState.activeStatusId = status.status_id;
@@ -393,7 +393,7 @@
                 return;
             }
             console.error('Error fetching stats:', error);
-            showErrorNotification('Failed to load customer statistics. Please refresh the page.');
+            // Don't show notification for stats errors - only log them
         }
     }
 
@@ -450,6 +450,7 @@
             if (error.name === 'AbortError' || error.code === 'ECONNABORTED') {
                 console.log('Customers request cancelled (user navigated away)');
                 customerState.isLoading = false;
+                hideLoadingState();
                 return;
             }
 
@@ -475,7 +476,7 @@
             if (customers.length === 0) {
                 // Show custom message based on search or filter
                 let emptyMessage = 'No customers found';
-                
+
                 if (customerState.searchQuery) {
                     emptyMessage = `No matches found for "${customerState.searchQuery}"`;
                 } else if (customerState.statusFilter) {
@@ -551,6 +552,8 @@
             });
 
             document.getElementById('customersTableBody').style.opacity = '1';
+            // Hide the empty state when we have data
+            hideEmptyState();
         } catch (error) {
             console.error('Error rendering table:', error);
             showEmptyState('Error rendering customers table');
@@ -597,15 +600,29 @@
         document.getElementById('emptyState').style.display = 'none';
     }
 
-    // Show loading state
+    // Show loading state with skeleton
     function showLoadingState() {
         const tbody = document.getElementById('customersTableBody');
-        tbody.style.opacity = '0.6';
+        const skeletonRows = Array.from({length: 5}, () => `
+            <tr class="border-b border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-900/50 transition-colors animate-pulse">
+                <td class="px-4 py-3"><div class="h-4 bg-neutral-300 dark:bg-neutral-700 rounded w-3/4"></div></td>
+                <td class="px-4 py-3"><div class="h-4 bg-neutral-300 dark:bg-neutral-700 rounded w-1/2"></div></td>
+                <td class="px-4 py-3"><div class="h-4 bg-neutral-300 dark:bg-neutral-700 rounded w-2/3"></div></td>
+                <td class="px-4 py-3"><div class="h-4 bg-neutral-300 dark:bg-neutral-700 rounded w-1/3"></div></td>
+                <td class="px-4 py-3"><div class="h-4 bg-neutral-300 dark:bg-neutral-700 rounded w-1/4"></div></td>
+                <td class="px-4 py-3"><div class="h-4 bg-neutral-300 dark:bg-neutral-700 rounded w-1/5"></div></td>
+            </tr>
+        `).join('');
+        tbody.innerHTML = skeletonRows;
+        document.getElementById('emptyState').style.display = 'none';
+        document.getElementById('paginationControls').style.display = 'none';
     }
 
     // Hide loading state
     function hideLoadingState() {
         hideEmptyState();
+        const tbody = document.getElementById('customersTableBody');
+        tbody.style.opacity = '1';
     }
 
     // Show error notification (user-facing)
@@ -627,7 +644,7 @@
             </button>
         `;
         document.body.appendChild(notification);
-        
+
         // Auto-remove after 5 seconds
         setTimeout(() => {
             notification.style.opacity = '0';
@@ -663,7 +680,7 @@
             const customer = response.data.data;
             const newStatus = customer.status_id === 1 ? 2 : 1;
             const statusName = newStatus === 1 ? 'Active' : 'Inactive';
-            
+
              // Store customer info for later use
              window.pendingStatusChange = {
                  customerId: customerId,
@@ -704,7 +721,7 @@
     // Toggle sort on column header click
     function toggleSort(column) {
         customerState.currentPage = 1;
-        
+
         if (customerState.sortBy === column) {
             // Toggle sort order if same column clicked
             customerState.sortOrder = customerState.sortOrder === 'asc' ? 'desc' : 'asc';
@@ -713,7 +730,7 @@
             customerState.sortBy = column;
             customerState.sortOrder = 'asc';
         }
-        
+
         fetchCustomers();
     }
 
