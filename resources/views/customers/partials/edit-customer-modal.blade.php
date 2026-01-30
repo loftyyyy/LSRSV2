@@ -2,7 +2,7 @@
 <div id="editCustomerModal" class="hidden fixed inset-0 z-50 flex items-center justify-center px-2 py-6 bg-black/60 backdrop-blur-sm">
     <div class="w-full max-w-6xl bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-3xl shadow-2xl">
         {{-- Header --}}
-        <div class="flex items-center justify-between px-6 py-4 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/80 dark:bg-neutral-900/50">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/80 dark:bg-neutral-900/50 rounded-t-3xl">
             <div>
                 <p class="text-xs uppercase tracking-[0.2em] text-neutral-500 dark:text-neutral-500">Edit Customer</p>
                 <h3 class="text-lg font-semibold text-neutral-900 dark:text-white">Update Customer Details</h3>
@@ -536,11 +536,11 @@
       // Handle change status button
       document.getElementById('changeStatusBtn').addEventListener('click', function(e) {
           e.preventDefault();
-          
+
           // Use dynamic status IDs from customerState
           const activeId = customerState.activeStatusId || 1;
           const inactiveId = customerState.inactiveStatusId || 2;
-          
+
           const newStatus = editCustomerModalState.currentCustomerStatus === activeId ? inactiveId : activeId;
           const statusName = newStatus === activeId ? 'Active' : 'Inactive';
 
@@ -612,7 +612,7 @@
          // Handle confirm button
          document.getElementById('confirmPasswordBtn').addEventListener('click', async function() {
              const password = document.getElementById('passwordConfirmationInput').value;
-             
+
              if (!password.trim()) {
                  const errorDiv = document.getElementById('passwordConfirmationError');
                  errorDiv.querySelector('p').textContent = 'Please enter your password';
@@ -627,7 +627,7 @@
               try {
                   // Verify password with backend
                   const response = await axios.post('/api/verify-password', { password });
-                  
+
                    if (response.data.valid) {
                        closePasswordConfirmationModal();
                        await changeCustomerStatus(newStatus);
@@ -681,14 +681,14 @@
           try {
               // Handle both cases: called from edit modal or from table button
               const customerId = editCustomerModalState.currentCustomerId || window.pendingStatusChange?.customerId;
-              
+
               if (!customerId) {
                   throw new Error('Customer ID not found');
               }
 
                const endpoint = newStatus === 2 ? 'deactivate' : 'reactivate';
               const url = `/api/customers/${customerId}/${endpoint}`;
-              
+
               const response = await axios.post(url);
 
               // Update modal state if called from edit modal

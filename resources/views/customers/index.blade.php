@@ -109,7 +109,7 @@
 
                         <div class="flex items-center gap-3">
                             <!-- Custom Filter Dropdown -->
-                            <div class="relative" id="filter-dropdown">
+                            <div class="relative mb-2" id="filter-dropdown">
                                 <button id="filter-button" class="flex items-center gap-2 rounded-2xl px-3 py-2 text-xs border border-neutral-300 bg-white text-neutral-700 dark:border-neutral-800 dark:bg-black/60 dark:text-neutral-100 focus:outline-none transition-colors duration-300 ease-in-out">
                                     <span id="filter-button-text">Filter Status</span>
                                     <span id="icon-down" class="h-3 w-3 transition-transform duration-300 ease-in-out">
@@ -271,7 +271,7 @@
              clearTimeout(searchDebounceTimer);
              customerState.searchQuery = e.target.value;
              customerState.currentPage = 1;
-             
+
              // Update search indicators immediately
              updateSearchIndicators();
 
@@ -477,20 +477,20 @@
      function updateSearchIndicators() {
          const searchIndicatorsDiv = document.getElementById('searchIndicators');
          const query = customerState.searchQuery.trim().toLowerCase();
-         
+
          if (!query) {
              searchIndicatorsDiv.innerHTML = '';
              return;
          }
-         
+
          const indicators = [];
-         
+
          // Determine what fields match
          if (!isNaN(query) && query !== '') {
              // Numeric search - matches customer ID
              indicators.push('Customer ID');
          }
-         
+
          // Check if it looks like an email
          if (query.includes('@')) {
              indicators.push('Email');
@@ -499,13 +499,13 @@
              indicators.push('Name');
              indicators.push('Contact');
          }
-         
+
          // Build the HTML for indicators
          let html = '';
          indicators.forEach(indicator => {
              html += `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300 border border-violet-200 dark:border-violet-800/60">${indicator}</span>`;
          });
-         
+
          searchIndicatorsDiv.innerHTML = html;
      }
 
