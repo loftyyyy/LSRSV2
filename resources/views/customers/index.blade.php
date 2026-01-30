@@ -392,16 +392,16 @@
             document.getElementById('inactiveCustomersCount').textContent = customerState.inactiveCustomersCount;
             document.getElementById('customersWithRentalsCount').textContent = customerState.customersWithRentalsCount;
 
-        } catch (error) {
-            // Don't show error if request was cancelled (user navigated away)
-            if (error.name === 'AbortError' || error.code === 'ECONNABORTED') {
-                console.log('Stats request cancelled (user navigated away)');
-                return;
-            }
-            console.error('Error fetching stats:', error);
-            // Don't show notification for stats errors - only log them
-        }
-    }
+         } catch (error) {
+             // Don't show error if request was cancelled (user navigated away)
+             if (error.name === 'AbortError' || error.code === 'ECONNABORTED' || error.code === 'ERR_CANCELED') {
+                 console.log('Stats request cancelled (user navigated away)');
+                 return;
+             }
+             console.error('Error fetching stats:', error);
+             // Don't show notification for stats errors - only log them
+         }
+     }
 
     // Fetch customers from API
     async function fetchCustomers() {
@@ -451,27 +451,27 @@
             updateSortIndicators();
             hideLoadingState();
 
-        } catch (error) {
-            // Don't show error if request was cancelled (user navigated away)
-            if (error.name === 'AbortError' || error.code === 'ECONNABORTED') {
-                console.log('Customers request cancelled (user navigated away)');
-                customerState.isLoading = false;
-                hideLoadingState();
-                return;
-            }
+         } catch (error) {
+             // Don't show error if request was cancelled (user navigated away)
+             if (error.name === 'AbortError' || error.code === 'ECONNABORTED' || error.code === 'ERR_CANCELED') {
+                 console.log('Customers request cancelled (user navigated away)');
+                 customerState.isLoading = false;
+                 hideLoadingState();
+                 return;
+             }
 
-            console.error('Error fetching customers:', error);
-            console.error('Error status:', error.response?.status);
-            console.error('Error data:', error.response?.data);
+             console.error('Error fetching customers:', error);
+             console.error('Error status:', error.response?.status);
+             console.error('Error data:', error.response?.data);
 
-            const errorMessage = error.response?.data?.message || error.message || 'Failed to load customers. Please try again.';
-            showErrorNotification(errorMessage);
-            showEmptyState(errorMessage);
-            hideLoadingState();
-        } finally {
-            customerState.isLoading = false;
-        }
-     }
+             const errorMessage = error.response?.data?.message || error.message || 'Failed to load customers. Please try again.';
+             showErrorNotification(errorMessage);
+             showEmptyState(errorMessage);
+             hideLoadingState();
+         } finally {
+             customerState.isLoading = false;
+         }
+      }
 
      // Update search indicators
      function updateSearchIndicators() {
