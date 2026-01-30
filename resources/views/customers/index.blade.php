@@ -251,6 +251,12 @@
             return;
         }
 
+        // Only initialize once per page visit
+        if (globalThis.customerPageInitialized) {
+            return;
+        }
+        globalThis.customerPageInitialized = true;
+
         // Cancel any pending requests from previous navigation
         if (globalThis.customerState.abortController) {
             globalThis.customerState.abortController.abort();
@@ -350,13 +356,15 @@
         });
     }
 
-    // Listen to both DOMContentLoaded and Turbo events
+    // Listen to DOMContentLoaded and turbo:load only (NOT turbo:render to avoid duplicate initialization)
     document.addEventListener('DOMContentLoaded', initializeCustomerPage);
     document.addEventListener('turbo:load', initializeCustomerPage);
-    document.addEventListener('turbo:render', initializeCustomerPage);
 
     // Clean up when leaving the page (reset flags and abort requests)
     document.addEventListener('turbo:before-visit', function() {
+        // Reset page initialization flag so it can be re-initialized on next visit
+        globalThis.customerPageInitialized = false;
+        
         // Reset filter dropdown flag so it can be re-initialized on next visit
         globalThis.filterDropdownInitialized = false;
         
