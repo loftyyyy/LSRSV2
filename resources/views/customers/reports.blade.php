@@ -364,16 +364,26 @@
     }
 
     function updateCharts(stats) {
-        // Determine if dark mode is enabled - check if dark class is actually present
-        const htmlElement = document.documentElement;
-        const hasDarkClass = htmlElement.classList.contains('dark');
-        const bodyHasDarkClass = document.body.classList.contains('dark');
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        // Determine if dark mode is enabled
+        // Check if dark class is on html or body, or check parent elements
+        let isDark = false;
+        let element = document.documentElement;
         
-        // Only use dark colors if dark class is explicitly set on HTML or body
-        const isDark = hasDarkClass || bodyHasDarkClass;
+        // Check html and body elements and their parents for dark class
+        while (element && element !== document) {
+            if (element.classList && element.classList.contains('dark')) {
+                isDark = true;
+                break;
+            }
+            element = element.parentElement;
+        }
+        
+        // Also check body specifically
+        if (!isDark && document.body.classList.contains('dark')) {
+            isDark = true;
+        }
 
-        console.log('Chart color mode - hasDarkClass:', hasDarkClass, 'bodyHasDarkClass:', bodyHasDarkClass, 'prefersDark:', prefersDark, 'isDark (final):', isDark);
+        console.log('Chart color mode - isDark:', isDark, 'textColor will be:', isDark ? '#e5e7eb' : '#000000');
 
         // Use pure black for light mode for maximum contrast with white backgrounds
         // Use light gray for dark mode for contrast with dark backgrounds
@@ -381,7 +391,7 @@
         const gridColor = isDark ? '#27272a' : '#d1d5db';
         const bgColor = isDark ? '#18181b' : '#ffffff';
 
-        console.log('Chart colors - textColor:', textColor, 'gridColor:', gridColor);
+        console.log('Chart colors applied - textColor:', textColor, 'gridColor:', gridColor);
 
         // Status Distribution Chart
         updateStatusChart(stats, textColor, gridColor);
