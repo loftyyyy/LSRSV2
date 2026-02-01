@@ -364,15 +364,21 @@
     }
 
     function updateCharts(stats) {
-        // Determine if dark mode is enabled
-        const isDark = document.documentElement.classList.contains('dark') || 
+        // Determine if dark mode is enabled - check multiple conditions
+        const htmlElement = document.documentElement;
+        const isDark = htmlElement.classList.contains('dark') || 
                        document.body.classList.contains('dark') ||
                        window.matchMedia('(prefers-color-scheme: dark)').matches;
 
-        // Use darker text color for light mode for better contrast
-        const textColor = isDark ? '#e5e7eb' : '#111827';
+        console.log('Chart color mode - isDark:', isDark, 'classList:', htmlElement.className);
+
+        // Use pure black for light mode for maximum contrast with white backgrounds
+        // Use light gray for dark mode for contrast with dark backgrounds
+        const textColor = isDark ? '#e5e7eb' : '#000000';
         const gridColor = isDark ? '#27272a' : '#d1d5db';
         const bgColor = isDark ? '#18181b' : '#ffffff';
+
+        console.log('Chart colors - textColor:', textColor, 'gridColor:', gridColor);
 
         // Status Distribution Chart
         updateStatusChart(stats, textColor, gridColor);
