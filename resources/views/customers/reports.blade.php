@@ -364,13 +364,16 @@
     }
 
     function updateCharts(stats) {
-        // Determine if dark mode is enabled - check multiple conditions
+        // Determine if dark mode is enabled - check if dark class is actually present
         const htmlElement = document.documentElement;
-        const isDark = htmlElement.classList.contains('dark') || 
-                       document.body.classList.contains('dark') ||
-                       window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const hasDarkClass = htmlElement.classList.contains('dark');
+        const bodyHasDarkClass = document.body.classList.contains('dark');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        
+        // Only use dark colors if dark class is explicitly set on HTML or body
+        const isDark = hasDarkClass || bodyHasDarkClass;
 
-        console.log('Chart color mode - isDark:', isDark, 'classList:', htmlElement.className);
+        console.log('Chart color mode - hasDarkClass:', hasDarkClass, 'bodyHasDarkClass:', bodyHasDarkClass, 'prefersDark:', prefersDark, 'isDark (final):', isDark);
 
         // Use pure black for light mode for maximum contrast with white backgrounds
         // Use light gray for dark mode for contrast with dark backgrounds
