@@ -33,14 +33,15 @@ Route::middleware(['guest'])->group(function () {
 
 
   Route::middleware('auth')->group(function () {
-     Route::get('/dashboard', [DashboardController::class, 'showDashboardPage'])->name('dashboard');
-     Route::get('/customers', [CustomerController::class, 'showCustomerPage'])->name('customers');
-     Route::get('/customers/reports', [CustomerController::class, 'showReportsPage'])->name('customers.reports');
-     Route::get('/inventories', [InventoryController::class, 'showInventoryPage'])->name('inventories');
-     Route::get('/reservations', [ReservationController::class, 'showReservationPage'])->name('reservations');
-     Route::get('/rentals', [RentalController::class, 'showRentalPage'])->name('rentals');
-     Route::get('/invoices', [InvoiceController::class, 'showInvoicePage'])->name('invoices');
-     Route::get('/payments', [PaymentController::class, 'showPaymentPage'])->name('payments');
+      Route::get('/dashboard', [DashboardController::class, 'showDashboardPage'])->name('dashboard');
+      Route::get('/customers', [CustomerController::class, 'showCustomerPage'])->name('customers');
+      Route::get('/customers/reports', [CustomerController::class, 'showReportsPage'])->name('customers.reports');
+      Route::get('/inventories', [InventoryController::class, 'showInventoryPage'])->name('inventories');
+      Route::get('/inventories/reports', [InventoryController::class, 'showReportsPage'])->name('inventories.reports');
+      Route::get('/reservations', [ReservationController::class, 'showReservationPage'])->name('reservations');
+      Route::get('/rentals', [RentalController::class, 'showRentalPage'])->name('rentals');
+      Route::get('/invoices', [InvoiceController::class, 'showInvoicePage'])->name('invoices');
+      Route::get('/payments', [PaymentController::class, 'showPaymentPage'])->name('payments');
 
      Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
@@ -87,10 +88,11 @@ Route::middleware(['guest'])->group(function () {
         // INVENTORY ROUTES
         // ============================================
 
-        // Inventory Reports
-        Route::get('/inventories/reports/generate', [InventoryController::class, 'report']);
-        Route::get('/inventories/reports/pdf', [InventoryController::class, 'generatePDF']);
-        Route::get('/inventories/reports/statistics', [InventoryController::class, 'getStatistics']);
+         // Inventory Reports
+         Route::get('/inventories/reports/generate', [InventoryController::class, 'report']);
+         Route::get('/inventories/reports/pdf', [InventoryController::class, 'generatePDF']);
+         Route::get('/inventories/reports/statistics', [InventoryController::class, 'getStatistics']);
+         Route::get('/inventories/reports/metrics', [InventoryController::class, 'getMetrics']);
 
         // Inventory Available Items (before CRUD to avoid conflicts)
         Route::get('/inventories/available', [InventoryController::class, 'getAvailableItems']);

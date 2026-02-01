@@ -57,17 +57,141 @@ class InventoryController extends Controller
         return $pdf->download("inventory_report_{$reportType}_" . now()->format('Y-m-d') . ".pdf");
     }
 
-    /**
-     * Display Inventory Page
-     */
-    public function showInventoryPage(): View
-    {
-        return view('inventories.index');
-    }
+     /**
+      * Display Inventory Page
+      */
+     public function showInventoryPage(): View
+     {
+         return view('inventories.index');
+     }
 
-    /**
-     * Display a listing of the resource.
-     */
+     /**
+      * Display Inventory Reports Page
+      */
+     public function showReportsPage(): View
+     {
+         return view('inventories.reports');
+     }
+
+     /**
+      * Get comprehensive inventory metrics and analytics
+      */
+     public function getMetrics(): JsonResponse
+     {
+         // Total Inventory Stats
+         $totalItems = Inventory::count();
+         $totalValue = Inventory::sum('purchase_price') ?? 0;
+         
+         // Status Distribution
+         $availableItems = Inventory::whereHas('status', fn($q) => $q->where('status_name', 'available'))->count();
+         $rentedItems = Inventory::whereHas('status', fn($q) => $q->where('status_name', 'rented'))->count();
+         $damagedItems = Inventory::whereHas('status', fn($q) => $q->where('status_name', 'damaged'))->count();
+         $maintenanceItems = Inventory::whereHas('status', fn($q) => $q->where('status_name', 'maintenance'))->count();
+         
+         // Condition Distribution
+         $excellentCondition = Inventory::where('condition', 'excellent')->count();
+         $goodCondition = Inventory::where('condition', 'good')->count();
+         $fairCondition = Inventory::where('condition', 'fair')->count();
+         $poorCondition = Inventory::where('condition', 'poor')->count();
+
+         // Item Type Distribution
+         $itemTypeDistribution = Inventory::selectRaw('item_type, COUNT(*) as count')
+             ->groupBy('item_type')
+             ->get()
+             ->map(fn($item) => ['type' => $item->item_type, 'count' => $item->count])
+             ->values();
+
+         // Top Items by Rental Count
+         $topItems = Inventory::with(['status', 'rentals'])
+             ->withCount('rentals')
+             ->orderBy('rentals_count', 'desc')
+             ->limit(8)
+             ->get()
+             ->map(function ($item) {
+                 return [
+                     'item_id' => $item->item_id,
+                     'name' => $item->name,
+                     'sku' => $item->sku,
+                     'rental_count' => $item->rentals_count,
+                     'status' => $item->status->status_name ?? 'unknown',
+                     'purchase_price' => $item->purchase_price,
+                 ];
+             });
+
+         // Value Distribution by Item Type
+         $valueByType = Inventory::selectRaw('item_type, SUM(purchase_price) as total_value, COUNT(*) as count')
+             ->groupBy('item_type')
+             ->orderBy('total_value', 'desc')
+             ->limit(8)
+             ->get()
+             ->map(fn($item) => [
+                 'type' => $item->item_type,
+                 'value' => round($item->total_value, 2),
+                 'count' => $item->count,
+             ])
+             ->values();
+
+         // Monthly Rental Activity
+         $monthlyRentals = collect();
+         for ($i = 11; $i >= 0; $i--) {
+             $month = now()->subMonths($i);
+             $count = Inventory::whereHas('rentals', function ($q) use ($month) {
+                 $q->whereMonth('created_at', $month->month)
+                   ->whereYear('created_at', $month->year);
+             })->distinct()->count();
+             
+             $monthlyRentals->push([
+                 'month' => $month->format('M'),
+                 'count' => $count,
+             ]);
+         }
+
+         // Condition Distribution for Chart
+         $conditionDistribution = [
+             ['condition' => 'Excellent', 'count' => $excellentCondition],
+             ['condition' => 'Good', 'count' => $goodCondition],
+             ['condition' => 'Fair', 'count' => $fairCondition],
+             ['condition' => 'Poor', 'count' => $poorCondition],
+         ];
+
+         // Status Distribution for Chart
+         $statusDistribution = [
+             ['status' => 'Available', 'count' => $availableItems],
+             ['status' => 'Rented', 'count' => $rentedItems],
+             ['status' => 'Maintenance', 'count' => $maintenanceItems],
+             ['status' => 'Damaged', 'count' => $damagedItems],
+         ];
+
+         return response()->json([
+             'kpis' => [
+                 'total_items' => $totalItems,
+                 'total_value' => round($totalValue, 2),
+                 'available_items' => $availableItems,
+                 'rented_items' => $rentedItems,
+                 'damaged_items' => $damagedItems,
+                 'maintenance_items' => $maintenanceItems,
+                 'excellent_condition' => $excellentCondition,
+                 'good_condition' => $goodCondition,
+                 'fair_condition' => $fairCondition,
+                 'poor_condition' => $poorCondition,
+                 'occupancy_rate' => $totalItems > 0 ? round(($rentedItems / $totalItems) * 100, 2) : 0,
+                 'value_at_risk' => round(Inventory::whereIn('status_id', [
+                     Inventory::whereHas('status', fn($q) => $q->where('status_name', 'damaged'))->first()?->status_id ?? 0,
+                 ])->sum('purchase_price'), 2),
+             ],
+             'top_items' => $topItems,
+             'item_type_distribution' => $itemTypeDistribution,
+             'value_by_type' => $valueByType,
+             'monthly_rentals' => $monthlyRentals,
+             'condition_distribution' => $conditionDistribution,
+             'status_distribution' => $statusDistribution,
+             'generated_at' => now()->format('Y-m-d H:i:s'),
+         ]);
+     }
+
+     /**
+      * Display a listing of the resource.
+      */
     public function index(Request $request): JsonResponse
     {
         // Load primary image with inventory items
