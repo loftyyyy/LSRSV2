@@ -205,23 +205,41 @@
     document.addEventListener('turbo:load', initializeReportsPage);
 
     function initializeReportsPage() {
-        if (globalThis.reportsPageInitialized) {
+        // Always reset the flag when returning to this page via Turbo
+        // Check if we're on the reports page
+        if (!window.location.pathname.includes('/customers/reports')) {
             return;
         }
-        globalThis.reportsPageInitialized = true;
+
+        // Clean up any previous listeners
+        if (globalThis.reportsCleanup) {
+            globalThis.reportsCleanup();
+        }
+
+        // Remove old guard flag - we want fresh state each time
+        delete globalThis.reportsPageInitialized;
 
         // Load initial report on page load
         generateReport();
 
         // Add event listeners
-        document.getElementById('startDate')?.addEventListener('change', generateReport);
-        document.getElementById('endDate')?.addEventListener('change', generateReport);
-        document.getElementById('statusFilter')?.addEventListener('change', generateReport);
+        const startDateInput = document.getElementById('startDate');
+        const endDateInput = document.getElementById('endDate');
+        const statusFilterSelect = document.getElementById('statusFilter');
 
-        // Cleanup on page leave
-        document.addEventListener('turbo:before-visit', function() {
-            globalThis.reportsPageInitialized = false;
-        }, { once: true });
+        const handleDateChange = () => generateReport();
+        const handleStatusChange = () => generateReport();
+
+        startDateInput?.addEventListener('change', handleDateChange);
+        endDateInput?.addEventListener('change', handleDateChange);
+        statusFilterSelect?.addEventListener('change', handleStatusChange);
+
+        // Store cleanup function for next page leave
+        globalThis.reportsCleanup = () => {
+            startDateInput?.removeEventListener('change', handleDateChange);
+            endDateInput?.removeEventListener('change', handleDateChange);
+            statusFilterSelect?.removeEventListener('change', handleStatusChange);
+        };
     }
 
     async function generateReport() {
@@ -235,7 +253,7 @@
             if (endDate) params.append('end_date', endDate);
             if (statusId) params.append('status_id', statusId);
 
-            const url = `/api/customers/reports/generate${params.toString() ? '?' + params.toString() : ''}`;
+            const url = `/customers/reports/generate${params.toString() ? '?' + params.toString() : ''}`;
             const response = await axios.get(url);
             const data = response.data;
 
@@ -334,7 +352,7 @@
             if (endDate) params.append('end_date', endDate);
             if (statusId) params.append('status_id', statusId);
 
-            const url = `/api/customers/reports/pdf${params.toString() ? '?' + params.toString() : ''}`;
+            const url = `/customers/reports/pdf${params.toString() ? '?' + params.toString() : ''}`;
             window.open(url, '_blank');
         } catch (error) {
             console.error('Error generating PDF:', error);
