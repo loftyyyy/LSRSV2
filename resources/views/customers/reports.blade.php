@@ -248,6 +248,13 @@
     // Initialize report page - use a guard flag to prevent multiple initializations
     let reportsPageInitialized = false;
     
+    // Use window object to store observer to avoid redeclaration errors with Turbo
+    if (!window.customerReportsState) {
+        window.customerReportsState = {
+            observer: null
+        };
+    }
+    
     document.addEventListener('DOMContentLoaded', initializeReportsPage);
     document.addEventListener('turbo:load', initializeReportsPage);
 
@@ -851,99 +858,101 @@
          }, 5000);
      }
 
-       // Set up dark mode observer immediately
-       const darkModeObserver = new MutationObserver((mutations) => {
-           mutations.forEach((mutation) => {
-               if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-                   // Small delay to ensure CSS transitions have completed
-                   setTimeout(() => {
-                       // Only update if we have charts to update
-                       if (!globalThis.currentStats) {
-                           console.log('[THEME DEBUG] No currentStats, skipping theme update');
-                           return;
-                       }
+        // Set up dark mode observer immediately
+        if (!window.customerReportsState.observer) {
+            window.customerReportsState.observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                        // Small delay to ensure CSS transitions have completed
+                        setTimeout(() => {
+                            // Only update if we have charts to update
+                            if (!globalThis.currentStats) {
+                                console.log('[THEME DEBUG] No currentStats, skipping theme update');
+                                return;
+                            }
 
-                       // Detect current theme
-                       const htmlElement = document.documentElement;
-                       const isDark = htmlElement.classList.contains('dark');
-                       const textColor = isDark ? '#e5e7eb' : '#000000';
-                       const gridColor = isDark ? '#27272a' : '#d1d5db';
-                       
-                       console.log('[THEME DEBUG] Theme changed to:', isDark ? 'DARK' : 'LIGHT');
-                       console.log('[THEME DEBUG] Text Color:', textColor);
-                       console.log('[THEME DEBUG] Grid Color:', gridColor);
-                       
-                       // Helper function to update chart colors
-                       const updateChartColors = (chart, isDark) => {
-                           if (!chart) return;
-                           
-                           const text = isDark ? '#e5e7eb' : '#000000';
-                           const grid = isDark ? '#27272a' : '#d1d5db';
-                           
-                           // Update plugins (legend, tooltip)
-                           if (chart.options.plugins) {
-                               if (chart.options.plugins.legend?.labels) {
-                                   chart.options.plugins.legend.labels.color = text;
-                               }
-                               if (chart.options.plugins.tooltip) {
-                                   chart.options.plugins.tooltip.titleColor = text;
-                                   chart.options.plugins.tooltip.bodyColor = text;
-                               }
-                           }
-                           
-                           // Update scales (axes, grid)
-                           if (chart.options.scales) {
-                               Object.values(chart.options.scales).forEach(scale => {
-                                   if (scale.ticks) {
-                                       scale.ticks.color = text;
-                                   }
-                                   if (scale.grid) {
-                                       scale.grid.color = grid;
-                                   }
-                                   if (scale.pointLabels) {
-                                       scale.pointLabels.color = text;
-                                   }
-                               });
-                           }
-                       };
-                       
-                       // Update all existing charts with new colors
-                       if (globalThis.statusChartInstance) {
-                           console.log('[THEME DEBUG] Updating statusChartInstance');
-                           updateChartColors(globalThis.statusChartInstance, isDark);
-                           globalThis.statusChartInstance.update('none');
-                       }
-                       
-                       if (globalThis.rentalsChartInstance) {
-                           console.log('[THEME DEBUG] Updating rentalsChartInstance');
-                           updateChartColors(globalThis.rentalsChartInstance, isDark);
-                           globalThis.rentalsChartInstance.update('none');
-                       }
-                       
-                       if (globalThis.acquisitionChartInstance) {
-                           console.log('[THEME DEBUG] Updating acquisitionChartInstance');
-                           updateChartColors(globalThis.acquisitionChartInstance, isDark);
-                           globalThis.acquisitionChartInstance.update('none');
-                       }
-                       
-                       if (globalThis.comparisonChartInstance) {
-                           console.log('[THEME DEBUG] Updating comparisonChartInstance');
-                           updateChartColors(globalThis.comparisonChartInstance, isDark);
-                           globalThis.comparisonChartInstance.update('none');
-                       }
-                       
-                       console.log('[THEME DEBUG] All charts updated successfully');
-                   }, 50);
-               }
-           });
-       });
+                            // Detect current theme
+                            const htmlElement = document.documentElement;
+                            const isDark = htmlElement.classList.contains('dark');
+                            const textColor = isDark ? '#e5e7eb' : '#000000';
+                            const gridColor = isDark ? '#27272a' : '#d1d5db';
+                            
+                            console.log('[THEME DEBUG] Theme changed to:', isDark ? 'DARK' : 'LIGHT');
+                            console.log('[THEME DEBUG] Text Color:', textColor);
+                            console.log('[THEME DEBUG] Grid Color:', gridColor);
+                            
+                            // Helper function to update chart colors
+                            const updateChartColors = (chart, isDark) => {
+                                if (!chart) return;
+                                
+                                const text = isDark ? '#e5e7eb' : '#000000';
+                                const grid = isDark ? '#27272a' : '#d1d5db';
+                                
+                                // Update plugins (legend, tooltip)
+                                if (chart.options.plugins) {
+                                    if (chart.options.plugins.legend?.labels) {
+                                        chart.options.plugins.legend.labels.color = text;
+                                    }
+                                    if (chart.options.plugins.tooltip) {
+                                        chart.options.plugins.tooltip.titleColor = text;
+                                        chart.options.plugins.tooltip.bodyColor = text;
+                                    }
+                                }
+                                
+                                // Update scales (axes, grid)
+                                if (chart.options.scales) {
+                                    Object.values(chart.options.scales).forEach(scale => {
+                                        if (scale.ticks) {
+                                            scale.ticks.color = text;
+                                        }
+                                        if (scale.grid) {
+                                            scale.grid.color = grid;
+                                        }
+                                        if (scale.pointLabels) {
+                                            scale.pointLabels.color = text;
+                                        }
+                                    });
+                                }
+                            };
+                            
+                            // Update all existing charts with new colors
+                            if (globalThis.statusChartInstance) {
+                                console.log('[THEME DEBUG] Updating statusChartInstance');
+                                updateChartColors(globalThis.statusChartInstance, isDark);
+                                globalThis.statusChartInstance.update('none');
+                            }
+                            
+                            if (globalThis.rentalsChartInstance) {
+                                console.log('[THEME DEBUG] Updating rentalsChartInstance');
+                                updateChartColors(globalThis.rentalsChartInstance, isDark);
+                                globalThis.rentalsChartInstance.update('none');
+                            }
+                            
+                            if (globalThis.acquisitionChartInstance) {
+                                console.log('[THEME DEBUG] Updating acquisitionChartInstance');
+                                updateChartColors(globalThis.acquisitionChartInstance, isDark);
+                                globalThis.acquisitionChartInstance.update('none');
+                            }
+                            
+                            if (globalThis.comparisonChartInstance) {
+                                console.log('[THEME DEBUG] Updating comparisonChartInstance');
+                                updateChartColors(globalThis.comparisonChartInstance, isDark);
+                                globalThis.comparisonChartInstance.update('none');
+                            }
+                            
+                            console.log('[THEME DEBUG] All charts updated successfully');
+                        }, 50);
+                    }
+                });
+            });
 
-       // Start observing immediately (not waiting for DOMContentLoaded)
-       darkModeObserver.observe(document.documentElement, {
-           attributes: true,
-           attributeFilter: ['class'],
-           subtree: false
-       });
+            // Start observing immediately (not waiting for DOMContentLoaded)
+            window.customerReportsState.observer.observe(document.documentElement, {
+                attributes: true,
+                attributeFilter: ['class'],
+                subtree: false
+            });
+        }
 </script>
 
 </body>

@@ -265,14 +265,23 @@
     </main>
 
     <script>
-        let inventoryCharts = {
-            status: null,
-            condition: null,
-            monthly: null,
-            itemType: null,
-            topItems: null,
-            value: null,
-        };
+        // Use window object to store charts and observer to avoid redeclaration errors with Turbo
+        if (!window.inventoryState) {
+            window.inventoryState = {
+                charts: {
+                    status: null,
+                    condition: null,
+                    monthly: null,
+                    itemType: null,
+                    topItems: null,
+                    value: null,
+                },
+                observer: null
+            };
+        }
+        
+        // Convenience reference
+        const inventoryCharts = window.inventoryState.charts;
 
         function cleanupCharts() {
             Object.values(inventoryCharts).forEach(chart => {
@@ -280,14 +289,20 @@
                     chart.destroy();
                 }
             });
-            inventoryCharts = {
-                status: null,
-                condition: null,
-                monthly: null,
-                itemType: null,
-                topItems: null,
-                value: null,
-            };
+            
+            // Reset all charts to null
+            inventoryCharts.status = null;
+            inventoryCharts.condition = null;
+            inventoryCharts.monthly = null;
+            inventoryCharts.itemType = null;
+            inventoryCharts.topItems = null;
+            inventoryCharts.value = null;
+            
+            // Cleanup the observer
+            if (window.inventoryState.observer) {
+                window.inventoryState.observer.disconnect();
+                window.inventoryState.observer = null;
+            }
         }
 
         function initializeInventoryReports() {
@@ -600,76 +615,78 @@
          });
 
          // Set up dark mode observer for theme switching
-         const darkModeObserver = new MutationObserver((mutations) => {
-             mutations.forEach((mutation) => {
-                 if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-                     setTimeout(() => {
-                         // Only update if we have data to work with
-                         if (!window.inventoryChartsData) {
-                             return;
-                         }
+         if (!window.inventoryState.observer) {
+             window.inventoryState.observer = new MutationObserver((mutations) => {
+                 mutations.forEach((mutation) => {
+                     if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                         setTimeout(() => {
+                             // Only update if we have data to work with
+                             if (!window.inventoryChartsData) {
+                                 return;
+                             }
 
-                         // Detect current theme
-                         const htmlElement = document.documentElement;
-                         const isDark = htmlElement.classList.contains('dark');
-                         const textColor = isDark ? '#e5e7eb' : '#000000';
-                         const gridColor = isDark ? '#27272a' : '#d1d5db';
-                         
-                         // Helper function to update chart colors
-                         const updateChartColors = (chart) => {
-                             if (!chart) return;
+                             // Detect current theme
+                             const htmlElement = document.documentElement;
+                             const isDark = htmlElement.classList.contains('dark');
+                             const textColor = isDark ? '#e5e7eb' : '#000000';
+                             const gridColor = isDark ? '#27272a' : '#d1d5db';
                              
-                             const text = isDark ? '#e5e7eb' : '#000000';
-                             const grid = isDark ? '#27272a' : '#d1d5db';
-                             
-                             // Update plugins (legend, tooltip)
-                             if (chart.options.plugins) {
-                                 if (chart.options.plugins.legend?.labels) {
-                                     chart.options.plugins.legend.labels.color = text;
-                                 }
-                                 if (chart.options.plugins.tooltip) {
-                                     chart.options.plugins.tooltip.titleColor = text;
-                                     chart.options.plugins.tooltip.bodyColor = text;
-                                     chart.options.plugins.tooltip.borderColor = text;
-                                 }
-                             }
-                             
-                             // Update scales (axes, grid)
-                             if (chart.options.scales) {
-                                 Object.values(chart.options.scales).forEach(scale => {
-                                     if (scale.ticks) {
-                                         scale.ticks.color = text;
+                             // Helper function to update chart colors
+                             const updateChartColors = (chart) => {
+                                 if (!chart) return;
+                                 
+                                 const text = isDark ? '#e5e7eb' : '#000000';
+                                 const grid = isDark ? '#27272a' : '#d1d5db';
+                                 
+                                 // Update plugins (legend, tooltip)
+                                 if (chart.options.plugins) {
+                                     if (chart.options.plugins.legend?.labels) {
+                                         chart.options.plugins.legend.labels.color = text;
                                      }
-                                     if (scale.grid) {
-                                         scale.grid.color = grid;
+                                     if (chart.options.plugins.tooltip) {
+                                         chart.options.plugins.tooltip.titleColor = text;
+                                         chart.options.plugins.tooltip.bodyColor = text;
+                                         chart.options.plugins.tooltip.borderColor = text;
                                      }
-                                 });
-                             }
-                         };
-                         
-                         // Update all charts
-                         if (inventoryCharts.status) updateChartColors(inventoryCharts.status);
-                         if (inventoryCharts.condition) updateChartColors(inventoryCharts.condition);
-                         if (inventoryCharts.monthly) updateChartColors(inventoryCharts.monthly);
-                         if (inventoryCharts.itemType) updateChartColors(inventoryCharts.itemType);
-                         if (inventoryCharts.topItems) updateChartColors(inventoryCharts.topItems);
-                         if (inventoryCharts.value) updateChartColors(inventoryCharts.value);
-                         
-                         // Update all charts with animation
-                         Object.values(inventoryCharts).forEach(chart => {
-                             if (chart) chart.update('none');
-                         });
-                     }, 50);
-                 }
+                                 }
+                                 
+                                 // Update scales (axes, grid)
+                                 if (chart.options.scales) {
+                                     Object.values(chart.options.scales).forEach(scale => {
+                                         if (scale.ticks) {
+                                             scale.ticks.color = text;
+                                         }
+                                         if (scale.grid) {
+                                             scale.grid.color = grid;
+                                         }
+                                     });
+                                 }
+                             };
+                             
+                             // Update all charts
+                             if (inventoryCharts.status) updateChartColors(inventoryCharts.status);
+                             if (inventoryCharts.condition) updateChartColors(inventoryCharts.condition);
+                             if (inventoryCharts.monthly) updateChartColors(inventoryCharts.monthly);
+                             if (inventoryCharts.itemType) updateChartColors(inventoryCharts.itemType);
+                             if (inventoryCharts.topItems) updateChartColors(inventoryCharts.topItems);
+                             if (inventoryCharts.value) updateChartColors(inventoryCharts.value);
+                             
+                             // Update all charts with animation
+                             Object.values(inventoryCharts).forEach(chart => {
+                                 if (chart) chart.update('none');
+                             });
+                         }, 50);
+                     }
+                 });
              });
-         });
 
-         // Start observing immediately
-         darkModeObserver.observe(document.documentElement, {
-             attributes: true,
-             attributeFilter: ['class'],
-             subtree: false
-         });
+             // Start observing immediately
+             window.inventoryState.observer.observe(document.documentElement, {
+                 attributes: true,
+                 attributeFilter: ['class'],
+                 subtree: false
+             });
+         }
 
          initializeInventoryReports();
     </script>
