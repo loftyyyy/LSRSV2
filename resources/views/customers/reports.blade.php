@@ -252,49 +252,37 @@
     document.addEventListener('turbo:load', initializeReportsPage);
 
     function initializeReportsPage() {
-        console.log('initializeReportsPage called');
-        console.log('Current pathname:', window.location.pathname);
-        
-        // Check if we're on the reports page
-        if (!window.location.pathname.includes('/customers/reports')) {
-            console.log('Not on reports page, skipping initialization');
-            return;
-        }
+         // Check if we're on the reports page
+         if (!window.location.pathname.includes('/customers/reports')) {
+             return;
+         }
 
-        // Guard against multiple initializations
-        if (reportsPageInitialized) {
-            console.log('Reports page already initialized, skipping');
-            return;
-        }
+         // Guard against multiple initializations
+         if (reportsPageInitialized) {
+             return;
+         }
 
-        console.log('Initializing reports page');
-        reportsPageInitialized = true;
+         reportsPageInitialized = true;
 
-        // Clean up any previous listeners
-        if (globalThis.reportsCleanup) {
-            console.log('Cleaning up previous listeners');
-            globalThis.reportsCleanup();
-        }
+         // Clean up any previous listeners
+         if (globalThis.reportsCleanup) {
+             globalThis.reportsCleanup();
+         }
 
-        // Load initial report on page load
-        console.log('Calling generateReport()');
-        generateReport();
+         // Load initial report on page load
+         generateReport();
 
-        // Add event listeners
-        const startDateInput = document.getElementById('startDate');
-        const endDateInput = document.getElementById('endDate');
-        const statusFilterSelect = document.getElementById('statusFilter');
+         // Add event listeners
+         const startDateInput = document.getElementById('startDate');
+         const endDateInput = document.getElementById('endDate');
+         const statusFilterSelect = document.getElementById('statusFilter');
 
-        console.log('Found input elements:', { startDateInput, endDateInput, statusFilterSelect });
+         const handleDateChange = () => generateReport();
+         const handleStatusChange = () => generateReport();
 
-        const handleDateChange = () => generateReport();
-        const handleStatusChange = () => generateReport();
-
-        startDateInput?.addEventListener('change', handleDateChange);
-        endDateInput?.addEventListener('change', handleDateChange);
-        statusFilterSelect?.addEventListener('change', handleStatusChange);
-
-        console.log('Event listeners attached');
+         startDateInput?.addEventListener('change', handleDateChange);
+         endDateInput?.addEventListener('change', handleDateChange);
+         statusFilterSelect?.addEventListener('change', handleStatusChange);
 
         // Store cleanup function for next page leave
         globalThis.reportsCleanup = () => {
@@ -312,43 +300,38 @@
         }
     });
 
-     async function generateReport() {
-         try {
-             const startDate = document.getElementById('startDate')?.value || '';
-             const endDate = document.getElementById('endDate')?.value || '';
-             const statusId = document.getElementById('statusFilter')?.value || '';
+      async function generateReport() {
+          try {
+              const startDate = document.getElementById('startDate')?.value || '';
+              const endDate = document.getElementById('endDate')?.value || '';
+              const statusId = document.getElementById('statusFilter')?.value || '';
 
-             const params = new URLSearchParams();
-             if (startDate) params.append('start_date', startDate);
-             if (endDate) params.append('end_date', endDate);
-             if (statusId) params.append('status_id', statusId);
+              const params = new URLSearchParams();
+              if (startDate) params.append('start_date', startDate);
+              if (endDate) params.append('end_date', endDate);
+              if (statusId) params.append('status_id', statusId);
 
-             const url = `/api/customers/reports/generate${params.toString() ? '?' + params.toString() : ''}`;
-             console.log('Fetching report from:', url);
-             const response = await axios.get(url);
-             const data = response.data;
+              const url = `/api/customers/reports/generate${params.toString() ? '?' + params.toString() : ''}`;
+              const response = await axios.get(url);
+              const data = response.data;
 
-             console.log('Report data received:', data);
+              // Store customers data globally FIRST (before updateStatistics)
+              // This ensures the Rentals chart can access customer data
+              globalThis.currentCustomersData = data.customers;
+              
+              // Update statistics (which calls updateCharts)
+              updateStatistics(data.statistics);
 
-             // Store customers data globally FIRST (before updateStatistics)
-             // This ensures the Rentals chart can access customer data
-             globalThis.currentCustomersData = data.customers;
-             
-             // Update statistics (which calls updateCharts)
-             updateStatistics(data.statistics);
+              // Render table
+              renderReportTable(data.customers);
 
-             // Render table
-             renderReportTable(data.customers);
-
-             // Update generated time
-             document.getElementById('statGeneratedAt').textContent = new Date(data.generated_at).toLocaleString();
-         } catch (error) {
-             console.error('Error generating report:', error);
-             console.error('Error response:', error.response?.data);
-             console.error('Error status:', error.response?.status);
-             showErrorNotification('Failed to generate report. Please try again.');
-         }
-     }
+              // Update generated time
+              document.getElementById('statGeneratedAt').textContent = new Date(data.generated_at).toLocaleString();
+          } catch (error) {
+              console.error('Error generating report:', error);
+              showErrorNotification('Failed to generate report. Please try again.');
+          }
+      }
 
      function updateStatistics(stats) {
          // Store stats globally so we can access them when updating charts on theme change
@@ -370,46 +353,39 @@
          updateCharts(stats);
      }
 
-     function updateCharts(stats) {
-         // Use provided stats or fall back to globally stored stats (for theme toggle updates)
-         const chartStats = stats || globalThis.currentStats;
-         if (!chartStats) {
-             console.log('No stats available to update charts');
-             return;
-         }
+      function updateCharts(stats) {
+          // Use provided stats or fall back to globally stored stats (for theme toggle updates)
+          const chartStats = stats || globalThis.currentStats;
+          if (!chartStats) {
+              return;
+          }
 
-         // Simply check if the html element has the 'dark' class
-         // This is the most reliable way with Tailwind CSS
-         const htmlElement = document.documentElement;
-         const isDark = htmlElement.classList.contains('dark');
+          // Simply check if the html element has the 'dark' class
+          // This is the most reliable way with Tailwind CSS
+          const htmlElement = document.documentElement;
+          const isDark = htmlElement.classList.contains('dark');
 
-         console.log('HTML element classes:', htmlElement.className);
-         console.log('isDark by checking dark class:', isDark);
-         console.log('Final Chart color mode - isDark:', isDark, 'textColor will be:', isDark ? '#e5e7eb' : '#000000');
+          // Use pure black for light mode for maximum contrast with white backgrounds
+          // Use light gray for dark mode for contrast with dark backgrounds
+          const textColor = isDark ? '#e5e7eb' : '#000000';
+          const gridColor = isDark ? '#27272a' : '#d1d5db';
 
-         // Use pure black for light mode for maximum contrast with white backgrounds
-         // Use light gray for dark mode for contrast with dark backgrounds
-         const textColor = isDark ? '#e5e7eb' : '#000000';
-         const gridColor = isDark ? '#27272a' : '#d1d5db';
+          // Status Distribution Chart
+          updateStatusChart(chartStats, textColor, gridColor);
 
-         console.log('Chart colors applied - textColor:', textColor, 'gridColor:', gridColor);
+          // Rentals Chart (will be updated with customer data)
+          if (globalThis.currentCustomersData) {
+              updateRentalsChart(globalThis.currentCustomersData, textColor, gridColor);
+          }
 
-         // Status Distribution Chart
-         updateStatusChart(chartStats, textColor, gridColor);
+          // Acquisition Chart - only update if not already in progress
+          if (!globalThis.acquisitionChartUpdating) {
+              updateAcquisitionChart(textColor, gridColor);
+          }
 
-         // Rentals Chart (will be updated with customer data)
-         if (globalThis.currentCustomersData) {
-             updateRentalsChart(globalThis.currentCustomersData, textColor, gridColor);
-         }
-
-         // Acquisition Chart - only update if not already in progress
-         if (!globalThis.acquisitionChartUpdating) {
-             updateAcquisitionChart(textColor, gridColor);
-         }
-
-         // Comparison Chart
-         updateComparisonChart(chartStats, textColor, gridColor);
-     }
+          // Comparison Chart
+          updateComparisonChart(chartStats, textColor, gridColor);
+      }
 
     function updateStatusChart(stats, textColor, gridColor) {
         const ctx = document.getElementById('statusChart')?.getContext('2d');
@@ -880,8 +856,6 @@
           const observer = new MutationObserver((mutations) => {
               mutations.forEach((mutation) => {
                   if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-                      console.log('Dark mode class changed, updating charts...');
-                      console.log('HTML classes:', document.documentElement.className);
                       // Small delay to ensure CSS transitions have completed
                       setTimeout(() => {
                           // Force chart update with new colors
@@ -889,8 +863,6 @@
                           const isDark = htmlElement.classList.contains('dark');
                           const textColor = isDark ? '#e5e7eb' : '#000000';
                           const gridColor = isDark ? '#27272a' : '#d1d5db';
-                          
-                          console.log('Theme toggled - isDark:', isDark, 'textColor:', textColor, 'gridColor:', gridColor);
                           
                           // Destroy and recreate all charts with new colors
                           if (globalThis.statusChartInstance) {
