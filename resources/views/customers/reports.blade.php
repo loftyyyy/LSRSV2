@@ -356,8 +356,8 @@
                        document.body.classList.contains('dark') ||
                        window.matchMedia('(prefers-color-scheme: dark)').matches;
 
-        const textColor = isDark ? '#e5e7eb' : '#374151';
-        const gridColor = isDark ? '#27272a' : '#e5e7eb';
+        const textColor = isDark ? '#e5e7eb' : '#1f2937';
+        const gridColor = isDark ? '#27272a' : '#d1d5db';
         const bgColor = isDark ? '#18181b' : '#ffffff';
 
         // Status Distribution Chart
