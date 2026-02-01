@@ -413,11 +413,16 @@
             globalThis.customerState.inactiveCustomersCount = data.inactive_customers || 0;
             globalThis.customerState.customersWithRentalsCount = data.customers_with_rentals || 0;
 
-            // Update KPI displays
-            document.getElementById('totalCustomersCount').textContent = globalThis.customerState.totalCustomersCount;
-            document.getElementById('activeCustomersCount').textContent = globalThis.customerState.activeCustomersCount;
-            document.getElementById('inactiveCustomersCount').textContent = globalThis.customerState.inactiveCustomersCount;
-            document.getElementById('customersWithRentalsCount').textContent = globalThis.customerState.customersWithRentalsCount;
+             // Update KPI displays
+             var totalCountEl = document.getElementById('totalCustomersCount');
+             var activeCountEl = document.getElementById('activeCustomersCount');
+             var inactiveCountEl = document.getElementById('inactiveCustomersCount');
+             var rentalsCountEl = document.getElementById('customersWithRentalsCount');
+
+             if (totalCountEl) totalCountEl.textContent = globalThis.customerState.totalCustomersCount;
+             if (activeCountEl) activeCountEl.textContent = globalThis.customerState.activeCustomersCount;
+             if (inactiveCountEl) inactiveCountEl.textContent = globalThis.customerState.inactiveCustomersCount;
+             if (rentalsCountEl) rentalsCountEl.textContent = globalThis.customerState.customersWithRentalsCount;
 
          } catch (error) {
              // Don't show error if request was cancelled (user navigated away)
@@ -500,23 +505,29 @@
          }
       }
 
-     // Update search indicators
-     function updateSearchIndicators() {
-         var searchIndicatorsDiv = document.getElementById('searchIndicators');
-         var query = globalThis.customerState.searchQuery.trim().toLowerCase();
+      // Update search indicators
+      function updateSearchIndicators() {
+          var searchIndicatorsDiv = document.getElementById('searchIndicators');
+          
+          // Guard against missing element
+          if (!searchIndicatorsDiv) {
+              return;
+          }
 
-         if (!query) {
-             searchIndicatorsDiv.innerHTML = '';
-             return;
-         }
+          var query = globalThis.customerState.searchQuery.trim().toLowerCase();
 
-         var indicators = [];
+          if (!query) {
+              searchIndicatorsDiv.innerHTML = '';
+              return;
+          }
 
-         // Determine what fields match
-         if (!isNaN(query) && query !== '') {
-             // Numeric search - matches customer ID
-             indicators.push('Customer ID');
-         }
+          var indicators = [];
+
+          // Determine what fields match
+          if (!isNaN(query) && query !== '') {
+              // Numeric search - matches customer ID
+              indicators.push('Customer ID');
+          }
 
          // Check if it looks like an email
          if (query.includes('@')) {
@@ -536,25 +547,32 @@
          searchIndicatorsDiv.innerHTML = html;
      }
 
-     // Render table rows
-     function renderTable(customers) {
-        try {
-            var tbody = document.getElementById('customersTableBody');
-            tbody.innerHTML = '';
+      // Render table rows
+      function renderTable(customers) {
+         try {
+             var tbody = document.getElementById('customersTableBody');
+             
+             // Guard against missing tbody element (can happen during Turbo navigation)
+             if (!tbody) {
+                 console.warn('customersTableBody element not found');
+                 return;
+             }
 
-            if (customers.length === 0) {
-                // Show custom message based on search or filter
-                let emptyMessage = 'No customers found';
+             tbody.innerHTML = '';
 
-                if (globalThis.customerState.searchQuery) {
-                    emptyMessage = `No matches found for "${globalThis.customerState.searchQuery}"`;
-                } else if (globalThis.customerState.statusFilter) {
-                    emptyMessage = 'No customers with this status';
-                }
+             if (customers.length === 0) {
+                 // Show custom message based on search or filter
+                 let emptyMessage = 'No customers found';
 
-                showEmptyState(emptyMessage);
-                return;
-            }
+                 if (globalThis.customerState.searchQuery) {
+                     emptyMessage = `No matches found for "${globalThis.customerState.searchQuery}"`;
+                 } else if (globalThis.customerState.statusFilter) {
+                     emptyMessage = 'No customers with this status';
+                 }
+
+                 showEmptyState(emptyMessage);
+                 return;
+             }
 
              customers.forEach(customer => {
                 var statusColor = customer.status?.status_name === 'active'
@@ -612,17 +630,21 @@
                 });
             });
 
-            document.querySelectorAll('.change-status-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    var customerId = btn.getAttribute('data-customer-id');
-                    openChangeStatusModal(customerId);
-                });
-            });
+             document.querySelectorAll('.change-status-btn').forEach(btn => {
+                 btn.addEventListener('click', (e) => {
+                     e.preventDefault();
+                     var customerId = btn.getAttribute('data-customer-id');
+                     openChangeStatusModal(customerId);
+                 });
+             });
 
-            document.getElementById('customersTableBody').style.opacity = '1';
-            // Hide the empty state when we have data
-            hideEmptyState();
+             // Set opacity to 1 for tbody if it exists
+             var tbody = document.getElementById('customersTableBody');
+             if (tbody) {
+                 tbody.style.opacity = '1';
+             }
+             // Hide the empty state when we have data
+             hideEmptyState();
         } catch (error) {
             console.error('Error rendering table:', error);
             showEmptyState('Error rendering customers table');
