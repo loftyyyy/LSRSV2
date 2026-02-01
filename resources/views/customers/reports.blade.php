@@ -312,39 +312,43 @@
         }
     });
 
-    async function generateReport() {
-        try {
-            const startDate = document.getElementById('startDate')?.value || '';
-            const endDate = document.getElementById('endDate')?.value || '';
-            const statusId = document.getElementById('statusFilter')?.value || '';
+     async function generateReport() {
+         try {
+             const startDate = document.getElementById('startDate')?.value || '';
+             const endDate = document.getElementById('endDate')?.value || '';
+             const statusId = document.getElementById('statusFilter')?.value || '';
 
-            const params = new URLSearchParams();
-            if (startDate) params.append('start_date', startDate);
-            if (endDate) params.append('end_date', endDate);
-            if (statusId) params.append('status_id', statusId);
+             const params = new URLSearchParams();
+             if (startDate) params.append('start_date', startDate);
+             if (endDate) params.append('end_date', endDate);
+             if (statusId) params.append('status_id', statusId);
 
-            const url = `/api/customers/reports/generate${params.toString() ? '?' + params.toString() : ''}`;
-            console.log('Fetching report from:', url);
-            const response = await axios.get(url);
-            const data = response.data;
+             const url = `/api/customers/reports/generate${params.toString() ? '?' + params.toString() : ''}`;
+             console.log('Fetching report from:', url);
+             const response = await axios.get(url);
+             const data = response.data;
 
-            console.log('Report data received:', data);
+             console.log('Report data received:', data);
 
-            // Update statistics
-            updateStatistics(data.statistics);
+             // Store customers data globally FIRST (before updateStatistics)
+             // This ensures the Rentals chart can access customer data
+             globalThis.currentCustomersData = data.customers;
+             
+             // Update statistics (which calls updateCharts)
+             updateStatistics(data.statistics);
 
-            // Render table
-            renderReportTable(data.customers);
+             // Render table
+             renderReportTable(data.customers);
 
-            // Update generated time
-            document.getElementById('statGeneratedAt').textContent = new Date(data.generated_at).toLocaleString();
-        } catch (error) {
-            console.error('Error generating report:', error);
-            console.error('Error response:', error.response?.data);
-            console.error('Error status:', error.response?.status);
-            showErrorNotification('Failed to generate report. Please try again.');
-        }
-    }
+             // Update generated time
+             document.getElementById('statGeneratedAt').textContent = new Date(data.generated_at).toLocaleString();
+         } catch (error) {
+             console.error('Error generating report:', error);
+             console.error('Error response:', error.response?.data);
+             console.error('Error status:', error.response?.status);
+             showErrorNotification('Failed to generate report. Please try again.');
+         }
+     }
 
      function updateStatistics(stats) {
          // Store stats globally so we can access them when updating charts on theme change
