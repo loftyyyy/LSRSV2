@@ -86,71 +86,63 @@
             
             <!-- KPI Grid -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                <!-- Customers KPI -->
-                <div class="stat-card bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800 p-6 shadow-sm">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm font-medium text-neutral-500 dark:text-neutral-400">Total Customers</p>
-                            <p class="text-2xl font-semibold text-neutral-900 dark:text-white mt-1" id="kpi-total-customers">0</p>
-                            <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-2" id="kpi-new-customers">+0 this month</p>
-                        </div>
-                        <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
-                            <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.856-1.487M15 10a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                            </svg>
-                        </div>
-                    </div>
-                </div>
+                 <!-- Customers KPI -->
+                 <div class="stat-card bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800 p-6 shadow-sm">
+                     <div class="flex items-center justify-between">
+                         <div>
+                             <p class="text-sm font-medium text-neutral-500 dark:text-neutral-400">Total Customers</p>
+                             <p class="text-2xl font-semibold text-neutral-900 dark:text-white mt-1" id="kpi-total-customers">0</p>
+                             <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-2" id="kpi-new-customers">+0 this month</p>
+                         </div>
+                         <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+                             <x-icon name="users" class="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                         </div>
+                     </div>
+                 </div>
 
-                <!-- Rentals KPI -->
-                <div class="stat-card bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800 p-6 shadow-sm">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm font-medium text-neutral-500 dark:text-neutral-400">Active Rentals</p>
-                            <p class="text-2xl font-semibold text-neutral-900 dark:text-white mt-1" id="kpi-active-rentals">0</p>
-                            <p class="text-xs text-red-600 dark:text-red-400 mt-2" id="kpi-overdue-rentals">0 overdue</p>
-                        </div>
-                        <div class="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center">
-                            <svg class="w-6 h-6 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                        </div>
-                    </div>
-                </div>
+                 <!-- Rentals KPI -->
+                 <div class="stat-card bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800 p-6 shadow-sm">
+                     <div class="flex items-center justify-between">
+                         <div>
+                             <p class="text-sm font-medium text-neutral-500 dark:text-neutral-400">Active Rentals</p>
+                             <p class="text-2xl font-semibold text-neutral-900 dark:text-white mt-1" id="kpi-active-rentals">0</p>
+                             <p class="text-xs text-red-600 dark:text-red-400 mt-2" id="kpi-overdue-rentals">0 overdue</p>
+                         </div>
+                         <div class="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center">
+                             <x-icon name="truck" class="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+                         </div>
+                     </div>
+                 </div>
 
-                <!-- Inventory KPI -->
-                <div class="stat-card bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800 p-6 shadow-sm">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm font-medium text-neutral-500 dark:text-neutral-400">Inventory Items</p>
-                            <p class="text-2xl font-semibold text-neutral-900 dark:text-white mt-1" id="kpi-total-items">0</p>
-                            <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-2">
-                                <span id="kpi-occupancy-rate">0</span>% occupancy
-                            </p>
-                        </div>
-                        <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center">
-                            <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4m0 0L4 7m16 0l-8 4m0 0l8 4m-8-4v10l8-4m-8 4L4 11m16 0l-8-4"></path>
-                            </svg>
-                        </div>
-                    </div>
-                </div>
+                 <!-- Inventory KPI -->
+                 <div class="stat-card bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800 p-6 shadow-sm">
+                     <div class="flex items-center justify-between">
+                         <div>
+                             <p class="text-sm font-medium text-neutral-500 dark:text-neutral-400">Inventory Items</p>
+                             <p class="text-2xl font-semibold text-neutral-900 dark:text-white mt-1" id="kpi-total-items">0</p>
+                             <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-2">
+                                 <span id="kpi-occupancy-rate">0</span>% occupancy
+                             </p>
+                         </div>
+                         <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center">
+                             <x-icon name="package" class="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                         </div>
+                     </div>
+                 </div>
 
-                <!-- Revenue KPI -->
-                <div class="stat-card bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800 p-6 shadow-sm">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm font-medium text-neutral-500 dark:text-neutral-400">Revenue (30d)</p>
-                            <p class="text-2xl font-semibold text-neutral-900 dark:text-white mt-1" id="kpi-revenue">$0.00</p>
-                            <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-2" id="kpi-payment-status">0 pending</p>
-                        </div>
-                        <div class="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center">
-                            <svg class="w-6 h-6 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                        </div>
-                    </div>
-                </div>
+                 <!-- Revenue KPI -->
+                 <div class="stat-card bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800 p-6 shadow-sm">
+                     <div class="flex items-center justify-between">
+                         <div>
+                             <p class="text-sm font-medium text-neutral-500 dark:text-neutral-400">Revenue (30d)</p>
+                             <p class="text-2xl font-semibold text-neutral-900 dark:text-white mt-1" id="kpi-revenue">$0.00</p>
+                             <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-2" id="kpi-payment-status">0 pending</p>
+                         </div>
+                         <div class="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center">
+                             <x-icon name="credit-card" class="w-6 h-6 text-orange-600 dark:text-orange-400" />
+                         </div>
+                     </div>
+                 </div>
             </div>
 
             <!-- Secondary KPIs -->
