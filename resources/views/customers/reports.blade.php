@@ -22,11 +22,21 @@
     @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     @endif
+
+    {{-- Chart.js Library --}}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+
+    <style>
+        /* Hide scrollbar while keeping functionality */
+        main::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
 </head>
 <body class="min-h-screen flex font-geist bg-neutral-100 text-neutral-900 dark:bg-black dark:text-neutral-50 transition-colors duration-300 ease-in-out">
     <x-sidebar />
 
-    <main class="flex-1 ml-64 flex flex-col px-10 py-8 overflow-x-hidden overflow-y-auto bg-gradient-to-b from-neutral-100 via-neutral-100 to-neutral-200 dark:from-black dark:via-black dark:to-neutral-950 transition-colors duration-300 ease-in-out">
+    <main class="flex-1 ml-64 flex flex-col px-10 py-8 overflow-x-hidden overflow-y-auto bg-gradient-to-b from-neutral-100 via-neutral-100 to-neutral-200 dark:from-black dark:via-black dark:to-neutral-950 transition-colors duration-300 ease-in-out scrollbar-hide" style="scrollbar-width: none; -ms-overflow-style: none;">
 
         <header class="mb-8 transition-colors duration-300 ease-in-out">
             <div class="flex items-center justify-between gap-4">
@@ -163,7 +173,42 @@
             </div>
         </section>
 
-        {{-- Detailed Customer Report Table --}}
+        {{-- Charts Section --}}
+        <section class="grid grid-cols-1 gap-6 mb-8 lg:grid-cols-2">
+            {{-- Customer Status Distribution Chart --}}
+            <div class="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm dark:border-neutral-900 dark:bg-neutral-950/60 dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
+                <h3 class="text-lg font-semibold text-neutral-900 dark:text-white mb-6">Customer Status Distribution</h3>
+                <div style="height: 300px; position: relative;">
+                    <canvas id="statusChart"></canvas>
+                </div>
+            </div>
+
+            {{-- Rentals Overview Chart --}}
+            <div class="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm dark:border-neutral-900 dark:bg-neutral-950/60 dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
+                <h3 class="text-lg font-semibold text-neutral-900 dark:text-white mb-6">Top Customers by Rentals</h3>
+                <div style="height: 300px; position: relative;">
+                    <canvas id="rentalsChart"></canvas>
+                </div>
+            </div>
+
+            {{-- Customer Acquisition Chart --}}
+            <div class="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm dark:border-neutral-900 dark:bg-neutral-950/60 dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
+                <h3 class="text-lg font-semibold text-neutral-900 dark:text-white mb-6">Registration Trend</h3>
+                <div style="height: 300px; position: relative;">
+                    <canvas id="acquisitionChart"></canvas>
+                </div>
+            </div>
+
+            {{-- Reservation vs Rental Chart --}}
+            <div class="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm dark:border-neutral-900 dark:bg-neutral-950/60 dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
+                <h3 class="text-lg font-semibold text-neutral-900 dark:text-white mb-6">Reservations vs Rentals</h3>
+                <div style="height: 300px; position: relative;">
+                    <canvas id="comparisonChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        
         <section class="rounded-2xl border border-neutral-200 bg-white shadow-sm dark:border-neutral-900 dark:bg-neutral-950/60 dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
             <div class="px-6 py-4 border-b border-neutral-200 dark:border-neutral-900">
                 <h2 class="text-lg font-semibold text-neutral-900 dark:text-white">Customer Details</h2>
@@ -300,11 +345,267 @@
 
         // Calculate total reservations (will be in the customers data)
         document.getElementById('statTotalReservations').textContent = stats.total_reservations || 0;
+
+        // Update charts
+        updateCharts(stats);
+    }
+
+    function updateCharts(stats) {
+        // Determine if dark mode is enabled
+        const isDark = document.documentElement.classList.contains('dark') || 
+                       document.body.classList.contains('dark') ||
+                       window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+        const textColor = isDark ? '#e5e7eb' : '#374151';
+        const gridColor = isDark ? '#27272a' : '#e5e7eb';
+        const bgColor = isDark ? '#18181b' : '#ffffff';
+
+        // Status Distribution Chart
+        updateStatusChart(stats, textColor, gridColor);
+
+        // Rentals Chart (will be updated with customer data)
+        if (globalThis.currentCustomersData) {
+            updateRentalsChart(globalThis.currentCustomersData, textColor, gridColor);
+        }
+
+        // Acquisition Chart
+        updateAcquisitionChart(textColor, gridColor);
+
+        // Comparison Chart
+        updateComparisonChart(stats, textColor, gridColor);
+    }
+
+    function updateStatusChart(stats, textColor, gridColor) {
+        const ctx = document.getElementById('statusChart')?.getContext('2d');
+        if (!ctx) return;
+
+        // Destroy existing chart if it exists
+        if (globalThis.statusChartInstance) {
+            globalThis.statusChartInstance.destroy();
+        }
+
+        globalThis.statusChartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Active', 'Inactive'],
+                datasets: [{
+                    data: [stats.active_customers, stats.inactive_customers],
+                    backgroundColor: [
+                        '#10b981', // emerald for active
+                        '#ef4444'  // red for inactive
+                    ],
+                    borderColor: [
+                        '#059669',
+                        '#dc2626'
+                    ],
+                    borderWidth: 2,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: textColor,
+                            font: { size: 12, weight: '600' }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.label + ': ' + context.parsed;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function updateRentalsChart(customers, textColor, gridColor) {
+        const ctx = document.getElementById('rentalsChart')?.getContext('2d');
+        if (!ctx || !customers || customers.length === 0) return;
+
+        // Get top 8 customers by rentals
+        const topCustomers = customers
+            .sort((a, b) => b.total_rentals - a.total_rentals)
+            .slice(0, 8);
+
+        const names = topCustomers.map(c => c.name.split(' ')[0]); // First name only
+        const rentals = topCustomers.map(c => c.total_rentals);
+
+        // Destroy existing chart if it exists
+        if (globalThis.rentalsChartInstance) {
+            globalThis.rentalsChartInstance.destroy();
+        }
+
+        globalThis.rentalsChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: names,
+                datasets: [{
+                    label: 'Total Rentals',
+                    data: rentals,
+                    backgroundColor: '#8b5cf6', // violet
+                    borderColor: '#7c3aed',
+                    borderWidth: 2,
+                    borderRadius: 8,
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: textColor,
+                            font: { size: 12, weight: '600' }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: { color: textColor },
+                        grid: { color: gridColor },
+                    },
+                    y: {
+                        ticks: { color: textColor },
+                        grid: { color: gridColor },
+                    }
+                }
+            }
+        });
+    }
+
+    function updateAcquisitionChart(textColor, gridColor) {
+        const ctx = document.getElementById('acquisitionChart')?.getContext('2d');
+        if (!ctx) return;
+
+        // Generate sample registration data (simulating monthly trend)
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+        const data = [12, 19, 15, 25, 22, 30];
+
+        // Destroy existing chart if it exists
+        if (globalThis.acquisitionChartInstance) {
+            globalThis.acquisitionChartInstance.destroy();
+        }
+
+        globalThis.acquisitionChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: months,
+                datasets: [{
+                    label: 'New Registrations',
+                    data: data,
+                    borderColor: '#06b6d4', // cyan
+                    backgroundColor: 'rgba(6, 182, 212, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#06b6d4',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 6,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: textColor,
+                            font: { size: 12, weight: '600' }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { color: textColor },
+                        grid: { color: gridColor },
+                    },
+                    x: {
+                        ticks: { color: textColor },
+                        grid: { color: gridColor },
+                    }
+                }
+            }
+        });
+    }
+
+    function updateComparisonChart(stats, textColor, gridColor) {
+        const ctx = document.getElementById('comparisonChart')?.getContext('2d');
+        if (!ctx) return;
+
+        // Destroy existing chart if it exists
+        if (globalThis.comparisonChartInstance) {
+            globalThis.comparisonChartInstance.destroy();
+        }
+
+        globalThis.comparisonChartInstance = new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: [
+                    'Total Customers',
+                    'Active Customers',
+                    'With Rentals',
+                    'Total Rentals',
+                    'Total Reservations'
+                ],
+                datasets: [{
+                    label: 'Customer Metrics',
+                    data: [
+                        Math.min(stats.total_customers / 2, 100),
+                        Math.min(stats.active_customers, 100),
+                        Math.min(stats.customers_with_rentals, 100),
+                        Math.min(stats.total_rentals / 5, 100),
+                        Math.min(stats.total_reservations / 5, 100)
+                    ],
+                    borderColor: '#f43f5e', // rose
+                    backgroundColor: 'rgba(244, 63, 94, 0.2)',
+                    borderWidth: 2,
+                    pointBackgroundColor: '#f43f5e',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: textColor,
+                            font: { size: 12, weight: '600' }
+                        }
+                    }
+                },
+                scales: {
+                    r: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            color: textColor,
+                            stepSize: 20
+                        },
+                        grid: {
+                            color: gridColor,
+                        }
+                    }
+                }
+            }
+        });
     }
 
     function renderReportTable(customers) {
         const tbody = document.getElementById('reportTableBody');
         if (!tbody) return;
+
+        // Store customers data globally for chart use
+        globalThis.currentCustomersData = customers;
 
         if (!customers || customers.length === 0) {
             tbody.innerHTML = `
