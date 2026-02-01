@@ -364,9 +364,12 @@
     }
 
     function updateCharts(stats) {
-        // Get computed styles to determine actual background color being used
-        const bodyStyle = window.getComputedStyle(document.body);
-        const bgColor = bodyStyle.backgroundColor;
+        // Get computed styles - try main first, then body, then html
+        let element = document.querySelector('main') || document.body || document.documentElement;
+        const elementStyle = window.getComputedStyle(element);
+        const bgColor = elementStyle.backgroundColor;
+        
+        console.log('Element checked:', element.tagName, 'Background color:', bgColor);
         
         // Determine brightness of background
         // If background is light (white or light gray), use dark text
@@ -376,17 +379,20 @@
         
         if (rgb && rgb.length >= 3) {
             // Calculate perceived brightness using standard formula
-            const brightness = (parseInt(rgb[0]) * 299 + parseInt(rgb[1]) * 587 + parseInt(rgb[2]) * 114) / 1000;
+            const r = parseInt(rgb[0]);
+            const g = parseInt(rgb[1]);
+            const b = parseInt(rgb[2]);
+            const brightness = (r * 299 + g * 587 + b * 114) / 1000;
             isDark = brightness < 128; // If background is darker than middle gray, use light text
-            console.log('Background color:', bgColor, 'Brightness:', brightness, 'isDark:', isDark);
+            console.log('RGB:', r, g, b, 'Brightness:', brightness, 'isDark:', isDark);
         } else {
-            // Fallback: check for dark class
-            isDark = document.documentElement.classList.contains('dark') || 
-                     document.body.classList.contains('dark');
-            console.log('Using class detection - isDark:', isDark);
+            // If we can't parse RGB, check for dark class as fallback
+            const hasDarkClass = document.documentElement.classList.contains('dark');
+            isDark = hasDarkClass;
+            console.log('Could not parse RGB, using class detection - isDark:', isDark);
         }
 
-        console.log('Chart color mode - isDark:', isDark, 'textColor will be:', isDark ? '#e5e7eb' : '#000000');
+        console.log('Final Chart color mode - isDark:', isDark, 'textColor will be:', isDark ? '#e5e7eb' : '#000000');
 
         // Use pure black for light mode for maximum contrast with white backgrounds
         // Use light gray for dark mode for contrast with dark backgrounds
