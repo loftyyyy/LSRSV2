@@ -12,6 +12,7 @@ use App\Models\Reservation;
 use Illuminate\Routing\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -30,8 +31,8 @@ class DashboardController extends Controller
     public function getMetrics(): JsonResponse
     {
         // Date range for metrics (last 30 days)
-        $thirtyDaysAgo = now()->subDays(30);
-        $today = now();
+        $thirtyDaysAgo = now()->subDays(30)->startOfDay();
+        $today = now()->endOfDay();
 
         // ============================================
         // KEY PERFORMANCE INDICATORS (KPIs)
@@ -44,33 +45,50 @@ class DashboardController extends Controller
 
         // Rental Metrics
         $totalRentals = Rental::count();
-        $activeRentals = Rental::whereHas('status', fn($q) => $q->where('status_name', 'active'))->count();
-        $overdueRentals = Rental::where('return_date', '<', now())
-            ->whereHas('status', fn($q) => $q->where('status_name', 'active'))
+        $activeRentals = Rental::whereNull('return_date')->count();
+        $overdueRentals = Rental::where('due_date', '<', now()->startOfDay())
+            ->whereNull('return_date')
             ->count();
-        $rentalsThisMonth = Rental::where('created_at', '>=', $thirtyDaysAgo)->count();
 
-        // Inventory Metrics
-        $totalItems = Item::count();
-        $availableItems = Item::whereHas('status', fn($q) => $q->where('status_name', 'available'))->count();
-        $rentedItems = Item::whereHas('status', fn($q) => $q->where('status_name', 'rented'))->count();
-        $damagedItems = Item::whereHas('status', fn($q) => $q->where('status_name', 'damaged'))->count();
+        // Inventory Metrics (using Inventory model)
+        $totalItems = Inventory::count();
+        // Since inventory status names vary, we'll count by existence if needed
+        // For now, we'll return counts directly from inventory items
+        $availableItems = 0;
+        $rentedItems = 0;
+        $damagedItems = 0;
+        
+        // Count items by status if status relationships exist
+        $inventoryByStatus = Inventory::with('status')->get()->groupBy(function ($item) {
+            return $item->status ? strtolower($item->status->status_name) : 'unknown';
+        });
+        
+        $availableItems = $inventoryByStatus->get('available', collect())->count();
+        $rentedItems = $inventoryByStatus->get('rented', collect())->count();
+        $damagedItems = $inventoryByStatus->get('damaged', collect())->count();
+        
+        // If no status data, use all items as available
+        if ($totalItems > 0 && ($availableItems + $rentedItems + $damagedItems) === 0) {
+            $availableItems = $totalItems;
+        }
 
         // Reservation Metrics
         $totalReservations = Reservation::count();
         $pendingReservations = Reservation::whereHas('status', fn($q) => $q->where('status_name', 'pending'))->count();
 
-        // Financial Metrics
+        // Financial Metrics - Use simple aggregations since invoice doesn't have status relationship
         $totalInvoices = Invoice::count();
         $totalInvoiceAmount = Invoice::sum('total_amount') ?? 0;
-        $paidAmount = Payment::whereHas('status', fn($q) => $q->where('status_name', 'completed'))->sum('amount') ?? 0;
-        $pendingPayments = Payment::whereHas('status', fn($q) => $q->where('status_name', 'pending'))->count();
-        $pendingPaymentAmount = Payment::whereHas('status', fn($q) => $q->where('status_name', 'pending'))->sum('amount') ?? 0;
+        $paidAmount = Invoice::sum('amount_paid') ?? 0;
+        // Count invoices with pending balance (balance_due > 0)
+        $pendingPayments = Invoice::where('balance_due', '>', 0)->count();
+        // Get sum of pending amounts
+        $pendingPaymentAmount = Invoice::where('balance_due', '>', 0)->sum('balance_due') ?? 0;
 
-        // Revenue (Last 30 days)
-        $revenueThisMonth = Payment::where('created_at', '>=', $thirtyDaysAgo)
-            ->whereHas('status', fn($q) => $q->where('status_name', 'completed'))
-            ->sum('amount') ?? 0;
+        // Revenue (Last 30 days) - from invoices with total_amount
+        $revenueThisMonth = Invoice::where('invoice_date', '>=', $thirtyDaysAgo)
+            ->where('invoice_date', '<=', $today)
+            ->sum('total_amount') ?? 0;
 
         // Occupancy Rate
         $occupancyRate = $totalItems > 0 ? round(($rentedItems / $totalItems) * 100, 2) : 0;
@@ -79,19 +97,19 @@ class DashboardController extends Controller
         // TOP PERFORMERS
         // ============================================
 
-        // Top 5 Most Rented Items
-        $topItems = Item::with('status')
+        // Top 5 Most Rented Items - using Inventory model which tracks actual rentals
+        $topItems = Inventory::with('status')
             ->withCount('rentals')
             ->orderBy('rentals_count', 'desc')
             ->limit(5)
             ->get()
-            ->map(function ($item) {
+            ->map(function ($inventory) {
                 return [
-                    'item_id' => $item->item_id,
-                    'item_name' => $item->item_name,
-                    'category' => $item->category,
-                    'rental_count' => $item->rentals_count,
-                    'status' => $item->status->status_name ?? 'unknown',
+                    'item_id' => $inventory->item_id,
+                    'item_name' => $inventory->name,
+                    'category' => $inventory->item_type ?? 'Uncategorized',
+                    'rental_count' => $inventory->rentals_count ?? 0,
+                    'status' => $inventory->status->status_name ?? 'Unknown',
                 ];
             });
 
@@ -105,7 +123,7 @@ class DashboardController extends Controller
                 return [
                     'customer_id' => $customer->customer_id,
                     'name' => $customer->first_name . ' ' . $customer->last_name,
-                    'rental_count' => $customer->rentals_count,
+                    'rental_count' => $customer->rentals_count ?? 0,
                     'status' => $customer->status->status_name ?? 'active',
                 ];
             });
@@ -117,14 +135,14 @@ class DashboardController extends Controller
         // Daily Revenue (Last 30 days)
         $dailyRevenue = collect();
         for ($i = 29; $i >= 0; $i--) {
-            $date = now()->subDays($i)->format('Y-m-d');
-            $amount = Payment::where('created_at', '>=', $date)
-                ->where('created_at', '<', $date . ' 23:59:59')
-                ->whereHas('status', fn($q) => $q->where('status_name', 'completed'))
-                ->sum('amount') ?? 0;
+            $date = now()->subDays($i)->startOfDay();
+            $dateString = $date->format('Y-m-d');
+            $amount = Invoice::where('invoice_date', '>=', $date)
+                ->where('invoice_date', '<', $date->copy()->addDay())
+                ->sum('total_amount') ?? 0;
             $dailyRevenue->push([
-                'date' => $date,
-                'amount' => $amount,
+                'date' => $dateString,
+                'amount' => (float) $amount,
             ]);
         }
 
@@ -132,7 +150,7 @@ class DashboardController extends Controller
         $weeklyRentals = collect();
         for ($i = 11; $i >= 0; $i--) {
             $startOfWeek = now()->subWeeks($i)->startOfWeek();
-            $endOfWeek = now()->subWeeks($i)->endOfWeek();
+            $endOfWeek = $startOfWeek->copy()->endOfWeek();
             $count = Rental::whereBetween('created_at', [$startOfWeek, $endOfWeek])->count();
             $weeklyRentals->push([
                 'week' => 'W' . $startOfWeek->weekOfYear . ' (' . $startOfWeek->format('M d') . ')',
@@ -150,21 +168,15 @@ class DashboardController extends Controller
         // Rental Status Distribution
         $rentalStatusDistribution = Rental::with('status')
             ->get()
-            ->groupBy('status.status_name')
-            ->map(fn($rentals, $status) => [
-                'status' => ucfirst($status),
-                'count' => $rentals->count(),
-            ])
-            ->values();
-
-        // Payment Status Distribution
-        $paymentStatusDistribution = Payment::with('status')
-            ->get()
-            ->groupBy('status.status_name')
-            ->map(fn($payments, $status) => [
-                'status' => ucfirst($status),
-                'count' => $payments->count(),
-            ])
+            ->groupBy(function ($rental) {
+                return $rental->status->status_name ?? 'Unknown';
+            })
+            ->map(function ($rentals, $status) {
+                return [
+                    'status' => ucfirst($status),
+                    'count' => $rentals->count(),
+                ];
+            })
             ->values();
 
         return response()->json([
@@ -173,23 +185,17 @@ class DashboardController extends Controller
                 'total_customers' => $totalCustomers,
                 'active_customers' => $activeCustomers,
                 'new_customers_this_month' => $newCustomersThisMonth,
-                'total_rentals' => $totalRentals,
                 'active_rentals' => $activeRentals,
                 'overdue_rentals' => $overdueRentals,
-                'rentals_this_month' => $rentalsThisMonth,
                 'total_items' => $totalItems,
                 'available_items' => $availableItems,
                 'rented_items' => $rentedItems,
                 'damaged_items' => $damagedItems,
-                'occupancy_rate' => $occupancyRate,
-                'total_reservations' => $totalReservations,
+                'occupancy_rate' => (int) $occupancyRate,
                 'pending_reservations' => $pendingReservations,
                 'total_invoices' => $totalInvoices,
-                'total_invoice_amount' => round($totalInvoiceAmount, 2),
-                'paid_amount' => round($paidAmount, 2),
                 'pending_payments' => $pendingPayments,
-                'pending_payment_amount' => round($pendingPaymentAmount, 2),
-                'revenue_this_month' => round($revenueThisMonth, 2),
+                'revenue_this_month' => (float) round($revenueThisMonth, 2),
             ],
             // Top performers
             'top_items' => $topItems,
@@ -199,7 +205,6 @@ class DashboardController extends Controller
             'weekly_rentals' => $weeklyRentals,
             'item_status_distribution' => $itemStatusDistribution,
             'rental_status_distribution' => $rentalStatusDistribution,
-            'payment_status_distribution' => $paymentStatusDistribution,
             'generated_at' => now()->format('Y-m-d H:i:s'),
         ]);
     }
