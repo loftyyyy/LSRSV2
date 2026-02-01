@@ -578,11 +578,83 @@
             }
         });
 
-        document.addEventListener('turbo:before-visit', function() {
-            cleanupCharts();
-        });
+         document.addEventListener('turbo:before-visit', function() {
+             cleanupCharts();
+         });
 
-        initializeRentalReports();
+         // Set up dark mode observer for theme switching
+         const darkModeObserver = new MutationObserver((mutations) => {
+             mutations.forEach((mutation) => {
+                 if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                     setTimeout(() => {
+                         // Only update if we have data to work with
+                         if (!window.rentalChartsData) {
+                             return;
+                         }
+
+                         // Detect current theme
+                         const htmlElement = document.documentElement;
+                         const isDark = htmlElement.classList.contains('dark');
+                         const textColor = isDark ? '#e5e7eb' : '#000000';
+                         const gridColor = isDark ? '#27272a' : '#d1d5db';
+                         
+                         // Helper function to update chart colors
+                         const updateChartColors = (chart) => {
+                             if (!chart) return;
+                             
+                             const text = isDark ? '#e5e7eb' : '#000000';
+                             const grid = isDark ? '#27272a' : '#d1d5db';
+                             
+                             // Update plugins (legend, tooltip)
+                             if (chart.options.plugins) {
+                                 if (chart.options.plugins.legend?.labels) {
+                                     chart.options.plugins.legend.labels.color = text;
+                                 }
+                                 if (chart.options.plugins.tooltip) {
+                                     chart.options.plugins.tooltip.titleColor = text;
+                                     chart.options.plugins.tooltip.bodyColor = text;
+                                     chart.options.plugins.tooltip.borderColor = text;
+                                 }
+                             }
+                             
+                             // Update scales (axes, grid)
+                             if (chart.options.scales) {
+                                 Object.values(chart.options.scales).forEach(scale => {
+                                     if (scale.ticks) {
+                                         scale.ticks.color = text;
+                                     }
+                                     if (scale.grid) {
+                                         scale.grid.color = grid;
+                                     }
+                                 });
+                             }
+                         };
+                         
+                         // Update all charts
+                         if (rentalCharts.monthly) updateChartColors(rentalCharts.monthly);
+                         if (rentalCharts.revenue) updateChartColors(rentalCharts.revenue);
+                         if (rentalCharts.status) updateChartColors(rentalCharts.status);
+                         if (rentalCharts.duration) updateChartColors(rentalCharts.duration);
+                         if (rentalCharts.topCustomers) updateChartColors(rentalCharts.topCustomers);
+                         if (rentalCharts.topItems) updateChartColors(rentalCharts.topItems);
+                         
+                         // Update all charts with animation
+                         Object.values(rentalCharts).forEach(chart => {
+                             if (chart) chart.update('none');
+                         });
+                     }, 50);
+                 }
+             });
+         });
+
+         // Start observing immediately
+         darkModeObserver.observe(document.documentElement, {
+             attributes: true,
+             attributeFilter: ['class'],
+             subtree: false
+         });
+
+         initializeRentalReports();
     </script>
 
 </body>
