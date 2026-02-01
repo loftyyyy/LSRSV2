@@ -245,7 +245,9 @@
     </main>
 
 <script>
-    // Initialize report page
+    // Initialize report page - use a guard flag to prevent multiple initializations
+    let reportsPageInitialized = false;
+    
     document.addEventListener('DOMContentLoaded', initializeReportsPage);
     document.addEventListener('turbo:load', initializeReportsPage);
 
@@ -253,23 +255,26 @@
         console.log('initializeReportsPage called');
         console.log('Current pathname:', window.location.pathname);
         
-        // Always reset the flag when returning to this page via Turbo
         // Check if we're on the reports page
         if (!window.location.pathname.includes('/customers/reports')) {
             console.log('Not on reports page, skipping initialization');
             return;
         }
 
+        // Guard against multiple initializations
+        if (reportsPageInitialized) {
+            console.log('Reports page already initialized, skipping');
+            return;
+        }
+
         console.log('Initializing reports page');
+        reportsPageInitialized = true;
 
         // Clean up any previous listeners
         if (globalThis.reportsCleanup) {
             console.log('Cleaning up previous listeners');
             globalThis.reportsCleanup();
         }
-
-        // Remove old guard flag - we want fresh state each time
-        delete globalThis.reportsPageInitialized;
 
         // Load initial report on page load
         console.log('Calling generateReport()');
@@ -296,8 +301,16 @@
             startDateInput?.removeEventListener('change', handleDateChange);
             endDateInput?.removeEventListener('change', handleDateChange);
             statusFilterSelect?.removeEventListener('change', handleStatusChange);
+            reportsPageInitialized = false; // Reset flag when leaving page
         };
     }
+    
+    // Reset flag when navigating away from the page
+    document.addEventListener('turbo:before-visit', () => {
+        if (!event.detail.url.includes('/customers/reports')) {
+            reportsPageInitialized = false;
+        }
+    });
 
     async function generateReport() {
         try {
@@ -368,8 +381,10 @@
             updateRentalsChart(globalThis.currentCustomersData, textColor, gridColor);
         }
 
-        // Acquisition Chart
-        updateAcquisitionChart(textColor, gridColor);
+        // Acquisition Chart - only update if not already in progress
+        if (!globalThis.acquisitionChartUpdating) {
+            updateAcquisitionChart(textColor, gridColor);
+        }
 
         // Comparison Chart
         updateComparisonChart(stats, textColor, gridColor);
@@ -501,84 +516,92 @@
         });
     }
 
-     function updateAcquisitionChart(textColor, gridColor) {
-         const ctx = document.getElementById('acquisitionChart')?.getContext('2d');
-         if (!ctx) return;
+      function updateAcquisitionChart(textColor, gridColor) {
+          const ctx = document.getElementById('acquisitionChart')?.getContext('2d');
+          if (!ctx) return;
 
-         // Fetch real registration trend data
-         axios.get('/api/customers/reports/registration-trend')
-             .then(response => {
-                 const trendData = response.data;
-                 
-                 // Destroy existing chart if it exists
-                 if (globalThis.acquisitionChartInstance) {
-                     globalThis.acquisitionChartInstance.destroy();
-                 }
+          // Set flag to prevent concurrent updates
+          globalThis.acquisitionChartUpdating = true;
 
-                 globalThis.acquisitionChartInstance = new Chart(ctx, {
-                     type: 'line',
-                     data: {
-                         labels: trendData.months,
-                         datasets: [{
-                             label: 'New Registrations',
-                             data: trendData.data,
-                             borderColor: '#06b6d4', // cyan
-                             backgroundColor: 'rgba(6, 182, 212, 0.1)',
-                             borderWidth: 3,
-                             fill: true,
-                             tension: 0.4,
-                             pointBackgroundColor: '#06b6d4',
-                             pointBorderColor: '#ffffff',
-                             pointBorderWidth: 2,
-                             pointRadius: 6,
-                         }]
-                     },
-                     options: {
-                         responsive: true,
-                         maintainAspectRatio: false,
-                         plugins: {
-                             legend: {
-                                 labels: {
-                                     color: textColor,
-                                     font: { size: 12, weight: '600' },
-                                     padding: 15,
-                                 }
-                             },
-                             tooltip: {
-                                 titleColor: textColor,
-                                 bodyColor: textColor,
-                                 backgroundColor: 'rgba(0,0,0,0.8)',
-                                 padding: 12,
-                                 titleFont: { size: 12, weight: 'bold' },
-                                 bodyFont: { size: 12 },
-                             }
-                         },
-                         scales: {
-                             y: {
-                                 beginAtZero: true,
-                                 ticks: { 
-                                     color: textColor,
-                                     font: { size: 11, weight: '500' }
-                                 },
-                                 grid: { color: gridColor },
-                             },
-                             x: {
-                                 ticks: { 
-                                     color: textColor,
-                                     font: { size: 11, weight: '500' }
-                                 },
-                                 grid: { color: gridColor },
-                             }
-                         }
-                     }
-                 });
-             })
-             .catch(error => {
-                 console.error('Failed to load registration trend data:', error);
-                 // Fallback to sample data if API fails
-                 createFallbackAcquisitionChart(ctx, textColor, gridColor);
-             });
-     }
+          // Fetch real registration trend data
+          axios.get('/api/customers/reports/registration-trend')
+              .then(response => {
+                  const trendData = response.data;
+                  
+                  // Destroy existing chart if it exists
+                  if (globalThis.acquisitionChartInstance) {
+                      globalThis.acquisitionChartInstance.destroy();
+                  }
+
+                  globalThis.acquisitionChartInstance = new Chart(ctx, {
+                      type: 'line',
+                      data: {
+                          labels: trendData.months,
+                          datasets: [{
+                              label: 'New Registrations',
+                              data: trendData.data,
+                              borderColor: '#06b6d4', // cyan
+                              backgroundColor: 'rgba(6, 182, 212, 0.1)',
+                              borderWidth: 3,
+                              fill: true,
+                              tension: 0.4,
+                              pointBackgroundColor: '#06b6d4',
+                              pointBorderColor: '#ffffff',
+                              pointBorderWidth: 2,
+                              pointRadius: 6,
+                          }]
+                      },
+                      options: {
+                          responsive: true,
+                          maintainAspectRatio: false,
+                          plugins: {
+                              legend: {
+                                  labels: {
+                                      color: textColor,
+                                      font: { size: 12, weight: '600' },
+                                      padding: 15,
+                                  }
+                              },
+                              tooltip: {
+                                  titleColor: textColor,
+                                  bodyColor: textColor,
+                                  backgroundColor: 'rgba(0,0,0,0.8)',
+                                  padding: 12,
+                                  titleFont: { size: 12, weight: 'bold' },
+                                  bodyFont: { size: 12 },
+                              }
+                          },
+                          scales: {
+                              y: {
+                                  beginAtZero: true,
+                                  ticks: { 
+                                      color: textColor,
+                                      font: { size: 11, weight: '500' }
+                                  },
+                                  grid: { color: gridColor },
+                              },
+                              x: {
+                                  ticks: { 
+                                      color: textColor,
+                                      font: { size: 11, weight: '500' }
+                                  },
+                                  grid: { color: gridColor },
+                              }
+                          }
+                      }
+                  });
+                  
+                  // Clear flag after successful update
+                  globalThis.acquisitionChartUpdating = false;
+              })
+              .catch(error => {
+                  console.error('Failed to load registration trend data:', error);
+                  // Fallback to sample data if API fails
+                  createFallbackAcquisitionChart(ctx, textColor, gridColor);
+                  // Clear flag after fallback
+                  globalThis.acquisitionChartUpdating = false;
+              });
+      }
 
      function createFallbackAcquisitionChart(ctx, textColor, gridColor) {
          // Fallback with sample data if real data fails to load
