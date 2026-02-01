@@ -364,23 +364,26 @@
     }
 
     function updateCharts(stats) {
-        // Determine if dark mode is enabled
-        // Check if dark class is on html or body, or check parent elements
+        // Get computed styles to determine actual background color being used
+        const bodyStyle = window.getComputedStyle(document.body);
+        const bgColor = bodyStyle.backgroundColor;
+        
+        // Determine brightness of background
+        // If background is light (white or light gray), use dark text
+        // If background is dark, use light text
+        const rgb = bgColor.match(/\d+/g);
         let isDark = false;
-        let element = document.documentElement;
         
-        // Check html and body elements and their parents for dark class
-        while (element && element !== document) {
-            if (element.classList && element.classList.contains('dark')) {
-                isDark = true;
-                break;
-            }
-            element = element.parentElement;
-        }
-        
-        // Also check body specifically
-        if (!isDark && document.body.classList.contains('dark')) {
-            isDark = true;
+        if (rgb && rgb.length >= 3) {
+            // Calculate perceived brightness using standard formula
+            const brightness = (parseInt(rgb[0]) * 299 + parseInt(rgb[1]) * 587 + parseInt(rgb[2]) * 114) / 1000;
+            isDark = brightness < 128; // If background is darker than middle gray, use light text
+            console.log('Background color:', bgColor, 'Brightness:', brightness, 'isDark:', isDark);
+        } else {
+            // Fallback: check for dark class
+            isDark = document.documentElement.classList.contains('dark') || 
+                     document.body.classList.contains('dark');
+            console.log('Using class detection - isDark:', isDark);
         }
 
         console.log('Chart color mode - isDark:', isDark, 'textColor will be:', isDark ? '#e5e7eb' : '#000000');
@@ -389,7 +392,6 @@
         // Use light gray for dark mode for contrast with dark backgrounds
         const textColor = isDark ? '#e5e7eb' : '#000000';
         const gridColor = isDark ? '#27272a' : '#d1d5db';
-        const bgColor = isDark ? '#18181b' : '#ffffff';
 
         console.log('Chart colors applied - textColor:', textColor, 'gridColor:', gridColor);
 
