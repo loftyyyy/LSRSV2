@@ -100,68 +100,68 @@
 
         {{-- Report Statistics --}}
         <section class="grid grid-cols-1 gap-6 mb-8 md:grid-cols-2 lg:grid-cols-4">
-            <div class="rounded-2xl p-6 border border-neutral-200 bg-white dark:border-neutral-900 dark:bg-neutral-950/60 shadow-sm dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
-                <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
-                    Total Customers
-                </div>
-                <div id="statTotalCustomers" class="text-3xl font-semibold text-neutral-900 dark:text-white transition-colors duration-300 ease-in-out">
-                    0
-                </div>
-            </div>
+             <div class="rounded-2xl p-6 border border-neutral-200 bg-white dark:border-neutral-900 dark:bg-neutral-950/60 shadow-sm dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
+                 <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
+                     Total Customers
+                 </div>
+                 <div id="statTotalCustomers" class="text-3xl font-semibold text-green-600 dark:text-green-400 transition-colors duration-300 ease-in-out">
+                     0
+                 </div>
+             </div>
 
-            <div class="rounded-2xl p-6 border border-neutral-200 bg-white dark:border-neutral-900 dark:bg-neutral-950/60 shadow-sm dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
-                <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
-                    Active Customers
-                </div>
-                <div id="statActiveCustomers" class="text-3xl font-semibold text-amber-500 transition-colors duration-300 ease-in-out">
-                    0
-                </div>
-            </div>
+             <div class="rounded-2xl p-6 border border-neutral-200 bg-white dark:border-neutral-900 dark:bg-neutral-950/60 shadow-sm dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
+                 <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
+                     Active Customers
+                 </div>
+                 <div id="statActiveCustomers" class="text-3xl font-semibold text-blue-600 dark:text-blue-400 transition-colors duration-300 ease-in-out">
+                     0
+                 </div>
+             </div>
 
-            <div class="rounded-2xl p-6 border border-neutral-200 bg-white dark:border-neutral-900 dark:bg-neutral-950/60 shadow-sm dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
-                <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
-                    Inactive Customers
-                </div>
-                <div id="statInactiveCustomers" class="text-3xl font-semibold text-green-500 transition-colors duration-300 ease-in-out">
-                    0
-                </div>
-            </div>
+             <div class="rounded-2xl p-6 border border-neutral-200 bg-white dark:border-neutral-900 dark:bg-neutral-950/60 shadow-sm dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
+                 <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
+                     Inactive Customers
+                 </div>
+                 <div id="statInactiveCustomers" class="text-3xl font-semibold text-red-600 dark:text-red-400 transition-colors duration-300 ease-in-out">
+                     0
+                 </div>
+             </div>
 
-            <div class="rounded-2xl p-6 border border-neutral-200 bg-white dark:border-neutral-900 dark:bg-neutral-950/60 shadow-sm dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
-                <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
-                    Customers with Rentals
-                </div>
-                <div id="statCustomersWithRentals" class="text-3xl font-semibold text-violet-600 transition-colors duration-300 ease-in-out">
-                    0
-                </div>
-            </div>
+             <div class="rounded-2xl p-6 border border-neutral-200 bg-white dark:border-neutral-900 dark:bg-neutral-950/60 shadow-sm dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
+                 <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
+                     Customers with Rentals
+                 </div>
+                 <div id="statCustomersWithRentals" class="text-3xl font-semibold text-emerald-600 dark:text-emerald-400 transition-colors duration-300 ease-in-out">
+                     0
+                 </div>
+             </div>
 
-            <div class="rounded-2xl p-6 border border-neutral-200 bg-white dark:border-neutral-900 dark:bg-neutral-950/60 shadow-sm dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
-                <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
-                    Total Rentals
-                </div>
-                <div id="statTotalRentals" class="text-3xl font-semibold text-rose-500 transition-colors duration-300 ease-in-out">
-                    0
-                </div>
-            </div>
+             <div class="rounded-2xl p-6 border border-neutral-200 bg-white dark:border-neutral-900 dark:bg-neutral-950/60 shadow-sm dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
+                 <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
+                     Total Rentals
+                 </div>
+                 <div id="statTotalRentals" class="text-3xl font-semibold text-amber-600 dark:text-amber-400 transition-colors duration-300 ease-in-out">
+                     0
+                 </div>
+             </div>
 
-            <div class="rounded-2xl p-6 border border-neutral-200 bg-white dark:border-neutral-900 dark:bg-neutral-950/60 shadow-sm dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
-                <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
-                    Avg Rentals per Customer
-                </div>
-                <div id="statAvgRentals" class="text-3xl font-semibold text-blue-500 transition-colors duration-300 ease-in-out">
-                    0.0
-                </div>
-            </div>
+             <div class="rounded-2xl p-6 border border-neutral-200 bg-white dark:border-neutral-900 dark:bg-neutral-950/60 shadow-sm dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
+                 <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
+                     Avg Rentals per Customer
+                 </div>
+                 <div id="statAvgRentals" class="text-3xl font-semibold text-purple-600 dark:text-purple-400 transition-colors duration-300 ease-in-out">
+                     0.0
+                 </div>
+             </div>
 
-            <div class="rounded-2xl p-6 border border-neutral-200 bg-white dark:border-neutral-900 dark:bg-neutral-950/60 shadow-sm dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
-                <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
-                    Total Reservations
-                </div>
-                <div id="statTotalReservations" class="text-3xl font-semibold text-cyan-500 transition-colors duration-300 ease-in-out">
-                    0
-                </div>
-            </div>
+             <div class="rounded-2xl p-6 border border-neutral-200 bg-white dark:border-neutral-900 dark:bg-neutral-950/60 shadow-sm dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
+                 <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
+                     Total Reservations
+                 </div>
+                 <div id="statTotalReservations" class="text-3xl font-semibold text-cyan-600 dark:text-cyan-400 transition-colors duration-300 ease-in-out">
+                     0
+                 </div>
+             </div>
 
             <div class="rounded-2xl p-6 border border-neutral-200 bg-white dark:border-neutral-900 dark:bg-neutral-950/60 shadow-sm dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
                 <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
