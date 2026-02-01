@@ -275,13 +275,28 @@
 
         // Initialize dashboard
         function initializeDashboard() {
-            // Fetch dashboard metrics
-            axios.get('/api/dashboard/metrics')
+            console.log('Initializing dashboard...');
+
+            // Fetch dashboard metrics using native fetch API
+            fetch('/api/dashboard/metrics')
                 .then(response => {
-                    const data = response.data;
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Dashboard metrics loaded:', data);
+                    
+                    // Verify data structure
+                    if (!data.kpis) {
+                        console.error('Invalid response: missing kpis', data);
+                        return;
+                    }
+                    
                     updateKPIs(data.kpis);
                     updateCharts(data);
-                    console.log('Dashboard loaded successfully', data);
+                    console.log('Dashboard loaded successfully');
                 })
                 .catch(error => {
                     console.error('Failed to load dashboard metrics:', error);
@@ -311,6 +326,18 @@
 
         // Update charts
         function updateCharts(data) {
+            // Validate data structure
+            if (!data.daily_revenue || !data.weekly_rentals || !data.item_status_distribution || 
+                !data.rental_status_distribution || !data.top_items || !data.top_customers) {
+                console.error('Invalid chart data structure:', data);
+                return;
+            }
+
+            console.log('Updating charts with data:', data);
+
+            // Destroy existing charts before creating new ones
+            cleanupCharts();
+
             const isDark = document.documentElement.classList.contains('dark') || 
                           document.body.classList.contains('dark') ||
                           window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -320,292 +347,358 @@
             const backgroundColor = isDark ? '#404040' : '#f3f4f6';
 
             // Daily Revenue Chart
-            const dailyRevenueCtx = document.getElementById('dailyRevenueChart').getContext('2d');
-            dashboardCharts.dailyRevenue = new Chart(dailyRevenueCtx, {
-                type: 'line',
-                data: {
-                    labels: data.daily_revenue.map(d => {
-                        const date = new Date(d.date);
-                        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                    }),
-                    datasets: [{
-                        label: 'Revenue',
-                        data: data.daily_revenue.map(d => d.amount),
-                        borderColor: '#0ea5e9',
-                        backgroundColor: 'rgba(6, 182, 212, 0.1)',
-                        borderWidth: 2,
-                        fill: true,
-                        tension: 0.4,
-                        pointBackgroundColor: '#0ea5e9',
-                        pointBorderColor: '#0ea5e9',
-                        pointRadius: 3,
-                        pointHoverRadius: 5,
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            labels: {
-                                color: textColor,
-                                font: { size: 12, weight: 500 },
-                                usePointStyle: true,
-                                padding: 15,
-                            }
-                        },
-                        tooltip: {
-                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                            titleColor: '#fff',
-                            bodyColor: '#fff',
-                            borderColor: textColor,
-                            borderWidth: 1,
-                            padding: 10,
-                            displayColors: true,
-                            callbacks: {
-                                label: function(context) {
-                                    return '$' + context.parsed.y.toFixed(2);
+            try {
+                const dailyRevenueCanvas = document.getElementById('dailyRevenueChart');
+                if (!dailyRevenueCanvas) {
+                    console.error('dailyRevenueChart canvas not found');
+                    return;
+                }
+                
+                const dailyRevenueCtx = dailyRevenueCanvas.getContext('2d');
+                dashboardCharts.dailyRevenue = new Chart(dailyRevenueCtx, {
+                    type: 'line',
+                    data: {
+                        labels: data.daily_revenue.map(d => {
+                            const date = new Date(d.date);
+                            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                        }),
+                        datasets: [{
+                            label: 'Revenue',
+                            data: data.daily_revenue.map(d => d.amount),
+                            borderColor: '#0ea5e9',
+                            backgroundColor: 'rgba(6, 182, 212, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4,
+                            pointBackgroundColor: '#0ea5e9',
+                            pointBorderColor: '#0ea5e9',
+                            pointRadius: 3,
+                            pointHoverRadius: 5,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: textColor,
+                                    font: { size: 12, weight: 500 },
+                                    usePointStyle: true,
+                                    padding: 15,
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                titleColor: '#fff',
+                                bodyColor: '#fff',
+                                borderColor: textColor,
+                                borderWidth: 1,
+                                padding: 10,
+                                displayColors: true,
+                                callbacks: {
+                                    label: function(context) {
+                                        return '$' + context.parsed.y.toFixed(2);
+                                    }
                                 }
                             }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            ticks: { color: textColor, font: { size: 11 } },
-                            grid: { color: gridColor, drawBorder: false },
-                            beginAtZero: true,
-                            callback: function(value) {
-                                return '$' + value.toFixed(0);
-                            }
                         },
-                        x: {
-                            ticks: { color: textColor, font: { size: 11 } },
-                            grid: { color: gridColor, drawBorder: false }
+                        scales: {
+                            y: {
+                                ticks: { color: textColor, font: { size: 11 } },
+                                grid: { color: gridColor, drawBorder: false },
+                                beginAtZero: true,
+                                callback: function(value) {
+                                    return '$' + value.toFixed(0);
+                                }
+                            },
+                            x: {
+                                ticks: { color: textColor, font: { size: 11 } },
+                                grid: { color: gridColor, drawBorder: false }
+                            }
                         }
                     }
-                }
-            });
+                });
+                console.log('Daily Revenue Chart created successfully');
+            } catch (error) {
+                console.error('Error creating Daily Revenue Chart:', error);
+            }
 
             // Weekly Rentals Chart
-            const weeklyRentalsCtx = document.getElementById('weeklyRentalsChart').getContext('2d');
-            dashboardCharts.weeklyRentals = new Chart(weeklyRentalsCtx, {
-                type: 'bar',
-                data: {
-                    labels: data.weekly_rentals.map(w => w.week),
-                    datasets: [{
-                        label: 'Rentals',
-                        data: data.weekly_rentals.map(w => w.count),
-                        backgroundColor: '#8b5cf6',
-                        borderColor: '#7c3aed',
-                        borderWidth: 1,
-                        borderRadius: 6,
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            labels: {
-                                color: textColor,
-                                font: { size: 12, weight: 500 },
-                                padding: 15,
+            try {
+                const weeklyRentalsCanvas = document.getElementById('weeklyRentalsChart');
+                if (!weeklyRentalsCanvas) {
+                    console.error('weeklyRentalsChart canvas not found');
+                    return;
+                }
+                
+                const weeklyRentalsCtx = weeklyRentalsCanvas.getContext('2d');
+                dashboardCharts.weeklyRentals = new Chart(weeklyRentalsCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.weekly_rentals.map(w => w.week),
+                        datasets: [{
+                            label: 'Rentals',
+                            data: data.weekly_rentals.map(w => w.count),
+                            backgroundColor: '#8b5cf6',
+                            borderColor: '#7c3aed',
+                            borderWidth: 1,
+                            borderRadius: 6,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: textColor,
+                                    font: { size: 12, weight: 500 },
+                                    padding: 15,
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                titleColor: '#fff',
+                                bodyColor: '#fff',
+                                borderColor: textColor,
+                                borderWidth: 1,
+                                padding: 10,
                             }
                         },
-                        tooltip: {
-                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                            titleColor: '#fff',
-                            bodyColor: '#fff',
-                            borderColor: textColor,
-                            borderWidth: 1,
-                            padding: 10,
-                        }
-                    },
-                    scales: {
-                        y: {
-                            ticks: { color: textColor, font: { size: 11 } },
-                            grid: { color: gridColor, drawBorder: false },
-                            beginAtZero: true,
-                        },
-                        x: {
-                            ticks: { color: textColor, font: { size: 11 } },
-                            grid: { color: gridColor, drawBorder: false }
+                        scales: {
+                            y: {
+                                ticks: { color: textColor, font: { size: 11 } },
+                                grid: { color: gridColor, drawBorder: false },
+                                beginAtZero: true,
+                            },
+                            x: {
+                                ticks: { color: textColor, font: { size: 11 } },
+                                grid: { color: gridColor, drawBorder: false }
+                            }
                         }
                     }
-                }
-            });
+                });
+                console.log('Weekly Rentals Chart created successfully');
+            } catch (error) {
+                console.error('Error creating Weekly Rentals Chart:', error);
+            }
 
             // Item Status Distribution (Doughnut)
-            const itemStatusCtx = document.getElementById('itemStatusChart').getContext('2d');
-            dashboardCharts.itemStatus = new Chart(itemStatusCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: data.item_status_distribution.map(d => d.status),
-                    datasets: [{
-                        data: data.item_status_distribution.map(d => d.count),
-                        backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
-                        borderColor: isDark ? '#1f2937' : '#fff',
-                        borderWidth: 2,
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            labels: {
-                                color: textColor,
-                                font: { size: 12, weight: 500 },
-                                padding: 15,
+            try {
+                const itemStatusCanvas = document.getElementById('itemStatusChart');
+                if (!itemStatusCanvas) {
+                    console.error('itemStatusChart canvas not found');
+                    return;
+                }
+                
+                const itemStatusCtx = itemStatusCanvas.getContext('2d');
+                dashboardCharts.itemStatus = new Chart(itemStatusCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: data.item_status_distribution.map(d => d.status),
+                        datasets: [{
+                            data: data.item_status_distribution.map(d => d.count),
+                            backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
+                            borderColor: isDark ? '#1f2937' : '#fff',
+                            borderWidth: 2,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: textColor,
+                                    font: { size: 12, weight: 500 },
+                                    padding: 15,
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                titleColor: '#fff',
+                                bodyColor: '#fff',
+                                borderColor: textColor,
+                                borderWidth: 1,
+                                padding: 10,
                             }
-                        },
-                        tooltip: {
-                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                            titleColor: '#fff',
-                            bodyColor: '#fff',
-                            borderColor: textColor,
-                            borderWidth: 1,
-                            padding: 10,
                         }
                     }
-                }
-            });
+                });
+                console.log('Item Status Chart created successfully');
+            } catch (error) {
+                console.error('Error creating Item Status Chart:', error);
+            }
 
             // Rental Status Distribution (Pie)
-            const rentalStatusCtx = document.getElementById('rentalStatusChart').getContext('2d');
-            dashboardCharts.rentalStatus = new Chart(rentalStatusCtx, {
-                type: 'pie',
-                data: {
-                    labels: data.rental_status_distribution.map(d => d.status),
-                    datasets: [{
-                        data: data.rental_status_distribution.map(d => d.count),
-                        backgroundColor: ['#06b6d4', '#14b8a6', '#f59e0b', '#ef4444', '#8b5cf6'],
-                        borderColor: isDark ? '#1f2937' : '#fff',
-                        borderWidth: 2,
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            labels: {
-                                color: textColor,
-                                font: { size: 12, weight: 500 },
-                                padding: 15,
+            try {
+                const rentalStatusCanvas = document.getElementById('rentalStatusChart');
+                if (!rentalStatusCanvas) {
+                    console.error('rentalStatusChart canvas not found');
+                    return;
+                }
+                
+                const rentalStatusCtx = rentalStatusCanvas.getContext('2d');
+                dashboardCharts.rentalStatus = new Chart(rentalStatusCtx, {
+                    type: 'pie',
+                    data: {
+                        labels: data.rental_status_distribution.map(d => d.status),
+                        datasets: [{
+                            data: data.rental_status_distribution.map(d => d.count),
+                            backgroundColor: ['#06b6d4', '#14b8a6', '#f59e0b', '#ef4444', '#8b5cf6'],
+                            borderColor: isDark ? '#1f2937' : '#fff',
+                            borderWidth: 2,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: textColor,
+                                    font: { size: 12, weight: 500 },
+                                    padding: 15,
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                titleColor: '#fff',
+                                bodyColor: '#fff',
+                                borderColor: textColor,
+                                borderWidth: 1,
+                                padding: 10,
                             }
-                        },
-                        tooltip: {
-                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                            titleColor: '#fff',
-                            bodyColor: '#fff',
-                            borderColor: textColor,
-                            borderWidth: 1,
-                            padding: 10,
                         }
                     }
-                }
-            });
+                });
+                console.log('Rental Status Chart created successfully');
+            } catch (error) {
+                console.error('Error creating Rental Status Chart:', error);
+            }
 
             // Top Items (Horizontal Bar)
-            const topItemsCtx = document.getElementById('topItemsChart').getContext('2d');
-            dashboardCharts.topItems = new Chart(topItemsCtx, {
-                type: 'bar',
-                data: {
-                    labels: data.top_items.map(item => item.item_name),
-                    datasets: [{
-                        label: 'Rentals',
-                        data: data.top_items.map(item => item.rental_count),
-                        backgroundColor: '#a78bfa',
-                        borderColor: '#9333ea',
-                        borderWidth: 1,
-                        borderRadius: 6,
-                    }]
-                },
-                options: {
-                    indexAxis: 'y',
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            labels: {
-                                color: textColor,
-                                font: { size: 12, weight: 500 },
-                                padding: 15,
+            try {
+                const topItemsCanvas = document.getElementById('topItemsChart');
+                if (!topItemsCanvas) {
+                    console.error('topItemsChart canvas not found');
+                    return;
+                }
+                
+                const topItemsCtx = topItemsCanvas.getContext('2d');
+                dashboardCharts.topItems = new Chart(topItemsCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.top_items.map(item => item.item_name),
+                        datasets: [{
+                            label: 'Rentals',
+                            data: data.top_items.map(item => item.rental_count),
+                            backgroundColor: '#a78bfa',
+                            borderColor: '#9333ea',
+                            borderWidth: 1,
+                            borderRadius: 6,
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: textColor,
+                                    font: { size: 12, weight: 500 },
+                                    padding: 15,
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                titleColor: '#fff',
+                                bodyColor: '#fff',
+                                borderColor: textColor,
+                                borderWidth: 1,
+                                padding: 10,
                             }
                         },
-                        tooltip: {
-                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                            titleColor: '#fff',
-                            bodyColor: '#fff',
-                            borderColor: textColor,
-                            borderWidth: 1,
-                            padding: 10,
-                        }
-                    },
-                    scales: {
-                        x: {
-                            ticks: { color: textColor, font: { size: 11 } },
-                            grid: { color: gridColor, drawBorder: false },
-                            beginAtZero: true,
-                        },
-                        y: {
-                            ticks: { color: textColor, font: { size: 11 } },
-                            grid: { color: gridColor, drawBorder: false }
+                        scales: {
+                            x: {
+                                ticks: { color: textColor, font: { size: 11 } },
+                                grid: { color: gridColor, drawBorder: false },
+                                beginAtZero: true,
+                            },
+                            y: {
+                                ticks: { color: textColor, font: { size: 11 } },
+                                grid: { color: gridColor, drawBorder: false }
+                            }
                         }
                     }
-                }
-            });
+                });
+                console.log('Top Items Chart created successfully');
+            } catch (error) {
+                console.error('Error creating Top Items Chart:', error);
+            }
 
             // Top Customers (Horizontal Bar)
-            const topCustomersCtx = document.getElementById('topCustomersChart').getContext('2d');
-            dashboardCharts.topCustomers = new Chart(topCustomersCtx, {
-                type: 'bar',
-                data: {
-                    labels: data.top_customers.map(customer => customer.name),
-                    datasets: [{
-                        label: 'Rentals',
-                        data: data.top_customers.map(customer => customer.rental_count),
-                        backgroundColor: '#38bdf8',
-                        borderColor: '#0284c7',
-                        borderWidth: 1,
-                        borderRadius: 6,
-                    }]
-                },
-                options: {
-                    indexAxis: 'y',
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            labels: {
-                                color: textColor,
-                                font: { size: 12, weight: 500 },
-                                padding: 15,
+            try {
+                const topCustomersCanvas = document.getElementById('topCustomersChart');
+                if (!topCustomersCanvas) {
+                    console.error('topCustomersChart canvas not found');
+                    return;
+                }
+                
+                const topCustomersCtx = topCustomersCanvas.getContext('2d');
+                dashboardCharts.topCustomers = new Chart(topCustomersCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.top_customers.map(customer => customer.name),
+                        datasets: [{
+                            label: 'Rentals',
+                            data: data.top_customers.map(customer => customer.rental_count),
+                            backgroundColor: '#38bdf8',
+                            borderColor: '#0284c7',
+                            borderWidth: 1,
+                            borderRadius: 6,
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: textColor,
+                                    font: { size: 12, weight: 500 },
+                                    padding: 15,
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                titleColor: '#fff',
+                                bodyColor: '#fff',
+                                borderColor: textColor,
+                                borderWidth: 1,
+                                padding: 10,
                             }
                         },
-                        tooltip: {
-                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                            titleColor: '#fff',
-                            bodyColor: '#fff',
-                            borderColor: textColor,
-                            borderWidth: 1,
-                            padding: 10,
-                        }
-                    },
-                    scales: {
-                        x: {
-                            ticks: { color: textColor, font: { size: 11 } },
-                            grid: { color: gridColor, drawBorder: false },
-                            beginAtZero: true,
-                        },
-                        y: {
-                            ticks: { color: textColor, font: { size: 11 } },
-                            grid: { color: gridColor, drawBorder: false }
+                        scales: {
+                            x: {
+                                ticks: { color: textColor, font: { size: 11 } },
+                                grid: { color: gridColor, drawBorder: false },
+                                beginAtZero: true,
+                            },
+                            y: {
+                                ticks: { color: textColor, font: { size: 11 } },
+                                grid: { color: gridColor, drawBorder: false }
+                            }
                         }
                     }
-                }
-            });
+                });
+                console.log('Top Customers Chart created successfully');
+            } catch (error) {
+                console.error('Error creating Top Customers Chart:', error);
+            }
         }
 
         // Event listeners for Turbo navigation
