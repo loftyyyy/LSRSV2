@@ -875,33 +875,69 @@
          }, 5000);
      }
 
-     // Watch for dark mode changes and update charts when theme toggles
-     function watchDarkModeChanges() {
-         const observer = new MutationObserver((mutations) => {
-             mutations.forEach((mutation) => {
-                 if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-                     console.log('Dark mode class changed, updating charts...');
-                     // Small delay to ensure CSS transitions have completed
-                     setTimeout(() => {
-                         updateCharts();
-                     }, 100);
-                 }
-             });
-         });
+      // Watch for dark mode changes and update charts when theme toggles
+      function watchDarkModeChanges() {
+          const observer = new MutationObserver((mutations) => {
+              mutations.forEach((mutation) => {
+                  if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                      console.log('Dark mode class changed, updating charts...');
+                      console.log('HTML classes:', document.documentElement.className);
+                      // Small delay to ensure CSS transitions have completed
+                      setTimeout(() => {
+                          // Force chart update with new colors
+                          const htmlElement = document.documentElement;
+                          const isDark = htmlElement.classList.contains('dark');
+                          const textColor = isDark ? '#e5e7eb' : '#000000';
+                          const gridColor = isDark ? '#27272a' : '#d1d5db';
+                          
+                          console.log('Theme toggled - isDark:', isDark, 'textColor:', textColor, 'gridColor:', gridColor);
+                          
+                          // Destroy and recreate all charts with new colors
+                          if (globalThis.statusChartInstance) {
+                              globalThis.statusChartInstance.destroy();
+                          }
+                          if (globalThis.rentalsChartInstance) {
+                              globalThis.rentalsChartInstance.destroy();
+                          }
+                          if (globalThis.acquisitionChartInstance) {
+                              globalThis.acquisitionChartInstance.destroy();
+                          }
+                          if (globalThis.comparisonChartInstance) {
+                              globalThis.comparisonChartInstance.destroy();
+                          }
+                          
+                          // Recreate charts with new theme colors
+                          if (globalThis.currentStats) {
+                              updateStatusChart(globalThis.currentStats, textColor, gridColor);
+                              if (globalThis.currentCustomersData) {
+                                  updateRentalsChart(globalThis.currentCustomersData, textColor, gridColor);
+                              }
+                              updateComparisonChart(globalThis.currentStats, textColor, gridColor);
+                          }
+                          
+                          // Update acquisition chart separately since it fetches data
+                          const ctx = document.getElementById('acquisitionChart');
+                          if (ctx) {
+                              updateAcquisitionChart(textColor, gridColor);
+                          }
+                      }, 100);
+                  }
+              });
+          });
 
-         // Watch the html element for class attribute changes
-         observer.observe(document.documentElement, {
-             attributes: true,
-             attributeFilter: ['class']
-         });
+          // Watch the html element for class attribute changes
+          observer.observe(document.documentElement, {
+              attributes: true,
+              attributeFilter: ['class']
+          });
 
-         return observer;
-     }
+          return observer;
+      }
 
-     // Start watching for dark mode changes when page loads
-     window.addEventListener('DOMContentLoaded', () => {
-         watchDarkModeChanges();
-     });
+      // Start watching for dark mode changes when page loads
+      window.addEventListener('DOMContentLoaded', () => {
+          watchDarkModeChanges();
+      });
 </script>
 
 </body>
