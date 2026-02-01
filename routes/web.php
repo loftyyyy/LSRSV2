@@ -48,6 +48,11 @@ Route::middleware(['guest'])->group(function () {
     Route::prefix('api')->group(function () {
 
         // ============================================
+        // DASHBOARD ROUTES
+        // ============================================
+        Route::get('/dashboard/metrics', [DashboardController::class, 'getMetrics']);
+
+        // ============================================
         // AUTH ROUTES
         // ============================================
         Route::post('/verify-password', [AuthController::class, 'verifyPassword'])->middleware('throttle:5,15');
