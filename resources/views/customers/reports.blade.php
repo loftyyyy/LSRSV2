@@ -205,14 +205,21 @@
     document.addEventListener('turbo:load', initializeReportsPage);
 
     function initializeReportsPage() {
+        console.log('initializeReportsPage called');
+        console.log('Current pathname:', window.location.pathname);
+        
         // Always reset the flag when returning to this page via Turbo
         // Check if we're on the reports page
         if (!window.location.pathname.includes('/customers/reports')) {
+            console.log('Not on reports page, skipping initialization');
             return;
         }
 
+        console.log('Initializing reports page');
+
         // Clean up any previous listeners
         if (globalThis.reportsCleanup) {
+            console.log('Cleaning up previous listeners');
             globalThis.reportsCleanup();
         }
 
@@ -220,6 +227,7 @@
         delete globalThis.reportsPageInitialized;
 
         // Load initial report on page load
+        console.log('Calling generateReport()');
         generateReport();
 
         // Add event listeners
@@ -227,12 +235,16 @@
         const endDateInput = document.getElementById('endDate');
         const statusFilterSelect = document.getElementById('statusFilter');
 
+        console.log('Found input elements:', { startDateInput, endDateInput, statusFilterSelect });
+
         const handleDateChange = () => generateReport();
         const handleStatusChange = () => generateReport();
 
         startDateInput?.addEventListener('change', handleDateChange);
         endDateInput?.addEventListener('change', handleDateChange);
         statusFilterSelect?.addEventListener('change', handleStatusChange);
+
+        console.log('Event listeners attached');
 
         // Store cleanup function for next page leave
         globalThis.reportsCleanup = () => {
@@ -253,9 +265,12 @@
             if (endDate) params.append('end_date', endDate);
             if (statusId) params.append('status_id', statusId);
 
-            const url = `/customers/reports/generate${params.toString() ? '?' + params.toString() : ''}`;
+            const url = `/api/customers/reports/generate${params.toString() ? '?' + params.toString() : ''}`;
+            console.log('Fetching report from:', url);
             const response = await axios.get(url);
             const data = response.data;
+
+            console.log('Report data received:', data);
 
             // Update statistics
             updateStatistics(data.statistics);
@@ -267,6 +282,8 @@
             document.getElementById('statGeneratedAt').textContent = new Date(data.generated_at).toLocaleString();
         } catch (error) {
             console.error('Error generating report:', error);
+            console.error('Error response:', error.response?.data);
+            console.error('Error status:', error.response?.status);
             showErrorNotification('Failed to generate report. Please try again.');
         }
     }
@@ -352,7 +369,7 @@
             if (endDate) params.append('end_date', endDate);
             if (statusId) params.append('status_id', statusId);
 
-            const url = `/customers/reports/pdf${params.toString() ? '?' + params.toString() : ''}`;
+            const url = `/api/customers/reports/pdf${params.toString() ? '?' + params.toString() : ''}`;
             window.open(url, '_blank');
         } catch (error) {
             console.error('Error generating PDF:', error);
