@@ -158,11 +158,51 @@ class CustomerController extends Controller
                   $q->where('status_name', 'active');
               })->count(),
               'inactive_customers' => Customer::whereHas('status', function ($q) {
-                  $q->where('status_name', 'inactive');
-              })->count(),
-              'customers_with_rentals' => Customer::whereHas('rentals')->count(),
-          ]);
-      }
+                   $q->where('status_name', 'inactive');
+               })->count(),
+               'customers_with_rentals' => Customer::whereHas('rentals')->count(),
+           ]);
+       }
+
+       /**
+        * Get customer registration trend data (monthly breakdown)
+        */
+       public function getRegistrationTrend(): JsonResponse
+       {
+           // Get the last 6 months of data (or all data if less than 6 months)
+           $sixMonthsAgo = now()->subMonths(6)->startOfMonth();
+           
+           // Group customers by month of registration
+           $registrationData = Customer::where('created_at', '>=', $sixMonthsAgo)
+               ->selectRaw("DATE_TRUNC('month', created_at) as month, COUNT(*) as count")
+               ->groupBy('month')
+               ->orderBy('month', 'asc')
+               ->get();
+
+           // Create array of all months in range for consistent display
+           $months = [];
+           $data = [];
+           $currentDate = $sixMonthsAgo->copy();
+
+           while ($currentDate <= now()) {
+               $monthKey = $currentDate->format('Y-m');
+               $months[] = $currentDate->format('M');
+               
+               // Find data for this month
+               $monthData = $registrationData->first(function ($item) use ($monthKey) {
+                   return substr($item->month, 0, 7) === $monthKey;
+               });
+               
+               $data[] = $monthData ? (int)$monthData->count : 0;
+               $currentDate->addMonth();
+           }
+
+           return response()->json([
+               'months' => $months,
+               'data' => $data,
+               'total_registered' => Customer::count(),
+           ]);
+       }
 
       /**
        * Display a listing of the resource.

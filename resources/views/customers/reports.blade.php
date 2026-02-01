@@ -501,77 +501,152 @@
         });
     }
 
-    function updateAcquisitionChart(textColor, gridColor) {
-        const ctx = document.getElementById('acquisitionChart')?.getContext('2d');
-        if (!ctx) return;
+     function updateAcquisitionChart(textColor, gridColor) {
+         const ctx = document.getElementById('acquisitionChart')?.getContext('2d');
+         if (!ctx) return;
 
-        // Generate sample registration data (simulating monthly trend)
-        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-        const data = [12, 19, 15, 25, 22, 30];
+         // Fetch real registration trend data
+         axios.get('/api/customers/reports/registration-trend')
+             .then(response => {
+                 const trendData = response.data;
+                 
+                 // Destroy existing chart if it exists
+                 if (globalThis.acquisitionChartInstance) {
+                     globalThis.acquisitionChartInstance.destroy();
+                 }
 
-        // Destroy existing chart if it exists
-        if (globalThis.acquisitionChartInstance) {
-            globalThis.acquisitionChartInstance.destroy();
-        }
+                 globalThis.acquisitionChartInstance = new Chart(ctx, {
+                     type: 'line',
+                     data: {
+                         labels: trendData.months,
+                         datasets: [{
+                             label: 'New Registrations',
+                             data: trendData.data,
+                             borderColor: '#06b6d4', // cyan
+                             backgroundColor: 'rgba(6, 182, 212, 0.1)',
+                             borderWidth: 3,
+                             fill: true,
+                             tension: 0.4,
+                             pointBackgroundColor: '#06b6d4',
+                             pointBorderColor: '#ffffff',
+                             pointBorderWidth: 2,
+                             pointRadius: 6,
+                         }]
+                     },
+                     options: {
+                         responsive: true,
+                         maintainAspectRatio: false,
+                         plugins: {
+                             legend: {
+                                 labels: {
+                                     color: textColor,
+                                     font: { size: 12, weight: '600' },
+                                     padding: 15,
+                                 }
+                             },
+                             tooltip: {
+                                 titleColor: textColor,
+                                 bodyColor: textColor,
+                                 backgroundColor: 'rgba(0,0,0,0.8)',
+                                 padding: 12,
+                                 titleFont: { size: 12, weight: 'bold' },
+                                 bodyFont: { size: 12 },
+                             }
+                         },
+                         scales: {
+                             y: {
+                                 beginAtZero: true,
+                                 ticks: { 
+                                     color: textColor,
+                                     font: { size: 11, weight: '500' }
+                                 },
+                                 grid: { color: gridColor },
+                             },
+                             x: {
+                                 ticks: { 
+                                     color: textColor,
+                                     font: { size: 11, weight: '500' }
+                                 },
+                                 grid: { color: gridColor },
+                             }
+                         }
+                     }
+                 });
+             })
+             .catch(error => {
+                 console.error('Failed to load registration trend data:', error);
+                 // Fallback to sample data if API fails
+                 createFallbackAcquisitionChart(ctx, textColor, gridColor);
+             });
+     }
 
-        globalThis.acquisitionChartInstance = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: months,
-                datasets: [{
-                    label: 'New Registrations',
-                    data: data,
-                    borderColor: '#06b6d4', // cyan
-                    backgroundColor: 'rgba(6, 182, 212, 0.1)',
-                    borderWidth: 3,
-                    fill: true,
-                    tension: 0.4,
-                    pointBackgroundColor: '#06b6d4',
-                    pointBorderColor: '#ffffff',
-                    pointBorderWidth: 2,
-                    pointRadius: 6,
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        labels: {
-                            color: textColor,
-                            font: { size: 12, weight: '600' },
-                            padding: 15,
-                        }
-                    },
-                    tooltip: {
-                        titleColor: textColor,
-                        bodyColor: textColor,
-                        backgroundColor: 'rgba(0,0,0,0.8)',
-                        padding: 12,
-                        titleFont: { size: 12, weight: 'bold' },
-                        bodyFont: { size: 12 },
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: { 
-                            color: textColor,
-                            font: { size: 11, weight: '500' }
-                        },
-                        grid: { color: gridColor },
-                    },
-                    x: {
-                        ticks: { 
-                            color: textColor,
-                            font: { size: 11, weight: '500' }
-                        },
-                        grid: { color: gridColor },
-                    }
-                }
-            }
-        });
-    }
+     function createFallbackAcquisitionChart(ctx, textColor, gridColor) {
+         // Fallback with sample data if real data fails to load
+         const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+         const data = [12, 19, 15, 25, 22, 30];
+
+         if (globalThis.acquisitionChartInstance) {
+             globalThis.acquisitionChartInstance.destroy();
+         }
+
+         globalThis.acquisitionChartInstance = new Chart(ctx, {
+             type: 'line',
+             data: {
+                 labels: months,
+                 datasets: [{
+                     label: 'New Registrations',
+                     data: data,
+                     borderColor: '#06b6d4', // cyan
+                     backgroundColor: 'rgba(6, 182, 212, 0.1)',
+                     borderWidth: 3,
+                     fill: true,
+                     tension: 0.4,
+                     pointBackgroundColor: '#06b6d4',
+                     pointBorderColor: '#ffffff',
+                     pointBorderWidth: 2,
+                     pointRadius: 6,
+                 }]
+             },
+             options: {
+                 responsive: true,
+                 maintainAspectRatio: false,
+                 plugins: {
+                     legend: {
+                         labels: {
+                             color: textColor,
+                             font: { size: 12, weight: '600' },
+                             padding: 15,
+                         }
+                     },
+                     tooltip: {
+                         titleColor: textColor,
+                         bodyColor: textColor,
+                         backgroundColor: 'rgba(0,0,0,0.8)',
+                         padding: 12,
+                         titleFont: { size: 12, weight: 'bold' },
+                         bodyFont: { size: 12 },
+                     }
+                 },
+                 scales: {
+                     y: {
+                         beginAtZero: true,
+                         ticks: { 
+                             color: textColor,
+                             font: { size: 11, weight: '500' }
+                         },
+                         grid: { color: gridColor },
+                     },
+                     x: {
+                         ticks: { 
+                             color: textColor,
+                             font: { size: 11, weight: '500' }
+                         },
+                         grid: { color: gridColor },
+                     }
+                 }
+             }
+         });
+     }
 
     function updateComparisonChart(stats, textColor, gridColor) {
         const ctx = document.getElementById('comparisonChart')?.getContext('2d');

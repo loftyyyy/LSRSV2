@@ -61,9 +61,10 @@ Route::middleware(['guest'])->group(function () {
         // CUSTOMER ROUTES
         // ============================================
 
-        // Customer Reports
-         Route::get('/customers/reports/generate', [CustomerController::class, 'report']);
-         Route::get('/customers/reports/pdf', [CustomerController::class, 'generatePDF']);
+         // Customer Reports
+          Route::get('/customers/reports/generate', [CustomerController::class, 'report']);
+          Route::get('/customers/reports/pdf', [CustomerController::class, 'generatePDF']);
+          Route::get('/customers/reports/registration-trend', [CustomerController::class, 'getRegistrationTrend']);
 
          // Customer Stats
         Route::get('/customers/stats', [CustomerController::class, 'stats']);
