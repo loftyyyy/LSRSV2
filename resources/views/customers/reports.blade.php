@@ -369,7 +369,8 @@
                        document.body.classList.contains('dark') ||
                        window.matchMedia('(prefers-color-scheme: dark)').matches;
 
-        const textColor = isDark ? '#e5e7eb' : '#1f2937';
+        // Use darker text color for light mode for better contrast
+        const textColor = isDark ? '#e5e7eb' : '#111827';
         const gridColor = isDark ? '#27272a' : '#d1d5db';
         const bgColor = isDark ? '#18181b' : '#ffffff';
 
