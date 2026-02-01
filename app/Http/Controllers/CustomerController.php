@@ -168,41 +168,39 @@ class CustomerController extends Controller
         * Get customer registration trend data (monthly breakdown)
         */
        public function getRegistrationTrend(): JsonResponse
-       {
-           // Get the last 6 months of data (or all data if less than 6 months)
-           $sixMonthsAgo = now()->subMonths(6)->startOfMonth();
-           
-           // Group customers by month of registration
-           $registrationData = Customer::where('created_at', '>=', $sixMonthsAgo)
-               ->selectRaw("DATE_TRUNC('month', created_at) as month, COUNT(*) as count")
-               ->groupBy('month')
-               ->orderBy('month', 'asc')
-               ->get();
+        {
+            // Get the last 6 months of data (or all data if less than 6 months)
+            $sixMonthsAgo = now()->subMonths(6)->startOfMonth();
+            
+            // Group customers by month of registration (MySQL compatible)
+            $registrationData = Customer::where('created_at', '>=', $sixMonthsAgo)
+                ->selectRaw("DATE_FORMAT(created_at, '%Y-%m') as month, COUNT(*) as count")
+                ->groupBy('month')
+                ->orderBy('month', 'asc')
+                ->get();
 
-           // Create array of all months in range for consistent display
-           $months = [];
-           $data = [];
-           $currentDate = $sixMonthsAgo->copy();
+            // Create array of all months in range for consistent display
+            $months = [];
+            $data = [];
+            $currentDate = $sixMonthsAgo->copy();
 
-           while ($currentDate <= now()) {
-               $monthKey = $currentDate->format('Y-m');
-               $months[] = $currentDate->format('M');
-               
-               // Find data for this month
-               $monthData = $registrationData->first(function ($item) use ($monthKey) {
-                   return substr($item->month, 0, 7) === $monthKey;
-               });
-               
-               $data[] = $monthData ? (int)$monthData->count : 0;
-               $currentDate->addMonth();
-           }
+            while ($currentDate <= now()) {
+                $monthKey = $currentDate->format('Y-m');
+                $months[] = $currentDate->format('M');
+                
+                // Find data for this month
+                $monthData = $registrationData->firstWhere('month', $monthKey);
+                
+                $data[] = $monthData ? (int)$monthData->count : 0;
+                $currentDate->addMonth();
+            }
 
-           return response()->json([
-               'months' => $months,
-               'data' => $data,
-               'total_registered' => Customer::count(),
-           ]);
-       }
+            return response()->json([
+                'months' => $months,
+                'data' => $data,
+                'total_registered' => Customer::count(),
+            ]);
+        }
 
       /**
        * Display a listing of the resource.
