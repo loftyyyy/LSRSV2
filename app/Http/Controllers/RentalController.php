@@ -158,13 +158,164 @@ class RentalController extends Controller
      * Display Rental Page
      */
     public function showRentalPage(): View
-    {
-        return view('rentals.index');
-    }
+     {
+         return view('rentals.index');
+     }
 
-    /**
-     * Display a listing of the resource.
-     */
+     /**
+      * Display Rental Reports Page
+      */
+     public function showReportsPage(): View
+     {
+         return view('rentals.reports');
+     }
+
+     /**
+      * Get comprehensive rental metrics and analytics
+      */
+     public function getMetrics(): JsonResponse
+     {
+         // Basic Rental Stats
+         $totalRentals = Rental::count();
+         $activeRentals = Rental::whereHas('status', fn($q) => $q->where('status_name', 'active'))->count();
+         $completedRentals = Rental::whereHas('status', fn($q) => $q->where('status_name', 'returned'))->count();
+         $cancelledRentals = Rental::whereHas('status', fn($q) => $q->where('status_name', 'cancelled'))->count();
+         
+         // Overdue & Late Returns
+         $overdueRentals = Rental::where('return_date', '<', now())
+             ->whereHas('status', fn($q) => $q->where('status_name', 'active'))
+             ->count();
+         
+         $lateReturnRentals = Rental::where('return_date', '<', 'actual_return_date')
+             ->whereHas('status', fn($q) => $q->where('status_name', 'returned'))
+             ->count();
+
+         // Duration Analysis
+         $avgRentalDuration = Rental::selectRaw('AVG(DATEDIFF(DAY, rental_date, return_date)) as avg_days')
+             ->first()?->avg_days ?? 0;
+
+         // Revenue Analysis
+         $totalRentalRevenue = Rental::whereHas('invoices')
+             ->with('invoices')
+             ->get()
+             ->sum(fn($rental) => $rental->invoices->sum('total_amount')) ?? 0;
+
+         $revenueThisMonth = Rental::where('created_at', '>=', now()->startOfMonth())
+             ->whereHas('invoices')
+             ->with('invoices')
+             ->get()
+             ->sum(fn($rental) => $rental->invoices->sum('total_amount')) ?? 0;
+
+         // Rental Status Distribution
+         $rentalStatusDistribution = Rental::with('status')
+             ->get()
+             ->groupBy('status.status_name')
+             ->map(fn($rentals, $status) => [
+                 'status' => ucfirst($status),
+                 'count' => $rentals->count(),
+             ])
+             ->values();
+
+         // Monthly Rental Trend (Last 12 months)
+         $monthlyRentals = collect();
+         for ($i = 11; $i >= 0; $i--) {
+             $month = now()->subMonths($i);
+             $count = Rental::whereMonth('created_at', $month->month)
+                 ->whereYear('created_at', $month->year)
+                 ->count();
+             
+             $monthlyRentals->push([
+                 'month' => $month->format('M'),
+                 'count' => $count,
+             ]);
+         }
+
+         // Weekly Rental Revenue (Last 8 weeks)
+         $weeklyRevenue = collect();
+         for ($i = 7; $i >= 0; $i--) {
+             $startOfWeek = now()->subWeeks($i)->startOfWeek();
+             $endOfWeek = now()->subWeeks($i)->endOfWeek();
+             
+             $revenue = Rental::whereBetween('created_at', [$startOfWeek, $endOfWeek])
+                 ->whereHas('invoices')
+                 ->with('invoices')
+                 ->get()
+                 ->sum(fn($rental) => $rental->invoices->sum('total_amount')) ?? 0;
+             
+             $weeklyRevenue->push([
+                 'week' => 'W' . $startOfWeek->weekOfYear,
+                 'revenue' => round($revenue, 2),
+             ]);
+         }
+
+         // Top Customers by Rentals
+         $topCustomers = Rental::with('customer')
+             ->get()
+             ->groupBy('customer_id')
+             ->map(fn($rentals, $customerId) => [
+                 'customer_id' => $customerId,
+                 'customer_name' => $rentals->first()->customer->first_name . ' ' . $rentals->first()->customer->last_name,
+                 'rental_count' => $rentals->count(),
+                 'total_spent' => $rentals->sum(fn($rental) => $rental->invoices->sum('total_amount') ?? 0),
+             ])
+             ->sortByDesc('rental_count')
+             ->take(8)
+             ->values();
+
+         // Top Items by Revenue
+         $topItemsByRevenue = Rental::with('item', 'invoices')
+             ->get()
+             ->groupBy('item_id')
+             ->map(fn($rentals, $itemId) => [
+                 'item_id' => $itemId,
+                 'item_name' => $rentals->first()->item->name,
+                 'rental_count' => $rentals->count(),
+                 'total_revenue' => round($rentals->sum(fn($rental) => $rental->invoices->sum('total_amount') ?? 0), 2),
+             ])
+             ->sortByDesc('total_revenue')
+             ->take(8)
+             ->values();
+
+         // Rental Duration Distribution (for histogram approximation)
+         $durationBuckets = [
+             '1-2 days' => Rental::whereBetween(Rental::selectRaw('DATEDIFF(DAY, rental_date, return_date)'), [1, 2])->count(),
+             '3-7 days' => Rental::whereBetween(Rental::selectRaw('DATEDIFF(DAY, rental_date, return_date)'), [3, 7])->count(),
+             '1-2 weeks' => Rental::whereBetween(Rental::selectRaw('DATEDIFF(DAY, rental_date, return_date)'), [8, 14])->count(),
+             '2-4 weeks' => Rental::whereBetween(Rental::selectRaw('DATEDIFF(DAY, rental_date, return_date)'), [15, 28])->count(),
+             '1+ months' => Rental::where(Rental::selectRaw('DATEDIFF(DAY, rental_date, return_date)'), '>=', 29)->count(),
+         ];
+
+         return response()->json([
+             'kpis' => [
+                 'total_rentals' => $totalRentals,
+                 'active_rentals' => $activeRentals,
+                 'completed_rentals' => $completedRentals,
+                 'cancelled_rentals' => $cancelledRentals,
+                 'overdue_rentals' => $overdueRentals,
+                 'late_return_rentals' => $lateReturnRentals,
+                 'avg_rental_duration' => round($avgRentalDuration, 1),
+                 'total_rental_revenue' => round($totalRentalRevenue, 2),
+                 'revenue_this_month' => round($revenueThisMonth, 2),
+             ],
+             'rental_status_distribution' => $rentalStatusDistribution,
+             'monthly_rentals' => $monthlyRentals,
+             'weekly_revenue' => $weeklyRevenue,
+             'top_customers' => $topCustomers,
+             'top_items_by_revenue' => $topItemsByRevenue,
+             'duration_distribution' => [
+                 ['duration' => '1-2 days', 'count' => $durationBuckets['1-2 days']],
+                 ['duration' => '3-7 days', 'count' => $durationBuckets['3-7 days']],
+                 ['duration' => '1-2 weeks', 'count' => $durationBuckets['1-2 weeks']],
+                 ['duration' => '2-4 weeks', 'count' => $durationBuckets['2-4 weeks']],
+                 ['duration' => '1+ months', 'count' => $durationBuckets['1+ months']],
+             ],
+             'generated_at' => now()->format('Y-m-d H:i:s'),
+         ]);
+     }
+
+     /**
+      * Display a listing of the resource.
+      */
     public function index(Request $request): JsonResponse
     {
         $query = Rental::with(['customer', 'item', 'status', 'reservation', 'releasedBy']);

@@ -36,12 +36,13 @@ Route::middleware(['guest'])->group(function () {
       Route::get('/dashboard', [DashboardController::class, 'showDashboardPage'])->name('dashboard');
       Route::get('/customers', [CustomerController::class, 'showCustomerPage'])->name('customers');
       Route::get('/customers/reports', [CustomerController::class, 'showReportsPage'])->name('customers.reports');
-      Route::get('/inventories', [InventoryController::class, 'showInventoryPage'])->name('inventories');
-      Route::get('/inventories/reports', [InventoryController::class, 'showReportsPage'])->name('inventories.reports');
-      Route::get('/reservations', [ReservationController::class, 'showReservationPage'])->name('reservations');
-      Route::get('/rentals', [RentalController::class, 'showRentalPage'])->name('rentals');
-      Route::get('/invoices', [InvoiceController::class, 'showInvoicePage'])->name('invoices');
-      Route::get('/payments', [PaymentController::class, 'showPaymentPage'])->name('payments');
+       Route::get('/inventories', [InventoryController::class, 'showInventoryPage'])->name('inventories');
+       Route::get('/inventories/reports', [InventoryController::class, 'showReportsPage'])->name('inventories.reports');
+       Route::get('/reservations', [ReservationController::class, 'showReservationPage'])->name('reservations');
+       Route::get('/rentals', [RentalController::class, 'showRentalPage'])->name('rentals');
+       Route::get('/rentals/reports', [RentalController::class, 'showReportsPage'])->name('rentals.reports');
+       Route::get('/invoices', [InvoiceController::class, 'showInvoicePage'])->name('invoices');
+       Route::get('/payments', [PaymentController::class, 'showPaymentPage'])->name('payments');
 
      Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
@@ -146,9 +147,10 @@ Route::middleware(['guest'])->group(function () {
         // RENTAL ROUTES
         // ============================================
 
-        // Rental Reports
-        Route::get('/rentals/reports/generate', [RentalController::class, 'report']);
-        Route::get('/rentals/reports/pdf', [RentalController::class, 'generatePDF']);
+         // Rental Reports
+         Route::get('/rentals/reports/generate', [RentalController::class, 'report']);
+         Route::get('/rentals/reports/pdf', [RentalController::class, 'generatePDF']);
+         Route::get('/rentals/reports/metrics', [RentalController::class, 'getMetrics']);
 
         // Rental Batch Operations
         Route::post('/rentals/batch/check-overdue', [RentalController::class, 'batchCheckOverdue']);
