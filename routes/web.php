@@ -32,14 +32,15 @@ Route::middleware(['guest'])->group(function () {
 
 
 
- Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'showDashboardPage'])->name('dashboard');
-    Route::get('/customers', [CustomerController::class, 'showCustomerPage'])->name('customers');
-    Route::get('/inventories', [InventoryController::class, 'showInventoryPage'])->name('inventories');
-    Route::get('/reservations', [ReservationController::class, 'showReservationPage'])->name('reservations');
-    Route::get('/rentals', [RentalController::class, 'showRentalPage'])->name('rentals');
-    Route::get('/invoices', [InvoiceController::class, 'showInvoicePage'])->name('invoices');
-    Route::get('/payments', [PaymentController::class, 'showPaymentPage'])->name('payments');
+  Route::middleware('auth')->group(function () {
+     Route::get('/dashboard', [DashboardController::class, 'showDashboardPage'])->name('dashboard');
+     Route::get('/customers', [CustomerController::class, 'showCustomerPage'])->name('customers');
+     Route::get('/customers/reports', [CustomerController::class, 'showReportsPage'])->name('customers.reports');
+     Route::get('/inventories', [InventoryController::class, 'showInventoryPage'])->name('inventories');
+     Route::get('/reservations', [ReservationController::class, 'showReservationPage'])->name('reservations');
+     Route::get('/rentals', [RentalController::class, 'showRentalPage'])->name('rentals');
+     Route::get('/invoices', [InvoiceController::class, 'showInvoicePage'])->name('invoices');
+     Route::get('/payments', [PaymentController::class, 'showPaymentPage'])->name('payments');
 
      Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 

@@ -40,10 +40,10 @@
                 </div>
 
                 <div class="flex items-center gap-3 text-xs">
-                    <button class="inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-[14px] font-medium border dark:hover:text-black hover:text-white border-neutral-300 bg-white text-neutral-700 dark:hover:bg-violet-600 hover:bg-violet-600  dark:border-neutral-800 dark:bg-neutral-950/80 dark:text-neutral-200 dark:hover:bg-neutral-900  transition-colors duration-300 ease-in-out">
+                    <a href="/customers/reports" class="inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-[14px] font-medium border dark:hover:text-black hover:text-white border-neutral-300 bg-white text-neutral-700 dark:hover:bg-violet-600 hover:bg-violet-600  dark:border-neutral-800 dark:bg-neutral-950/80 dark:text-neutral-200 dark:hover:bg-neutral-900  transition-colors duration-300 ease-in-out">
                         <x-icon name="chart-column" class="h-4 w-4" />
                         <span>Reports</span>
-                    </button>
+                    </a>
 
                     <button onclick="openAddCustomerModal()" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-[14px] font-medium bg-violet-600 text-white dark:hover:text-white hover:text-black dark:text-black hover:bg-violet-500 shadow-violet-600/40 transition-colors duration-300 ease-in-out">
                         <x-icon name="plus" class="h-4 w-4" />
@@ -637,16 +637,25 @@
         var pageStart = document.getElementById('pageStart');
         var pageEnd = document.getElementById('pageEnd');
         var pageTotal = document.getElementById('pageTotal');
+        var paginationControls = document.getElementById('paginationControls');
+
+        // Guard against missing elements (can happen during Turbo navigation)
+        if (!prevBtn || !nextBtn || !pageInfo) {
+            console.warn('Pagination elements not found');
+            return;
+        }
 
         prevBtn.disabled = !data.links[0].url;
         nextBtn.disabled = !data.links[data.links.length - 1].url;
 
         pageInfo.textContent = `Page ${data.current_page} of ${data.last_page}`;
-        pageStart.textContent = (data.from || 0);
-        pageEnd.textContent = (data.to || 0);
-        pageTotal.textContent = data.total;
+        if (pageStart) pageStart.textContent = (data.from || 0);
+        if (pageEnd) pageEnd.textContent = (data.to || 0);
+        if (pageTotal) pageTotal.textContent = data.total;
 
-        document.getElementById('paginationControls').style.display = 'flex';
+        if (paginationControls) {
+            paginationControls.style.display = 'flex';
+        }
     }
 
     // Update stats
@@ -658,20 +667,44 @@
 
     // Show empty state
     function showEmptyState(message) {
-        document.getElementById('customersTableBody').innerHTML = '';
-        document.getElementById('emptyState').textContent = message;
-        document.getElementById('emptyState').style.display = 'block';
-        document.getElementById('paginationControls').style.display = 'none';
+        var tbody = document.getElementById('customersTableBody');
+        var emptyState = document.getElementById('emptyState');
+        var paginationControls = document.getElementById('paginationControls');
+
+        // Guard against missing elements (can happen during Turbo navigation)
+        if (tbody) {
+            tbody.innerHTML = '';
+        }
+        if (emptyState) {
+            emptyState.textContent = message;
+            emptyState.style.display = 'block';
+        }
+        if (paginationControls) {
+            paginationControls.style.display = 'none';
+        }
     }
 
     // Hide empty state
     function hideEmptyState() {
-        document.getElementById('emptyState').style.display = 'none';
+        var emptyState = document.getElementById('emptyState');
+        // Guard against missing elements (can happen during Turbo navigation)
+        if (emptyState) {
+            emptyState.style.display = 'none';
+        }
     }
 
     // Show loading state with skeleton
     function showLoadingState() {
         var tbody = document.getElementById('customersTableBody');
+        var emptyState = document.getElementById('emptyState');
+        var paginationControls = document.getElementById('paginationControls');
+
+        // Guard against missing elements (can happen during Turbo navigation)
+        if (!tbody) {
+            console.warn('customersTableBody element not found');
+            return;
+        }
+
         var skeletonRows = Array.from({length: 5}, () => `
             <tr class="border-b border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-900/50 transition-colors animate-pulse">
                 <td class="px-4 py-3"><div class="h-4 bg-neutral-300 dark:bg-neutral-700 rounded w-1/2"></div></td>
@@ -685,15 +718,23 @@
             </tr>
         `).join('');
         tbody.innerHTML = skeletonRows;
-        document.getElementById('emptyState').style.display = 'none';
-        document.getElementById('paginationControls').style.display = 'none';
+
+        if (emptyState) {
+            emptyState.style.display = 'none';
+        }
+        if (paginationControls) {
+            paginationControls.style.display = 'none';
+        }
     }
 
     // Hide loading state
     function hideLoadingState() {
         hideEmptyState();
         var tbody = document.getElementById('customersTableBody');
-        tbody.style.opacity = '1';
+        // Guard against missing elements (can happen during Turbo navigation)
+        if (tbody) {
+            tbody.style.opacity = '1';
+        }
     }
 
     // Show error notification (user-facing)

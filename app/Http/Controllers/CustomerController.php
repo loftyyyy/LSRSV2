@@ -127,10 +127,18 @@ class CustomerController extends Controller
      */
     public function showCustomerPage(): View
     {
-        return view('customers.index');
-       }
+         return view('customers.index');
+        }
 
-       /**
+        /**
+         * Display customer reports page
+         */
+        public function showReportsPage(): View
+        {
+            return view('customers.reports');
+        }
+
+        /**
         * Get all available customer statuses
         */
        public function statuses(): JsonResponse
