@@ -364,34 +364,13 @@
     }
 
     function updateCharts(stats) {
-        // Get computed styles - try main first, then body, then html
-        let element = document.querySelector('main') || document.body || document.documentElement;
-        const elementStyle = window.getComputedStyle(element);
-        const bgColor = elementStyle.backgroundColor;
-        
-        console.log('Element checked:', element.tagName, 'Background color:', bgColor);
-        
-        // Determine brightness of background
-        // If background is light (white or light gray), use dark text
-        // If background is dark, use light text
-        const rgb = bgColor.match(/\d+/g);
-        let isDark = false;
-        
-        if (rgb && rgb.length >= 3) {
-            // Calculate perceived brightness using standard formula
-            const r = parseInt(rgb[0]);
-            const g = parseInt(rgb[1]);
-            const b = parseInt(rgb[2]);
-            const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-            isDark = brightness < 128; // If background is darker than middle gray, use light text
-            console.log('RGB:', r, g, b, 'Brightness:', brightness, 'isDark:', isDark);
-        } else {
-            // If we can't parse RGB, check for dark class as fallback
-            const hasDarkClass = document.documentElement.classList.contains('dark');
-            isDark = hasDarkClass;
-            console.log('Could not parse RGB, using class detection - isDark:', isDark);
-        }
+        // Simply check if the html element has the 'dark' class
+        // This is the most reliable way with Tailwind CSS
+        const htmlElement = document.documentElement;
+        const isDark = htmlElement.classList.contains('dark');
 
+        console.log('HTML element classes:', htmlElement.className);
+        console.log('isDark by checking dark class:', isDark);
         console.log('Final Chart color mode - isDark:', isDark, 'textColor will be:', isDark ? '#e5e7eb' : '#000000');
 
         // Use pure black for light mode for maximum contrast with white backgrounds
@@ -855,32 +834,60 @@
         }
     }
 
-    function showErrorNotification(message) {
-        const notification = document.createElement('div');
-        notification.className = 'fixed top-4 right-4 max-w-sm bg-red-100 border border-red-300 dark:bg-red-900 dark:border-red-700 rounded-lg px-5 py-4 shadow-xl z-[999] flex items-start gap-3 animate-in slide-in-from-top-2';
-        notification.innerHTML = `
-            <svg class="h-5 w-5 text-red-700 dark:text-red-200 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-            </svg>
-            <div class="flex-1">
-                <p class="text-sm font-semibold text-red-900 dark:text-red-50">${message}</p>
-            </div>
-            <button onclick="this.parentElement.remove()" class="text-red-700 dark:text-red-200 hover:text-red-900 dark:hover:text-red-50 flex-shrink-0 transition-colors">
-                <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
-                </svg>
-            </button>
-        `;
-        document.body.appendChild(notification);
+     function showErrorNotification(message) {
+         const notification = document.createElement('div');
+         notification.className = 'fixed top-4 right-4 max-w-sm bg-red-100 border border-red-300 dark:bg-red-900 dark:border-red-700 rounded-lg px-5 py-4 shadow-xl z-[999] flex items-start gap-3 animate-in slide-in-from-top-2';
+         notification.innerHTML = `
+             <svg class="h-5 w-5 text-red-700 dark:text-red-200 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+             </svg>
+             <div class="flex-1">
+                 <p class="text-sm font-semibold text-red-900 dark:text-red-50">${message}</p>
+             </div>
+             <button onclick="this.parentElement.remove()" class="text-red-700 dark:text-red-200 hover:text-red-900 dark:hover:text-red-50 flex-shrink-0 transition-colors">
+                 <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                     <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                 </svg>
+             </button>
+         `;
+         document.body.appendChild(notification);
 
-        setTimeout(() => {
-            notification.style.opacity = '0';
-            notification.style.transition = 'opacity 0.3s ease-out';
-            setTimeout(() => {
-                notification.remove();
-            }, 300);
-        }, 5000);
-    }
+         setTimeout(() => {
+             notification.style.opacity = '0';
+             notification.style.transition = 'opacity 0.3s ease-out';
+             setTimeout(() => {
+                 notification.remove();
+             }, 300);
+         }, 5000);
+     }
+
+     // Watch for dark mode changes and update charts when theme toggles
+     function watchDarkModeChanges() {
+         const observer = new MutationObserver((mutations) => {
+             mutations.forEach((mutation) => {
+                 if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                     console.log('Dark mode class changed, updating charts...');
+                     // Small delay to ensure CSS transitions have completed
+                     setTimeout(() => {
+                         updateCharts();
+                     }, 100);
+                 }
+             });
+         });
+
+         // Watch the html element for class attribute changes
+         observer.observe(document.documentElement, {
+             attributes: true,
+             attributeFilter: ['class']
+         });
+
+         return observer;
+     }
+
+     // Start watching for dark mode changes when page loads
+     window.addEventListener('DOMContentLoaded', () => {
+         watchDarkModeChanges();
+     });
 </script>
 
 </body>
