@@ -408,10 +408,17 @@
                     legend: {
                         labels: {
                             color: textColor,
-                            font: { size: 12, weight: '600' }
+                            font: { size: 12, weight: '600' },
+                            padding: 15,
                         }
                     },
                     tooltip: {
+                        titleColor: textColor,
+                        bodyColor: textColor,
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        padding: 12,
+                        titleFont: { size: 12, weight: 'bold' },
+                        bodyFont: { size: 12 },
                         callbacks: {
                             label: function(context) {
                                 return context.label + ': ' + context.parsed;
@@ -461,17 +468,32 @@
                     legend: {
                         labels: {
                             color: textColor,
-                            font: { size: 12, weight: '600' }
+                            font: { size: 12, weight: '600' },
+                            padding: 15,
                         }
+                    },
+                    tooltip: {
+                        titleColor: textColor,
+                        bodyColor: textColor,
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        padding: 12,
+                        titleFont: { size: 12, weight: 'bold' },
+                        bodyFont: { size: 12 },
                     }
                 },
                 scales: {
                     x: {
-                        ticks: { color: textColor },
+                        ticks: { 
+                            color: textColor,
+                            font: { size: 11, weight: '500' }
+                        },
                         grid: { color: gridColor },
                     },
                     y: {
-                        ticks: { color: textColor },
+                        ticks: { 
+                            color: textColor,
+                            font: { size: 11, weight: '500' }
+                        },
                         grid: { color: gridColor },
                     }
                 }
@@ -517,18 +539,33 @@
                     legend: {
                         labels: {
                             color: textColor,
-                            font: { size: 12, weight: '600' }
+                            font: { size: 12, weight: '600' },
+                            padding: 15,
                         }
+                    },
+                    tooltip: {
+                        titleColor: textColor,
+                        bodyColor: textColor,
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        padding: 12,
+                        titleFont: { size: 12, weight: 'bold' },
+                        bodyFont: { size: 12 },
                     }
                 },
                 scales: {
                     y: {
                         beginAtZero: true,
-                        ticks: { color: textColor },
+                        ticks: { 
+                            color: textColor,
+                            font: { size: 11, weight: '500' }
+                        },
                         grid: { color: gridColor },
                     },
                     x: {
-                        ticks: { color: textColor },
+                        ticks: { 
+                            color: textColor,
+                            font: { size: 11, weight: '500' }
+                        },
                         grid: { color: gridColor },
                     }
                 }
@@ -579,8 +616,17 @@
                     legend: {
                         labels: {
                             color: textColor,
-                            font: { size: 12, weight: '600' }
+                            font: { size: 12, weight: '600' },
+                            padding: 15,
                         }
+                    },
+                    tooltip: {
+                        titleColor: textColor,
+                        bodyColor: textColor,
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        padding: 12,
+                        titleFont: { size: 12, weight: 'bold' },
+                        bodyFont: { size: 12 },
                     }
                 },
                 scales: {
@@ -589,10 +635,15 @@
                         max: 100,
                         ticks: {
                             color: textColor,
-                            stepSize: 20
+                            stepSize: 20,
+                            font: { size: 11, weight: '500' }
                         },
                         grid: {
                             color: gridColor,
+                        },
+                        pointLabels: {
+                            color: textColor,
+                            font: { size: 11, weight: '500' }
                         }
                     }
                 }
