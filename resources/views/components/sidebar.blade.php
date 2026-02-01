@@ -1,4 +1,4 @@
-<aside class="flex flex-col h-screen w-64 bg-white dark:bg-[#0b0b0b] border-r border-neutral-200 dark:border-neutral-800 text-neutral-900 dark:text-neutral-100 transition-colors duration-200">
+<aside class="fixed left-0 top-0 flex flex-col h-screen w-64 bg-white dark:bg-[#0b0b0b] border-r border-neutral-200 dark:border-neutral-800 text-neutral-900 dark:text-neutral-100 transition-colors duration-200 z-40">
     {{-- Brand --}}
     <div class="flex items-center gap-3 px-6 h-20 border-b border-neutral-200 dark:border-neutral-800">
         <div class="flex items-center justify-center h-10 w-10 rounded-2xl bg-violet-600 text-sm font-semibold tracking-tight text-white">
