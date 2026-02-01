@@ -346,56 +346,66 @@
         }
     }
 
-    function updateStatistics(stats) {
-        document.getElementById('statTotalCustomers').textContent = stats.total_customers || 0;
-        document.getElementById('statActiveCustomers').textContent = stats.active_customers || 0;
-        document.getElementById('statInactiveCustomers').textContent = stats.inactive_customers || 0;
-        document.getElementById('statCustomersWithRentals').textContent = stats.customers_with_rentals || 0;
-        document.getElementById('statTotalRentals').textContent = stats.total_rentals || 0;
+     function updateStatistics(stats) {
+         // Store stats globally so we can access them when updating charts on theme change
+         globalThis.currentStats = stats;
+         
+         document.getElementById('statTotalCustomers').textContent = stats.total_customers || 0;
+         document.getElementById('statActiveCustomers').textContent = stats.active_customers || 0;
+         document.getElementById('statInactiveCustomers').textContent = stats.inactive_customers || 0;
+         document.getElementById('statCustomersWithRentals').textContent = stats.customers_with_rentals || 0;
+         document.getElementById('statTotalRentals').textContent = stats.total_rentals || 0;
 
-        const avgRentals = stats.total_customers > 0 ? (stats.total_rentals / stats.total_customers).toFixed(1) : 0;
-        document.getElementById('statAvgRentals').textContent = avgRentals;
+         const avgRentals = stats.total_customers > 0 ? (stats.total_rentals / stats.total_customers).toFixed(1) : 0;
+         document.getElementById('statAvgRentals').textContent = avgRentals;
 
-        // Calculate total reservations (will be in the customers data)
-        document.getElementById('statTotalReservations').textContent = stats.total_reservations || 0;
+         // Calculate total reservations (will be in the customers data)
+         document.getElementById('statTotalReservations').textContent = stats.total_reservations || 0;
 
-        // Update charts
-        updateCharts(stats);
-    }
+         // Update charts
+         updateCharts(stats);
+     }
 
-    function updateCharts(stats) {
-        // Simply check if the html element has the 'dark' class
-        // This is the most reliable way with Tailwind CSS
-        const htmlElement = document.documentElement;
-        const isDark = htmlElement.classList.contains('dark');
+     function updateCharts(stats) {
+         // Use provided stats or fall back to globally stored stats (for theme toggle updates)
+         const chartStats = stats || globalThis.currentStats;
+         if (!chartStats) {
+             console.log('No stats available to update charts');
+             return;
+         }
 
-        console.log('HTML element classes:', htmlElement.className);
-        console.log('isDark by checking dark class:', isDark);
-        console.log('Final Chart color mode - isDark:', isDark, 'textColor will be:', isDark ? '#e5e7eb' : '#000000');
+         // Simply check if the html element has the 'dark' class
+         // This is the most reliable way with Tailwind CSS
+         const htmlElement = document.documentElement;
+         const isDark = htmlElement.classList.contains('dark');
 
-        // Use pure black for light mode for maximum contrast with white backgrounds
-        // Use light gray for dark mode for contrast with dark backgrounds
-        const textColor = isDark ? '#e5e7eb' : '#000000';
-        const gridColor = isDark ? '#27272a' : '#d1d5db';
+         console.log('HTML element classes:', htmlElement.className);
+         console.log('isDark by checking dark class:', isDark);
+         console.log('Final Chart color mode - isDark:', isDark, 'textColor will be:', isDark ? '#e5e7eb' : '#000000');
 
-        console.log('Chart colors applied - textColor:', textColor, 'gridColor:', gridColor);
+         // Use pure black for light mode for maximum contrast with white backgrounds
+         // Use light gray for dark mode for contrast with dark backgrounds
+         const textColor = isDark ? '#e5e7eb' : '#000000';
+         const gridColor = isDark ? '#27272a' : '#d1d5db';
 
-        // Status Distribution Chart
-        updateStatusChart(stats, textColor, gridColor);
+         console.log('Chart colors applied - textColor:', textColor, 'gridColor:', gridColor);
 
-        // Rentals Chart (will be updated with customer data)
-        if (globalThis.currentCustomersData) {
-            updateRentalsChart(globalThis.currentCustomersData, textColor, gridColor);
-        }
+         // Status Distribution Chart
+         updateStatusChart(chartStats, textColor, gridColor);
 
-        // Acquisition Chart - only update if not already in progress
-        if (!globalThis.acquisitionChartUpdating) {
-            updateAcquisitionChart(textColor, gridColor);
-        }
+         // Rentals Chart (will be updated with customer data)
+         if (globalThis.currentCustomersData) {
+             updateRentalsChart(globalThis.currentCustomersData, textColor, gridColor);
+         }
 
-        // Comparison Chart
-        updateComparisonChart(stats, textColor, gridColor);
-    }
+         // Acquisition Chart - only update if not already in progress
+         if (!globalThis.acquisitionChartUpdating) {
+             updateAcquisitionChart(textColor, gridColor);
+         }
+
+         // Comparison Chart
+         updateComparisonChart(chartStats, textColor, gridColor);
+     }
 
     function updateStatusChart(stats, textColor, gridColor) {
         const ctx = document.getElementById('statusChart')?.getContext('2d');
