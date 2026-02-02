@@ -54,6 +54,37 @@
         main::-webkit-scrollbar {
             display: none; /* Chrome, Safari and Opera */
         }
+
+        /* Style date input calendar icon for dark mode */
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1) brightness(1);
+            cursor: pointer;
+        }
+
+        input[type="date"]:dark::-webkit-calendar-picker-indicator {
+            filter: invert(0) brightness(0.8);
+        }
+
+        /* Ensure dark mode text color for date inputs */
+        input[type="date"].dark {
+            color-scheme: dark;
+        }
+
+        /* Fix select dropdown arrow spacing */
+        select {
+            padding-right: 2rem; /* Ensure space for dropdown arrow */
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
+            background-position: right 0.5rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+        }
+
+        select.dark {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%23d1d5db' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
+        }
     </style>
 </head>
 <body class="min-h-screen flex font-geist bg-neutral-100 text-neutral-900 dark:bg-black dark:text-neutral-50 transition-colors duration-300 ease-in-out">
@@ -93,16 +124,16 @@
                 <!-- Date Range -->
                 <div>
                     <label class="block text-xs font-medium text-neutral-700 dark:text-neutral-300 mb-2">Start Date</label>
-                    <input id="startDate" type="date" class="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-xs text-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white focus:border-violet-500 focus:outline-none">
+                    <input id="startDate" type="date" class="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-xs text-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:selection:bg-neutral-700 focus:border-violet-500 focus:outline-none" style="color-scheme: light dark;">
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-neutral-700 dark:text-neutral-300 mb-2">End Date</label>
-                    <input id="endDate" type="date" class="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-xs text-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white focus:border-violet-500 focus:outline-none">
+                    <input id="endDate" type="date" class="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-xs text-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:selection:bg-neutral-700 focus:border-violet-500 focus:outline-none" style="color-scheme: light dark;">
                 </div>
                 <!-- Status Filter -->
                 <div>
                     <label class="block text-xs font-medium text-neutral-700 dark:text-neutral-300 mb-2">Status</label>
-                    <select id="statusFilter" class="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-xs text-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white focus:border-violet-500 focus:outline-none">
+                    <select id="statusFilter" class="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-xs text-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white focus:border-violet-500 focus:outline-none pr-8">
                         <option value="">All Statuses</option>
                         <option value="1">Active</option>
                         <option value="2">Inactive</option>
