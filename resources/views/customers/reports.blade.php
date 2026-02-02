@@ -57,13 +57,13 @@
 
         /* Style date input calendar icon for dark mode */
         input[type="date"]::-webkit-calendar-picker-indicator {
-            filter: invert(0.8) brightness(1.2);
+            filter: invert(0.7);
             cursor: pointer;
         }
 
-        /* Dark mode - make calendar icon white */
+        /* Dark mode - make calendar icon bright white */
         .dark input[type="date"]::-webkit-calendar-picker-indicator {
-            filter: invert(1) brightness(1.1);
+            filter: brightness(0) invert(1);
             cursor: pointer;
         }
 
