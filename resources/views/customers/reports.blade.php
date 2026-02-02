@@ -28,6 +28,23 @@
 
     <style>
         /* Hide scrollbar while keeping scroll functionality */
+        html {
+            scrollbar-width: none; /* Firefox - hide on document root */
+        }
+        
+        html::-webkit-scrollbar {
+            display: none; /* Chrome, Safari and Opera */
+        }
+        
+        body {
+            -ms-overflow-style: none; /* IE and Edge */
+            scrollbar-width: none; /* Firefox */
+        }
+        
+        body::-webkit-scrollbar {
+            display: none; /* Chrome, Safari and Opera */
+        }
+        
         main {
             -ms-overflow-style: none; /* IE and Edge */
             scrollbar-width: none; /* Firefox */
