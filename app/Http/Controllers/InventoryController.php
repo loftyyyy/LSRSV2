@@ -507,6 +507,15 @@ class InventoryController extends Controller
     }
 
     /**
+     * Get all available inventory statuses
+     */
+    public function statuses(): JsonResponse
+    {
+        $statuses = InventoryStatus::select('status_id', 'status_name')->get();
+        return response()->json(['statuses' => $statuses]);
+    }
+
+    /**
      * Get inventory summary report
      */
     private function getInventorySummaryReport(Request $request): array

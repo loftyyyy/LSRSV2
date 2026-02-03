@@ -95,6 +95,9 @@ Route::middleware(['guest'])->group(function () {
          Route::get('/inventories/reports/statistics', [InventoryController::class, 'getStatistics']);
          Route::get('/inventories/reports/metrics', [InventoryController::class, 'getMetrics']);
 
+        // Inventory Stats & Statuses
+        Route::get('/inventories/statuses', [InventoryController::class, 'statuses']);
+
         // Inventory Available Items (before CRUD to avoid conflicts)
         Route::get('/inventories/available', [InventoryController::class, 'getAvailableItems']);
 

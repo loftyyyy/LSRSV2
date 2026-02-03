@@ -186,27 +186,28 @@
 
 <script>
     // Use globalThis to avoid redeclaration errors when Turbo navigates between pages
-    if (!globalThis.inventoryState) {
-        globalThis.inventoryState = {
-            currentPage: 1,
-            perPage: 15,
-            searchQuery: '',
-            statusFilter: '',
-            sortBy: 'created_at',
-            sortOrder: 'desc',
-            totalPages: 1,
-            totalCount: 0,
-            isLoading: false,
-            allItems: [],
-            // Stats tracking (always shows total, not filtered)
-            totalItemsCount: 0,
-            availableItemsCount: 0,
-            underRepairItemsCount: 0,
-            inventoryValueCount: 0,
-            // Request cancellation
-            abortController: null
-        };
-    }
+    // Always reset the state on page load to ensure fresh data
+    globalThis.inventoryState = {
+        currentPage: 1,
+        perPage: 15,
+        searchQuery: '',
+        statusFilter: '',
+        sortBy: 'created_at',
+        sortOrder: 'desc',
+        totalPages: 1,
+        totalCount: 0,
+        isLoading: false,
+        allItems: [],
+        // Stats tracking (always shows total, not filtered)
+        totalItemsCount: 0,
+        availableItemsCount: 0,
+        underRepairItemsCount: 0,
+        inventoryValueCount: 0,
+        // Dynamic status mappings
+        statuses: {},
+        // Request cancellation
+        abortController: null
+    };
 
     // Debounce timer for search (use var to allow redeclaration)
     var searchDebounceTimer;
@@ -238,10 +239,13 @@
         globalThis.inventoryState.currentPage = 1;
         globalThis.inventoryState.searchQuery = '';
         globalThis.inventoryState.statusFilter = '';
+        globalThis.inventoryState.isLoading = false;
 
-        // Load stats and items
-        fetchStats();
-        fetchInventoryItems();
+        // Load statuses first, then stats and items
+        fetchStatuses().then(() => {
+            fetchStats();
+            fetchInventoryItems();
+        });
 
          // Search with debounce
          searchInput.addEventListener('input', function(e) {
@@ -266,7 +270,7 @@
                  if (statusText === 'All Status') {
                      globalThis.inventoryState.statusFilter = '';
                  } else {
-                     // Convert "Available" -> "available", "Under Repair" -> "under_repair", etc.
+                     // Convert "Available" -> "available", "Maintenance" -> "maintenance", etc.
                      globalThis.inventoryState.statusFilter = statusText.toLowerCase().replace(' ', '_');
                  }
 
@@ -341,6 +345,24 @@
             globalThis.inventoryState.abortController.abort();
         }
     });
+
+    // Fetch inventory statuses (dynamically populate status ID mappings)
+    async function fetchStatuses() {
+        try {
+            var response = await axios.get('/api/inventories/statuses');
+            var statuses = response.data.statuses || response.data || [];
+
+            // Build mappings for status names to IDs
+            if (Array.isArray(statuses)) {
+                statuses.forEach(status => {
+                    globalThis.inventoryState.statuses[status.status_id] = status.status_name;
+                });
+            }
+        } catch (error) {
+            console.error('Error fetching statuses:', error);
+            // Continue anyway - statuses are not critical for display
+        }
+    }
 
     // Fetch total stats (always gets unfiltered counts)
     async function fetchStats() {
