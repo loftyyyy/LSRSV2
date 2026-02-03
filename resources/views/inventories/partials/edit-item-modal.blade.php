@@ -1,8 +1,8 @@
 {{-- Edit Item Modal --}}
-<div id="editItemModal" class="hidden fixed inset-0 z-50 flex items-center justify-center px-2 py-6 bg-black/60 backdrop-blur-sm">
-    <div class="w-full max-w-4xl bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-3xl shadow-2xl">
-        {{-- Header --}}
-        <div class="flex items-center justify-between px-6 py-4 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/80 dark:bg-neutral-900/50 rounded-t-3xl">
+<div id="editItemModal" class="hidden fixed inset-0 z-50 flex items-center justify-center px-2 py-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
+    <div class="w-full max-w-4xl bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-3xl shadow-2xl flex flex-col max-h-[calc(100vh-2rem)] my-auto">
+        {{-- Header (sticky) --}}
+        <div class="flex-shrink-0 flex items-center justify-between px-6 py-4 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/80 dark:bg-neutral-900/50 rounded-t-3xl">
             <div>
                 <p class="text-xs uppercase tracking-[0.2em] text-neutral-500 dark:text-neutral-500">Edit Item</p>
                 <h3 class="text-lg font-semibold text-neutral-900 dark:text-white">Update Inventory Item</h3>
@@ -10,8 +10,8 @@
             <button onclick="closeEditItemModal()" class="text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 text-xl transition-colors duration-200">&times;</button>
         </div>
 
-        {{-- Form --}}
-        <form id="editItemForm" class="px-8 py-6 space-y-5">
+        {{-- Form (scrollable) --}}
+        <form id="editItemForm" class="flex-1 overflow-y-auto px-8 py-6 space-y-5">
             @csrf
             <input type="hidden" id="editItemId" name="item_id" value="">
 
@@ -225,8 +225,8 @@
                 <p class="text-xs text-emerald-600 dark:text-emerald-400"></p>
             </div>
 
-            {{-- Action Buttons --}}
-            <div class="flex items-center justify-between pt-2">
+            {{-- Action Buttons (inside form for submit to work) --}}
+            <div class="flex items-center justify-between pt-4 pb-2 sticky bottom-0 bg-white dark:bg-neutral-950 border-t border-neutral-100 dark:border-neutral-800/50 -mx-8 px-8 mt-4">
                 <button
                     type="button"
                     id="changeItemStatusBtn"
@@ -333,6 +333,37 @@
         will-change: opacity;
         transform: translateZ(0);
         backface-visibility: hidden;
+    }
+
+    /* Custom scrollbar for edit item form */
+    #editItemForm {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(155, 155, 155, 0.5) transparent;
+    }
+
+    #editItemForm::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    #editItemForm::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    #editItemForm::-webkit-scrollbar-thumb {
+        background-color: rgba(155, 155, 155, 0.5);
+        border-radius: 3px;
+    }
+
+    #editItemForm::-webkit-scrollbar-thumb:hover {
+        background-color: rgba(155, 155, 155, 0.7);
+    }
+
+    .dark #editItemForm::-webkit-scrollbar-thumb {
+        background-color: rgba(100, 100, 100, 0.5);
+    }
+
+    .dark #editItemForm::-webkit-scrollbar-thumb:hover {
+        background-color: rgba(100, 100, 100, 0.7);
     }
 
     /* Fix select dropdown appearance */
