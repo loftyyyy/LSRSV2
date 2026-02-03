@@ -764,9 +764,28 @@
 
     // Open add item modal
     function openAddItemModal() {
-        showErrorNotification('Add item functionality coming soon');
+        var modal = document.getElementById('addItemModal');
+        if (modal) {
+            globalThis.addItemModalState.isOpen = true;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            // Focus first input
+            setTimeout(() => {
+                modal.querySelector('input[name="name"]').focus();
+            }, 100);
+
+            // Reset form
+            var form = document.getElementById('addItemForm');
+            if (form) {
+                form.reset();
+            }
+        }
     }
 </script>
+
+{{-- Include Add Item Modal --}}
+@include('inventories.partials.add-item-modal')
 
 </body>
 </html>
