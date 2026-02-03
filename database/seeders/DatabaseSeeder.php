@@ -25,7 +25,19 @@ class DatabaseSeeder extends Seeder
         $this->call([
             UserSeeder::class,
             CustomerStatusSeeder::class,
-
+            PaymentStatusSeeder::class,
+            RentalStatusSeeder::class,
+            ReservationStatusSeeder::class,
+            InventoryStatusSeeder::class,
+            CustomerSeeder::class,
+            InventorySeeder::class,
+            RentalSeeder::class,
+            ReservationSeeder::class,
+            ReservationItemSeeder::class,
+            InvoiceSeeder::class,
+            InvoiceItemSeeder::class,
+            PaymentSeeder::class,
+            InventoryImageSeeder::class,
         ]);
     }
 }
