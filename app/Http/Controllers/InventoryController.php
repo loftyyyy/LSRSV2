@@ -275,13 +275,9 @@ class InventoryController extends Controller
          $inventory->load('status');
 
          return response()->json([
-             'message' => 'Inventory item created successfully. You can now upload images.',
-             'data' => $inventory,
-             'next_step' => [
-                 'action' => 'upload_images',
-                 'endpoint' => route('inventories.images.store', $inventory->item_id),
-                 'required_views' => ['front', 'back', 'side']
-             ]
+             'success' => true,
+             'message' => 'Inventory item created successfully',
+             'data' => $inventory
          ], 201);
      }
 
