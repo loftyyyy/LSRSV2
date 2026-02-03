@@ -74,7 +74,7 @@
         </div>
         <div class="rounded-2xl p-6 border border-neutral-200 bg-white dark:border-neutral-900 dark:bg-neutral-950/60 shadow-sm dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
             <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
-                Under Repair
+                Maintenance
             </div>
             <div id="underRepairItemsCount" class="text-3xl font-semibold text-green-500 transition-colors duration-300 ease-in-out">
                 0
@@ -345,15 +345,17 @@
     // Fetch total stats (always gets unfiltered counts)
     async function fetchStats() {
         try {
-            var response = await axios.get('/api/inventories/stats', {
+            var response = await axios.get('/api/inventories/reports/statistics', {
                 signal: globalThis.inventoryState.abortController.signal
             });
             var data = response.data;
 
             // Store total counts regardless of current filters
+            // Map the API response fields to frontend state
             globalThis.inventoryState.totalItemsCount = data.total_items || 0;
             globalThis.inventoryState.availableItemsCount = data.available_items || 0;
-            globalThis.inventoryState.underRepairItemsCount = data.under_repair_items || 0;
+            globalThis.inventoryState.underRepairItemsCount = data.under_maintenance || 0;
+            // Note: inventory_value is not provided by this endpoint, we'll fetch it separately if needed
             globalThis.inventoryState.inventoryValueCount = data.inventory_value || 0;
 
              // Update KPI displays

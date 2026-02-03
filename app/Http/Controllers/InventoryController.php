@@ -488,6 +488,7 @@ class InventoryController extends Controller
             'under_maintenance' => Inventory::whereHas('status', function ($q) {
                 $q->where('status_name', 'maintenance');
             })->count(),
+            'inventory_value' => Inventory::sum('rental_price') ?? 0,
             'by_item_type' => Inventory::select('item_type', DB::raw('count(*) as count'))
                 ->groupBy('item_type')
                 ->get(),
