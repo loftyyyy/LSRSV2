@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Inventory · Love &amp; Styles</title>
 
     {{-- Favicon --}}
@@ -39,12 +40,12 @@
             </div>
 
             <div class="flex items-center gap-3 text-xs">
-                <button class="inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-[14px] font-medium border dark:hover:text-black hover:text-white border-neutral-300 bg-white text-neutral-700 dark:hover:bg-violet-600 hover:bg-violet-600  dark:border-neutral-800 dark:bg-neutral-950/80 dark:text-neutral-200 dark:hover:bg-neutral-900  transition-colors duration-300 ease-in-out">
+                <a href="/inventory/reports" class="inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-[14px] font-medium border dark:hover:text-black hover:text-white border-neutral-300 bg-white text-neutral-700 dark:hover:bg-violet-600 hover:bg-violet-600  dark:border-neutral-800 dark:bg-neutral-950/80 dark:text-neutral-200 dark:hover:bg-neutral-900  transition-colors duration-300 ease-in-out">
                     <x-icon name="chart-column" class="h-4 w-4" />
                     <span>Reports</span>
-                </button>
+                </a>
 
-                <button class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-[14px] font-medium bg-violet-600 text-white dark:hover:text-white hover:text-black dark:text-black hover:bg-violet-500 shadow-violet-600/40 transition-colors duration-300 ease-in-out">
+                <button onclick="openAddItemModal()" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-[14px] font-medium bg-violet-600 text-white dark:hover:text-white hover:text-black dark:text-black hover:bg-violet-500 shadow-violet-600/40 transition-colors duration-300 ease-in-out">
                     <x-icon name="plus" class="h-4 w-4" />
                     <span>Add Item</span>
                 </button>
@@ -55,62 +56,83 @@
 
     {{-- Stats --}}
     <section class="grid grid-cols-4 gap-6 mb-8">
-        @foreach ([
-            ['label' => 'Total Items', 'value' => '3', 'color' => 'text-neutral-900 dark:text-white'],
-            ['label' => 'Available', 'value' => '3', 'color' => 'text-amber-500'],
-            ['label' => 'Under Repair', 'value' => '1', 'color' => 'text-green-500'],
-            ['label' => 'Inventory Value', 'value' => '₱2', 'color' => 'text-violet-600'],
-        ] as $stat)
-            <div class="rounded-2xl p-6 border border-neutral-200 bg-white dark:border-neutral-900 dark:bg-neutral-950/60 shadow-sm dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
-                <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
-                    {{ $stat['label'] }}
-                </div>
-                <div class="text-3xl font-semibold {{ $stat['color'] }} transition-colors duration-300 ease-in-out">
-                    {{ $stat['value'] }}
-                </div>
+        <div class="rounded-2xl p-6 border border-neutral-200 bg-white dark:border-neutral-900 dark:bg-neutral-950/60 shadow-sm dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
+            <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
+                Total Items
             </div>
-        @endforeach
+            <div id="totalItemsCount" class="text-3xl font-semibold text-neutral-900 dark:text-white transition-colors duration-300 ease-in-out">
+                0
+            </div>
+        </div>
+        <div class="rounded-2xl p-6 border border-neutral-200 bg-white dark:border-neutral-900 dark:bg-neutral-950/60 shadow-sm dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
+            <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
+                Available
+            </div>
+            <div id="availableItemsCount" class="text-3xl font-semibold text-amber-500 transition-colors duration-300 ease-in-out">
+                0
+            </div>
+        </div>
+        <div class="rounded-2xl p-6 border border-neutral-200 bg-white dark:border-neutral-900 dark:bg-neutral-950/60 shadow-sm dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
+            <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
+                Under Repair
+            </div>
+            <div id="underRepairItemsCount" class="text-3xl font-semibold text-green-500 transition-colors duration-300 ease-in-out">
+                0
+            </div>
+        </div>
+        <div class="rounded-2xl p-6 border border-neutral-200 bg-white dark:border-neutral-900 dark:bg-neutral-950/60 shadow-sm dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
+            <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
+                Inventory Value
+            </div>
+            <div id="inventoryValueCount" class="text-3xl font-semibold text-violet-600 transition-colors duration-300 ease-in-out">
+                ₱0
+            </div>
+        </div>
     </section>
 
 
     {{-- Filters + table --}}
-    <section class="rounded-2xl p-6 border border-neutral-200 bg-white dark:border-neutral-900 dark:bg-neutral-950/60 transition-colors duration-300 ease-in-out">
-        <div class="flex items-center justify-between mb-6">
-            <h2 class="text-xl font-semibold tracking-tight text-neutral-900 dark:text-white transition-colors duration-300 ease-in-out">
-                Inventory Items
-            </h2>
+    <section class="flex-1">
+        <div class="rounded-2xl border border-neutral-200 bg-white shadow-sm dark:border-neutral-900 dark:bg-neutral-950/60 dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
+            {{-- Search & filters --}}
+            <div class="border-b border-neutral-200 px-6 py-4 dark:border-neutral-900 transition-colors duration-300 ease-in-out">
+                <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                    <div class="flex-1">
+                        <div>
+                            <div class="flex items-center gap-3 rounded-2xl bg-white px-4 py-2.5 border border-neutral-300 focus-within:border-neutral-500 dark:border-neutral-800 dark:bg-black/60 transition-colors duration-300 ease-in-out">
+                                <x-icon name="search" class="h-4 w-4 text-neutral-500 transition-colors duration-300 ease-in-out" />
+                                <input id="searchInput" type="text" placeholder="Search by item, SKU, category, or ID..." class="w-full bg-transparent text-xs text-neutral-700 placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500 focus:outline-none transition-colors duration-300 ease-in-out">
+                            </div>
+                            <div id="searchIndicators" class="mt-2 flex flex-wrap gap-1.5 px-0"></div>
+                        </div>
+                    </div>
 
-            <div class="relative flex items-center gap-3">
-                <!-- Search -->
-                <div class="flex items-center gap-3 rounded-2xl px-4 py-2.5 border border-neutral-300 bg-white focus-within:border-neutral-500 dark:border-neutral-800 dark:bg-black/60 transition-colors duration-300 ease-in-out">
-                    <x-icon name="search" class="h-4 w-4 text-neutral-500 transition-colors duration-300 ease-in-out" />
-                    <input type="text" placeholder="Search by customer, item, or ID..." class="w-72 bg-transparent text-xs text-neutral-700 placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500 focus:outline-none transition-colors duration-300 ease-in-out">
-                </div>
+                    <div class="flex items-center gap-3">
+                        <!-- Custom Filter Dropdown -->
+                        <div class="relative mb-2" id="filter-dropdown">
+                            <button id="filter-button" class="flex items-center gap-2 rounded-2xl px-3 py-2 text-xs border border-neutral-300 bg-white text-neutral-700 dark:border-neutral-800 dark:bg-black/60 dark:text-neutral-100 focus:outline-none transition-colors duration-300 ease-in-out">
+                                <span id="filter-button-text">Filter Status</span>
+                                <span id="icon-down" class="h-3 w-3 transition-transform duration-300 ease-in-out">
+                                <x-icon name="arrow-down" class="h-3 w-3" />
+                            </span>
+                                <span id="icon-up" class="hidden h-3 w-3 transition-transform duration-300 ease-in-out">
+                                <x-icon name="arrow-up" class="h-3 w-3" />
+                            </span>
+                            </button>
 
-                <!-- Filter with toggle icons -->
-                <div class="relative" id="filter-dropdown">
-                    <button id="filter-button" class="flex items-center gap-2 rounded-2xl px-3 py-2 text-xs border border-neutral-300 bg-white text-neutral-700 dark:border-neutral-800 dark:bg-black/60 dark:text-neutral-100 focus:outline-none transition-colors duration-300 ease-in-out">
-                        <span id="filter-button-text">Filter Status</span>
-                        <span id="icon-down" class="h-3 w-3 transition-transform duration-300 ease-in-out">
-                            <x-icon name="arrow-down" class="h-3 w-3" />
-                        </span>
-                        <span id="icon-up" class="hidden h-3 w-3 transition-transform duration-300 ease-in-out">
-                            <x-icon name="arrow-up" class="h-3 w-3" />
-                        </span>
-                    </button>
-
-                    <div id="filter-menu" class="absolute right-0 mt-2 w-48 rounded-xl border border-neutral-300 bg-white dark:border-neutral-800 dark:bg-black/60 shadow-lg z-50 overflow-hidden opacity-0 scale-95 pointer-events-none transition-all duration-200 ease-in-out">
-                        <ul class="flex flex-col text-xs">
-                            <li class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">All Status</li>
-                            <li class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">Good</li>
-                            <li class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">Damaged</li>
-                            <li class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">Under Repair</li>
-                            <li class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">Retired</li>
-                        </ul>
+                            <div id="filter-menu" class="absolute right-0 mt-2 w-48 rounded-xl border border-neutral-300 bg-white dark:border-neutral-800 dark:bg-black/60 shadow-lg z-50 overflow-hidden opacity-0 scale-95 pointer-events-none transition-all duration-200 ease-in-out">
+                                <ul class="flex flex-col text-xs">
+                                    <li class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">All Status</li>
+                                    <li class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">Good</li>
+                                    <li class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">Damaged</li>
+                                    <li class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">Under Repair</li>
+                                    <li class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">Retired</li>
+                                </ul>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
             {{-- Table --}}
             <div class="px-6 py-4">
@@ -129,33 +151,33 @@
                         </tr>
                         </thead>
 
-                        <tbody class="text-[13px]">
-                        <tr class="border-b border-neutral-200 hover:bg-neutral-100 dark:border-neutral-900/60 dark:hover:bg-white/5 transition-colors duration-300 ease-in-out">
-                            <td class="py-3.5 pr-4 pl-4 text-neutral-500 font-geist-mono">Wedding Gown - Ivory</td>
-                            <td class="py-3.5 pr-4 text-neutral-900 dark:text-neutral-100">WG-001</td>
-                            <td class="py-3.5 pr-4 text-neutral-600 dark:text-neutral-300">Wedding</td>
-                            <td class="py-3.5 pr-4 text-neutral-600 dark:text-neutral-300 font-geist-mono">5</td>
-                            <td class="py-3.5 pr-2 text-neutral-600 dark:text-neutral-300 font-geist-mono">₱540</td>
-                            <td class="py-3.5 pr-4 text-left text-neutral-900 dark:text-neutral-100 font-geist-mono">Excellent</td>
-                            <td class="py-3.5 pr-2">
-                                <span class="inline-flex items-center rounded-full bg-emerald-500/15 px-2 py-1 text-[11px] font-medium text-emerald-600 border border-emerald-500/40 dark:text-emerald-300 transition-colors duration-300 ease-in-out">
-                                    <span class="mr-1.5 h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
-                                    Available
-                                </span>
-                            </td>
-                            <td class="py-3.5 pl-2 text-left text-neutral-500 dark:text-neutral-400">
-                                <div class="inline-flex items-center gap-2">
-                                    <button class="rounded-lg p-1.5 hover:bg-violet-600 hover:text-white transition-colors duration-300 ease-in-out" aria-label="Edit">
-                                        <x-icon name="edit" class="h-3.5 w-3.5" />
-                                    </button>
-                                    <button class="rounded-lg p-1.5 text-red-500 hover:bg-red-500/15 hover:text-red-400 transition-colors duration-300 ease-in-out" aria-label="Delete">
-                                        <x-icon name="trash" class="h-3.5 w-3.5" />
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
+                        <tbody id="inventoryTableBody" class="text-[13px]">
+                        <!-- Rows will be dynamically inserted here -->
                         </tbody>
                     </table>
+                </div>
+
+                <!-- Empty state -->
+                <div id="emptyState" class="text-center py-12">
+                    <p class="text-neutral-500 dark:text-neutral-400">No items found</p>
+                </div>
+            </div>
+
+            <!-- Pagination Controls -->
+            <div id="paginationControls" class="px-6 py-4 border-t border-neutral-200 dark:border-neutral-900 flex items-center justify-between">
+                <div class="text-xs text-neutral-500 dark:text-neutral-400">
+                    Showing <span id="pageStart">0</span> to <span id="pageEnd">0</span> of <span id="pageTotal">0</span> results
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="prevBtn" onclick="previousPage()" class="text-xs rounded-lg px-3 py-1.5 border border-neutral-300 bg-white text-neutral-700 dark:border-neutral-800 dark:bg-black/60 dark:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-900 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-geist" disabled>
+                        Previous
+                    </button>
+                    <div id="pageInfo" class="text-xs text-neutral-600 dark:text-neutral-300 min-w-[100px] text-center">
+                        Page 1
+                    </div>
+                    <button id="nextBtn" onclick="nextPage()" class="text-xs rounded-lg px-3 py-1.5 border border-neutral-300 bg-white text-neutral-700 dark:border-neutral-800 dark:bg-black/60 dark:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-900 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-geist" disabled>
+                        Next
+                    </button>
                 </div>
             </div>
         </div>
@@ -164,75 +186,587 @@
 
 
 <script>
-    document.addEventListener('turbo:load', function initializeInventoryFilters() {
-        // Guard check to prevent duplicate initialization
-        if (globalThis.inventoryFiltersInitialized) {
+    // Use globalThis to avoid redeclaration errors when Turbo navigates between pages
+    if (!globalThis.inventoryState) {
+        globalThis.inventoryState = {
+            currentPage: 1,
+            perPage: 15,
+            searchQuery: '',
+            statusFilter: '',
+            sortBy: 'created_at',
+            sortOrder: 'desc',
+            totalPages: 1,
+            totalCount: 0,
+            isLoading: false,
+            allItems: [],
+            // Stats tracking (always shows total, not filtered)
+            totalItemsCount: 0,
+            availableItemsCount: 0,
+            underRepairItemsCount: 0,
+            inventoryValueCount: 0,
+            // Request cancellation
+            abortController: null
+        };
+    }
+
+    // Debounce timer for search (use var to allow redeclaration)
+    var searchDebounceTimer;
+
+    // Initialize inventory page
+    function initializeInventoryPage() {
+        var searchInput = document.getElementById('searchInput');
+        var filterMenu = document.getElementById('filter-menu');
+        var filterButtonText = document.getElementById('filter-button-text');
+
+        // Guard against missing elements
+        if (!searchInput || !filterMenu) {
             return;
         }
-        globalThis.inventoryFiltersInitialized = true;
 
-        // Use IIFE to scope variables and prevent redeclaration issues
-        (function() {
-            var filterButton = document.getElementById('filter-button');
-            var filterButtonText = document.getElementById('filter-button-text');
-            var filterMenu = document.getElementById('filter-menu');
-            var iconDown = document.getElementById('icon-down');
-            var iconUp = document.getElementById('icon-up');
+        // Only initialize once per page visit
+        if (globalThis.inventoryPageInitialized) {
+            return;
+        }
+        globalThis.inventoryPageInitialized = true;
 
-            var isOpen = false;
+        // Cancel any pending requests from previous navigation
+        if (globalThis.inventoryState.abortController) {
+            globalThis.inventoryState.abortController.abort();
+        }
+        globalThis.inventoryState.abortController = new AbortController();
 
-            // Toggle dropdown
-            filterButton?.addEventListener('click', (e) => {
-                e.stopPropagation();
-                isOpen = !isOpen;
+        // Reset state when page is loaded
+        globalThis.inventoryState.currentPage = 1;
+        globalThis.inventoryState.searchQuery = '';
+        globalThis.inventoryState.statusFilter = '';
 
-                filterMenu.classList.toggle('opacity-0', !isOpen);
-                filterMenu.classList.toggle('scale-95', !isOpen);
-                filterMenu.classList.toggle('pointer-events-none', !isOpen);
-                filterMenu.classList.toggle('opacity-100', isOpen);
-                filterMenu.classList.toggle('scale-100', isOpen);
-                filterMenu.classList.toggle('pointer-events-auto', isOpen);
+        // Load stats and items
+        fetchStats();
+        fetchInventoryItems();
 
-                iconDown.classList.toggle('hidden', isOpen);
-                iconUp.classList.toggle('hidden', !isOpen);
+         // Search with debounce
+         searchInput.addEventListener('input', function(e) {
+             clearTimeout(searchDebounceTimer);
+             globalThis.inventoryState.searchQuery = e.target.value;
+             globalThis.inventoryState.currentPage = 1;
+
+             // Update search indicators immediately
+             updateSearchIndicators();
+
+             searchDebounceTimer = setTimeout(() => {
+                 fetchInventoryItems();
+             }, 300);
+         });
+
+        // Filter by status
+        filterMenu.querySelectorAll('li').forEach(item => {
+            item.addEventListener('click', function(e) {
+                var statusText = item.textContent.trim();
+                filterButtonText.textContent = statusText;
+
+                if (statusText === 'All Status') {
+                    globalThis.inventoryState.statusFilter = '';
+                } else {
+                    globalThis.inventoryState.statusFilter = statusText.toLowerCase();
+                }
+
+                globalThis.inventoryState.currentPage = 1;
+                fetchInventoryItems();
+            });
+        });
+
+        // Initialize filter dropdown
+        initializeFilterDropdown();
+    }
+
+    // Initialize filter dropdown (only setup listeners if not already done)
+    function initializeFilterDropdown() {
+        var filterButton = document.getElementById('filter-button');
+        var filterMenu = document.getElementById('filter-menu');
+        var iconDown = document.getElementById('icon-down');
+        var iconUp = document.getElementById('icon-up');
+
+        if (!filterButton || !filterMenu) {
+            return;
+        }
+
+        // Only attach event listeners once per visit
+        if (globalThis.filterDropdownInitialized) {
+            return;
+        }
+        globalThis.filterDropdownInitialized = true;
+
+        var isOpen = false;
+
+        filterButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            isOpen = !isOpen;
+
+            filterMenu.classList.toggle('opacity-0', !isOpen);
+            filterMenu.classList.toggle('scale-95', !isOpen);
+            filterMenu.classList.toggle('pointer-events-none', !isOpen);
+            filterMenu.classList.toggle('opacity-100', isOpen);
+            filterMenu.classList.toggle('scale-100', isOpen);
+            filterMenu.classList.toggle('pointer-events-auto', isOpen);
+
+            iconDown.classList.toggle('hidden', isOpen);
+            iconUp.classList.toggle('hidden', !isOpen);
+        });
+
+        document.addEventListener('click', () => {
+            if (isOpen) {
+                isOpen = false;
+                filterMenu.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+                filterMenu.classList.remove('opacity-100', 'scale-100', 'pointer-events-auto');
+                iconDown.classList.remove('hidden');
+                iconUp.classList.add('hidden');
+            }
+        });
+    }
+
+    // Listen to DOMContentLoaded and turbo:load only (NOT turbo:render to avoid duplicate initialization)
+    document.addEventListener('DOMContentLoaded', initializeInventoryPage);
+    document.addEventListener('turbo:load', initializeInventoryPage);
+
+    // Clean up when leaving the page (reset flags and abort requests)
+    document.addEventListener('turbo:before-visit', function() {
+        // Reset page initialization flag so it can be re-initialized on next visit
+        globalThis.inventoryPageInitialized = false;
+        
+        // Reset filter dropdown flag so it can be re-initialized on next visit
+        globalThis.filterDropdownInitialized = false;
+        
+        // Abort any pending requests
+        if (globalThis.inventoryState && globalThis.inventoryState.abortController) {
+            globalThis.inventoryState.abortController.abort();
+        }
+    });
+
+    // Fetch total stats (always gets unfiltered counts)
+    async function fetchStats() {
+        try {
+            var response = await axios.get('/api/inventories/stats', {
+                signal: globalThis.inventoryState.abortController.signal
+            });
+            var data = response.data;
+
+            // Store total counts regardless of current filters
+            globalThis.inventoryState.totalItemsCount = data.total_items || 0;
+            globalThis.inventoryState.availableItemsCount = data.available_items || 0;
+            globalThis.inventoryState.underRepairItemsCount = data.under_repair_items || 0;
+            globalThis.inventoryState.inventoryValueCount = data.inventory_value || 0;
+
+             // Update KPI displays
+             var totalCountEl = document.getElementById('totalItemsCount');
+             var availableCountEl = document.getElementById('availableItemsCount');
+             var underRepairCountEl = document.getElementById('underRepairItemsCount');
+             var valueCountEl = document.getElementById('inventoryValueCount');
+
+             if (totalCountEl) totalCountEl.textContent = globalThis.inventoryState.totalItemsCount;
+             if (availableCountEl) availableCountEl.textContent = globalThis.inventoryState.availableItemsCount;
+             if (underRepairCountEl) underRepairCountEl.textContent = globalThis.inventoryState.underRepairItemsCount;
+             if (valueCountEl) valueCountEl.textContent = '₱' + (globalThis.inventoryState.inventoryValueCount || 0).toLocaleString();
+
+         } catch (error) {
+             // Don't show error if request was cancelled (user navigated away)
+             if (error.name === 'AbortError' || error.code === 'ECONNABORTED' || error.code === 'ERR_CANCELED') {
+                 console.log('Stats request cancelled (user navigated away)');
+                 return;
+             }
+             console.error('Error fetching stats:', error);
+             // Don't show notification for stats errors - only log them
+         }
+     }
+
+    // Fetch inventory items from API
+    async function fetchInventoryItems() {
+        if (globalThis.inventoryState.isLoading) return;
+
+        globalThis.inventoryState.isLoading = true;
+        showLoadingState();
+
+        try {
+            var params = new URLSearchParams({
+                page: globalThis.inventoryState.currentPage,
+                per_page: globalThis.inventoryState.perPage,
+                sort_by: globalThis.inventoryState.sortBy,
+                sort_order: globalThis.inventoryState.sortOrder
             });
 
-            // Update filter button text when a status is clicked
-            filterMenu?.querySelectorAll('li').forEach(item => {
-                item.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    filterButtonText.textContent = item.textContent;
-                    isOpen = false;
+            if (globalThis.inventoryState.searchQuery) {
+                params.append('search', globalThis.inventoryState.searchQuery);
+            }
 
-                    filterMenu.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
-                    filterMenu.classList.remove('opacity-100', 'scale-100', 'pointer-events-auto');
+            if (globalThis.inventoryState.statusFilter) {
+                params.append('status', globalThis.inventoryState.statusFilter);
+            }
 
-                    iconDown.classList.remove('hidden');
-                    iconUp.classList.add('hidden');
+            var url = `/api/inventories?${params.toString()}`;
+
+            var response = await axios.get(url, {
+                signal: globalThis.inventoryState.abortController.signal
+            });
+            var data = response.data;
+
+            if (!data.data || !Array.isArray(data.data)) {
+                showEmptyState('No items found.');
+                hideLoadingState();
+                globalThis.inventoryState.isLoading = false;
+                return;
+            }
+
+            globalThis.inventoryState.totalPages = data.last_page;
+            globalThis.inventoryState.totalCount = data.total;
+            globalThis.inventoryState.allItems = data.data;
+
+            renderTable(data.data);
+            updatePagination(data);
+            hideLoadingState();
+
+         } catch (error) {
+             // Don't show error if request was cancelled (user navigated away)
+             if (error.name === 'AbortError' || error.code === 'ECONNABORTED' || error.code === 'ERR_CANCELED') {
+                 console.log('Items request cancelled (user navigated away)');
+                 globalThis.inventoryState.isLoading = false;
+                 hideLoadingState();
+                 return;
+             }
+
+             console.error('Error fetching items:', error);
+             console.error('Error status:', error.response?.status);
+             console.error('Error data:', error.response?.data);
+
+             var errorMessage = error.response?.data?.message || error.message || 'Failed to load items. Please try again.';
+             showErrorNotification(errorMessage);
+             showEmptyState(errorMessage);
+             hideLoadingState();
+         } finally {
+             globalThis.inventoryState.isLoading = false;
+         }
+      }
+
+      // Update search indicators
+      function updateSearchIndicators() {
+          var searchIndicatorsDiv = document.getElementById('searchIndicators');
+          
+          // Guard against missing element
+          if (!searchIndicatorsDiv) {
+              return;
+          }
+
+          var query = globalThis.inventoryState.searchQuery.trim().toLowerCase();
+
+          if (!query) {
+              searchIndicatorsDiv.innerHTML = '';
+              return;
+          }
+
+          var indicators = [];
+
+          // Determine what fields match
+          if (!isNaN(query) && query !== '') {
+              // Numeric search - matches item ID
+              indicators.push('Item ID');
+          }
+
+         // Text search - could match name, SKU, or category
+         indicators.push('Item Name');
+         indicators.push('SKU');
+         indicators.push('Category');
+
+         // Build the HTML for indicators
+         let html = '';
+         indicators.forEach(indicator => {
+             html += `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300 border border-violet-200 dark:border-violet-800/60">${indicator}</span>`;
+         });
+
+         searchIndicatorsDiv.innerHTML = html;
+     }
+
+      // Render table rows
+      function renderTable(items) {
+         try {
+             var tbody = document.getElementById('inventoryTableBody');
+             
+             // Guard against missing tbody element (can happen during Turbo navigation)
+             if (!tbody) {
+                 console.warn('inventoryTableBody element not found');
+                 return;
+             }
+
+             tbody.innerHTML = '';
+
+             if (items.length === 0) {
+                 // Show custom message based on search or filter
+                 let emptyMessage = 'No items found';
+
+                 if (globalThis.inventoryState.searchQuery) {
+                     emptyMessage = `No matches found for "${globalThis.inventoryState.searchQuery}"`;
+                 } else if (globalThis.inventoryState.statusFilter) {
+                     emptyMessage = 'No items with this status';
+                 }
+
+                 showEmptyState(emptyMessage);
+                 return;
+             }
+
+             items.forEach(item => {
+                var statusColor = item.status === 'available'
+                    ? 'bg-emerald-500/15 text-emerald-600 border-emerald-500/40 dark:text-emerald-300'
+                    : item.status === 'under_repair'
+                    ? 'bg-amber-500/15 text-amber-600 border-amber-500/40 dark:text-amber-300'
+                    : item.status === 'damaged'
+                    ? 'bg-red-500/15 text-red-600 border-red-500/40 dark:text-red-300'
+                    : 'bg-gray-500/15 text-gray-600 border-gray-500/40 dark:text-gray-300';
+
+                var statusBgColor = item.status === 'available'
+                    ? 'bg-emerald-500'
+                    : item.status === 'under_repair'
+                    ? 'bg-amber-500'
+                    : item.status === 'damaged'
+                    ? 'bg-red-500'
+                    : 'bg-gray-500';
+
+                var statusLabel = item.status === 'available'
+                    ? 'Available'
+                    : item.status === 'under_repair'
+                    ? 'Under Repair'
+                    : item.status === 'damaged'
+                    ? 'Damaged'
+                    : 'Retired';
+
+                var row = document.createElement('tr');
+                row.className = 'border-b border-neutral-200 hover:bg-neutral-100 dark:border-neutral-900/60 dark:hover:bg-white/5 transition-colors duration-300 ease-in-out';
+                row.innerHTML = `
+                    <td class="py-3.5 pr-4 pl-4 text-neutral-500 font-geist-mono">${item.item_name || 'N/A'}</td>
+                    <td class="py-3.5 pr-4 text-neutral-900 dark:text-neutral-100">${item.sku || 'N/A'}</td>
+                    <td class="py-3.5 pr-4 text-neutral-600 dark:text-neutral-300">${item.category || 'N/A'}</td>
+                    <td class="py-3.5 pr-4 text-neutral-600 dark:text-neutral-300 font-geist-mono">${item.quantity || 0}</td>
+                    <td class="py-3.5 pr-2 text-neutral-600 dark:text-neutral-300 font-geist-mono">₱${(item.rental_fee || 0).toLocaleString()}</td>
+                    <td class="py-3.5 pr-4 text-left text-neutral-900 dark:text-neutral-100 font-geist-mono">${item.condition || 'N/A'}</td>
+                    <td class="py-3.5 pr-2">
+                        <span class="inline-flex items-center rounded-full ${statusColor} px-2 py-1 text-[11px] font-medium border transition-colors duration-300 ease-in-out">
+                            <span class="mr-1.5 h-1.5 w-1.5 rounded-full ${statusBgColor}"></span>
+                            ${statusLabel}
+                        </span>
+                    </td>
+                    <td class="py-3.5 pl-2 text-left text-neutral-500 dark:text-neutral-400">
+                        <div class="inline-flex items-center gap-2">
+                            <button class="edit-item-btn rounded-lg p-1.5 hover:bg-violet-600 hover:text-white transition-colors duration-300 ease-in-out" aria-label="Edit" title="Edit item" data-item-id="${item.item_id}">
+                                <x-icon name="edit" class="h-3.5 w-3.5" />
+                            </button>
+                            <button class="change-status-btn rounded-lg p-1.5 text-amber-600 hover:bg-amber-500/15 hover:text-amber-500 transition-colors duration-300 ease-in-out dark:text-amber-500 dark:hover:bg-amber-900/25" aria-label="Change Status" title="Change item status" data-item-id="${item.item_id}">
+                                <x-icon name="archive" class="h-3.5 w-3.5" />
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            // Attach event listeners to edit and change status buttons
+            document.querySelectorAll('.edit-item-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    var itemId = btn.getAttribute('data-item-id');
+                    openEditItemModal(itemId);
                 });
             });
 
-            // Close dropdown when clicking outside (function needs to be named to allow removal)
-            function closeOnClickOutside() {
-                if (isOpen) {
-                    isOpen = false;
-                    filterMenu.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
-                    filterMenu.classList.remove('opacity-100', 'scale-100', 'pointer-events-auto');
+             document.querySelectorAll('.change-status-btn').forEach(btn => {
+                 btn.addEventListener('click', (e) => {
+                     e.preventDefault();
+                     var itemId = btn.getAttribute('data-item-id');
+                     openChangeStatusModal(itemId);
+                 });
+             });
 
-                    iconDown.classList.remove('hidden');
-                    iconUp.classList.add('hidden');
-                }
-            }
+             // Set opacity to 1 for tbody if it exists
+             var tbody = document.getElementById('inventoryTableBody');
+             if (tbody) {
+                 tbody.style.opacity = '1';
+             }
+             // Hide the empty state when we have data
+             hideEmptyState();
+        } catch (error) {
+            console.error('Error rendering table:', error);
+            showEmptyState('Error rendering inventory table');
+        }
+    }
 
-            document.addEventListener('click', closeOnClickOutside);
+    // Update pagination controls
+    function updatePagination(data) {
+        var prevBtn = document.getElementById('prevBtn');
+        var nextBtn = document.getElementById('nextBtn');
+        var pageInfo = document.getElementById('pageInfo');
+        var pageStart = document.getElementById('pageStart');
+        var pageEnd = document.getElementById('pageEnd');
+        var pageTotal = document.getElementById('pageTotal');
+        var paginationControls = document.getElementById('paginationControls');
 
-            // Cleanup on page leave
-            document.addEventListener('turbo:before-visit', function cleanup() {
-                globalThis.inventoryFiltersInitialized = false;
-                document.removeEventListener('click', closeOnClickOutside);
-            }, { once: true });
-        })();
-    });
+        // Guard against missing elements (can happen during Turbo navigation)
+        if (!prevBtn || !nextBtn || !pageInfo) {
+            console.warn('Pagination elements not found');
+            return;
+        }
+
+        prevBtn.disabled = !data.links[0].url;
+        nextBtn.disabled = !data.links[data.links.length - 1].url;
+
+        pageInfo.textContent = `Page ${data.current_page} of ${data.last_page}`;
+        if (pageStart) pageStart.textContent = (data.from || 0);
+        if (pageEnd) pageEnd.textContent = (data.to || 0);
+        if (pageTotal) pageTotal.textContent = data.total;
+
+        if (paginationControls) {
+            paginationControls.style.display = 'flex';
+        }
+    }
+
+    // Show empty state
+    function showEmptyState(message) {
+        var tbody = document.getElementById('inventoryTableBody');
+        var emptyState = document.getElementById('emptyState');
+        var paginationControls = document.getElementById('paginationControls');
+
+        // Guard against missing elements (can happen during Turbo navigation)
+        if (tbody) {
+            tbody.innerHTML = '';
+        }
+        if (emptyState) {
+            emptyState.textContent = message;
+            emptyState.style.display = 'block';
+        }
+        if (paginationControls) {
+            paginationControls.style.display = 'none';
+        }
+    }
+
+    // Hide empty state
+    function hideEmptyState() {
+        var emptyState = document.getElementById('emptyState');
+        // Guard against missing elements (can happen during Turbo navigation)
+        if (emptyState) {
+            emptyState.style.display = 'none';
+        }
+    }
+
+    // Show loading state with skeleton
+    function showLoadingState() {
+        var tbody = document.getElementById('inventoryTableBody');
+        var emptyState = document.getElementById('emptyState');
+        var paginationControls = document.getElementById('paginationControls');
+
+        // Guard against missing elements (can happen during Turbo navigation)
+        if (!tbody) {
+            console.warn('inventoryTableBody element not found');
+            return;
+        }
+
+        var skeletonRows = Array.from({length: 5}, () => `
+            <tr class="border-b border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-900/50 transition-colors animate-pulse">
+                <td class="px-4 py-3"><div class="h-4 bg-neutral-300 dark:bg-neutral-700 rounded w-1/2"></div></td>
+                <td class="px-4 py-3"><div class="h-4 bg-neutral-300 dark:bg-neutral-700 rounded w-3/4"></div></td>
+                <td class="px-4 py-3"><div class="h-4 bg-neutral-300 dark:bg-neutral-700 rounded w-2/3"></div></td>
+                <td class="px-4 py-3"><div class="h-4 bg-neutral-300 dark:bg-neutral-700 rounded w-1/2"></div></td>
+                <td class="px-4 py-3"><div class="h-4 bg-neutral-300 dark:bg-neutral-700 rounded w-2/3"></div></td>
+                <td class="px-4 py-3"><div class="h-4 bg-neutral-300 dark:bg-neutral-700 rounded w-1/3"></div></td>
+                <td class="px-4 py-3"><div class="h-4 bg-neutral-300 dark:bg-neutral-700 rounded w-1/4"></div></td>
+                <td class="px-4 py-3"><div class="h-4 bg-neutral-300 dark:bg-neutral-700 rounded w-1/3"></div></td>
+            </tr>
+        `).join('');
+        tbody.innerHTML = skeletonRows;
+
+        if (emptyState) {
+            emptyState.style.display = 'none';
+        }
+        if (paginationControls) {
+            paginationControls.style.display = 'none';
+        }
+    }
+
+    // Hide loading state
+    function hideLoadingState() {
+        hideEmptyState();
+        var tbody = document.getElementById('inventoryTableBody');
+        // Guard against missing elements (can happen during Turbo navigation)
+        if (tbody) {
+            tbody.style.opacity = '1';
+        }
+    }
+
+    // Show error notification (user-facing)
+    function showErrorNotification(message) {
+        // Create a temporary notification element
+        var notification = document.createElement('div');
+        notification.className = 'fixed top-4 right-4 max-w-sm bg-red-100 border border-red-300 dark:bg-red-900 dark:border-red-700 rounded-lg px-5 py-4 shadow-xl z-[999] flex items-start gap-3 animate-in slide-in-from-top-2';
+        notification.innerHTML = `
+            <svg class="h-5 w-5 text-red-700 dark:text-red-200 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+            </svg>
+            <div class="flex-1">
+                <p class="text-sm font-semibold text-red-900 dark:text-red-50">${message}</p>
+            </div>
+            <button onclick="this.parentElement.remove()" class="text-red-700 dark:text-red-200 hover:text-red-900 dark:hover:text-red-50 flex-shrink-0 transition-colors">
+                <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+            </button>
+        `;
+        document.body.appendChild(notification);
+
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            notification.style.opacity = '0';
+            notification.style.transition = 'opacity 0.3s ease-out';
+            setTimeout(() => {
+                notification.remove();
+            }, 300);
+        }, 5000);
+    }
+
+    // Pagination handlers
+    function previousPage() {
+        if (globalThis.inventoryState.currentPage > 1) {
+            globalThis.inventoryState.currentPage--;
+            fetchInventoryItems();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    }
+
+    function nextPage() {
+        if (globalThis.inventoryState.currentPage < globalThis.inventoryState.totalPages) {
+            globalThis.inventoryState.currentPage++;
+            fetchInventoryItems();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    }
+
+    // Open change status modal
+    async function openChangeStatusModal(itemId) {
+        try {
+            showErrorNotification('Status change functionality coming soon');
+        } catch (error) {
+            console.error('Error:', error);
+            showErrorNotification('An error occurred. Please try again.');
+        }
+    }
+
+    // Open edit item modal
+    async function openEditItemModal(itemId) {
+        try {
+            showErrorNotification('Edit functionality coming soon');
+        } catch (error) {
+            console.error('Error:', error);
+            showErrorNotification('An error occurred. Please try again.');
+        }
+    }
+
+    // Open add item modal
+    function openAddItemModal() {
+        showErrorNotification('Add item functionality coming soon');
+    }
 </script>
+
 </body>
 </html>
