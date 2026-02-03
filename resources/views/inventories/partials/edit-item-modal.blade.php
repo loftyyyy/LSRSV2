@@ -804,10 +804,9 @@
                 var imagePayload = new FormData();
                 
                 globalThis.editItemModalState.newImages.forEach((img, index) => {
-                    imagePayload.append(`images[${index}][file]`, img.file);
-                    imagePayload.append(`images[${index}][view_type]`, img.view_type);
-                    imagePayload.append(`images[${index}][caption]`, img.caption || '');
-                    imagePayload.append(`images[${index}][is_primary]`, img.is_primary ? 1 : 0);
+                    imagePayload.append('images[]', img.file);
+                    imagePayload.append('view_types[]', img.view_type);
+                    imagePayload.append('captions[]', img.caption || '');
                 });
 
                 await axios.post(`/api/inventories/${globalThis.editItemModalState.currentItemId}/images`, imagePayload, {
