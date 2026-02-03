@@ -43,26 +43,30 @@
                     {{-- Right: Item Information --}}
                     <div class="lg:w-1/2 p-6 space-y-5">
                         {{-- Status & Price Row --}}
-                        <div class="flex items-start gap-3">
-                            {{-- Status Card --}}
-                            <div id="detailStatusCard" class="flex-1 rounded-2xl p-4 border">
-                                <div class="flex items-center gap-2 mb-1">
-                                    <x-icon name="activity" class="h-4 w-4 opacity-70" />
-                                    <p class="text-xs opacity-70">Status</p>
+                        <div class="grid grid-cols-2 gap-4">
+                            {{-- Status Section --}}
+                            <div class="space-y-3">
+                                <div class="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                                    <x-icon name="activity" class="h-4 w-4" />
+                                    <span>Status</span>
                                 </div>
-                                <div class="flex items-center gap-2">
-                                    <span id="detailStatusDot" class="h-2 w-2 rounded-full"></span>
-                                    <p id="detailItemStatus" class="text-sm font-semibold">-</p>
+                                <div id="detailStatusCard" class="rounded-xl p-3 border">
+                                    <div class="flex items-center gap-2">
+                                        <span id="detailStatusDot" class="h-2.5 w-2.5 rounded-full"></span>
+                                        <p id="detailItemStatus" class="text-sm font-semibold">-</p>
+                                    </div>
                                 </div>
                             </div>
                             
-                            {{-- Price Card --}}
-                            <div class="flex-1 bg-gradient-to-br from-violet-500/10 to-purple-500/10 dark:from-violet-500/20 dark:to-purple-500/20 rounded-2xl p-4 border border-violet-200 dark:border-violet-800/50">
-                                <div class="flex items-center gap-2 mb-1">
-                                    <x-icon name="currency-peso" class="h-4 w-4 text-violet-600 dark:text-violet-400" />
-                                    <p class="text-xs text-violet-600 dark:text-violet-400">Rental Price</p>
+                            {{-- Price Section --}}
+                            <div class="space-y-3">
+                                <div class="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                                    <x-icon name="currency-peso" class="h-4 w-4" />
+                                    <span>Rental Price</span>
                                 </div>
-                                <p id="detailItemPrice" class="text-xl font-bold text-violet-600 dark:text-violet-400 font-geist-mono">-</p>
+                                <div class="bg-gradient-to-br from-violet-500/10 to-purple-500/10 dark:from-violet-500/20 dark:to-purple-500/20 rounded-xl p-3 border border-violet-200 dark:border-violet-800/50">
+                                    <p id="detailItemPrice" class="text-xl font-bold text-violet-600 dark:text-violet-400 font-geist-mono">-</p>
+                                </div>
                             </div>
                         </div>
 
