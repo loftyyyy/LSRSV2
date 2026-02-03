@@ -99,10 +99,10 @@
                 <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                     <div class="flex-1">
                         <div>
-                            <div class="flex items-center gap-3 rounded-2xl bg-white px-4 py-2.5 border border-neutral-300 focus-within:border-neutral-500 dark:border-neutral-800 dark:bg-black/60 transition-colors duration-300 ease-in-out">
-                                <x-icon name="search" class="h-4 w-4 text-neutral-500 transition-colors duration-300 ease-in-out" />
-                                <input id="searchInput" type="text" placeholder="Search by item, SKU, category, or ID..." class="w-full bg-transparent text-xs text-neutral-700 placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500 focus:outline-none transition-colors duration-300 ease-in-out">
-                            </div>
+                             <div class="flex items-center gap-3 rounded-2xl bg-white px-4 py-2.5 border border-neutral-300 focus-within:border-neutral-500 dark:border-neutral-800 dark:bg-black/60 transition-colors duration-300 ease-in-out">
+                                 <x-icon name="search" class="h-4 w-4 text-neutral-500 transition-colors duration-300 ease-in-out" />
+                                 <input id="searchInput" type="text" placeholder="Search by item name, SKU, or ID..." class="w-full bg-transparent text-xs text-neutral-700 placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500 focus:outline-none transition-colors duration-300 ease-in-out">
+                             </div>
                             <div id="searchIndicators" class="mt-2 flex flex-wrap gap-1.5 px-0"></div>
                         </div>
                     </div>
@@ -123,9 +123,9 @@
                             <div id="filter-menu" class="absolute right-0 mt-2 w-48 rounded-xl border border-neutral-300 bg-white dark:border-neutral-800 dark:bg-black/60 shadow-lg z-50 overflow-hidden opacity-0 scale-95 pointer-events-none transition-all duration-200 ease-in-out">
                                 <ul class="flex flex-col text-xs">
                                     <li class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">All Status</li>
-                                    <li class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">Good</li>
-                                    <li class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">Damaged</li>
-                                    <li class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">Under Repair</li>
+                                    <li class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">Available</li>
+                                    <li class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">Rented</li>
+                                    <li class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">Maintenance</li>
                                     <li class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">Retired</li>
                                 </ul>
                             </div>
@@ -141,11 +141,10 @@
                         <thead class="text-[11px] uppercase tracking-[0.18em] text-neutral-500">
                         <tr class="border-b border-neutral-200 dark:border-neutral-900/80">
                             <th class="py-2.5 pr-4 pl-4 font-medium">Item</th>
+                            <th class="py-2.5 pr-4 font-medium">Type</th>
                             <th class="py-2.5 pr-4 font-medium">SKU</th>
-                            <th class="py-2.5 pr-4 font-medium">Category</th>
-                            <th class="py-2.5 pr-4 font-medium">Qty</th>
-                            <th class="py-2.5 pr-4 font-medium">Fee</th>
-                            <th class="py-2.5 pr-4 font-medium">Condition</th>
+                            <th class="py-2.5 pr-4 font-medium">Size</th>
+                            <th class="py-2.5 pr-4 font-medium">Price</th>
                             <th class="py-2.5 pr-4 font-medium text-left">Status</th>
                             <th class="py-2.5 pl-2 font-medium text-left">Actions</th>
                         </tr>
@@ -258,22 +257,23 @@
              }, 300);
          });
 
-        // Filter by status
-        filterMenu.querySelectorAll('li').forEach(item => {
-            item.addEventListener('click', function(e) {
-                var statusText = item.textContent.trim();
-                filterButtonText.textContent = statusText;
+         // Filter by status
+         filterMenu.querySelectorAll('li').forEach(item => {
+             item.addEventListener('click', function(e) {
+                 var statusText = item.textContent.trim();
+                 filterButtonText.textContent = statusText;
 
-                if (statusText === 'All Status') {
-                    globalThis.inventoryState.statusFilter = '';
-                } else {
-                    globalThis.inventoryState.statusFilter = statusText.toLowerCase();
-                }
+                 if (statusText === 'All Status') {
+                     globalThis.inventoryState.statusFilter = '';
+                 } else {
+                     // Convert "Available" -> "available", "Under Repair" -> "under_repair", etc.
+                     globalThis.inventoryState.statusFilter = statusText.toLowerCase().replace(' ', '_');
+                 }
 
-                globalThis.inventoryState.currentPage = 1;
-                fetchInventoryItems();
-            });
-        });
+                 globalThis.inventoryState.currentPage = 1;
+                 fetchInventoryItems();
+             });
+         });
 
         // Initialize filter dropdown
         initializeFilterDropdown();
@@ -469,10 +469,9 @@
               indicators.push('Item ID');
           }
 
-         // Text search - could match name, SKU, or category
-         indicators.push('Item Name');
-         indicators.push('SKU');
-         indicators.push('Category');
+          // Text search - could match name or SKU
+          indicators.push('Item Name');
+          indicators.push('SKU');
 
          // Build the HTML for indicators
          let html = '';
@@ -510,59 +509,64 @@
                  return;
              }
 
-             items.forEach(item => {
-                var statusColor = item.status === 'available'
-                    ? 'bg-emerald-500/15 text-emerald-600 border-emerald-500/40 dark:text-emerald-300'
-                    : item.status === 'under_repair'
-                    ? 'bg-amber-500/15 text-amber-600 border-amber-500/40 dark:text-amber-300'
-                    : item.status === 'damaged'
-                    ? 'bg-red-500/15 text-red-600 border-red-500/40 dark:text-red-300'
-                    : 'bg-gray-500/15 text-gray-600 border-gray-500/40 dark:text-gray-300';
+              items.forEach(item => {
+                 // Get status name from the status relationship
+                 var statusName = item.status?.status_name || 'unknown';
+                 
+                 var statusColor = statusName === 'available'
+                     ? 'bg-emerald-500/15 text-emerald-600 border-emerald-500/40 dark:text-emerald-300'
+                     : statusName === 'rented'
+                     ? 'bg-blue-500/15 text-blue-600 border-blue-500/40 dark:text-blue-300'
+                     : statusName === 'maintenance'
+                     ? 'bg-amber-500/15 text-amber-600 border-amber-500/40 dark:text-amber-300'
+                     : 'bg-gray-500/15 text-gray-600 border-gray-500/40 dark:text-gray-300';
 
-                var statusBgColor = item.status === 'available'
-                    ? 'bg-emerald-500'
-                    : item.status === 'under_repair'
-                    ? 'bg-amber-500'
-                    : item.status === 'damaged'
-                    ? 'bg-red-500'
-                    : 'bg-gray-500';
+                 var statusBgColor = statusName === 'available'
+                     ? 'bg-emerald-500'
+                     : statusName === 'rented'
+                     ? 'bg-blue-500'
+                     : statusName === 'maintenance'
+                     ? 'bg-amber-500'
+                     : 'bg-gray-500';
 
-                var statusLabel = item.status === 'available'
-                    ? 'Available'
-                    : item.status === 'under_repair'
-                    ? 'Under Repair'
-                    : item.status === 'damaged'
-                    ? 'Damaged'
-                    : 'Retired';
+                 var statusLabel = statusName === 'available'
+                     ? 'Available'
+                     : statusName === 'rented'
+                     ? 'Rented'
+                     : statusName === 'maintenance'
+                     ? 'Maintenance'
+                     : 'Retired';
 
-                var row = document.createElement('tr');
-                row.className = 'border-b border-neutral-200 hover:bg-neutral-100 dark:border-neutral-900/60 dark:hover:bg-white/5 transition-colors duration-300 ease-in-out';
-                row.innerHTML = `
-                    <td class="py-3.5 pr-4 pl-4 text-neutral-500 font-geist-mono">${item.item_name || 'N/A'}</td>
-                    <td class="py-3.5 pr-4 text-neutral-900 dark:text-neutral-100">${item.sku || 'N/A'}</td>
-                    <td class="py-3.5 pr-4 text-neutral-600 dark:text-neutral-300">${item.category || 'N/A'}</td>
-                    <td class="py-3.5 pr-4 text-neutral-600 dark:text-neutral-300 font-geist-mono">${item.quantity || 0}</td>
-                    <td class="py-3.5 pr-2 text-neutral-600 dark:text-neutral-300 font-geist-mono">₱${(item.rental_fee || 0).toLocaleString()}</td>
-                    <td class="py-3.5 pr-4 text-left text-neutral-900 dark:text-neutral-100 font-geist-mono">${item.condition || 'N/A'}</td>
-                    <td class="py-3.5 pr-2">
-                        <span class="inline-flex items-center rounded-full ${statusColor} px-2 py-1 text-[11px] font-medium border transition-colors duration-300 ease-in-out">
-                            <span class="mr-1.5 h-1.5 w-1.5 rounded-full ${statusBgColor}"></span>
-                            ${statusLabel}
-                        </span>
-                    </td>
-                    <td class="py-3.5 pl-2 text-left text-neutral-500 dark:text-neutral-400">
-                        <div class="inline-flex items-center gap-2">
-                            <button class="edit-item-btn rounded-lg p-1.5 hover:bg-violet-600 hover:text-white transition-colors duration-300 ease-in-out" aria-label="Edit" title="Edit item" data-item-id="${item.item_id}">
-                                <x-icon name="edit" class="h-3.5 w-3.5" />
-                            </button>
-                            <button class="change-status-btn rounded-lg p-1.5 text-amber-600 hover:bg-amber-500/15 hover:text-amber-500 transition-colors duration-300 ease-in-out dark:text-amber-500 dark:hover:bg-amber-900/25" aria-label="Change Status" title="Change item status" data-item-id="${item.item_id}">
-                                <x-icon name="archive" class="h-3.5 w-3.5" />
-                            </button>
-                        </div>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
+                 // Format item type (capitalize first letter)
+                 var itemType = item.item_type ? item.item_type.charAt(0).toUpperCase() + item.item_type.slice(1) : 'N/A';
+
+                 var row = document.createElement('tr');
+                 row.className = 'border-b border-neutral-200 hover:bg-neutral-100 dark:border-neutral-900/60 dark:hover:bg-white/5 transition-colors duration-300 ease-in-out';
+                 row.innerHTML = `
+                     <td class="py-3.5 pr-4 pl-4 text-neutral-500 font-geist-mono">${item.name || 'N/A'}</td>
+                     <td class="py-3.5 pr-4 text-neutral-900 dark:text-neutral-100">${itemType}</td>
+                     <td class="py-3.5 pr-4 text-neutral-900 dark:text-neutral-100">${item.sku || 'N/A'}</td>
+                     <td class="py-3.5 pr-4 text-neutral-600 dark:text-neutral-300">${item.size || 'N/A'}</td>
+                     <td class="py-3.5 pr-2 text-neutral-600 dark:text-neutral-300 font-geist-mono">₱${(item.rental_price || 0).toLocaleString()}</td>
+                     <td class="py-3.5 pr-2">
+                         <span class="inline-flex items-center rounded-full ${statusColor} px-2 py-1 text-[11px] font-medium border transition-colors duration-300 ease-in-out">
+                             <span class="mr-1.5 h-1.5 w-1.5 rounded-full ${statusBgColor}"></span>
+                             ${statusLabel}
+                         </span>
+                     </td>
+                     <td class="py-3.5 pl-2 text-left text-neutral-500 dark:text-neutral-400">
+                         <div class="inline-flex items-center gap-2">
+                             <button class="edit-item-btn rounded-lg p-1.5 hover:bg-violet-600 hover:text-white transition-colors duration-300 ease-in-out" aria-label="Edit" title="Edit item" data-item-id="${item.item_id}">
+                                 <x-icon name="edit" class="h-3.5 w-3.5" />
+                             </button>
+                             <button class="change-status-btn rounded-lg p-1.5 text-amber-600 hover:bg-amber-500/15 hover:text-amber-500 transition-colors duration-300 ease-in-out dark:text-amber-500 dark:hover:bg-amber-900/25" aria-label="Change Status" title="Change item status" data-item-id="${item.item_id}">
+                                 <x-icon name="archive" class="h-3.5 w-3.5" />
+                             </button>
+                         </div>
+                     </td>
+                 `;
+                 tbody.appendChild(row);
+             });
 
             // Attach event listeners to edit and change status buttons
             document.querySelectorAll('.edit-item-btn').forEach(btn => {

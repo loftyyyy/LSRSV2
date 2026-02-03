@@ -229,10 +229,13 @@ class InventoryController extends Controller
             $query->where('condition', $request->get('condition'));
         }
 
-        // Filter by status
-        if ($request->has('status_id')) {
-            $query->where('status_id', $request->get('status_id'));
-        }
+         // Filter by status
+         if ($request->has('status')) {
+             $statusName = $request->get('status');
+             $query->whereHas('status', function ($q) use ($statusName) {
+                 $q->where('status_name', $statusName);
+             });
+         }
 
         // Filter items with/without images
         if ($request->has('has_images')) {
