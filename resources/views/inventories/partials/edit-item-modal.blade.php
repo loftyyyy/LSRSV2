@@ -225,8 +225,8 @@
                 <p class="text-xs text-emerald-600 dark:text-emerald-400"></p>
             </div>
 
-            {{-- Action Buttons (inside form for submit to work) --}}
-            <div class="flex items-center justify-between pt-4 pb-2 sticky bottom-0 bg-white dark:bg-neutral-950 border-t border-neutral-100 dark:border-neutral-800/50 -mx-8 px-8 mt-4">
+            {{-- Action Buttons --}}
+            <div class="flex items-center justify-between pt-4">
                 <button
                     type="button"
                     id="changeItemStatusBtn"
