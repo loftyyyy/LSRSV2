@@ -185,6 +185,20 @@
 
 
 <script>
+    // DEBUG: Log when script is loaded (helps trace Turbo navigation issues)
+    console.log('[Inventory] Script loaded at', new Date().toISOString());
+    console.log('[Inventory] Current allItems:', globalThis.inventoryState?.allItems?.length || 0);
+    console.log('[Inventory] inventoryPageInitialized:', globalThis.inventoryPageInitialized);
+    
+    // IMMEDIATE FIX: Clear tbody immediately when script loads to prevent stale data flash
+    (function() {
+        var tbody = document.getElementById('inventoryTableBody');
+        if (tbody && tbody.children.length > 0) {
+            console.log('[Inventory] Clearing stale tbody rows immediately');
+            tbody.innerHTML = '';
+        }
+    })();
+
     // Use globalThis to avoid redeclaration errors when Turbo navigates between pages
     if (!globalThis.inventoryState) {
         globalThis.inventoryState = {
@@ -215,20 +229,26 @@
 
     // Initialize inventory page
     function initializeInventoryPage() {
+        console.log('[Inventory] initializeInventoryPage() called');
+        console.log('[Inventory] inventoryPageInitialized flag:', globalThis.inventoryPageInitialized);
+        
         var searchInput = document.getElementById('searchInput');
         var filterMenu = document.getElementById('filter-menu');
         var filterButtonText = document.getElementById('filter-button-text');
 
         // Guard against missing elements
         if (!searchInput || !filterMenu) {
+            console.log('[Inventory] Missing DOM elements, returning early');
             return;
         }
 
         // Only initialize once per page visit
         if (globalThis.inventoryPageInitialized) {
+            console.log('[Inventory] Already initialized, returning');
             return;
         }
         globalThis.inventoryPageInitialized = true;
+        console.log('[Inventory] Starting initialization...');
 
         // Cancel any pending requests from previous navigation
         if (globalThis.inventoryState.abortController) {
@@ -299,10 +319,10 @@
         }
 
         // Only attach event listeners once per visit
-        if (globalThis.filterDropdownInitialized) {
+        if (globalThis.inventoryFilterDropdownInitialized) {
             return;
         }
-        globalThis.filterDropdownInitialized = true;
+        globalThis.inventoryFilterDropdownInitialized = true;
 
         var isOpen = false;
 
@@ -332,23 +352,46 @@
         });
     }
 
-    // Listen to DOMContentLoaded and turbo:load only (NOT turbo:render to avoid duplicate initialization)
-    document.addEventListener('DOMContentLoaded', initializeInventoryPage);
-    document.addEventListener('turbo:load', initializeInventoryPage);
+    // EVENT LISTENER SETUP - Only add once globally to prevent duplicate handlers
+    // This is critical for Turbo.js: document persists across navigations, so we track if listeners are added
+    if (!globalThis.inventoryEventListenersAdded) {
+        globalThis.inventoryEventListenersAdded = true;
+        
+        // Listen to DOMContentLoaded and turbo:load only (NOT turbo:render to avoid duplicate initialization)
+        document.addEventListener('DOMContentLoaded', initializeInventoryPage);
+        document.addEventListener('turbo:load', function() {
+            // Only initialize if we're actually on the inventory page
+            if (document.getElementById('inventoryTableBody')) {
+                initializeInventoryPage();
+            }
+        });
 
-    // Clean up when leaving the page (reset flags and abort requests)
-    document.addEventListener('turbo:before-visit', function() {
-        // Reset page initialization flag so it can be re-initialized on next visit
-        globalThis.inventoryPageInitialized = false;
-        
-        // Reset filter dropdown flag so it can be re-initialized on next visit
-        globalThis.filterDropdownInitialized = false;
-        
-        // Abort any pending requests
-        if (globalThis.inventoryState && globalThis.inventoryState.abortController) {
-            globalThis.inventoryState.abortController.abort();
-        }
-    });
+        // Clean up when leaving the page (reset flags and abort requests)
+        document.addEventListener('turbo:before-visit', function() {
+            // Only run cleanup if we're leaving the inventory page
+            if (!document.getElementById('inventoryTableBody')) {
+                return;
+            }
+            
+            console.log('[Inventory] turbo:before-visit fired - cleaning up');
+            
+            // Reset page initialization flag so it can be re-initialized on next visit
+            globalThis.inventoryPageInitialized = false;
+            
+            // Reset filter dropdown flag so it can be re-initialized on next visit
+            globalThis.inventoryFilterDropdownInitialized = false;
+            
+            // Abort any pending requests
+            if (globalThis.inventoryState && globalThis.inventoryState.abortController) {
+                globalThis.inventoryState.abortController.abort();
+            }
+            
+            // Clear the items array to prevent stale data
+            if (globalThis.inventoryState) {
+                globalThis.inventoryState.allItems = [];
+            }
+        });
+    }
 
     // Fetch inventory statuses (dynamically populate status ID mappings)
     async function fetchStatuses() {
@@ -522,12 +565,17 @@
 
        // Render table rows
        function renderTable(items) {
+          console.log('[Inventory] renderTable() called with', items?.length || 0, 'items');
+          if (items && items.length > 0) {
+              console.log('[Inventory] First item:', items[0]?.name, items[0]?.sku);
+          }
+          
           try {
               var tbody = document.getElementById('inventoryTableBody');
               
               // Guard against missing tbody element (can happen during Turbo navigation)
               if (!tbody) {
-                  console.warn('inventoryTableBody element not found');
+                  console.warn('[Inventory] inventoryTableBody element not found');
                   return;
               }
 
@@ -597,7 +645,7 @@
                              <button class="edit-item-btn rounded-lg p-1.5 hover:bg-violet-600 hover:text-white transition-colors duration-300 ease-in-out" aria-label="Edit" title="Edit item" data-item-id="${item.item_id}">
                                  <x-icon name="edit" class="h-3.5 w-3.5" />
                              </button>
-                             <button class="change-status-btn rounded-lg p-1.5 text-amber-600 hover:bg-amber-500/15 hover:text-amber-500 transition-colors duration-300 ease-in-out dark:text-amber-500 dark:hover:bg-amber-900/25" aria-label="Change Status" title="Change item status" data-item-id="${item.item_id}">
+                             <button class="change-status-btn rounded-lg p-1.5 text-amber-600 hover:bg-amber-500/15 hover:text-amber-500 transition-colors duration-300 ease-in-out dark:text-amber-500 dark:hover:bg-amber-900/25" aria-label="Set Status" title="Set maintenance or retire" data-item-id="${item.item_id}">
                                  <x-icon name="archive" class="h-3.5 w-3.5" />
                              </button>
                          </div>
@@ -784,25 +832,7 @@
         }
     }
 
-    // Open change status modal
-    async function openChangeStatusModal(itemId) {
-        try {
-            showErrorNotification('Status change functionality coming soon');
-        } catch (error) {
-            console.error('Error:', error);
-            showErrorNotification('An error occurred. Please try again.');
-        }
-    }
-
-    // Open edit item modal
-    async function openEditItemModal(itemId) {
-        try {
-            showErrorNotification('Edit functionality coming soon');
-        } catch (error) {
-            console.error('Error:', error);
-            showErrorNotification('An error occurred. Please try again.');
-        }
-    }
+    // openChangeStatusModal and openEditItemModal are defined in the edit-item-modal partial
 
     // Open add item modal
     function openAddItemModal() {
@@ -828,6 +858,9 @@
 
 {{-- Include Add Item Modal --}}
 @include('inventories.partials.add-item-modal')
+
+{{-- Include Edit Item Modal --}}
+@include('inventories.partials.edit-item-modal')
 
 </body>
 </html>
