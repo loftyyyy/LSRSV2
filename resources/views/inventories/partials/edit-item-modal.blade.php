@@ -281,8 +281,8 @@
                         class="w-full bg-transparent text-xs text-neutral-700 placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500 focus:outline-none transition-colors duration-300 ease-in-out"
                     >
                         <option value="">Select status</option>
-                        <option value="maintenance">Maintenance</option>
-                        <option value="retired">Retired</option>
+                        <option value="3">Maintenance</option>
+                        <option value="4">Retired</option>
                     </select>
                 </div>
                 <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
@@ -895,13 +895,17 @@
             }
 
             var response = await axios.patch(`/api/inventories/${itemId}/status`, {
-                status: newStatus
+                status_id: newStatus
             });
+
+            // Map status ID to name for display
+            var statusNames = { '3': 'maintenance', '4': 'retired' };
+            var statusName = statusNames[newStatus] || newStatus;
 
             // Update modal state if called from edit modal
             if (globalThis.editItemModalState.currentItemId) {
-                globalThis.editItemModalState.currentItemStatus = newStatus;
-                showEditItemSuccess(`Item status changed to ${newStatus} successfully!`);
+                globalThis.editItemModalState.currentItemStatus = statusName;
+                showEditItemSuccess(`Item status changed to ${statusName} successfully!`);
             }
 
             closeChangeItemStatusModal();
