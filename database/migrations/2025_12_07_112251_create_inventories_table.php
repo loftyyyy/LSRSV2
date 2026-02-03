@@ -19,7 +19,6 @@ return new class extends Migration
             $table->string('size');
             $table->string('color');
             $table->string('design');
-            $table->enum('condition', ['good', 'damaged', 'under repair', 'retired'])->default('good');
             $table->decimal('rental_price', 10,2)->default(0);
             $table->foreignId('status_id')->constrained('inventory_statuses', 'status_id')->cascadeOnDelete();
             $table->timestamps();

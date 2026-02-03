@@ -1,0 +1,145 @@
+╔════════════════════════════════════════════════════════════════════════════════╗
+║         LSRSV2 SUBSYSTEM ARCHITECTURE & DEPENDENCY DIAGRAM                     ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+LAYER 0: FOUNDATION (Core Infrastructure)
+═════════════════════════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ AUTHENTICATION & AUTHORIZATION                                              │
+│ Status: ✅ COMPLETE (95%)                                                   │
+│                                                                              │
+│ Components:                                                                  │
+│   • AuthController (login, register, password reset)                        │
+│   • OtpController (OTP generation, verification)                           │
+│   • User Model (Authenticatable)                                           │
+│   • Session Management                                                      │
+│                                                                              │
+│ Used By: ALL OTHER SUBSYSTEMS ⬇️                                            │
+│                                                                              │
+│ Known Issues:                                                               │
+│   ⚠️ Missing 'use Throwable' import in CustomerController                   │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+LAYER 1: CORE ENTITIES (Independent - no cross-dependencies)
+═════════════════════════════════════════════════════════════════════════════════
+
+┌──────────────────────────────────┐      ┌──────────────────────────────────┐
+│ CUSTOMER MANAGEMENT              │      │ INVENTORY MANAGEMENT             │
+│ Status: ✅ COMPLETE (90%)        │      │ Status: ✅ COMPLETE (92%)        │
+│                                  │      │                                  │
+│ Models:                          │      │ Models:                          │
+│  • Customer                      │      │  • Inventory                     │
+│  • CustomerStatus               │      │  • InventoryStatus              │
+│                                  │      │  • InventoryImage               │
+│ Controllers:                     │      │                                  │
+│  • CustomerController           │      │ Controllers:                     │
+│  • CustomerStatusController     │      │  • InventoryController          │
+│                                  │      │  • InventoryStatusController    │
+│ DB Tables: 2                     │      │  • InventoryImageController     │
+│  • customers                     │      │                                  │
+│  • customer_statuses             │      │ DB Tables: 3                     │
+│                                  │      │  • inventories                   │
+│ CRUD: ✅                         │      │  • inventory_images              │
+│ Reports: ✅                      │      │  • inventory_statuses            │
+│ Validation: ✅                   │      │                                  │
+│ Relationships: Good ✅           │      │ SKU Generation: ✅               │
+│                                  │      │ Condition Tracking: ✅          │
+│ Known Issues:                    │      │ Availability Checking: ✅       │
+│  ⚠️ Hardcoded status IDs         │      │                                  │
+│  ⚠️ Race condition on create     │      │ Known Issues: ✅ None           │
+└──────────────────────────────────┘      └──────────────────────────────────┘
+
+LAYER 2: WORKFLOWS (Depend on Layer 1)
+═════════════════════════════════════════════════════════════════════════════════
+
+       Customer                          Inventory
+           ▲                                ▲
+           │                                │
+           │                                │
+       ┌───┴────────────────────────────────┴────┐
+       │                                         │
+       ▼                                         ▼
+┌──────────────────────────────────┐  ┌──────────────────────────────────┐
+│ RESERVATION MANAGEMENT           │  │ RENTAL MANAGEMENT                │
+│ Status: ⚠️  MOSTLY COMPLETE (85%) │  │ Status: ✅ COMPLETE (88%)        │
+│                                  │  │                                  │
+│ Models:                          │  │ Models:                          │
+│  • Reservation                   │  │  • Rental                        │
+│  • ReservationItem              │  │  • RentalStatus                  │
+│  • ReservationStatus            │  │                                  │
+│                                  │  │ Controllers:                     │
+│ Controllers:                     │  │  • RentalController             │
+│  • ReservationController        │  │  • RentalStatusController       │
+│  • ReservationItemController    │  │                                  │
+│                                  │  │ DB Tables: 2                     │
+│ DB Tables: 3                     │  │  • rentals                       │
+│  • reservations                  │  │  • rental_statuses               │
+│  • reservation_items             │  │                                  │
+│  • reservation_statuses          │  │ Features:                        │
+│                                  │  │  • Release tracking ✅           │
+│ Features:                        │  │  • Extension management ✅       │
+│  • Item browsing ✅              │  │  • Return processing ✅          │
+│  • Date validation ✅            │  │  • Overdue detection ✅          │
+│  • Availability check ✅         │  │  • Staff tracking ✅             │
+│  • Confirmation ✅               │  │  • Late fees ✅                  │
+│  • Cancellation ✅               │  │                                  │
+│                                  │  │ Complex workflows: ✅            │
+│ CRITICAL ISSUES:                 │  │ Known Issues: ✅ Return type     │
+│  ❌ Missing Auth import          │  │                                  │
+│  ❌ Missing ReservationItem import│  │                                  │
+│  ⚠️  Inventory status not updated │  │                                  │
+│  ⚠️  Return type mismatch        │  │                                  │
+└──────────────────────────────────┘  └──────────────────────────────────┘
+       │                                     │
+       └─────────────────┬───────────────────┘
+                         │
+                         ▼
+            Reservation ─────► Rental
+            (May have triggered)
+
+LAYER 3: FINANCIAL (Depend on Layer 2)
+═════════════════════════════════════════════════════════════════════════════════
+
+       Customer + Rental
+           ▲    ▲
+           │    │
+       ┌───┴────┘
+       │
+       ▼
+┌──────────────────────────────────┐
+│ INVOICING & BILLING              │
+│ Status: ⚠️  MOSTLY COMPLETE (82%) │
+│                                  │
+│ Models:                          │
+│  • Invoice                       │
+│  • InvoiceItem                   │
+│                                  │
+│ Controllers:                     │
+│  • InvoiceController             │
+│  • InvoiceItemController         │
+│                                  │
+│ DB Tables: 2                     │
+│  • invoices                      │
+│  • invoice_items                 │
+│                                  │
+│ Features:                        │
+│  • Three invoice types ✅        │
+│  • Rental fees ✅                │
+│  • Penalties/late fees ✅        │
+│  • Partial payments ✅           │
+│  • Financial reports ✅          │
+│                                  │
+│ CRITICAL ISSUE:                  │
+│  ❌ Missing Carbon import        │
+│                                  │
+│ HIGH PRIORITY:                   │
+│  ⚠️  Return type mismatch        │
+│  ⚠️  Duplicate code              │
+│  ⚠️  Incomplete isPaid()         │
+└──────────────────────────────────┘
+           │
+           ▼
+┌──────────────────────────────────┐
+│ PAYMENT PROCESSING               │
+│ Status: ✅

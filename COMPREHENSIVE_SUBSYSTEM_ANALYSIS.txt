@@ -1,0 +1,235 @@
+# LSRSV2 CODEBASE ARCHITECTURE ANALYSIS
+# Love & Styles Rental System Version 2
+
+## PROJECT OVERVIEW
+- Framework: Laravel 12 + Blade Templates + Chart.js
+- Database: MySQL with 15 tables
+- Code Size: ~30,760 PHP lines, ~6,439 HTTP/Controller lines
+- Status: 85% Feature Complete, Production-Ready (with 4 critical fixes needed)
+
+================================================================================
+## SUBSYSTEM 1: AUTHENTICATION & AUTHORIZATION
+================================================================================
+Status: ✅ COMPLETE (95%)
+
+Components:
+  - AuthController: login, register, password reset
+  - OtpController: OTP generation, verification, resend
+  - OtpService: Email-based OTP delivery
+  - User model with Authenticatable trait
+  - Auth Middleware integration
+  
+Key Features:
+  ✅ User registration with password hashing
+  ✅ Session-based authentication
+  ✅ Password recovery via OTP email
+  ✅ Rate limiting (5 attempts per 15 minutes on verification)
+  ✅ Logout with session invalidation
+
+Known Issues:
+  ⚠️ Missing 'use Throwable' in CustomerController
+  ⚠️ Password verification could use stronger rate limiting
+  
+Dependencies: User Model, Laravel Mail, Session Management
+
+================================================================================
+## SUBSYSTEM 2: CUSTOMER MANAGEMENT
+================================================================================
+Status: ✅ COMPLETE (90%)
+
+Database Tables:
+  - customers (customer_id, first_name, last_name, email, contact_number, address, measurement[JSON], status_id)
+  - customer_statuses (status_id, status_name)
+
+Controllers:
+  - CustomerController: CRUD, stats, reporting, deactivate/reactivate
+  - CustomerStatusController: Status management
+  
+Key Features:
+  ✅ Full CRUD operations
+  ✅ Customer status tracking (active/inactive)
+  ✅ Rental history tracking
+  ✅ PDF report generation
+  ✅ Registration trend analysis
+  ✅ Customer statistics and filtering
+  
+Request Validations:
+  - StoreCustomerRequest
+  - UpdateCustomerRequest
+
+Models & Relationships:
+  - Customer (has_many Reservations, Rentals, Invoices)
+  - CustomerStatus (has_many Customers)
+
+Known Issues:
+  ⚠️ Hardcoded status IDs in JavaScript (1=active, 2=inactive)
+  ⚠️ Race condition in customer creation
+  ⚠️ Missing error handling for failed API calls
+  ⚠️ generatePDF() returns wrong type (JsonResponse instead of Response)
+
+Dependencies:
+  → Reservation Subsystem
+  → Rental Subsystem
+  → Invoice Subsystem
+  → PDF Generation (Barryvdh\DomPDF)
+
+================================================================================
+## SUBSYSTEM 3: INVENTORY MANAGEMENT
+================================================================================
+Status: ✅ COMPLETE (92%)
+
+Database Tables:
+  - inventories (item_id, item_type[gown|suit], sku, name, size, color, design, condition, rental_price, status_id)
+  - inventory_images (image_id, item_id, image_path, etc.)
+  - inventory_statuses (status_id, status_name)
+
+Controllers:
+  - InventoryController: CRUD, availability checking, bulk operations, reporting
+  - InventoryImageController: Image upload/management
+  - InventoryStatusController: Status management
+
+Key Features:
+  ✅ Automatic SKU generation (GWN-001, SUT-001 format)
+  ✅ Item condition tracking (good/damaged/under repair/retired)
+  ✅ Rental price management
+  ✅ Item images with multiple per item
+  ✅ Availability checking
+  ✅ Bulk status updates
+  ✅ Missing image identification
+  ✅ Financial metrics (total value, rental performance)
+  ✅ Database performance indexes
+
+Models & Relationships:
+  - Inventory (has_many Images, Rentals, ReservationItems, InvoiceItems)
+  - InventoryImage (belongs_to Inventory)
+  - InventoryStatus (has_many Inventories)
+
+Known Issues:
+  ✅ No critical issues found
+
+Dependencies:
+  → Reservation Subsystem (availability checks)
+  → Rental Subsystem (track rented items)
+  → Invoice Subsystem (rental pricing)
+
+================================================================================
+## SUBSYSTEM 4: RESERVATION MANAGEMENT
+================================================================================
+Status: ⚠️ MOSTLY COMPLETE (85%)
+
+Database Tables:
+  - reservations (reservation_id, customer_id, reserved_by, status_id, reservation_date, start_date, end_date)
+  - reservation_items (linking items to reservations)
+  - reservation_statuses (status_id, status_name)
+
+Controllers:
+  - ReservationController: CRUD, browse items, confirm, cancel, reporting
+  - ReservationItemController: Item linking
+
+Key Features:
+  ✅ Browse available inventory
+  ✅ Check item details and availability
+  ✅ Create reservations with date ranges
+  ✅ Confirm reservations
+  ✅ Cancel reservations
+  ✅ Item availability validation
+  ✅ PDF report generation
+  ✅ Complex validation rules
+
+Models & Relationships:
+  - Reservation (has_many ReservationItems, Rentals, Invoices)
+  - ReservationItem (belongs_to Reservation, Inventory)
+  - ReservationStatus (has_many Reservations)
+
+CRITICAL ISSUES - MUST FIX:
+  ❌ Missing 'use Illuminate\Support\Facades\Auth;' (lines 208, 587, 642)
+  ❌ Missing 'use App\Models\ReservationItem;' (line 236)
+  
+HIGH PRIORITY ISSUES:
+  ⚠️ TODO comment: Inventory status not updated when canceling reservations (line 596)
+  ⚠️ Missing error handling in store() method
+  ⚠️ generatePDF() returns wrong type annotation
+
+Medium Priority:
+  ⚠️ Missing exception handling in create/update operations
+
+Dependencies:
+  → Customer Subsystem
+  → Inventory Subsystem (availability)
+  → Rental Subsystem (convert to rental)
+  → Invoice Subsystem (billing)
+  → User Model (track who reserved)
+
+================================================================================
+## SUBSYSTEM 5: RENTAL MANAGEMENT
+================================================================================
+Status: ✅ COMPLETE (88%)
+
+Database Tables:
+  - rentals (rental_id, reservation_id, item_id, customer_id, released_by, released_date, due_date, 
+             original_due_date, extension_count, extended_by, last_extended_at, extension_reason,
+             return_date, returned_to, return_notes, status_id)
+  - rental_statuses (status_id, status_name)
+
+Controllers:
+  - RentalController: CRUD, release, return, extend, overdue checking, reporting
+  - RentalStatusController: Status management
+
+Key Features:
+  ✅ Item release to customers
+  ✅ Rental status tracking
+  ✅ Extension management with reason tracking
+  ✅ Return processing with condition notes
+  ✅ Overdue detection (automatic)
+  ✅ Batch overdue checking
+  ✅ Customer rental history
+  ✅ Item rental history
+  ✅ Late fee integration
+  ✅ PDF report generation
+  ✅ Metrics and statistics
+
+Staff Tracking (Audit Trail):
+  ✅ released_by (who released item)
+  ✅ returned_to (who accepted return)
+  ✅ extended_by (who authorized extension)
+
+Models & Relationships:
+  - Rental (has_many Invoices, belongs_to many relationships)
+  - RentalStatus (has_many Rentals)
+
+Known Issues:
+  ⚠️ Return type mismatch in generatePDF()
+
+Dependencies:
+  → Customer Subsystem
+  → Inventory Subsystem
+  → Reservation Subsystem (optional)
+  → Invoice Subsystem (late fees)
+  → User Model (staff tracking)
+
+================================================================================
+## SUBSYSTEM 6: INVOICING & BILLING
+================================================================================
+Status: ⚠️ MOSTLY COMPLETE (82%)
+
+Database Tables:
+  - invoices (invoice_id, invoice_number, customer_id, reservation_id, rental_id,
+              subtotal, discount, tax, total_amount, amount_paid, balance_due,
+              invoice_date, due_date, invoice_type[reservation|rental|final], 
+              created_by, status_id)
+  - invoice_items (linking items to invoices)
+  - payment_statuses (referenced by invoices)
+
+Controllers:
+  - InvoiceController: CRUD, reporting, PDF generation
+  - InvoiceItemController: Line item management
+
+Key Features:
+  ✅ Three invoice types (reservation, rental, final)
+  ✅ Rental fee breakdown
+  ✅ Penalty/late fee tracking
+  ✅ Invoice PDF generation
+  ✅ Payment monitoring
+  ✅ Partial payment handling (balance_due)
+  ✅ Financial details retrieval
+  

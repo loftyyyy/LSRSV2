@@ -352,15 +352,37 @@
             // Destroy existing charts before creating new ones
             cleanupCharts();
 
-            const isDark = document.documentElement.classList.contains('dark') || 
-                          document.body.classList.contains('dark') ||
-                          window.matchMedia('(prefers-color-scheme: dark)').matches;
+            // Simply check if the html element has the 'dark' class
+            // This is the most reliable way with Tailwind CSS
+            const htmlElement = document.documentElement;
+            const isDark = htmlElement.classList.contains('dark');
 
-            const textColor = isDark ? '#e5e7eb' : '#1f2937';
+            // Use pure black for light mode for maximum contrast with white backgrounds
+            // Use light gray for dark mode for contrast with dark backgrounds
+            const textColor = isDark ? '#e5e7eb' : '#000000';
             const gridColor = isDark ? '#27272a' : '#d1d5db';
-            const backgroundColor = isDark ? '#404040' : '#f3f4f6';
 
             // Daily Revenue Chart
+            createDailyRevenueChart(data.daily_revenue, textColor, gridColor);
+
+            // Weekly Rentals Chart
+            createWeeklyRentalsChart(data.weekly_rentals, textColor, gridColor);
+
+            // Item Status Distribution Chart
+            createItemStatusChart(data.item_status_distribution, textColor, gridColor);
+
+            // Rental Status Distribution Chart
+            createRentalStatusChart(data.rental_status_distribution, textColor, gridColor);
+
+            // Top Items Chart
+            createTopItemsChart(data.top_items, textColor, gridColor);
+
+            // Top Customers Chart
+            createTopCustomersChart(data.top_customers, textColor, gridColor);
+        }
+
+        // Daily Revenue Chart
+        function createDailyRevenueChart(dailyRevenueData, textColor, gridColor) {
             try {
                 const dailyRevenueCanvas = document.getElementById('dailyRevenueChart');
                 if (!dailyRevenueCanvas) {
@@ -372,13 +394,13 @@
                 dashboardCharts.dailyRevenue = new Chart(dailyRevenueCtx, {
                     type: 'line',
                     data: {
-                        labels: data.daily_revenue.map(d => {
+                        labels: dailyRevenueData.map(d => {
                             const date = new Date(d.date);
                             return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                         }),
                         datasets: [{
                             label: 'Revenue',
-                            data: data.daily_revenue.map(d => d.amount),
+                            data: dailyRevenueData.map(d => d.amount),
                             borderColor: '#0ea5e9',
                             backgroundColor: 'rgba(6, 182, 212, 0.1)',
                             borderWidth: 2,
@@ -437,8 +459,10 @@
             } catch (error) {
                 console.error('Error creating Daily Revenue Chart:', error);
             }
+        }
 
-            // Weekly Rentals Chart
+        // Weekly Rentals Chart
+        function createWeeklyRentalsChart(weeklyRentalsData, textColor, gridColor) {
             try {
                 const weeklyRentalsCanvas = document.getElementById('weeklyRentalsChart');
                 if (!weeklyRentalsCanvas) {
@@ -450,10 +474,10 @@
                 dashboardCharts.weeklyRentals = new Chart(weeklyRentalsCtx, {
                     type: 'bar',
                     data: {
-                        labels: data.weekly_rentals.map(w => w.week),
+                        labels: weeklyRentalsData.map(w => w.week),
                         datasets: [{
                             label: 'Rentals',
-                            data: data.weekly_rentals.map(w => w.count),
+                            data: weeklyRentalsData.map(w => w.count),
                             backgroundColor: '#8b5cf6',
                             borderColor: '#7c3aed',
                             borderWidth: 1,
@@ -497,8 +521,10 @@
             } catch (error) {
                 console.error('Error creating Weekly Rentals Chart:', error);
             }
+        }
 
-            // Item Status Distribution (Doughnut)
+        // Item Status Distribution Chart
+        function createItemStatusChart(itemStatusData, textColor, gridColor) {
             try {
                 const itemStatusCanvas = document.getElementById('itemStatusChart');
                 if (!itemStatusCanvas) {
@@ -510,11 +536,11 @@
                 dashboardCharts.itemStatus = new Chart(itemStatusCtx, {
                     type: 'doughnut',
                     data: {
-                        labels: data.item_status_distribution.map(d => d.status),
+                        labels: itemStatusData.map(d => d.status),
                         datasets: [{
-                            data: data.item_status_distribution.map(d => d.count),
+                            data: itemStatusData.map(d => d.count),
                             backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
-                            borderColor: isDark ? '#1f2937' : '#fff',
+                            borderColor: textColor === '#e5e7eb' ? '#1f2937' : '#fff',
                             borderWidth: 2,
                         }]
                     },
@@ -544,8 +570,10 @@
             } catch (error) {
                 console.error('Error creating Item Status Chart:', error);
             }
+        }
 
-            // Rental Status Distribution (Pie)
+        // Rental Status Distribution Chart
+        function createRentalStatusChart(rentalStatusData, textColor, gridColor) {
             try {
                 const rentalStatusCanvas = document.getElementById('rentalStatusChart');
                 if (!rentalStatusCanvas) {
@@ -557,11 +585,11 @@
                 dashboardCharts.rentalStatus = new Chart(rentalStatusCtx, {
                     type: 'pie',
                     data: {
-                        labels: data.rental_status_distribution.map(d => d.status),
+                        labels: rentalStatusData.map(d => d.status),
                         datasets: [{
-                            data: data.rental_status_distribution.map(d => d.count),
+                            data: rentalStatusData.map(d => d.count),
                             backgroundColor: ['#06b6d4', '#14b8a6', '#f59e0b', '#ef4444', '#8b5cf6'],
-                            borderColor: isDark ? '#1f2937' : '#fff',
+                            borderColor: textColor === '#e5e7eb' ? '#1f2937' : '#fff',
                             borderWidth: 2,
                         }]
                     },
@@ -591,8 +619,10 @@
             } catch (error) {
                 console.error('Error creating Rental Status Chart:', error);
             }
+        }
 
-            // Top Items (Horizontal Bar)
+        // Top Items Chart
+        function createTopItemsChart(topItemsData, textColor, gridColor) {
             try {
                 const topItemsCanvas = document.getElementById('topItemsChart');
                 if (!topItemsCanvas) {
@@ -604,10 +634,10 @@
                 dashboardCharts.topItems = new Chart(topItemsCtx, {
                     type: 'bar',
                     data: {
-                        labels: data.top_items.map(item => item.item_name),
+                        labels: topItemsData.map(item => item.item_name),
                         datasets: [{
                             label: 'Rentals',
-                            data: data.top_items.map(item => item.rental_count),
+                            data: topItemsData.map(item => item.rental_count),
                             backgroundColor: '#a78bfa',
                             borderColor: '#9333ea',
                             borderWidth: 1,
@@ -652,8 +682,10 @@
             } catch (error) {
                 console.error('Error creating Top Items Chart:', error);
             }
+        }
 
-            // Top Customers (Horizontal Bar)
+        // Top Customers Chart
+        function createTopCustomersChart(topCustomersData, textColor, gridColor) {
             try {
                 const topCustomersCanvas = document.getElementById('topCustomersChart');
                 if (!topCustomersCanvas) {
@@ -665,10 +697,10 @@
                 dashboardCharts.topCustomers = new Chart(topCustomersCtx, {
                     type: 'bar',
                     data: {
-                        labels: data.top_customers.map(customer => customer.name),
+                        labels: topCustomersData.map(customer => customer.name),
                         datasets: [{
                             label: 'Rentals',
-                            data: data.top_customers.map(customer => customer.rental_count),
+                            data: topCustomersData.map(customer => customer.rental_count),
                             backgroundColor: '#38bdf8',
                             borderColor: '#0284c7',
                             borderWidth: 1,

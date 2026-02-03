@@ -2,7 +2,7 @@
 <div id="addItemModal" class="hidden fixed inset-0 z-50 flex items-center justify-center px-2 py-6 bg-black/60 backdrop-blur-sm">
     <div class="w-full max-w-4xl bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-3xl shadow-2xl">
         {{-- Header --}}
-        <div class="flex items-center justify-between px-6 py-4 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/80 dark:bg-neutral-900/50">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/80 rounded-t-3xl dark:bg-neutral-900/50">
             <div>
                 <p class="text-xs uppercase tracking-[0.2em] text-neutral-500 dark:text-neutral-500">New Item</p>
                 <h3 class="text-lg font-semibold text-neutral-900 dark:text-white">Add Inventory Item</h3>
@@ -151,6 +151,50 @@
                 </div>
             </div>
 
+            {{-- Image Upload Section --}}
+            <div class="space-y-3">
+                <div class="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                    <x-icon name="image" class="h-4 w-4" />
+                    <span>Item Photos (Optional)</span>
+                </div>
+
+                <div class="bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4">
+                    <p class="text-xs text-neutral-600 dark:text-neutral-400 mb-4">
+                        Upload photos of the item from different angles. You can upload up to 5 photos.
+                    </p>
+
+                    {{-- File Input (Hidden) --}}
+                    <input
+                        type="file"
+                        id="imageInput"
+                        name="images[]"
+                        multiple
+                        accept="image/*"
+                        class="hidden"
+                    />
+
+                    {{-- Upload Button --}}
+                    <button
+                        type="button"
+                        onclick="document.getElementById('imageInput').click()"
+                        class="w-full flex items-center justify-center gap-2 rounded-xl px-4 py-3 border-2 border-dashed border-neutral-300 dark:border-neutral-700 bg-white dark:bg-black/60 text-neutral-600 dark:text-neutral-400 hover:border-violet-600 hover:text-violet-600 dark:hover:border-violet-500 dark:hover:text-violet-400 transition-colors duration-300"
+                    >
+                        <x-icon name="cloud-upload" class="h-4 w-4" />
+                        <span class="text-xs font-medium">Click to upload or drag and drop</span>
+                    </button>
+
+                    {{-- Image Preview Grid --}}
+                    <div id="imagePreviewContainer" class="mt-4 grid grid-cols-5 gap-3 hidden">
+                        <!-- Image previews will be inserted here -->
+                    </div>
+
+                    {{-- No Images Message --}}
+                    <div id="noImagesMessage" class="mt-4 text-center text-xs text-neutral-500 dark:text-neutral-400">
+                        No photos selected yet
+                    </div>
+                </div>
+            </div>
+
             {{-- Error Message --}}
             <div id="addItemError" class="hidden bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-3 flex items-center gap-2">
                 <x-icon name="alert-circle" class="h-4 w-4 text-red-500" />
@@ -234,7 +278,8 @@
     if (!globalThis.addItemModalState) {
         globalThis.addItemModalState = {
             isOpen: false,
-            isSubmitting: false
+            isSubmitting: false,
+            selectedImages: [] // Track selected images
         };
     }
 
@@ -255,6 +300,7 @@
 
         // Reset form
         document.getElementById('addItemForm').reset();
+        clearImagePreviews();
         hideMessages();
     }
 
@@ -267,6 +313,7 @@
 
         // Reset form and state
         document.getElementById('addItemForm').reset();
+        clearImagePreviews();
         hideMessages();
         globalThis.addItemModalState.isSubmitting = false;
         updateSubmitButton();
@@ -310,6 +357,136 @@
             btnLoading.classList.add('hidden');
         }
     }
+
+    // Clear image previews
+    function clearImagePreviews() {
+        globalThis.addItemModalState.selectedImages = [];
+        var container = document.getElementById('imagePreviewContainer');
+        container.innerHTML = '';
+        container.classList.add('hidden');
+        document.getElementById('noImagesMessage').classList.remove('hidden');
+    }
+
+    // Remove single image preview
+    function removeImagePreview(index) {
+        globalThis.addItemModalState.selectedImages.splice(index, 1);
+        renderImagePreviews();
+    }
+
+    // Update image metadata
+    function updateImageMetadata(index, field, value) {
+        if (globalThis.addItemModalState.selectedImages[index]) {
+            globalThis.addItemModalState.selectedImages[index][field] = value;
+        }
+    }
+
+    // Render image previews
+    function renderImagePreviews() {
+        var container = document.getElementById('imagePreviewContainer');
+        var noImagesMsg = document.getElementById('noImagesMessage');
+
+        if (globalThis.addItemModalState.selectedImages.length === 0) {
+            container.classList.add('hidden');
+            noImagesMsg.classList.remove('hidden');
+            return;
+        }
+
+        container.classList.remove('hidden');
+        noImagesMsg.classList.add('hidden');
+
+        container.innerHTML = globalThis.addItemModalState.selectedImages.map((img, index) => `
+            <div class="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg overflow-hidden hover:border-violet-400 dark:hover:border-violet-500 transition-colors duration-200">
+                <!-- Image Preview -->
+                <div class="aspect-square bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center overflow-hidden">
+                    <img src="${img.preview}" alt="Preview ${index + 1}" class="w-full h-full object-cover">
+                </div>
+
+                <!-- Metadata Section -->
+                <div class="p-2 space-y-2">
+                    <!-- View Type Dropdown -->
+                    <div class="space-y-1">
+                        <label class="text-xs font-medium text-neutral-600 dark:text-neutral-400">View Type</label>
+                        <select onchange="updateImageMetadata(${index}, 'view_type', this.value)" class="w-full text-xs rounded border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-black/60 text-neutral-700 dark:text-neutral-100 px-2 py-1 focus:outline-none focus:border-violet-500">
+                            <option value="front" ${img.view_type === 'front' ? 'selected' : ''}>Front</option>
+                            <option value="back" ${img.view_type === 'back' ? 'selected' : ''}>Back</option>
+                            <option value="side" ${img.view_type === 'side' ? 'selected' : ''}>Side</option>
+                            <option value="detail" ${img.view_type === 'detail' ? 'selected' : ''}>Detail</option>
+                            <option value="full" ${img.view_type === 'full' ? 'selected' : ''}>Full</option>
+                        </select>
+                    </div>
+
+                    <!-- Caption Input -->
+                    <div class="space-y-1">
+                        <label class="text-xs font-medium text-neutral-600 dark:text-neutral-400">Caption (optional)</label>
+                        <input type="text" placeholder="e.g., Embroidered detail" onchange="updateImageMetadata(${index}, 'caption', this.value)" class="w-full text-xs rounded border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-black/60 text-neutral-700 dark:text-neutral-100 px-2 py-1 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-violet-500">
+                    </div>
+
+                    <!-- Primary Checkbox -->
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" onchange="updateImageMetadata(${index}, 'is_primary', this.checked)" ${img.is_primary ? 'checked' : ''} class="rounded border-neutral-300 dark:border-neutral-600">
+                        <span class="text-xs text-neutral-600 dark:text-neutral-400">Primary image</span>
+                    </label>
+
+                    <!-- Remove Button -->
+                    <button type="button" onclick="removeImagePreview(${index})" class="w-full text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 py-1 transition-colors duration-200">
+                        Remove
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // Validate image file
+    function validateImageFile(file) {
+        var maxSize = 5 * 1024 * 1024; // 5MB
+        var allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+
+        if (!allowedTypes.includes(file.type)) {
+            return 'Only JPEG, PNG, GIF, and WebP images are allowed';
+        }
+
+        if (file.size > maxSize) {
+            return 'Image size must be less than 5MB';
+        }
+
+        return null;
+    }
+
+    // Handle image input change
+    document.getElementById('imageInput').addEventListener('change', function(e) {
+        var files = Array.from(e.target.files);
+        var maxImages = 5;
+        var currentCount = globalThis.addItemModalState.selectedImages.length;
+
+        if (currentCount + files.length > maxImages) {
+            showError(`You can upload a maximum of ${maxImages} images. You have ${currentCount} selected.`);
+            return;
+        }
+
+        files.forEach((file) => {
+            var error = validateImageFile(file);
+            if (error) {
+                showError(error);
+                return;
+            }
+
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                globalThis.addItemModalState.selectedImages.push({
+                    file: file,
+                    preview: e.target.result,
+                    view_type: 'front',
+                    caption: '',
+                    is_primary: globalThis.addItemModalState.selectedImages.length === 0 // First image is primary by default
+                });
+                renderImagePreviews();
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // Reset file input for next selection
+        this.value = '';
+    });
 
     // Validate form
     function validateAddItemForm(formData) {
@@ -369,17 +546,28 @@
 
         try {
             // Prepare API payload
-            var payload = {
-                name: formData.get('name'),
-                sku: formData.get('sku'),
-                item_type: formData.get('item_type'),
-                size: formData.get('size'),
-                color: formData.get('color'),
-                design: formData.get('design'),
-                rental_price: parseFloat(formData.get('rental_price'))
-            };
+            var payload = new FormData();
+            payload.append('name', formData.get('name'));
+            payload.append('sku', formData.get('sku'));
+            payload.append('item_type', formData.get('item_type'));
+            payload.append('size', formData.get('size'));
+            payload.append('color', formData.get('color'));
+            payload.append('design', formData.get('design'));
+            payload.append('rental_price', parseFloat(formData.get('rental_price')));
 
-            var response = await axios.post('/api/inventories', payload);
+            // Add images and their metadata
+            globalThis.addItemModalState.selectedImages.forEach((img, index) => {
+                payload.append(`images[${index}][file]`, img.file);
+                payload.append(`images[${index}][view_type]`, img.view_type);
+                payload.append(`images[${index}][caption]`, img.caption || '');
+                payload.append(`images[${index}][is_primary]`, img.is_primary ? 1 : 0);
+            });
+
+            var response = await axios.post('/api/inventories', payload, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
             var data = response.data;
 
             if (data.success) {
