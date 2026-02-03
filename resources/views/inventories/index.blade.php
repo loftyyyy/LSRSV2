@@ -186,28 +186,29 @@
 
 <script>
     // Use globalThis to avoid redeclaration errors when Turbo navigates between pages
-    // Always reset the state on page load to ensure fresh data
-    globalThis.inventoryState = {
-        currentPage: 1,
-        perPage: 15,
-        searchQuery: '',
-        statusFilter: '',
-        sortBy: 'created_at',
-        sortOrder: 'desc',
-        totalPages: 1,
-        totalCount: 0,
-        isLoading: false,
-        allItems: [],
-        // Stats tracking (always shows total, not filtered)
-        totalItemsCount: 0,
-        availableItemsCount: 0,
-        underRepairItemsCount: 0,
-        inventoryValueCount: 0,
-        // Dynamic status mappings
-        statuses: {},
-        // Request cancellation
-        abortController: null
-    };
+    if (!globalThis.inventoryState) {
+        globalThis.inventoryState = {
+            currentPage: 1,
+            perPage: 15,
+            searchQuery: '',
+            statusFilter: '',
+            sortBy: 'created_at',
+            sortOrder: 'desc',
+            totalPages: 1,
+            totalCount: 0,
+            isLoading: false,
+            allItems: [],
+            // Stats tracking (always shows total, not filtered)
+            totalItemsCount: 0,
+            availableItemsCount: 0,
+            underRepairItemsCount: 0,
+            inventoryValueCount: 0,
+            // Dynamic status mappings
+            statuses: {},
+            // Request cancellation
+            abortController: null
+        };
+    }
 
     // Debounce timer for search (use var to allow redeclaration)
     var searchDebounceTimer;
