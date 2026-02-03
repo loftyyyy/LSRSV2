@@ -24,189 +24,189 @@
     @endif
 </head>
 <body class="min-h-screen flex font-geist bg-neutral-100 text-neutral-900 dark:bg-black dark:text-neutral-50 transition-colors duration-300 ease-in-out">
-    <x-sidebar />
+<x-sidebar />
 
-    <main class="flex-1 ml-64 flex flex-col px-10 py-8 overflow-x-hidden overflow-y-auto bg-gradient-to-b from-neutral-100 via-neutral-100 to-neutral-200 dark:from-black dark:via-black dark:to-neutral-950 transition-colors duration-300 ease-in-out">
+<main class="flex-1 ml-64 flex flex-col px-10 py-8 overflow-x-hidden overflow-y-auto bg-gradient-to-b from-neutral-100 via-neutral-100 to-neutral-200 dark:from-black dark:via-black dark:to-neutral-950 transition-colors duration-300 ease-in-out">
 
-        <header class="mb-8 transition-colors duration-300 ease-in-out">
-            <div class="flex items-center justify-between gap-4">
-                <div>
-                    <h1 class="text-3xl font-semibold tracking-tight text-neutral-900 dark:text-white transition-colors duration-300 ease-in-out">
-                        Customers
-                    </h1>
-                    <p class="mt-1 text-sm font-geist-mono text-neutral-500 dark:text-neutral-400 transition-colors duration-300 ease-in-out">
-                        View and manage customer profiles
-                    </p>
+    <header class="mb-8 transition-colors duration-300 ease-in-out">
+        <div class="flex items-center justify-between gap-4">
+            <div>
+                <h1 class="text-3xl font-semibold tracking-tight text-neutral-900 dark:text-white transition-colors duration-300 ease-in-out">
+                    Customers
+                </h1>
+                <p class="mt-1 text-sm font-geist-mono text-neutral-500 dark:text-neutral-400 transition-colors duration-300 ease-in-out">
+                    View and manage customer profiles
+                </p>
+            </div>
+
+            <div class="flex items-center gap-3 text-xs">
+                <a href="/customers/reports" class="inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-[14px] font-medium border dark:hover:text-black hover:text-white border-neutral-300 bg-white text-neutral-700 dark:hover:bg-violet-600 hover:bg-violet-600  dark:border-neutral-800 dark:bg-neutral-950/80 dark:text-neutral-200 dark:hover:bg-neutral-900  transition-colors duration-300 ease-in-out">
+                    <x-icon name="chart-column" class="h-4 w-4" />
+                    <span>Reports</span>
+                </a>
+
+                <button onclick="openAddCustomerModal()" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-[14px] font-medium bg-violet-600 text-white dark:hover:text-white hover:text-black dark:text-black hover:bg-violet-500 shadow-violet-600/40 transition-colors duration-300 ease-in-out">
+                    <x-icon name="plus" class="h-4 w-4" />
+                    <span>Add Customer</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+
+    {{-- Stats --}}
+    <section class="grid grid-cols-4 gap-6 mb-8">
+        <div class="rounded-2xl p-6 border border-neutral-200 bg-white dark:border-neutral-900 dark:bg-neutral-950/60 shadow-sm dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
+            <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
+                Total Customers
+            </div>
+            <div id="totalCustomersCount" class="text-3xl font-semibold text-neutral-900 dark:text-white transition-colors duration-300 ease-in-out">
+                0
+            </div>
+        </div>
+        <div class="rounded-2xl p-6 border border-neutral-200 bg-white dark:border-neutral-900 dark:bg-neutral-950/60 shadow-sm dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
+            <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
+                Active Customers
+            </div>
+            <div id="activeCustomersCount" class="text-3xl font-semibold text-amber-500 transition-colors duration-300 ease-in-out">
+                0
+            </div>
+        </div>
+        <div class="rounded-2xl p-6 border border-neutral-200 bg-white dark:border-neutral-900 dark:bg-neutral-950/60 shadow-sm dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
+            <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
+                Inactive Customers
+            </div>
+            <div id="inactiveCustomersCount" class="text-3xl font-semibold text-green-500 transition-colors duration-300 ease-in-out">
+                0
+            </div>
+        </div>
+        <div class="rounded-2xl p-6 border border-neutral-200 bg-white dark:border-neutral-900 dark:bg-neutral-950/60 shadow-sm dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
+            <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
+                Customers with Rentals
+            </div>
+            <div id="customersWithRentalsCount" class="text-3xl font-semibold text-violet-600 transition-colors duration-300 ease-in-out">
+                0
+            </div>
+        </div>
+    </section>
+
+
+    {{-- Filters + table --}}
+    <section class="flex-1">
+        <div class="rounded-2xl border border-neutral-200 bg-white shadow-sm dark:border-neutral-900 dark:bg-neutral-950/60 dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
+            {{-- Search & filters --}}
+            <div class="border-b border-neutral-200 px-6 py-4 dark:border-neutral-900 transition-colors duration-300 ease-in-out">
+                <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                    <div class="flex-1">
+                        <div>
+                            <div class="flex items-center gap-3 rounded-2xl bg-white px-4 py-2.5 border border-neutral-300 focus-within:border-neutral-500 dark:border-neutral-800 dark:bg-black/60 transition-colors duration-300 ease-in-out">
+                                <x-icon name="search" class="h-4 w-4 text-neutral-500 transition-colors duration-300 ease-in-out" />
+                                <input id="searchInput" type="text" placeholder="Search by customer, email, or ID..." class="w-full bg-transparent text-xs text-neutral-700 placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500 focus:outline-none transition-colors duration-300 ease-in-out">
+                            </div>
+                            <div id="searchIndicators" class="mt-2 flex flex-wrap gap-1.5 px-0"></div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        <!-- Custom Filter Dropdown -->
+                        <div class="relative mb-2" id="filter-dropdown">
+                            <button id="filter-button" class="flex items-center gap-2 rounded-2xl px-3 py-2 text-xs border border-neutral-300 bg-white text-neutral-700 dark:border-neutral-800 dark:bg-black/60 dark:text-neutral-100 focus:outline-none transition-colors duration-300 ease-in-out">
+                                <span id="filter-button-text">Filter Status</span>
+                                <span id="icon-down" class="h-3 w-3 transition-transform duration-300 ease-in-out">
+                                    <x-icon name="arrow-down" class="h-3 w-3" />
+                                </span>
+                                <span id="icon-up" class="hidden h-3 w-3 transition-transform duration-300 ease-in-out">
+                                    <x-icon name="arrow-up" class="h-3 w-3" />
+                                </span>
+                            </button>
+
+                            <div id="filter-menu" class="absolute right-0 mt-2 w-48 rounded-xl border border-neutral-300 bg-white dark:border-neutral-800 dark:bg-black/60 shadow-lg z-50 overflow-hidden opacity-0 scale-95 pointer-events-none transition-all duration-200 ease-in-out">
+                                <ul class="flex flex-col text-xs">
+                                    <li class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">All Status</li>
+                                    <li class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">Active</li>
+                                    <li class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">Inactive</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Table --}}
+            <div class="px-6 py-4">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-left text-xs text-neutral-600 dark:text-neutral-300 transition-colors duration-300 ease-in-out">
+                        <thead class="text-[11px] uppercase tracking-[0.18em] text-neutral-500">
+                        <tr class="border-b border-neutral-200 dark:border-neutral-900/80">
+                            <th class="py-2.5 pr-4 pl-4 font-medium">ID</th>
+                            <th class="py-2.5 pr-4 font-medium cursor-pointer hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors" onclick="toggleSort('first_name')">
+                                <div class="flex items-center gap-1.5">
+                                    <span>Name</span>
+                                    <span class="sort-indicator text-[10px]"></span>
+                                </div>
+                            </th>
+                            <th class="py-2.5 pr-4 font-medium cursor-pointer hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors" onclick="toggleSort('email')">
+                                <div class="flex items-center gap-1.5">
+                                    <span>Email</span>
+                                    <span class="sort-indicator text-[10px]"></span>
+                                </div>
+                            </th>
+                            <th class="py-2.5 pr-4 font-medium cursor-pointer hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors" onclick="toggleSort('contact_number')">
+                                <div class="flex items-center gap-1.5">
+                                    <span>Phone</span>
+                                    <span class="sort-indicator text-[10px]"></span>
+                                </div>
+                            </th>
+                            <th class="py-2.5 pr-4 font-medium">Address</th>
+                            <th class="py-2.5 pr-4 font-medium cursor-pointer hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors" onclick="toggleSort('created_at')">
+                                <div class="flex items-center gap-1.5">
+                                    <span>Created Date</span>
+                                    <span class="sort-indicator text-[10px]"></span>
+                                </div>
+                            </th>
+                            <th class="py-2.5 pr-4 font-medium cursor-pointer hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors" onclick="toggleSort('rentals_count')">
+                                <div class="flex items-center gap-1.5">
+                                    <span>Total Rentals</span>
+                                    <span class="sort-indicator text-[10px]"></span>
+                                </div>
+                            </th>
+                            <th class="py-2.5 pr-4 font-medium text-left">Status</th>
+                            <th class="py-2.5 pl-2 font-medium text-left">Actions</th>
+                        </tr>
+                        </thead>
+
+                        <tbody id="customersTableBody" class="text-[13px]">
+                        <!-- Rows will be dynamically inserted here -->
+                        </tbody>
+                    </table>
                 </div>
 
-                <div class="flex items-center gap-3 text-xs">
-                    <a href="/customers/reports" class="inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-[14px] font-medium border dark:hover:text-black hover:text-white border-neutral-300 bg-white text-neutral-700 dark:hover:bg-violet-600 hover:bg-violet-600  dark:border-neutral-800 dark:bg-neutral-950/80 dark:text-neutral-200 dark:hover:bg-neutral-900  transition-colors duration-300 ease-in-out">
-                        <x-icon name="chart-column" class="h-4 w-4" />
-                        <span>Reports</span>
-                    </a>
+                <!-- Empty state -->
+                <div id="emptyState" class="text-center py-12">
+                    <p class="text-neutral-500 dark:text-neutral-400">No customers found</p>
+                </div>
+            </div>
 
-                    <button onclick="openAddCustomerModal()" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-[14px] font-medium bg-violet-600 text-white dark:hover:text-white hover:text-black dark:text-black hover:bg-violet-500 shadow-violet-600/40 transition-colors duration-300 ease-in-out">
-                        <x-icon name="plus" class="h-4 w-4" />
-                        <span>Add Customer</span>
+            <!-- Pagination Controls -->
+            <div id="paginationControls" class="px-6 py-4 border-t border-neutral-200 dark:border-neutral-900 flex items-center justify-between">
+                <div class="text-xs text-neutral-500 dark:text-neutral-400">
+                    Showing <span id="pageStart">0</span> to <span id="pageEnd">0</span> of <span id="pageTotal">0</span> results
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="prevBtn" onclick="previousPage()" class="text-xs rounded-lg px-3 py-1.5 border border-neutral-300 bg-white text-neutral-700 dark:border-neutral-800 dark:bg-black/60 dark:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-900 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-geist" disabled>
+                        Previous
+                    </button>
+                    <div id="pageInfo" class="text-xs text-neutral-600 dark:text-neutral-300 min-w-[100px] text-center">
+                        Page 1
+                    </div>
+                    <button id="nextBtn" onclick="nextPage()" class="text-xs rounded-lg px-3 py-1.5 border border-neutral-300 bg-white text-neutral-700 dark:border-neutral-800 dark:bg-black/60 dark:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-900 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-geist" disabled>
+                        Next
                     </button>
                 </div>
             </div>
-        </header>
-
-
-         {{-- Stats --}}
-         <section class="grid grid-cols-4 gap-6 mb-8">
-             <div class="rounded-2xl p-6 border border-neutral-200 bg-white dark:border-neutral-900 dark:bg-neutral-950/60 shadow-sm dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
-                 <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
-                     Total Customers
-                 </div>
-                 <div id="totalCustomersCount" class="text-3xl font-semibold text-neutral-900 dark:text-white transition-colors duration-300 ease-in-out">
-                     0
-                 </div>
-             </div>
-             <div class="rounded-2xl p-6 border border-neutral-200 bg-white dark:border-neutral-900 dark:bg-neutral-950/60 shadow-sm dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
-                 <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
-                     Active Customers
-                 </div>
-                 <div id="activeCustomersCount" class="text-3xl font-semibold text-amber-500 transition-colors duration-300 ease-in-out">
-                     0
-                 </div>
-             </div>
-             <div class="rounded-2xl p-6 border border-neutral-200 bg-white dark:border-neutral-900 dark:bg-neutral-950/60 shadow-sm dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
-                 <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
-                     Inactive Customers
-                 </div>
-                 <div id="inactiveCustomersCount" class="text-3xl font-semibold text-green-500 transition-colors duration-300 ease-in-out">
-                     0
-                 </div>
-             </div>
-             <div class="rounded-2xl p-6 border border-neutral-200 bg-white dark:border-neutral-900 dark:bg-neutral-950/60 shadow-sm dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
-                 <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
-                     Customers with Rentals
-                 </div>
-                 <div id="customersWithRentalsCount" class="text-3xl font-semibold text-violet-600 transition-colors duration-300 ease-in-out">
-                     0
-                 </div>
-             </div>
-         </section>
-
-
-        {{-- Filters + table --}}
-        <section class="flex-1">
-            <div class="rounded-2xl border border-neutral-200 bg-white shadow-sm dark:border-neutral-900 dark:bg-neutral-950/60 dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
-                {{-- Search & filters --}}
-                <div class="border-b border-neutral-200 px-6 py-4 dark:border-neutral-900 transition-colors duration-300 ease-in-out">
-                    <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                        <div class="flex-1">
-                            <div>
-                                <div class="flex items-center gap-3 rounded-2xl bg-white px-4 py-2.5 border border-neutral-300 focus-within:border-neutral-500 dark:border-neutral-800 dark:bg-black/60 transition-colors duration-300 ease-in-out">
-                                    <x-icon name="search" class="h-4 w-4 text-neutral-500 transition-colors duration-300 ease-in-out" />
-                                    <input id="searchInput" type="text" placeholder="Search by customer, email, or ID..." class="w-full bg-transparent text-xs text-neutral-700 placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500 focus:outline-none transition-colors duration-300 ease-in-out">
-                                </div>
-                                <div id="searchIndicators" class="mt-2 flex flex-wrap gap-1.5 px-0"></div>
-                            </div>
-                        </div>
-
-                        <div class="flex items-center gap-3">
-                            <!-- Custom Filter Dropdown -->
-                            <div class="relative mb-2" id="filter-dropdown">
-                                <button id="filter-button" class="flex items-center gap-2 rounded-2xl px-3 py-2 text-xs border border-neutral-300 bg-white text-neutral-700 dark:border-neutral-800 dark:bg-black/60 dark:text-neutral-100 focus:outline-none transition-colors duration-300 ease-in-out">
-                                    <span id="filter-button-text">Filter Status</span>
-                                    <span id="icon-down" class="h-3 w-3 transition-transform duration-300 ease-in-out">
-                                    <x-icon name="arrow-down" class="h-3 w-3" />
-                                </span>
-                                    <span id="icon-up" class="hidden h-3 w-3 transition-transform duration-300 ease-in-out">
-                                    <x-icon name="arrow-up" class="h-3 w-3" />
-                                </span>
-                                </button>
-
-                                <div id="filter-menu" class="absolute right-0 mt-2 w-48 rounded-xl border border-neutral-300 bg-white dark:border-neutral-800 dark:bg-black/60 shadow-lg z-50 overflow-hidden opacity-0 scale-95 pointer-events-none transition-all duration-200 ease-in-out">
-                                    <ul class="flex flex-col text-xs">
-                                        <li class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">All Status</li>
-                                        <li class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">Active</li>
-                                        <li class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">Inactive</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Table --}}
-                <div class="px-6 py-4">
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full text-left text-xs text-neutral-600 dark:text-neutral-300 transition-colors duration-300 ease-in-out">
-                            <thead class="text-[11px] uppercase tracking-[0.18em] text-neutral-500">
-                            <tr class="border-b border-neutral-200 dark:border-neutral-900/80">
-                                <th class="py-2.5 pr-4 pl-4 font-medium">ID</th>
-                                <th class="py-2.5 pr-4 font-medium cursor-pointer hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors" onclick="toggleSort('first_name')">
-                                    <div class="flex items-center gap-1.5">
-                                        <span>Name</span>
-                                        <span class="sort-indicator text-[10px]"></span>
-                                    </div>
-                                </th>
-                                <th class="py-2.5 pr-4 font-medium cursor-pointer hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors" onclick="toggleSort('email')">
-                                    <div class="flex items-center gap-1.5">
-                                        <span>Email</span>
-                                        <span class="sort-indicator text-[10px]"></span>
-                                    </div>
-                                </th>
-                                <th class="py-2.5 pr-4 font-medium cursor-pointer hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors" onclick="toggleSort('contact_number')">
-                                    <div class="flex items-center gap-1.5">
-                                        <span>Phone</span>
-                                        <span class="sort-indicator text-[10px]"></span>
-                                    </div>
-                                </th>
-                                <th class="py-2.5 pr-4 font-medium">Address</th>
-                                <th class="py-2.5 pr-4 font-medium cursor-pointer hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors" onclick="toggleSort('created_at')">
-                                    <div class="flex items-center gap-1.5">
-                                        <span>Created Date</span>
-                                        <span class="sort-indicator text-[10px]"></span>
-                                    </div>
-                                </th>
-                                <th class="py-2.5 pr-4 font-medium cursor-pointer hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors" onclick="toggleSort('rentals_count')">
-                                    <div class="flex items-center gap-1.5">
-                                        <span>Total Rentals</span>
-                                        <span class="sort-indicator text-[10px]"></span>
-                                    </div>
-                                </th>
-                                <th class="py-2.5 pr-4 font-medium text-left">Status</th>
-                                <th class="py-2.5 pl-2 font-medium text-left">Actions</th>
-                            </tr>
-                            </thead>
-
-                            <tbody id="customersTableBody" class="text-[13px]">
-                            <!-- Rows will be dynamically inserted here -->
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Empty state -->
-                    <div id="emptyState" class="text-center py-12">
-                        <p class="text-neutral-500 dark:text-neutral-400">No customers found</p>
-                    </div>
-                </div>
-
-                <!-- Pagination Controls -->
-                <div id="paginationControls" class="px-6 py-4 border-t border-neutral-200 dark:border-neutral-900 flex items-center justify-between">
-                    <div class="text-xs text-neutral-500 dark:text-neutral-400">
-                        Showing <span id="pageStart">0</span> to <span id="pageEnd">0</span> of <span id="pageTotal">0</span> results
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <button id="prevBtn" onclick="previousPage()" class="text-xs rounded-lg px-3 py-1.5 border border-neutral-300 bg-white text-neutral-700 dark:border-neutral-800 dark:bg-black/60 dark:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-900 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-geist" disabled>
-                            Previous
-                        </button>
-                        <div id="pageInfo" class="text-xs text-neutral-600 dark:text-neutral-300 min-w-[100px] text-center">
-                            Page 1
-                        </div>
-                        <button id="nextBtn" onclick="nextPage()" class="text-xs rounded-lg px-3 py-1.5 border border-neutral-300 bg-white text-neutral-700 dark:border-neutral-800 dark:bg-black/60 dark:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-900 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-geist" disabled>
-                            Next
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </main>
+        </div>
+    </section>
+</main>
 
 
 <script>
@@ -267,6 +267,10 @@
         globalThis.customerState.currentPage = 1;
         globalThis.customerState.searchQuery = '';
         globalThis.customerState.statusFilter = '';
+        globalThis.customerState.isLoading = false;
+        globalThis.customerState.allCustomers = []; // Clear any leftover customers
+        globalThis.customerState.totalPages = 1;
+        globalThis.customerState.totalCount = 0;
 
         // Load statuses first, then stats and customers
         fetchStatuses().then(() => {
@@ -274,19 +278,19 @@
             fetchCustomers();
         });
 
-         // Search with debounce
-         searchInput.addEventListener('input', function(e) {
-             clearTimeout(searchDebounceTimer);
-             globalThis.customerState.searchQuery = e.target.value;
-             globalThis.customerState.currentPage = 1;
+        // Search with debounce
+        searchInput.addEventListener('input', function(e) {
+            clearTimeout(searchDebounceTimer);
+            globalThis.customerState.searchQuery = e.target.value;
+            globalThis.customerState.currentPage = 1;
 
-             // Update search indicators immediately
-             updateSearchIndicators();
+            // Update search indicators immediately
+            updateSearchIndicators();
 
-             searchDebounceTimer = setTimeout(() => {
-                 fetchCustomers();
-             }, 300);
-         });
+            searchDebounceTimer = setTimeout(() => {
+                fetchCustomers();
+            }, 300);
+        });
 
         // Filter by status
         filterMenu.querySelectorAll('li').forEach(item => {
@@ -364,10 +368,10 @@
     document.addEventListener('turbo:before-visit', function() {
         // Reset page initialization flag so it can be re-initialized on next visit
         globalThis.customerPageInitialized = false;
-        
+
         // Reset filter dropdown flag so it can be re-initialized on next visit
         globalThis.filterDropdownInitialized = false;
-        
+
         // Abort any pending requests
         if (globalThis.customerState && globalThis.customerState.abortController) {
             globalThis.customerState.abortController.abort();
@@ -413,27 +417,27 @@
             globalThis.customerState.inactiveCustomersCount = data.inactive_customers || 0;
             globalThis.customerState.customersWithRentalsCount = data.customers_with_rentals || 0;
 
-             // Update KPI displays
-             var totalCountEl = document.getElementById('totalCustomersCount');
-             var activeCountEl = document.getElementById('activeCustomersCount');
-             var inactiveCountEl = document.getElementById('inactiveCustomersCount');
-             var rentalsCountEl = document.getElementById('customersWithRentalsCount');
+            // Update KPI displays
+            var totalCountEl = document.getElementById('totalCustomersCount');
+            var activeCountEl = document.getElementById('activeCustomersCount');
+            var inactiveCountEl = document.getElementById('inactiveCustomersCount');
+            var rentalsCountEl = document.getElementById('customersWithRentalsCount');
 
-             if (totalCountEl) totalCountEl.textContent = globalThis.customerState.totalCustomersCount;
-             if (activeCountEl) activeCountEl.textContent = globalThis.customerState.activeCustomersCount;
-             if (inactiveCountEl) inactiveCountEl.textContent = globalThis.customerState.inactiveCustomersCount;
-             if (rentalsCountEl) rentalsCountEl.textContent = globalThis.customerState.customersWithRentalsCount;
+            if (totalCountEl) totalCountEl.textContent = globalThis.customerState.totalCustomersCount;
+            if (activeCountEl) activeCountEl.textContent = globalThis.customerState.activeCustomersCount;
+            if (inactiveCountEl) inactiveCountEl.textContent = globalThis.customerState.inactiveCustomersCount;
+            if (rentalsCountEl) rentalsCountEl.textContent = globalThis.customerState.customersWithRentalsCount;
 
-         } catch (error) {
-             // Don't show error if request was cancelled (user navigated away)
-             if (error.name === 'AbortError' || error.code === 'ECONNABORTED' || error.code === 'ERR_CANCELED') {
-                 console.log('Stats request cancelled (user navigated away)');
-                 return;
-             }
-             console.error('Error fetching stats:', error);
-             // Don't show notification for stats errors - only log them
-         }
-     }
+        } catch (error) {
+            // Don't show error if request was cancelled (user navigated away)
+            if (error.name === 'AbortError' || error.code === 'ECONNABORTED' || error.code === 'ERR_CANCELED') {
+                console.log('Stats request cancelled (user navigated away)');
+                return;
+            }
+            console.error('Error fetching stats:', error);
+            // Don't show notification for stats errors - only log them
+        }
+    }
 
     // Fetch customers from API
     async function fetchCustomers() {
@@ -483,98 +487,98 @@
             updateSortIndicators();
             hideLoadingState();
 
-         } catch (error) {
-             // Don't show error if request was cancelled (user navigated away)
-             if (error.name === 'AbortError' || error.code === 'ECONNABORTED' || error.code === 'ERR_CANCELED') {
-                 console.log('Customers request cancelled (user navigated away)');
-                 globalThis.customerState.isLoading = false;
-                 hideLoadingState();
-                 return;
-             }
+        } catch (error) {
+            // Don't show error if request was cancelled (user navigated away)
+            if (error.name === 'AbortError' || error.code === 'ECONNABORTED' || error.code === 'ERR_CANCELED') {
+                console.log('Customers request cancelled (user navigated away)');
+                globalThis.customerState.isLoading = false;
+                hideLoadingState();
+                return;
+            }
 
-             console.error('Error fetching customers:', error);
-             console.error('Error status:', error.response?.status);
-             console.error('Error data:', error.response?.data);
+            console.error('Error fetching customers:', error);
+            console.error('Error status:', error.response?.status);
+            console.error('Error data:', error.response?.data);
 
-             var errorMessage = error.response?.data?.message || error.message || 'Failed to load customers. Please try again.';
-             showErrorNotification(errorMessage);
-             showEmptyState(errorMessage);
-             hideLoadingState();
-         } finally {
-             globalThis.customerState.isLoading = false;
-         }
-      }
+            var errorMessage = error.response?.data?.message || error.message || 'Failed to load customers. Please try again.';
+            showErrorNotification(errorMessage);
+            showEmptyState(errorMessage);
+            hideLoadingState();
+        } finally {
+            globalThis.customerState.isLoading = false;
+        }
+    }
 
-      // Update search indicators
-      function updateSearchIndicators() {
-          var searchIndicatorsDiv = document.getElementById('searchIndicators');
-          
-          // Guard against missing element
-          if (!searchIndicatorsDiv) {
-              return;
-          }
+    // Update search indicators
+    function updateSearchIndicators() {
+        var searchIndicatorsDiv = document.getElementById('searchIndicators');
 
-          var query = globalThis.customerState.searchQuery.trim().toLowerCase();
+        // Guard against missing element
+        if (!searchIndicatorsDiv) {
+            return;
+        }
 
-          if (!query) {
-              searchIndicatorsDiv.innerHTML = '';
-              return;
-          }
+        var query = globalThis.customerState.searchQuery.trim().toLowerCase();
 
-          var indicators = [];
+        if (!query) {
+            searchIndicatorsDiv.innerHTML = '';
+            return;
+        }
 
-          // Determine what fields match
-          if (!isNaN(query) && query !== '') {
-              // Numeric search - matches customer ID
-              indicators.push('Customer ID');
-          }
+        var indicators = [];
 
-         // Check if it looks like an email
-         if (query.includes('@')) {
-             indicators.push('Email');
-         } else {
-             // Text search - could match name or contact
-             indicators.push('Name');
-             indicators.push('Contact');
-         }
+        // Determine what fields match
+        if (!isNaN(query) && query !== '') {
+            // Numeric search - matches customer ID
+            indicators.push('Customer ID');
+        }
 
-         // Build the HTML for indicators
-         let html = '';
-         indicators.forEach(indicator => {
-             html += `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300 border border-violet-200 dark:border-violet-800/60">${indicator}</span>`;
-         });
+        // Check if it looks like an email
+        if (query.includes('@')) {
+            indicators.push('Email');
+        } else {
+            // Text search - could match name or contact
+            indicators.push('Name');
+            indicators.push('Contact');
+        }
 
-         searchIndicatorsDiv.innerHTML = html;
-     }
+        // Build the HTML for indicators
+        let html = '';
+        indicators.forEach(indicator => {
+            html += `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300 border border-violet-200 dark:border-violet-800/60">${indicator}</span>`;
+        });
 
-      // Render table rows
-      function renderTable(customers) {
-         try {
-             var tbody = document.getElementById('customersTableBody');
-             
-             // Guard against missing tbody element (can happen during Turbo navigation)
-             if (!tbody) {
-                 console.warn('customersTableBody element not found');
-                 return;
-             }
+        searchIndicatorsDiv.innerHTML = html;
+    }
 
-             tbody.innerHTML = '';
+    // Render table rows
+    function renderTable(customers) {
+        try {
+            var tbody = document.getElementById('customersTableBody');
 
-             if (customers.length === 0) {
-                 // Show custom message based on search or filter
-                 let emptyMessage = 'No customers found';
+            // Guard against missing tbody element (can happen during Turbo navigation)
+            if (!tbody) {
+                console.warn('customersTableBody element not found');
+                return;
+            }
 
-                 if (globalThis.customerState.searchQuery) {
-                     emptyMessage = `No matches found for "${globalThis.customerState.searchQuery}"`;
-                 } else if (globalThis.customerState.statusFilter) {
-                     emptyMessage = 'No customers with this status';
-                 }
+            tbody.innerHTML = '';
 
-                 showEmptyState(emptyMessage);
-                 return;
-             }
+            if (customers.length === 0) {
+                // Show custom message based on search or filter
+                let emptyMessage = 'No customers found';
 
-             customers.forEach(customer => {
+                if (globalThis.customerState.searchQuery) {
+                    emptyMessage = `No matches found for "${globalThis.customerState.searchQuery}"`;
+                } else if (globalThis.customerState.statusFilter) {
+                    emptyMessage = 'No customers with this status';
+                }
+
+                showEmptyState(emptyMessage);
+                return;
+            }
+
+            customers.forEach(customer => {
                 var statusColor = customer.status?.status_name === 'active'
                     ? 'bg-emerald-500/15 text-emerald-600 border-emerald-500/40 dark:text-emerald-300'
                     : 'bg-red-500/15 text-red-600 border-red-500/40 dark:text-red-300';
@@ -630,21 +634,21 @@
                 });
             });
 
-             document.querySelectorAll('.change-status-btn').forEach(btn => {
-                 btn.addEventListener('click', (e) => {
-                     e.preventDefault();
-                     var customerId = btn.getAttribute('data-customer-id');
-                     openChangeStatusModal(customerId);
-                 });
-             });
+            document.querySelectorAll('.change-status-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    var customerId = btn.getAttribute('data-customer-id');
+                    openChangeStatusModal(customerId);
+                });
+            });
 
-             // Set opacity to 1 for tbody if it exists
-             var tbody = document.getElementById('customersTableBody');
-             if (tbody) {
-                 tbody.style.opacity = '1';
-             }
-             // Hide the empty state when we have data
-             hideEmptyState();
+            // Set opacity to 1 for tbody if it exists
+            var tbody = document.getElementById('customersTableBody');
+            if (tbody) {
+                tbody.style.opacity = '1';
+            }
+            // Hide the empty state when we have data
+            hideEmptyState();
         } catch (error) {
             console.error('Error rendering table:', error);
             showEmptyState('Error rendering customers table');
@@ -815,20 +819,20 @@
             var newStatus = customer.status_id === 1 ? 2 : 1;
             var statusName = newStatus === 1 ? 'Active' : 'Inactive';
 
-             // Store customer info for later use
-             window.pendingStatusChange = {
-                 customerId: customerId,
-                 currentStatus: customer.status_id,
-                 newStatus: newStatus,
-                 customerName: `${customer.first_name} ${customer.last_name}`
-             };
+            // Store customer info for later use
+            window.pendingStatusChange = {
+                customerId: customerId,
+                currentStatus: customer.status_id,
+                newStatus: newStatus,
+                customerName: `${customer.first_name} ${customer.last_name}`
+            };
 
-             // Require password confirmation for both deactivate and reactivate
-             showPasswordConfirmationModal(statusName, newStatus);
-         } catch (error) {
-             console.error('Error fetching customer for status change:', error);
-             showErrorNotification('Failed to load customer data. Please try again.');
-         }
+            // Require password confirmation for both deactivate and reactivate
+            showPasswordConfirmationModal(statusName, newStatus);
+        } catch (error) {
+            console.error('Error fetching customer for status change:', error);
+            showErrorNotification('Failed to load customer data. Please try again.');
+        }
     }
 
     // Show password confirmation modal (defined in edit modal include)
