@@ -345,6 +345,11 @@
     // Fetch total stats (always gets unfiltered counts)
     async function fetchStats() {
         try {
+            // Ensure abortController exists
+            if (!globalThis.inventoryState.abortController) {
+                globalThis.inventoryState.abortController = new AbortController();
+            }
+            
             var response = await axios.get('/api/inventories/reports/statistics', {
                 signal: globalThis.inventoryState.abortController.signal
             });
@@ -388,6 +393,11 @@
         showLoadingState();
 
         try {
+            // Ensure abortController exists
+            if (!globalThis.inventoryState.abortController) {
+                globalThis.inventoryState.abortController = new AbortController();
+            }
+            
             var params = new URLSearchParams({
                 page: globalThis.inventoryState.currentPage,
                 per_page: globalThis.inventoryState.perPage,

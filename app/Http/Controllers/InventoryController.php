@@ -492,9 +492,6 @@ class InventoryController extends Controller
             'by_item_type' => Inventory::select('item_type', DB::raw('count(*) as count'))
                 ->groupBy('item_type')
                 ->get(),
-            'by_condition' => Inventory::select('condition', DB::raw('count(*) as count'))
-                ->groupBy('condition')
-                ->get(),
             'low_stock_items' => Inventory::select('item_type', DB::raw('count(*) as count'))
                 ->whereHas('status', function ($q) {
                     $q->where('status_name', 'available');
