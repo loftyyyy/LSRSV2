@@ -548,8 +548,17 @@
             return;
         }
 
+        // Check if any new image is already marked as primary
+        var hasPrimarySelected = globalThis.editItemModalState.newImages.some(img => img.is_primary);
+
         wrapper.classList.remove('hidden');
-        container.innerHTML = globalThis.editItemModalState.newImages.map((img, index) => `
+        container.innerHTML = globalThis.editItemModalState.newImages.map((img, index) => {
+            // Disable checkbox if another image is primary (but not this one)
+            var isDisabled = hasPrimarySelected && !img.is_primary;
+            var disabledClass = isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer';
+            var disabledAttr = isDisabled ? 'disabled' : '';
+            
+            return `
             <div class="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg overflow-hidden hover:border-violet-400 dark:hover:border-violet-500 transition-colors duration-200">
                 <div class="aspect-square bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center overflow-hidden">
                     <img src="${img.preview}" alt="New photo ${index + 1}" class="w-full h-full object-cover">
@@ -569,16 +578,16 @@
                         <label class="text-xs font-medium text-neutral-600 dark:text-neutral-400">Caption</label>
                         <input type="text" placeholder="Optional caption" value="${img.caption || ''}" onchange="updateEditNewImageMetadata(${index}, 'caption', this.value)" class="w-full text-xs rounded border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-black/60 text-neutral-700 dark:text-neutral-100 px-2 py-1 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-violet-500">
                     </div>
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" onchange="updateEditNewImageMetadata(${index}, 'is_primary', this.checked)" ${img.is_primary ? 'checked' : ''} class="rounded border-neutral-300 dark:border-neutral-600">
-                        <span class="text-xs text-neutral-600 dark:text-neutral-400">Primary</span>
+                    <label class="flex items-center gap-2 ${disabledClass}">
+                        <input type="checkbox" onchange="updateEditNewImageMetadata(${index}, 'is_primary', this.checked)" ${img.is_primary ? 'checked' : ''} ${disabledAttr} class="rounded border-neutral-300 dark:border-neutral-600 ${isDisabled ? 'opacity-50' : ''}">
+                        <span class="text-xs text-neutral-600 dark:text-neutral-400 ${isDisabled ? 'opacity-50' : ''}">Primary</span>
                     </label>
                     <button type="button" onclick="removeEditNewImage(${index})" class="w-full text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 py-1 transition-colors duration-200">
                         Remove
                     </button>
                 </div>
             </div>
-        `).join('');
+        `}).join('');
 
         updateEditUploadButtonState();
     }
@@ -595,6 +604,11 @@
     function updateEditNewImageMetadata(index, field, value) {
         if (globalThis.editItemModalState.newImages[index]) {
             globalThis.editItemModalState.newImages[index][field] = value;
+            
+            // Re-render when primary changes to update disabled state of other checkboxes
+            if (field === 'is_primary') {
+                renderEditNewImages();
+            }
         }
     }
 
