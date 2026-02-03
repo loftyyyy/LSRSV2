@@ -18,9 +18,9 @@ class Inventory extends Model
         'size',
         'color',
         'design',
-        'condition',
         'rental_price',
-        'status_id'
+        'status_id',
+        'condition'
     ];
 
     protected $casts = [

@@ -496,9 +496,7 @@
         if (!formData.get('name')?.trim()) {
             errors.push('Item name is required');
         }
-        if (!formData.get('sku')?.trim()) {
-            errors.push('SKU is required');
-        }
+        // SKU is optional (auto-generated if not provided)
         if (!formData.get('item_type')?.trim()) {
             errors.push('Item type is required');
         }

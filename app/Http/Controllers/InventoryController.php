@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Inventory;
+use App\Models\InventoryStatus;
 use App\Http\Requests\StoreInventoryRequest;
 use App\Http\Requests\UpdateInventoryRequest;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -82,13 +83,13 @@ class InventoryController extends Controller
          // Total Inventory Stats
          $totalItems = Inventory::count();
          $totalValue = Inventory::sum('purchase_price') ?? 0;
-         
+
          // Status Distribution
          $availableItems = Inventory::whereHas('status', fn($q) => $q->where('status_name', 'available'))->count();
          $rentedItems = Inventory::whereHas('status', fn($q) => $q->where('status_name', 'rented'))->count();
          $damagedItems = Inventory::whereHas('status', fn($q) => $q->where('status_name', 'damaged'))->count();
          $maintenanceItems = Inventory::whereHas('status', fn($q) => $q->where('status_name', 'maintenance'))->count();
-         
+
          // Condition Distribution
          $excellentCondition = Inventory::where('condition', 'excellent')->count();
          $goodCondition = Inventory::where('condition', 'good')->count();
@@ -140,7 +141,7 @@ class InventoryController extends Controller
                  $q->whereMonth('created_at', $month->month)
                    ->whereYear('created_at', $month->year);
              })->distinct()->count();
-             
+
              $monthlyRentals->push([
                  'month' => $month->format('M'),
                  'count' => $count,
@@ -257,21 +258,32 @@ class InventoryController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreInventoryRequest $request): JsonResponse
-    {
-        $inventory = Inventory::create($request->validated());
-        $inventory->load('status');
+     public function store(StoreInventoryRequest $request): JsonResponse
+     {
+         $data = $request->validated();
+         
+         // Set default condition to 'good' if not provided
+         $data['condition'] = $data['condition'] ?? 'good';
+         
+         // Set default status to 'available' if not provided
+         if (empty($data['status_id'])) {
+             $data['status_id'] = InventoryStatus::where('status_name', 'available')->first()?->status_id;
+         }
+         
+         $inventory = Inventory::create($data);
+         
+         $inventory->load('status');
 
-        return response()->json([
-            'message' => 'Inventory item created successfully. You can now upload images.',
-            'data' => $inventory,
-            'next_step' => [
-                'action' => 'upload_images',
-                'endpoint' => route('inventories.images.store', $inventory->item_id),
-                'required_views' => ['front', 'back', 'side']
-            ]
-        ], 201);
-    }
+         return response()->json([
+             'message' => 'Inventory item created successfully. You can now upload images.',
+             'data' => $inventory,
+             'next_step' => [
+                 'action' => 'upload_images',
+                 'endpoint' => route('inventories.images.store', $inventory->item_id),
+                 'required_views' => ['front', 'back', 'side']
+             ]
+         ], 201);
+     }
 
     /**
      * Display the specified resource.
