@@ -57,11 +57,11 @@
                         <div class="space-y-2">
                             <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Item Type *</label>
                             <div class="flex items-center rounded-2xl bg-white px-3 py-2.5 border border-neutral-300 focus-within:border-neutral-500 dark:border-neutral-800 dark:bg-black/60 transition-colors duration-300 ease-in-out">
-                                <x-icon name="tag" class="h-4 w-4 text-neutral-500 mr-2 transition-colors duration-300 ease-in-out" />
+                                <x-icon name="tag" class="h-4 w-4 text-neutral-500 mr-2 transition-colors duration-300 ease-in-out dark:text-neutral-400" />
                                 <select
                                     name="item_type"
                                     required
-                                    class="w-full bg-transparent text-xs text-neutral-700 dark:text-neutral-100 focus:outline-none transition-colors duration-300 ease-in-out"
+                                    class="w-full bg-transparent text-xs text-neutral-700 placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500 focus:outline-none transition-colors duration-300 ease-in-out"
                                 >
                                     <option value="">Select type</option>
                                     <option value="gown">Gown</option>
@@ -200,7 +200,7 @@
 
     /* Fix select dropdown appearance */
     select {
-        background-color: white;
+        background-color: transparent;
         color: #374151;
         background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
         background-position: right 0.5rem center;
@@ -213,7 +213,6 @@
     }
 
     .dark select {
-        background-color: rgb(12, 12, 12);
         color: #f5f5f5;
         background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
     }
