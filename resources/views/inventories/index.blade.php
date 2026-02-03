@@ -236,13 +236,16 @@
         }
         globalThis.inventoryState.abortController = new AbortController();
 
-        // Reset state when page is loaded
-        globalThis.inventoryState.currentPage = 1;
-        globalThis.inventoryState.searchQuery = '';
-        globalThis.inventoryState.statusFilter = '';
-        globalThis.inventoryState.isLoading = false;
+         // Reset state when page is loaded
+         globalThis.inventoryState.currentPage = 1;
+         globalThis.inventoryState.searchQuery = '';
+         globalThis.inventoryState.statusFilter = '';
+         globalThis.inventoryState.isLoading = false;
+         globalThis.inventoryState.allItems = []; // Clear any leftover items
+         globalThis.inventoryState.totalPages = 1;
+         globalThis.inventoryState.totalCount = 0;
 
-        // Load statuses first, then stats and items
+         // Load statuses first, then stats and items
         fetchStatuses().then(() => {
             fetchStats();
             fetchInventoryItems();
@@ -408,57 +411,57 @@
          }
      }
 
-    // Fetch inventory items from API
-    async function fetchInventoryItems() {
-        if (globalThis.inventoryState.isLoading) return;
+     // Fetch inventory items from API
+     async function fetchInventoryItems() {
+         if (globalThis.inventoryState.isLoading) return;
 
-        globalThis.inventoryState.isLoading = true;
-        showLoadingState();
+         globalThis.inventoryState.isLoading = true;
+         showLoadingState();
 
-        try {
-            // Ensure abortController exists
-            if (!globalThis.inventoryState.abortController) {
-                globalThis.inventoryState.abortController = new AbortController();
-            }
-            
-            var params = new URLSearchParams({
-                page: globalThis.inventoryState.currentPage,
-                per_page: globalThis.inventoryState.perPage,
-                sort_by: globalThis.inventoryState.sortBy,
-                sort_order: globalThis.inventoryState.sortOrder
-            });
+         try {
+             // Ensure abortController exists
+             if (!globalThis.inventoryState.abortController) {
+                 globalThis.inventoryState.abortController = new AbortController();
+             }
+             
+             var params = new URLSearchParams({
+                 page: globalThis.inventoryState.currentPage,
+                 per_page: globalThis.inventoryState.perPage,
+                 sort_by: globalThis.inventoryState.sortBy,
+                 sort_order: globalThis.inventoryState.sortOrder
+             });
 
-            if (globalThis.inventoryState.searchQuery) {
-                params.append('search', globalThis.inventoryState.searchQuery);
-            }
+             if (globalThis.inventoryState.searchQuery) {
+                 params.append('search', globalThis.inventoryState.searchQuery);
+             }
 
-            if (globalThis.inventoryState.statusFilter) {
-                params.append('status', globalThis.inventoryState.statusFilter);
-            }
+             if (globalThis.inventoryState.statusFilter) {
+                 params.append('status', globalThis.inventoryState.statusFilter);
+             }
 
-            var url = `/api/inventories?${params.toString()}`;
+             var url = `/api/inventories?${params.toString()}`;
 
-            var response = await axios.get(url, {
-                signal: globalThis.inventoryState.abortController.signal
-            });
-            var data = response.data;
+             var response = await axios.get(url, {
+                 signal: globalThis.inventoryState.abortController.signal
+             });
+             var data = response.data;
 
-            if (!data.data || !Array.isArray(data.data)) {
-                showEmptyState('No items found.');
-                hideLoadingState();
-                globalThis.inventoryState.isLoading = false;
-                return;
-            }
+             if (!data.data || !Array.isArray(data.data)) {
+                 showEmptyState('No items found.');
+                 hideLoadingState();
+                 globalThis.inventoryState.isLoading = false;
+                 return;
+             }
 
-            globalThis.inventoryState.totalPages = data.last_page;
-            globalThis.inventoryState.totalCount = data.total;
-            globalThis.inventoryState.allItems = data.data;
+             globalThis.inventoryState.totalPages = data.last_page;
+             globalThis.inventoryState.totalCount = data.total;
+             globalThis.inventoryState.allItems = data.data;
 
-            renderTable(data.data);
-            updatePagination(data);
-            hideLoadingState();
+             renderTable(data.data);
+             updatePagination(data);
+             hideLoadingState();
 
-         } catch (error) {
+          } catch (error) {
              // Don't show error if request was cancelled (user navigated away)
              if (error.name === 'AbortError' || error.code === 'ECONNABORTED' || error.code === 'ERR_CANCELED') {
                  console.log('Items request cancelled (user navigated away)');
@@ -517,20 +520,20 @@
          searchIndicatorsDiv.innerHTML = html;
      }
 
-      // Render table rows
-      function renderTable(items) {
-         try {
-             var tbody = document.getElementById('inventoryTableBody');
-             
-             // Guard against missing tbody element (can happen during Turbo navigation)
-             if (!tbody) {
-                 console.warn('inventoryTableBody element not found');
-                 return;
-             }
+       // Render table rows
+       function renderTable(items) {
+          try {
+              var tbody = document.getElementById('inventoryTableBody');
+              
+              // Guard against missing tbody element (can happen during Turbo navigation)
+              if (!tbody) {
+                  console.warn('inventoryTableBody element not found');
+                  return;
+              }
 
-             tbody.innerHTML = '';
+              tbody.innerHTML = '';
 
-             if (items.length === 0) {
+              if (items.length === 0) {
                  // Show custom message based on search or filter
                  let emptyMessage = 'No items found';
 
