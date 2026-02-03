@@ -262,12 +262,12 @@ class InventoryController extends Controller
      {
          $data = $request->validated();
          
-         // Set default condition to 'good' if not provided
-         $data['condition'] = $data['condition'] ?? 'good';
-         
          // Set default status to 'available' if not provided
          if (empty($data['status_id'])) {
-             $data['status_id'] = InventoryStatus::where('status_name', 'available')->first()?->status_id;
+             $availableStatus = InventoryStatus::where('status_name', 'available')->first();
+             if ($availableStatus) {
+                 $data['status_id'] = $availableStatus->status_id;
+             }
          }
          
          $inventory = Inventory::create($data);

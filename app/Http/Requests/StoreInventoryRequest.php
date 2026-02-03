@@ -28,7 +28,6 @@ class StoreInventoryRequest extends FormRequest
              'size' => ['required', 'string', 'max:50'],
              'color' => ['required', 'string', 'max:100'],
              'design' => ['required', 'string', 'max:255'],
-             'condition' => ['nullable', 'in:excellent,good,fair,poor'],
              'rental_price' => ['required', 'numeric', 'min:0', 'max:999999.99'],
              'status_id' => ['nullable', 'exists:inventory_statuses,status_id'],
          ];
