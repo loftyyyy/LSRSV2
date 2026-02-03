@@ -113,7 +113,7 @@ Route::middleware(['guest'])->group(function () {
 
         // Inventory Additional Actions
         Route::get('/inventories/{inventory}/availability', [InventoryController::class, 'checkAvailability']);
-        Route::put('/inventories/{inventory}/status', [InventoryController::class, 'updateStatus']);
+        Route::patch('/inventories/{inventory}/status', [InventoryController::class, 'updateStatus']);
         Route::put('/inventories/{inventory}/condition', [InventoryController::class, 'updateCondition']);
 
         // Inventory Image
