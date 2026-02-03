@@ -3,12 +3,9 @@
     <div class="w-full max-w-5xl bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-3xl shadow-2xl flex flex-col max-h-[calc(100vh-2rem)] my-auto">
         {{-- Header --}}
         <div class="flex-shrink-0 flex items-center justify-between px-6 py-4 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/80 dark:bg-neutral-900/50 rounded-t-3xl">
-            <div class="flex items-center gap-4">
-                <div>
-                    <p class="text-xs uppercase tracking-[0.2em] text-neutral-500 dark:text-neutral-500">Item Details</p>
-                    <h3 id="itemDetailsTitle" class="text-lg font-semibold text-neutral-900 dark:text-white">Loading...</h3>
-                </div>
-                <span id="itemDetailsStatusBadge" class="hidden inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium"></span>
+            <div>
+                <p class="text-xs uppercase tracking-[0.2em] text-neutral-500 dark:text-neutral-500">Item Details</p>
+                <h3 id="itemDetailsTitle" class="text-lg font-semibold text-neutral-900 dark:text-white">Loading...</h3>
             </div>
             <button onclick="closeItemDetailsModal()" class="text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 text-xl transition-colors duration-200">&times;</button>
         </div>
@@ -45,43 +42,112 @@
 
                     {{-- Right: Item Information --}}
                     <div class="lg:w-1/2 p-6 space-y-5">
-                        {{-- Price Highlight --}}
-                        <div class="bg-gradient-to-r from-violet-500/10 to-purple-500/10 dark:from-violet-500/20 dark:to-purple-500/20 rounded-2xl p-4 border border-violet-200 dark:border-violet-800/50">
-                            <p class="text-xs text-violet-600 dark:text-violet-400 mb-1">Rental Price</p>
-                            <p id="detailItemPrice" class="text-2xl font-bold text-violet-600 dark:text-violet-400 font-geist-mono">-</p>
-                        </div>
-
-                        {{-- Quick Info Grid --}}
-                        <div class="grid grid-cols-2 gap-3">
-                            <div class="bg-neutral-50 dark:bg-neutral-900/50 rounded-xl p-3 border border-neutral-200 dark:border-neutral-800">
-                                <p class="text-xs text-neutral-500 dark:text-neutral-400 mb-1">SKU</p>
-                                <p id="detailItemSku" class="text-sm font-medium text-neutral-900 dark:text-white font-geist-mono">-</p>
+                        {{-- Status & Price Row --}}
+                        <div class="flex items-start gap-3">
+                            {{-- Status Card --}}
+                            <div id="detailStatusCard" class="flex-1 rounded-2xl p-4 border">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <x-icon name="activity" class="h-4 w-4 opacity-70" />
+                                    <p class="text-xs opacity-70">Status</p>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span id="detailStatusDot" class="h-2 w-2 rounded-full"></span>
+                                    <p id="detailItemStatus" class="text-sm font-semibold">-</p>
+                                </div>
                             </div>
-                            <div class="bg-neutral-50 dark:bg-neutral-900/50 rounded-xl p-3 border border-neutral-200 dark:border-neutral-800">
-                                <p class="text-xs text-neutral-500 dark:text-neutral-400 mb-1">Type</p>
-                                <p id="detailItemType" class="text-sm font-medium text-neutral-900 dark:text-white">-</p>
-                            </div>
-                            <div class="bg-neutral-50 dark:bg-neutral-900/50 rounded-xl p-3 border border-neutral-200 dark:border-neutral-800">
-                                <p class="text-xs text-neutral-500 dark:text-neutral-400 mb-1">Size</p>
-                                <p id="detailItemSize" class="text-sm font-medium text-neutral-900 dark:text-white">-</p>
-                            </div>
-                            <div class="bg-neutral-50 dark:bg-neutral-900/50 rounded-xl p-3 border border-neutral-200 dark:border-neutral-800">
-                                <p class="text-xs text-neutral-500 dark:text-neutral-400 mb-1">Color</p>
-                                <p id="detailItemColor" class="text-sm font-medium text-neutral-900 dark:text-white">-</p>
+                            
+                            {{-- Price Card --}}
+                            <div class="flex-1 bg-gradient-to-br from-violet-500/10 to-purple-500/10 dark:from-violet-500/20 dark:to-purple-500/20 rounded-2xl p-4 border border-violet-200 dark:border-violet-800/50">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <x-icon name="currency-peso" class="h-4 w-4 text-violet-600 dark:text-violet-400" />
+                                    <p class="text-xs text-violet-600 dark:text-violet-400">Rental Price</p>
+                                </div>
+                                <p id="detailItemPrice" class="text-xl font-bold text-violet-600 dark:text-violet-400 font-geist-mono">-</p>
                             </div>
                         </div>
 
-                        {{-- Design --}}
-                        <div class="bg-neutral-50 dark:bg-neutral-900/50 rounded-xl p-4 border border-neutral-200 dark:border-neutral-800">
-                            <p class="text-xs text-neutral-500 dark:text-neutral-400 mb-1">Design</p>
-                            <p id="detailItemDesign" class="text-sm font-medium text-neutral-900 dark:text-white">-</p>
+                        {{-- Item Information Section --}}
+                        <div class="space-y-3">
+                            <div class="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                                <x-icon name="package" class="h-4 w-4" />
+                                <span>Item Information</span>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3">
+                                {{-- SKU --}}
+                                <div class="bg-neutral-50 dark:bg-neutral-900/50 rounded-xl p-3 border border-neutral-200 dark:border-neutral-800">
+                                    <div class="flex items-center gap-1.5 mb-1">
+                                        <x-icon name="barcode" class="h-3 w-3 text-neutral-400" />
+                                        <p class="text-xs text-neutral-500 dark:text-neutral-400">SKU</p>
+                                    </div>
+                                    <p id="detailItemSku" class="text-sm font-medium text-neutral-900 dark:text-white font-geist-mono">-</p>
+                                </div>
+                                
+                                {{-- Type --}}
+                                <div class="bg-neutral-50 dark:bg-neutral-900/50 rounded-xl p-3 border border-neutral-200 dark:border-neutral-800">
+                                    <div class="flex items-center gap-1.5 mb-1">
+                                        <x-icon name="tag" class="h-3 w-3 text-neutral-400" />
+                                        <p class="text-xs text-neutral-500 dark:text-neutral-400">Type</p>
+                                    </div>
+                                    <p id="detailItemType" class="text-sm font-medium text-neutral-900 dark:text-white">-</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Physical Details Section --}}
+                        <div class="space-y-3">
+                            <div class="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                                <x-icon name="palette" class="h-4 w-4" />
+                                <span>Physical Details</span>
+                            </div>
+
+                            <div class="grid grid-cols-3 gap-3">
+                                {{-- Size --}}
+                                <div class="bg-neutral-50 dark:bg-neutral-900/50 rounded-xl p-3 border border-neutral-200 dark:border-neutral-800">
+                                    <div class="flex items-center gap-1.5 mb-1">
+                                        <x-icon name="ruler" class="h-3 w-3 text-neutral-400" />
+                                        <p class="text-xs text-neutral-500 dark:text-neutral-400">Size</p>
+                                    </div>
+                                    <p id="detailItemSize" class="text-sm font-medium text-neutral-900 dark:text-white">-</p>
+                                </div>
+                                
+                                {{-- Color --}}
+                                <div class="bg-neutral-50 dark:bg-neutral-900/50 rounded-xl p-3 border border-neutral-200 dark:border-neutral-800">
+                                    <div class="flex items-center gap-1.5 mb-1">
+                                        <x-icon name="palette" class="h-3 w-3 text-neutral-400" />
+                                        <p class="text-xs text-neutral-500 dark:text-neutral-400">Color</p>
+                                    </div>
+                                    <p id="detailItemColor" class="text-sm font-medium text-neutral-900 dark:text-white">-</p>
+                                </div>
+                                
+                                {{-- Design --}}
+                                <div class="bg-neutral-50 dark:bg-neutral-900/50 rounded-xl p-3 border border-neutral-200 dark:border-neutral-800">
+                                    <div class="flex items-center gap-1.5 mb-1">
+                                        <x-icon name="sparkles" class="h-3 w-3 text-neutral-400" />
+                                        <p class="text-xs text-neutral-500 dark:text-neutral-400">Design</p>
+                                    </div>
+                                    <p id="detailItemDesign" class="text-sm font-medium text-neutral-900 dark:text-white">-</p>
+                                </div>
+                            </div>
                         </div>
 
                         {{-- Timestamps --}}
-                        <div class="pt-3 border-t border-neutral-200 dark:border-neutral-800">
-                            <div class="flex items-center justify-between text-xs text-neutral-500 dark:text-neutral-400">
-                                <span>Added: <span id="detailItemCreated" class="text-neutral-700 dark:text-neutral-300">-</span></span>
-                                <span>Updated: <span id="detailItemUpdated" class="text-neutral-700 dark:text-neutral-300">-</span></span>
+                        <div class="pt-4 border-t border-neutral-200 dark:border-neutral-800">
+                            <div class="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-3">
+                                <x-icon name="clock" class="h-4 w-4" />
+                                <span>Timeline</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="flex items-center gap-2 text-xs">
+                                    <div class="h-1.5 w-1.5 rounded-full bg-emerald-500"></div>
+                                    <span class="text-neutral-500 dark:text-neutral-400">Added:</span>
+                                    <span id="detailItemCreated" class="text-neutral-700 dark:text-neutral-300 font-medium">-</span>
+                                </div>
+                                <div class="flex items-center gap-2 text-xs">
+                                    <div class="h-1.5 w-1.5 rounded-full bg-blue-500"></div>
+                                    <span class="text-neutral-500 dark:text-neutral-400">Updated:</span>
+                                    <span id="detailItemUpdated" class="text-neutral-700 dark:text-neutral-300 font-medium">-</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -209,7 +275,6 @@
         document.getElementById('itemDetailsData').classList.add('hidden');
         document.getElementById('itemDetailsError').classList.add('hidden');
         document.getElementById('itemDetailsTitle').textContent = 'Loading...';
-        document.getElementById('itemDetailsStatusBadge').classList.add('hidden');
 
         try {
             var response = await axios.get(`/api/inventories/${itemId}`);
@@ -235,21 +300,39 @@
         // Title
         document.getElementById('itemDetailsTitle').textContent = item.name || 'Item Details';
 
-        // Status badge in header
+        // Status with dynamic styling
         var statusName = item.status?.status_name || 'unknown';
-        var statusBadge = document.getElementById('itemDetailsStatusBadge');
+        var statusCard = document.getElementById('detailStatusCard');
+        var statusDot = document.getElementById('detailStatusDot');
+        var statusText = document.getElementById('detailItemStatus');
         
         var statusConfig = {
-            'available': { label: 'Available', class: 'bg-emerald-500/15 text-emerald-600 border border-emerald-500/40 dark:text-emerald-300' },
-            'rented': { label: 'Rented', class: 'bg-blue-500/15 text-blue-600 border border-blue-500/40 dark:text-blue-300' },
-            'maintenance': { label: 'Maintenance', class: 'bg-amber-500/15 text-amber-600 border border-amber-500/40 dark:text-amber-300' },
-            'retired': { label: 'Retired', class: 'bg-gray-500/15 text-gray-600 border border-gray-500/40 dark:text-gray-300' }
+            'available': { 
+                label: 'Available', 
+                cardClass: 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800/50 text-emerald-700 dark:text-emerald-300',
+                dotClass: 'bg-emerald-500'
+            },
+            'rented': { 
+                label: 'Rented', 
+                cardClass: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800/50 text-blue-700 dark:text-blue-300',
+                dotClass: 'bg-blue-500'
+            },
+            'maintenance': { 
+                label: 'Maintenance', 
+                cardClass: 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800/50 text-amber-700 dark:text-amber-300',
+                dotClass: 'bg-amber-500'
+            },
+            'retired': { 
+                label: 'Retired', 
+                cardClass: 'bg-neutral-100 dark:bg-neutral-800/50 border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400',
+                dotClass: 'bg-neutral-500'
+            }
         };
         
         var config = statusConfig[statusName] || statusConfig['retired'];
-        statusBadge.textContent = config.label;
-        statusBadge.className = `inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${config.class}`;
-        statusBadge.classList.remove('hidden');
+        statusCard.className = `flex-1 rounded-2xl p-4 border ${config.cardClass}`;
+        statusDot.className = `h-2 w-2 rounded-full ${config.dotClass}`;
+        statusText.textContent = config.label;
 
         // Info fields
         document.getElementById('detailItemSku').textContent = item.sku || '-';
@@ -306,18 +389,26 @@
         
         // Main image with primary badge overlay if applicable
         var primaryBadge = mainImage.is_primary 
-            ? `<span class="absolute top-3 left-3 bg-violet-600 text-white text-xs font-medium px-2.5 py-1 rounded-full shadow-lg flex items-center gap-1">
-                    <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+            ? `<span class="absolute top-3 left-3 bg-violet-600 text-white text-xs font-medium px-2.5 py-1 rounded-full shadow-lg flex items-center gap-1.5">
+                    <svg class="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401z" clip-rule="evenodd" />
                     </svg>
                     Primary
                </span>` 
             : '';
         
+        // View type badge
+        var viewTypeBadge = mainImage.view_type 
+            ? `<span class="absolute bottom-3 left-3 bg-black/60 text-white text-xs font-medium px-2.5 py-1 rounded-full backdrop-blur-sm">
+                    ${mainImage.view_type.charAt(0).toUpperCase() + mainImage.view_type.slice(1)} View
+               </span>`
+            : '';
+        
         mainImageContainer.innerHTML = `
             <div class="relative w-full h-full">
                 <img src="${mainImage.image_url}" alt="${mainImage.caption || 'Item photo'}" class="w-full h-full object-contain">
                 ${primaryBadge}
+                ${viewTypeBadge}
             </div>
         `;
 
@@ -331,6 +422,7 @@
                     type="button" 
                     onclick="selectDetailsImage(${index})"
                     class="relative flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden border-2 transition-all duration-200 ${isSelected ? 'border-violet-500 ring-2 ring-violet-500/30' : 'border-neutral-200 dark:border-neutral-700 hover:border-violet-400'}"
+                    title="${img.view_type ? img.view_type.charAt(0).toUpperCase() + img.view_type.slice(1) + ' View' : 'Photo'}"
                 >
                     <img src="${img.image_url}" alt="${img.caption || 'Thumbnail'}" class="w-full h-full object-cover">
                     ${isPrimary ? `<span class="absolute top-0.5 right-0.5 w-4 h-4 bg-violet-600 rounded-full flex items-center justify-center shadow">
