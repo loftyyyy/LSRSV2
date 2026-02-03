@@ -15,8 +15,8 @@ class CustomerStatusSeeder extends Seeder
     public function run(): void
     {
         DB::table('customer_statuses')->insert([
-            ['status_name' => 'active'],
-            ['status_name' => 'inactive'],
+            ['status_name' => 'Active'],
+            ['status_name' => 'Inactive'],
         ]);
     }
 }
