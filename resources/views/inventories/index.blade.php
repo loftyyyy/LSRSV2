@@ -627,7 +627,8 @@
                  var itemType = item.item_type ? item.item_type.charAt(0).toUpperCase() + item.item_type.slice(1) : 'N/A';
 
                  var row = document.createElement('tr');
-                 row.className = 'border-b border-neutral-200 hover:bg-neutral-100 dark:border-neutral-900/60 dark:hover:bg-white/5 transition-colors duration-300 ease-in-out';
+                 row.className = 'border-b border-neutral-200 hover:bg-neutral-100 dark:border-neutral-900/60 dark:hover:bg-white/5 transition-colors duration-300 ease-in-out cursor-pointer';
+                 row.setAttribute('data-item-id', item.item_id);
                  row.innerHTML = `
                      <td class="py-3.5 pr-4 pl-4 text-neutral-500 font-geist-mono">${item.name || 'N/A'}</td>
                      <td class="py-3.5 pr-4 text-neutral-900 dark:text-neutral-100">${itemType}</td>
@@ -640,7 +641,7 @@
                              ${statusLabel}
                          </span>
                      </td>
-                     <td class="py-3.5 pl-2 text-left text-neutral-500 dark:text-neutral-400">
+                     <td class="py-3.5 pl-2 text-left text-neutral-500 dark:text-neutral-400" onclick="event.stopPropagation()">
                          <div class="inline-flex items-center gap-2">
                              <button class="edit-item-btn rounded-lg p-1.5 hover:bg-violet-600 hover:text-white transition-colors duration-300 ease-in-out" aria-label="Edit" title="Edit item" data-item-id="${item.item_id}">
                                  <x-icon name="edit" class="h-3.5 w-3.5" />
@@ -651,6 +652,12 @@
                          </div>
                      </td>
                  `;
+                 
+                 // Add click handler for row to open details modal
+                 row.addEventListener('click', function() {
+                     openItemDetailsModal(item.item_id);
+                 });
+                 
                  tbody.appendChild(row);
              });
 
@@ -861,6 +868,9 @@
 
 {{-- Include Edit Item Modal --}}
 @include('inventories.partials.edit-item-modal')
+
+{{-- Include Item Details Modal --}}
+@include('inventories.partials.item-details-modal')
 
 </body>
 </html>
