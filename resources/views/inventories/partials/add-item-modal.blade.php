@@ -1,8 +1,8 @@
 {{-- Add Item Modal --}}
-<div id="addItemModal" class="hidden fixed inset-0 z-50 flex items-center justify-center px-2 py-6 bg-black/60 backdrop-blur-sm">
-    <div class="w-full max-w-4xl bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-3xl shadow-2xl">
+<div id="addItemModal" class="hidden fixed inset-0 z-50 flex items-center justify-center px-2 py-6 bg-black/60 backdrop-blur-sm overflow-y-auto">
+    <div class="w-full max-w-4xl bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-3xl shadow-2xl flex flex-col max-h-[calc(100vh-3rem)] my-auto">
         {{-- Header --}}
-        <div class="flex items-center justify-between px-6 py-4 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/80 rounded-t-3xl dark:bg-neutral-900/50">
+        <div class="flex-shrink-0 flex items-center justify-between px-6 py-4 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/80 rounded-t-3xl dark:bg-neutral-900/50">
             <div>
                 <p class="text-xs uppercase tracking-[0.2em] text-neutral-500 dark:text-neutral-500">New Item</p>
                 <h3 class="text-lg font-semibold text-neutral-900 dark:text-white">Add Inventory Item</h3>
@@ -10,8 +10,8 @@
             <button onclick="closeAddItemModal()" class="text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 text-xl transition-colors duration-200">×</button>
         </div>
 
-        {{-- Form --}}
-        <form id="addItemForm" class="px-8 py-6 space-y-5">
+        {{-- Form (scrollable) --}}
+        <form id="addItemForm" class="flex-1 overflow-y-auto px-8 py-6 space-y-5">
             @csrf
 
             <div class="grid grid-cols-2 gap-6">
@@ -240,6 +240,37 @@
     #addItemModal .max-w-4xl {
         will-change: transform;
         transform: translateZ(0);
+    }
+
+    /* Custom scrollbar for form */
+    #addItemForm {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(155, 155, 155, 0.5) transparent;
+    }
+
+    #addItemForm::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    #addItemForm::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    #addItemForm::-webkit-scrollbar-thumb {
+        background-color: rgba(155, 155, 155, 0.5);
+        border-radius: 3px;
+    }
+
+    #addItemForm::-webkit-scrollbar-thumb:hover {
+        background-color: rgba(155, 155, 155, 0.7);
+    }
+
+    .dark #addItemForm::-webkit-scrollbar-thumb {
+        background-color: rgba(100, 100, 100, 0.5);
+    }
+
+    .dark #addItemForm::-webkit-scrollbar-thumb:hover {
+        background-color: rgba(100, 100, 100, 0.7);
     }
 
     /* Fix select dropdown appearance */
