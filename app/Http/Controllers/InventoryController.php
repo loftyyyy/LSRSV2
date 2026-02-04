@@ -8,6 +8,7 @@ use App\Http\Requests\StoreInventoryRequest;
 use App\Http\Requests\UpdateInventoryRequest;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -275,12 +276,65 @@ class InventoryController extends Controller
          
          $inventory = Inventory::create($data);
          
-         $inventory->load('status');
+         // Handle image uploads if present
+         $uploadedImages = [];
+         if ($request->has('images')) {
+             $images = $request->input('images');
+             
+             foreach ($images as $index => $imageData) {
+                 // Get the file from the nested structure
+                 $file = $request->file("images.{$index}.file");
+                 
+                 if ($file && $file->isValid()) {
+                     // Generate unique filename
+                     $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
+                     
+                     // Store image in public disk under inventory folder
+                     $path = $file->storeAs('inventory/' . $inventory->item_id, $filename, 'public');
+                     
+                     // Get metadata
+                     $viewType = $imageData['view_type'] ?? 'front';
+                     $caption = $imageData['caption'] ?? null;
+                     $isPrimary = ($imageData['is_primary'] ?? 0) == 1;
+                     
+                     // If this is set as primary, make sure no other image is primary
+                     if ($isPrimary && count($uploadedImages) > 0) {
+                         foreach ($uploadedImages as $img) {
+                             if ($img->is_primary) {
+                                 $img->update(['is_primary' => false]);
+                             }
+                         }
+                     }
+                     
+                     // First image is primary by default if none explicitly set
+                     if (count($uploadedImages) === 0 && !$isPrimary) {
+                         $isPrimary = true;
+                     }
+                     
+                     // Create image record
+                     $inventoryImage = $inventory->images()->create([
+                         'image_path' => $path,
+                         'image_url' => Storage::url($path),
+                         'view_type' => $viewType,
+                         'caption' => $caption,
+                         'is_primary' => $isPrimary,
+                         'display_order' => $index + 1,
+                         'file_size' => $file->getSize(),
+                         'mime_type' => $file->getMimeType()
+                     ]);
+                     
+                     $uploadedImages[] = $inventoryImage;
+                 }
+             }
+         }
+         
+         $inventory->load(['status', 'images']);
 
          return response()->json([
              'success' => true,
              'message' => 'Inventory item created successfully',
-             'data' => $inventory
+             'data' => $inventory,
+             'images_uploaded' => count($uploadedImages)
          ], 201);
      }
 
