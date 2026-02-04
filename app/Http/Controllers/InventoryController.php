@@ -291,6 +291,7 @@ class InventoryController extends Controller
     {
         $inventory->load([
             'status',
+            'updatedByUser',
             'rentals',
             'reservationItems',
             'invoiceItems',
@@ -325,8 +326,11 @@ class InventoryController extends Controller
      */
     public function update(UpdateInventoryRequest $request, Inventory $inventory): JsonResponse
     {
-        $inventory->update($request->validated());
-        $inventory->load('status');
+        $data = $request->validated();
+        $data['updated_by'] = auth()->id();
+        
+        $inventory->update($data);
+        $inventory->load(['status', 'updatedByUser']);
 
         return response()->json([
             'message' => 'Inventory item updated successfully',
@@ -445,8 +449,11 @@ class InventoryController extends Controller
             'status_id' => 'required|exists:inventory_statuses,status_id'
         ]);
 
-        $inventory->update(['status_id' => $request->status_id]);
-        $inventory->load('status');
+        $inventory->update([
+            'status_id' => $request->status_id,
+            'updated_by' => auth()->id()
+        ]);
+        $inventory->load(['status', 'updatedByUser']);
 
         return response()->json([
             'message' => 'Inventory status updated successfully',
@@ -463,8 +470,11 @@ class InventoryController extends Controller
             'condition' => 'required|in:excellent,good,fair,poor'
         ]);
 
-        $inventory->update(['condition' => $request->condition]);
-        $inventory->load('status');
+        $inventory->update([
+            'condition' => $request->condition,
+            'updated_by' => auth()->id()
+        ]);
+        $inventory->load(['status', 'updatedByUser']);
 
         return response()->json([
             'message' => 'Inventory condition updated successfully',
@@ -651,7 +661,10 @@ class InventoryController extends Controller
         ]);
 
         $updated = Inventory::whereIn('item_id', $request->item_ids)
-            ->update(['status_id' => $request->status_id]);
+            ->update([
+                'status_id' => $request->status_id,
+                'updated_by' => auth()->id()
+            ]);
 
         return response()->json([
             'message' => "Successfully updated {$updated} items",

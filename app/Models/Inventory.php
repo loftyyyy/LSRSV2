@@ -19,7 +19,8 @@ class Inventory extends Model
         'color',
         'design',
         'rental_price',
-        'status_id'
+        'status_id',
+        'updated_by'
     ];
 
     protected $casts = [
@@ -29,6 +30,11 @@ class Inventory extends Model
     public function status()
     {
         return $this->belongsTo(InventoryStatus::class, 'status_id', 'status_id');
+    }
+
+    public function updatedByUser()
+    {
+        return $this->belongsTo(User::class, 'updated_by', 'user_id');
     }
 
     public function rentals()

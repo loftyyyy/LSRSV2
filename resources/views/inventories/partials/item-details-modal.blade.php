@@ -186,6 +186,14 @@
                                     <span id="detailItemUpdated" class="text-neutral-700 dark:text-neutral-300 font-medium">-</span>
                                 </div>
                             </div>
+                            {{-- Updated By --}}
+                            <div id="detailUpdatedBySection" class="hidden mt-3 pt-3 border-t border-neutral-100 dark:border-neutral-800/50">
+                                <div class="flex items-center gap-2 text-xs">
+                                    <div class="h-1.5 w-1.5 rounded-full bg-violet-500"></div>
+                                    <span class="text-neutral-500 dark:text-neutral-400">Last updated by:</span>
+                                    <span id="detailUpdatedByName" class="text-neutral-700 dark:text-neutral-300 font-medium">-</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -390,6 +398,17 @@
         document.getElementById('detailItemUpdated').textContent = item.updated_at 
             ? formatDate(item.updated_at) 
             : '-';
+
+        // Updated By
+        var updatedBySection = document.getElementById('detailUpdatedBySection');
+        var updatedByName = document.getElementById('detailUpdatedByName');
+        if (item.updated_by_user && item.updated_by_user.name) {
+            updatedBySection.classList.remove('hidden');
+            updatedByName.textContent = item.updated_by_user.name;
+        } else {
+            updatedBySection.classList.add('hidden');
+            updatedByName.textContent = '-';
+        }
 
         // Images
         renderItemDetailsImages(item.images || []);
