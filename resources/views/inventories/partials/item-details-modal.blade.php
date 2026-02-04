@@ -574,13 +574,26 @@
         }, 100);
     }
 
-    // Close modal on escape key
+    // Handle keyboard navigation
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && globalThis.itemDetailsModalState.isOpen) {
-            // Only close if other modals are not open
-            if (!globalThis.editItemModalState?.isOpen && 
-                !document.getElementById('changeItemStatusModal')?.classList.contains('flex')) {
-                closeItemDetailsModal();
+        if (!globalThis.itemDetailsModalState.isOpen) return;
+        
+        // Check if other modals are open (edit modal, status modal)
+        var otherModalsOpen = globalThis.editItemModalState?.isOpen || 
+            document.getElementById('changeItemStatusModal')?.classList.contains('flex');
+        
+        if (e.key === 'Escape' && !otherModalsOpen) {
+            closeItemDetailsModal();
+        }
+        
+        // Arrow key navigation for images (only when no other modals are open)
+        if (!otherModalsOpen) {
+            if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                navigateDetailsImage(-1);
+            } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                navigateDetailsImage(1);
             }
         }
     });
