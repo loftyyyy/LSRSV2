@@ -26,16 +26,49 @@
                 <div class="flex flex-col lg:flex-row">
                     {{-- Left: Image Gallery --}}
                     <div class="lg:w-1/2 p-6 border-b lg:border-b-0 lg:border-r border-neutral-200 dark:border-neutral-800">
-                        {{-- Main Image --}}
-                        <div id="itemDetailsMainImage" class="aspect-square bg-neutral-100 dark:bg-neutral-900 rounded-2xl overflow-hidden flex items-center justify-center border border-neutral-200 dark:border-neutral-800 mb-4">
-                            <div class="text-neutral-400 dark:text-neutral-600 flex flex-col items-center gap-2">
-                                <x-icon name="image" class="h-16 w-16" />
-                                <span class="text-sm">No photos available</span>
+                        {{-- Main Image with Navigation Arrows --}}
+                        <div class="relative group">
+                            <div id="itemDetailsMainImage" class="aspect-square bg-neutral-100 dark:bg-neutral-900 rounded-2xl overflow-hidden flex items-center justify-center border border-neutral-200 dark:border-neutral-800">
+                                <div class="text-neutral-400 dark:text-neutral-600 flex flex-col items-center gap-2">
+                                    <x-icon name="image" class="h-16 w-16" />
+                                    <span class="text-sm">No photos available</span>
+                                </div>
+                            </div>
+                            
+                            {{-- Left Arrow --}}
+                            <button 
+                                type="button"
+                                id="itemDetailsPrevBtn"
+                                onclick="navigateDetailsImage(-1)"
+                                class="hidden absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 dark:bg-neutral-800/90 border border-neutral-200 dark:border-neutral-700 shadow-lg flex items-center justify-center text-neutral-700 dark:text-neutral-200 hover:bg-white dark:hover:bg-neutral-700 transition-all duration-200 opacity-0 group-hover:opacity-100 focus:opacity-100"
+                                title="Previous image"
+                            >
+                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                                </svg>
+                            </button>
+                            
+                            {{-- Right Arrow --}}
+                            <button 
+                                type="button"
+                                id="itemDetailsNextBtn"
+                                onclick="navigateDetailsImage(1)"
+                                class="hidden absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 dark:bg-neutral-800/90 border border-neutral-200 dark:border-neutral-700 shadow-lg flex items-center justify-center text-neutral-700 dark:text-neutral-200 hover:bg-white dark:hover:bg-neutral-700 transition-all duration-200 opacity-0 group-hover:opacity-100 focus:opacity-100"
+                                title="Next image"
+                            >
+                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                </svg>
+                            </button>
+                            
+                            {{-- Image Counter --}}
+                            <div id="itemDetailsImageCounter" class="hidden absolute bottom-3 right-3 bg-black/60 text-white text-xs font-medium px-2.5 py-1 rounded-full backdrop-blur-sm">
+                                1 / 1
                             </div>
                         </div>
                         
                         {{-- Thumbnails Row --}}
-                        <div id="itemDetailsThumbnails" class="flex gap-2 overflow-x-auto pb-2">
+                        <div id="itemDetailsThumbnails" class="flex gap-2 overflow-x-auto pb-2 mt-4">
                             {{-- Thumbnails will be inserted here --}}
                         </div>
                     </div>
@@ -366,6 +399,9 @@
     function renderItemDetailsImages(images) {
         var mainImageContainer = document.getElementById('itemDetailsMainImage');
         var thumbnailsContainer = document.getElementById('itemDetailsThumbnails');
+        var prevBtn = document.getElementById('itemDetailsPrevBtn');
+        var nextBtn = document.getElementById('itemDetailsNextBtn');
+        var imageCounter = document.getElementById('itemDetailsImageCounter');
 
         if (!images || images.length === 0) {
             mainImageContainer.innerHTML = `
@@ -377,6 +413,10 @@
                 </div>
             `;
             thumbnailsContainer.innerHTML = '';
+            // Hide navigation buttons and counter
+            prevBtn.classList.add('hidden');
+            nextBtn.classList.add('hidden');
+            imageCounter.classList.add('hidden');
             return;
         }
 
@@ -386,6 +426,9 @@
             if (!a.is_primary && b.is_primary) return 1;
             return (a.display_order || 0) - (b.display_order || 0);
         });
+        
+        // Store sorted images for navigation
+        globalThis.itemDetailsModalState.sortedImages = sortedImages;
 
         // Set main image
         var selectedIndex = globalThis.itemDetailsModalState.selectedImageIndex;
@@ -415,6 +458,43 @@
                 ${viewTypeBadge}
             </div>
         `;
+        
+        // Show/hide navigation arrows based on image count
+        if (sortedImages.length > 1) {
+            // Show arrows (they will appear on hover due to CSS)
+            prevBtn.classList.remove('hidden');
+            prevBtn.classList.add('flex');
+            nextBtn.classList.remove('hidden');
+            nextBtn.classList.add('flex');
+            imageCounter.classList.remove('hidden');
+            
+            // Update counter
+            imageCounter.textContent = `${selectedIndex + 1} / ${sortedImages.length}`;
+            
+            // Disable prev button if at first image
+            if (selectedIndex === 0) {
+                prevBtn.classList.add('opacity-30', 'cursor-not-allowed');
+                prevBtn.classList.remove('hover:bg-white', 'dark:hover:bg-neutral-700');
+            } else {
+                prevBtn.classList.remove('opacity-30', 'cursor-not-allowed');
+                prevBtn.classList.add('hover:bg-white', 'dark:hover:bg-neutral-700');
+            }
+            
+            // Disable next button if at last image
+            if (selectedIndex === sortedImages.length - 1) {
+                nextBtn.classList.add('opacity-30', 'cursor-not-allowed');
+                nextBtn.classList.remove('hover:bg-white', 'dark:hover:bg-neutral-700');
+            } else {
+                nextBtn.classList.remove('opacity-30', 'cursor-not-allowed');
+                nextBtn.classList.add('hover:bg-white', 'dark:hover:bg-neutral-700');
+            }
+        } else {
+            prevBtn.classList.add('hidden');
+            prevBtn.classList.remove('flex');
+            nextBtn.classList.add('hidden');
+            nextBtn.classList.remove('flex');
+            imageCounter.classList.add('hidden');
+        }
 
         // Render thumbnails - horizontal row
         thumbnailsContainer.innerHTML = sortedImages.map((img, index) => {
@@ -437,6 +517,22 @@
                 </button>
             `;
         }).join('');
+    }
+    
+    // Navigate to previous/next image
+    function navigateDetailsImage(direction) {
+        var sortedImages = globalThis.itemDetailsModalState.sortedImages || [];
+        if (sortedImages.length <= 1) return;
+        
+        var currentIndex = globalThis.itemDetailsModalState.selectedImageIndex;
+        var newIndex = currentIndex + direction;
+        
+        // Boundary checks
+        if (newIndex < 0 || newIndex >= sortedImages.length) return;
+        
+        globalThis.itemDetailsModalState.selectedImageIndex = newIndex;
+        var images = globalThis.itemDetailsModalState.currentItem?.images || [];
+        renderItemDetailsImages(images);
     }
 
     // Select an image in the details modal
