@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('design');
             $table->decimal('rental_price', 10,2)->default(0);
             $table->foreignId('status_id')->constrained('inventory_statuses', 'status_id')->cascadeOnDelete();
+            $table->foreignId('updated_by')->nullable()->constrained('users', 'user_id')->cascadeOnDelete();
             $table->timestamps();
         });
     }
