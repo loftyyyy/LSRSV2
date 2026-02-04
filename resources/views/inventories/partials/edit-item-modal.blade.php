@@ -174,7 +174,7 @@
                     {{-- Existing Images Grid --}}
                     <div id="editExistingImagesContainer" class="mb-4">
                         <p class="text-xs font-medium text-neutral-600 dark:text-neutral-400 mb-2">Current Photos</p>
-                        <div id="editExistingImagesGrid" class="grid grid-cols-5 gap-3">
+                        <div id="editExistingImagesGrid" class="grid grid-cols-3 gap-3">
                             <!-- Existing images will be inserted here -->
                         </div>
                         <div id="editNoExistingImagesMessage" class="hidden text-center text-xs text-neutral-500 dark:text-neutral-400 py-4">
@@ -206,7 +206,7 @@
                     {{-- New Images Preview Grid --}}
                     <div id="editNewImagesContainer" class="mt-4 hidden">
                         <p class="text-xs font-medium text-neutral-600 dark:text-neutral-400 mb-2">New Photos to Add</p>
-                        <div id="editNewImagesGrid" class="grid grid-cols-5 gap-3">
+                        <div id="editNewImagesGrid" class="grid grid-cols-3 gap-3">
                             <!-- New image previews will be inserted here -->
                         </div>
                     </div>
@@ -410,6 +410,7 @@
             currentItemId: null,
             currentItemStatus: null,
             existingImages: [],      // Images already saved on server
+            existingImagesOriginal: [], // Original state of existing images (for change detection)
             newImages: [],           // New images to upload
             imagesToDelete: []       // IDs of images to delete
         };
@@ -423,6 +424,7 @@
         globalThis.editItemModalState.isOpen = true;
         globalThis.editItemModalState.currentItemId = itemId;
         globalThis.editItemModalState.existingImages = [];
+        globalThis.editItemModalState.existingImagesOriginal = [];
         globalThis.editItemModalState.newImages = [];
         globalThis.editItemModalState.imagesToDelete = [];
         
@@ -459,6 +461,8 @@
                     caption: img.caption || '',
                     is_primary: img.is_primary || false
                 }));
+                // Store original state for change detection
+                globalThis.editItemModalState.existingImagesOriginal = JSON.parse(JSON.stringify(globalThis.editItemModalState.existingImages));
                 renderEditExistingImages();
             }
 
@@ -480,6 +484,7 @@
         globalThis.editItemModalState.currentItemId = null;
         globalThis.editItemModalState.currentItemStatus = null;
         globalThis.editItemModalState.existingImages = [];
+        globalThis.editItemModalState.existingImagesOriginal = [];
         globalThis.editItemModalState.newImages = [];
         globalThis.editItemModalState.imagesToDelete = [];
         
@@ -517,24 +522,84 @@
             return;
         }
 
+        // Check if any existing image or new image is set as primary
+        var existingPrimary = visibleImages.find(img => img.is_primary);
+        var newImagesPrimary = globalThis.editItemModalState.newImages.find(img => img.is_primary);
+        var hasPrimarySelected = existingPrimary || newImagesPrimary;
+
         noImagesMsg.classList.add('hidden');
-        container.innerHTML = visibleImages.map((img, index) => `
-            <div class="relative group bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg overflow-hidden">
-                <div class="aspect-square bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center overflow-hidden">
+        container.innerHTML = visibleImages.map((img, index) => {
+            // Find the actual index in the existingImages array (not the filtered visibleImages)
+            var actualIndex = globalThis.editItemModalState.existingImages.findIndex(i => i.id === img.id);
+            
+            // Disable primary checkbox if another image is primary (but not this one)
+            var isDisabled = hasPrimarySelected && !img.is_primary;
+            var disabledClass = isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer';
+            var disabledAttr = isDisabled ? 'disabled' : '';
+            
+            return `
+            <div class="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg overflow-hidden hover:border-violet-400 dark:hover:border-violet-500 transition-colors duration-200">
+                <div class="aspect-square bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center overflow-hidden relative group">
                     <img src="${img.url}" alt="Item photo ${index + 1}" class="w-full h-full object-cover">
+                    <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+                        <button type="button" onclick="markImageForDeletion(${img.id})" class="p-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors" title="Delete image">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                        </button>
+                    </div>
                 </div>
-                <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
-                    <button type="button" onclick="markImageForDeletion(${img.id})" class="p-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                    </button>
+                <div class="p-2 space-y-2">
+                    <div class="space-y-1">
+                        <label class="text-xs font-medium text-neutral-600 dark:text-neutral-400">View Type</label>
+                        <select onchange="updateEditExistingImageMetadata(${actualIndex}, 'view_type', this.value)" class="w-full text-xs rounded border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-black/60 text-neutral-700 dark:text-neutral-100 px-2 py-1 focus:outline-none focus:border-violet-500">
+                            <option value="front" ${img.view_type === 'front' ? 'selected' : ''}>Front</option>
+                            <option value="back" ${img.view_type === 'back' ? 'selected' : ''}>Back</option>
+                            <option value="side" ${img.view_type === 'side' ? 'selected' : ''}>Side</option>
+                            <option value="detail" ${img.view_type === 'detail' ? 'selected' : ''}>Detail</option>
+                            <option value="full" ${img.view_type === 'full' ? 'selected' : ''}>Full</option>
+                        </select>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs font-medium text-neutral-600 dark:text-neutral-400">Caption</label>
+                        <input type="text" placeholder="Optional caption" value="${img.caption || ''}" onchange="updateEditExistingImageMetadata(${actualIndex}, 'caption', this.value)" class="w-full text-xs rounded border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-black/60 text-neutral-700 dark:text-neutral-100 px-2 py-1 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-violet-500">
+                    </div>
+                    <label class="flex items-center gap-2 ${disabledClass}">
+                        <input type="checkbox" onchange="updateEditExistingImageMetadata(${actualIndex}, 'is_primary', this.checked)" ${img.is_primary ? 'checked' : ''} ${disabledAttr} class="rounded border-neutral-300 dark:border-neutral-600 ${isDisabled ? 'opacity-50' : ''}">
+                        <span class="text-xs text-neutral-600 dark:text-neutral-400 ${isDisabled ? 'opacity-50' : ''}">Primary</span>
+                    </label>
                 </div>
-                ${img.is_primary ? '<span class="absolute top-1 left-1 bg-violet-600 text-white text-[9px] px-1.5 py-0.5 rounded-full">Primary</span>' : ''}
             </div>
-        `).join('');
+        `}).join('');
 
         updateEditUploadButtonState();
+    }
+
+    // Update existing image metadata
+    function updateEditExistingImageMetadata(index, field, value) {
+        if (globalThis.editItemModalState.existingImages[index]) {
+            // If setting this image as primary, unset primary from all other images
+            if (field === 'is_primary' && value === true) {
+                // Unset primary from all existing images
+                globalThis.editItemModalState.existingImages.forEach((img, i) => {
+                    if (i !== index) {
+                        img.is_primary = false;
+                    }
+                });
+                // Unset primary from all new images
+                globalThis.editItemModalState.newImages.forEach(img => {
+                    img.is_primary = false;
+                });
+            }
+            
+            globalThis.editItemModalState.existingImages[index][field] = value;
+            
+            // Re-render both sections when primary changes to update disabled state
+            if (field === 'is_primary') {
+                renderEditExistingImages();
+                renderEditNewImages();
+            }
+        }
     }
 
     // Render new images to upload
@@ -548,8 +613,13 @@
             return;
         }
 
-        // Check if any new image is already marked as primary
-        var hasPrimarySelected = globalThis.editItemModalState.newImages.some(img => img.is_primary);
+        // Check if any existing image or new image is set as primary
+        var visibleExistingImages = globalThis.editItemModalState.existingImages.filter(
+            img => !globalThis.editItemModalState.imagesToDelete.includes(img.id)
+        );
+        var existingPrimary = visibleExistingImages.find(img => img.is_primary);
+        var newImagesPrimary = globalThis.editItemModalState.newImages.find(img => img.is_primary);
+        var hasPrimarySelected = existingPrimary || newImagesPrimary;
 
         wrapper.classList.remove('hidden');
         container.innerHTML = globalThis.editItemModalState.newImages.map((img, index) => {
@@ -603,10 +673,25 @@
     // Update new image metadata
     function updateEditNewImageMetadata(index, field, value) {
         if (globalThis.editItemModalState.newImages[index]) {
+            // If setting this image as primary, unset primary from all other images
+            if (field === 'is_primary' && value === true) {
+                // Unset primary from all existing images
+                globalThis.editItemModalState.existingImages.forEach(img => {
+                    img.is_primary = false;
+                });
+                // Unset primary from all other new images
+                globalThis.editItemModalState.newImages.forEach((img, i) => {
+                    if (i !== index) {
+                        img.is_primary = false;
+                    }
+                });
+            }
+            
             globalThis.editItemModalState.newImages[index][field] = value;
             
-            // Re-render when primary changes to update disabled state of other checkboxes
+            // Re-render both sections when primary changes to update disabled state
             if (field === 'is_primary') {
+                renderEditExistingImages();
                 renderEditNewImages();
             }
         }
@@ -804,7 +889,43 @@
 
             await axios.put(`/api/inventories/${globalThis.editItemModalState.currentItemId}`, payload);
 
-            // Step 2: Delete images marked for deletion
+            // Step 2: Update existing images that have changed
+            var existingImagesUpdatePromises = [];
+            globalThis.editItemModalState.existingImages.forEach((img, index) => {
+                // Skip images marked for deletion
+                if (globalThis.editItemModalState.imagesToDelete.includes(img.id)) {
+                    return;
+                }
+                
+                var original = globalThis.editItemModalState.existingImagesOriginal.find(o => o.id === img.id);
+                if (!original) return;
+                
+                // Check if view_type or caption changed
+                var viewTypeChanged = img.view_type !== original.view_type;
+                var captionChanged = img.caption !== original.caption;
+                
+                if (viewTypeChanged || captionChanged) {
+                    existingImagesUpdatePromises.push(
+                        axios.patch(`/api/inventories/${globalThis.editItemModalState.currentItemId}/images/${img.id}`, {
+                            view_type: img.view_type,
+                            caption: img.caption
+                        })
+                    );
+                }
+                
+                // Check if this image is now set as primary (and wasn't before)
+                if (img.is_primary && !original.is_primary) {
+                    existingImagesUpdatePromises.push(
+                        axios.patch(`/api/inventories/${globalThis.editItemModalState.currentItemId}/images/${img.id}/primary`)
+                    );
+                }
+            });
+            
+            if (existingImagesUpdatePromises.length > 0) {
+                await Promise.all(existingImagesUpdatePromises);
+            }
+
+            // Step 3: Delete images marked for deletion
             var deletePromises = globalThis.editItemModalState.imagesToDelete.map(imageId => 
                 axios.delete(`/api/inventories/${globalThis.editItemModalState.currentItemId}/images/${imageId}`)
             );
@@ -813,7 +934,7 @@
                 await Promise.all(deletePromises);
             }
 
-            // Step 3: Upload new images
+            // Step 4: Upload new images
             if (globalThis.editItemModalState.newImages.length > 0) {
                 var imagePayload = new FormData();
                 
@@ -832,9 +953,6 @@
                         'Content-Type': 'multipart/form-data'
                     }
                 });
-                
-                // If a new image was marked as primary, we need to call setPrimary endpoint
-                // The store endpoint will return the uploaded images, but we need to handle this
             }
 
             showEditItemSuccess('Item updated successfully!');
