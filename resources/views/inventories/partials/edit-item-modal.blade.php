@@ -269,7 +269,7 @@
 
         <div class="px-6 py-4 space-y-4">
             <p class="text-sm text-neutral-600 dark:text-neutral-400">
-                Mark this item for maintenance or retire it from your inventory.
+                Update this item's availability status.
             </p>
 
             <div class="space-y-2">
@@ -281,12 +281,13 @@
                         class="w-full bg-transparent text-xs text-neutral-700 placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500 focus:outline-none transition-colors duration-300 ease-in-out"
                     >
                         <option value="">Select status</option>
+                        <option value="1">Available</option>
                         <option value="3">Maintenance</option>
                         <option value="4">Retired</option>
                     </select>
                 </div>
                 <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
-                    Note: "Available" and "Rented" statuses are automatically managed by the rental system.
+                    Note: "Rented" status is automatically managed by the rental system.
                 </p>
             </div>
 
