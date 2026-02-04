@@ -817,10 +817,14 @@
             if (globalThis.editItemModalState.newImages.length > 0) {
                 var imagePayload = new FormData();
                 
+                // Find if any new image is marked as primary
+                var primaryNewImageIndex = globalThis.editItemModalState.newImages.findIndex(img => img.is_primary);
+                
                 globalThis.editItemModalState.newImages.forEach((img, index) => {
                     imagePayload.append('images[]', img.file);
                     imagePayload.append('view_types[]', img.view_type);
                     imagePayload.append('captions[]', img.caption || '');
+                    imagePayload.append('is_primary[]', img.is_primary ? '1' : '0');
                 });
 
                 await axios.post(`/api/inventories/${globalThis.editItemModalState.currentItemId}/images`, imagePayload, {
@@ -828,6 +832,9 @@
                         'Content-Type': 'multipart/form-data'
                     }
                 });
+                
+                // If a new image was marked as primary, we need to call setPrimary endpoint
+                // The store endpoint will return the uploaded images, but we need to handle this
             }
 
             showEditItemSuccess('Item updated successfully!');

@@ -55,7 +55,9 @@ class InventoryImageController
             'view_types' => 'required|array',
             'view_types.*' => 'required|string|in:front,back,side,detail,full',
             'captions' => 'nullable|array',
-            'captions.*' => 'nullable|string|max:255'
+            'captions.*' => 'nullable|string|max:255',
+            'is_primary' => 'nullable|array',
+            'is_primary.*' => 'nullable|string|in:0,1'
         ]);
 
         // Validate that images and view_types have the same count
@@ -80,8 +82,15 @@ class InventoryImageController
         $uploadedImages = [];
         $existingImagesCount = $inventory->images()->count();
 
-        // Check if this is the first image to set as primary
-        $shouldSetPrimary = $existingImagesCount === 0;
+        // Check if this is the first image to set as primary (only if no is_primary flag is explicitly set)
+        $isPrimaryFlags = $request->is_primary ?? [];
+        $hasExplicitPrimary = in_array('1', $isPrimaryFlags, true);
+        $shouldAutoSetPrimary = $existingImagesCount === 0 && !$hasExplicitPrimary;
+
+        // If a new image is explicitly set as primary, unset all existing primary flags
+        if ($hasExplicitPrimary) {
+            $inventory->images()->update(['is_primary' => false]);
+        }
 
         foreach ($request->file('images') as $index => $image) {
             // Generate unique filename
@@ -93,6 +102,16 @@ class InventoryImageController
             // Get view type and caption
             $viewType = $request->view_types[$index];
             $caption = $request->captions[$index] ?? null;
+            
+            // Determine if this image should be primary
+            $isPrimary = false;
+            if ($hasExplicitPrimary) {
+                // Use explicit is_primary flag from request
+                $isPrimary = isset($isPrimaryFlags[$index]) && $isPrimaryFlags[$index] === '1';
+            } else {
+                // Auto-set first image as primary if no images exist
+                $isPrimary = $shouldAutoSetPrimary && $index === 0;
+            }
 
             // Create image record
             $inventoryImage = $inventory->images()->create([
@@ -100,7 +119,7 @@ class InventoryImageController
                 'image_url' => Storage::url($path),
                 'view_type' => $viewType,
                 'caption' => $caption,
-                'is_primary' => $shouldSetPrimary && $index === 0,
+                'is_primary' => $isPrimary,
                 'display_order' => $existingImagesCount + $index + 1,
                 'file_size' => $image->getSize(),
                 'mime_type' => $image->getMimeType()
