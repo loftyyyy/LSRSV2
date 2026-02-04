@@ -120,6 +120,7 @@ Route::middleware(['guest'])->group(function () {
         Route::get('/inventories/missing-images', [InventoryController::class, 'getItemsMissingImages']);
         Route::get('/inventories/{inventory}/images', [InventoryImageController::class, 'index']);
         Route::post('/inventories/{inventory}/images', [InventoryImageController::class, 'store']);
+        Route::patch('/inventories/{inventory}/images/{image}', [InventoryImageController::class, 'update']);
         Route::delete('/inventories/{inventory}/images/{image}', [InventoryImageController::class, 'destroy']);
         Route::patch('/inventories/{inventory}/images/{image}/primary', [InventoryImageController::class, 'setPrimary']);
 
