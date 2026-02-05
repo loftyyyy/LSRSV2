@@ -43,30 +43,51 @@ html:not(.dark) input:-webkit-autofill {
     -webkit-box-shadow: 0 0 0px 1000px #000000 inset;
 }
 
-/* Smooth theme transition */
-html,
-body {
+/* Smooth theme transition for all elements */
+*,
+*::before,
+*::after {
     transition:
-        background-color 300ms ease,
-        color 300ms ease;
+        background-color 200ms ease-out,
+        border-color 200ms ease-out,
+        color 200ms ease-out,
+        fill 200ms ease-out,
+        stroke 200ms ease-out,
+        box-shadow 200ms ease-out;
 }
 
-/* Common surfaces */
-.theme-transition,
-.theme-transition * {
+/* Exclude elements that shouldn't transition (performance optimization) */
+input,
+textarea,
+select,
+button,
+a,
+[data-no-transition],
+.no-theme-transition,
+.no-theme-transition * {
     transition:
-        background-color 300ms ease,
-        color 300ms ease,
-        border-color 300ms ease,
-        box-shadow 300ms ease;
+        background-color 200ms ease-out,
+        border-color 200ms ease-out,
+        color 200ms ease-out,
+        fill 200ms ease-out,
+        stroke 200ms ease-out,
+        box-shadow 200ms ease-out,
+        transform 150ms ease-out,
+        opacity 150ms ease-out;
+}
+
+/* Override for elements that need specific transitions */
+.transition-none,
+.transition-none * {
+    transition: none !important;
 }
 
 /* Respect reduced motion */
 @media (prefers-reduced-motion: reduce) {
-    html,
-    body,
-    .theme-transition,
-    .theme-transition * {
+    *,
+    *::before,
+    *::after {
         transition: none !important;
+        animation: none !important;
     }
 }
