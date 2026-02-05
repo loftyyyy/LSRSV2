@@ -259,7 +259,25 @@
         globalThis.inventoryPageInitialized = true;
         console.log('[Inventory] Starting initialization...');
 
-        // Create fresh abort controller for this page visit
+        // Reset state for fresh page load
+        globalThis.inventoryState.currentPage = 1;
+        globalThis.inventoryState.searchQuery = '';
+        globalThis.inventoryState.statusFilter = '';
+        globalThis.inventoryState.isLoading = false;
+        globalThis.inventoryState.allItems = [];
+        
+        // Clear search input
+        searchInput.value = '';
+        
+        // Reset filter button text
+        if (filterButtonText) {
+            filterButtonText.textContent = 'Filter Status';
+        }
+
+        // Abort any pending requests and create fresh abort controller
+        if (globalThis.inventoryState.abortController) {
+            globalThis.inventoryState.abortController.abort();
+        }
         globalThis.inventoryState.abortController = new AbortController();
 
          // Load statuses first, then stats and items
@@ -354,12 +372,33 @@
     if (!globalThis.inventoryEventListenersAdded) {
         globalThis.inventoryEventListenersAdded = true;
         
-        // Listen to DOMContentLoaded and turbo:load only (NOT turbo:render to avoid duplicate initialization)
+        // Listen to DOMContentLoaded for initial page load
         document.addEventListener('DOMContentLoaded', initializeInventoryPage);
+        
+        // Listen to turbo:load for Turbo navigation
         document.addEventListener('turbo:load', function() {
+            console.log('[Inventory] turbo:load fired');
             // Only initialize if we're actually on the inventory page
             if (document.getElementById('inventoryTableBody')) {
+                // CRITICAL: Reset the flag here to ensure re-initialization on Turbo navigation
+                // The inline script at the top may not re-run when Turbo restores from cache
+                globalThis.inventoryPageInitialized = false;
+                globalThis.inventoryFilterDropdownInitialized = false;
                 initializeInventoryPage();
+            }
+        });
+
+        // Clear the table before Turbo caches the page to prevent stale data
+        document.addEventListener('turbo:before-cache', function() {
+            console.log('[Inventory] turbo:before-cache fired');
+            var tbody = document.getElementById('inventoryTableBody');
+            if (tbody) {
+                tbody.innerHTML = '';
+            }
+            // Also hide pagination and show empty state for clean cache
+            var paginationControls = document.getElementById('paginationControls');
+            if (paginationControls) {
+                paginationControls.style.display = 'none';
             }
         });
 
@@ -387,6 +426,7 @@
             // Clear the items array to prevent stale data
             if (globalThis.inventoryState) {
                 globalThis.inventoryState.allItems = [];
+                globalThis.inventoryState.isLoading = false;
             }
         });
     }
