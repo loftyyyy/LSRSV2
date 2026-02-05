@@ -190,14 +190,10 @@
     console.log('[Inventory] Current allItems:', globalThis.inventoryState?.allItems?.length || 0);
     console.log('[Inventory] inventoryPageInitialized:', globalThis.inventoryPageInitialized);
     
-    // IMMEDIATE FIX: Clear tbody immediately when script loads to prevent stale data flash
-    (function() {
-        var tbody = document.getElementById('inventoryTableBody');
-        if (tbody && tbody.children.length > 0) {
-            console.log('[Inventory] Clearing stale tbody rows immediately');
-            tbody.innerHTML = '';
-        }
-    })();
+    // CRITICAL: Always reset the initialization flag when the script runs
+    // This ensures fresh initialization on every page visit (both Turbo and hard refresh)
+    globalThis.inventoryPageInitialized = false;
+    globalThis.inventoryFilterDropdownInitialized = false;
 
     // Use globalThis to avoid redeclaration errors when Turbo navigates between pages
     if (!globalThis.inventoryState) {
@@ -222,6 +218,19 @@
             // Request cancellation
             abortController: null
         };
+    } else {
+        // Reset state for fresh page load
+        globalThis.inventoryState.currentPage = 1;
+        globalThis.inventoryState.searchQuery = '';
+        globalThis.inventoryState.statusFilter = '';
+        globalThis.inventoryState.isLoading = false;
+        globalThis.inventoryState.allItems = [];
+        
+        // Abort any pending requests from previous navigation
+        if (globalThis.inventoryState.abortController) {
+            globalThis.inventoryState.abortController.abort();
+            globalThis.inventoryState.abortController = null;
+        }
     }
 
     // Debounce timer for search (use var to allow redeclaration)
@@ -236,34 +245,22 @@
         var filterMenu = document.getElementById('filter-menu');
         var filterButtonText = document.getElementById('filter-button-text');
 
-        // Guard against missing elements
+        // Guard against missing elements (we're not on the inventory page)
         if (!searchInput || !filterMenu) {
-            console.log('[Inventory] Missing DOM elements, returning early');
+            console.log('[Inventory] Missing DOM elements, not on inventory page');
             return;
         }
 
         // Only initialize once per page visit
         if (globalThis.inventoryPageInitialized) {
-            console.log('[Inventory] Already initialized, returning');
+            console.log('[Inventory] Already initialized, skipping');
             return;
         }
         globalThis.inventoryPageInitialized = true;
         console.log('[Inventory] Starting initialization...');
 
-        // Cancel any pending requests from previous navigation
-        if (globalThis.inventoryState.abortController) {
-            globalThis.inventoryState.abortController.abort();
-        }
+        // Create fresh abort controller for this page visit
         globalThis.inventoryState.abortController = new AbortController();
-
-         // Reset state when page is loaded
-         globalThis.inventoryState.currentPage = 1;
-         globalThis.inventoryState.searchQuery = '';
-         globalThis.inventoryState.statusFilter = '';
-         globalThis.inventoryState.isLoading = false;
-         globalThis.inventoryState.allItems = []; // Clear any leftover items
-         globalThis.inventoryState.totalPages = 1;
-         globalThis.inventoryState.totalCount = 0;
 
          // Load statuses first, then stats and items
         fetchStatuses().then(() => {
@@ -368,7 +365,7 @@
 
         // Clean up when leaving the page (reset flags and abort requests)
         document.addEventListener('turbo:before-visit', function() {
-            // Only run cleanup if we're leaving the inventory page
+            // Only run cleanup if we ARE currently on the inventory page (tbody exists means we're on it)
             if (!document.getElementById('inventoryTableBody')) {
                 return;
             }
@@ -384,6 +381,7 @@
             // Abort any pending requests
             if (globalThis.inventoryState && globalThis.inventoryState.abortController) {
                 globalThis.inventoryState.abortController.abort();
+                globalThis.inventoryState.abortController = null;
             }
             
             // Clear the items array to prevent stale data
