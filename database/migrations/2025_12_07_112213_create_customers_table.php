@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('address');
             $table->json('measurement')->nullable();
             $table->foreignId('status_id')->constrained('customer_statuses', 'status_id')->cascadeOnDelete();
+            $table->foreignId('updated_by')->nullable()->constrained('users', 'user_id')->nullOnDelete();
             $table->timestamps();
         });
     }
