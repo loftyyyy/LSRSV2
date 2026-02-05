@@ -1,11 +1,17 @@
 {{-- Customer Details Modal --}}
 <div id="customerDetailsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center px-2 py-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
-    <div class="w-full max-w-4xl bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-3xl shadow-2xl flex flex-col max-h-[calc(100vh-2rem)] my-auto">
+    <div class="w-full max-w-5xl bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-3xl shadow-2xl flex flex-col max-h-[calc(100vh-2rem)] my-auto">
         {{-- Header --}}
         <div class="flex-shrink-0 flex items-center justify-between px-6 py-4 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/80 dark:bg-neutral-900/50 rounded-t-3xl">
-            <div>
-                <p class="text-xs uppercase tracking-[0.2em] text-neutral-500 dark:text-neutral-500">Customer Details</p>
-                <h3 id="customerDetailsTitle" class="text-lg font-semibold text-neutral-900 dark:text-white">Loading...</h3>
+            <div class="flex items-center gap-4">
+                {{-- Customer Avatar --}}
+                <div id="customerDetailsAvatar" class="h-12 w-12 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white text-lg font-semibold shadow-lg">
+                    --
+                </div>
+                <div>
+                    <p class="text-xs uppercase tracking-[0.2em] text-neutral-500 dark:text-neutral-500">Customer Details</p>
+                    <h3 id="customerDetailsTitle" class="text-lg font-semibold text-neutral-900 dark:text-white">Loading...</h3>
+                </div>
             </div>
             <button onclick="closeCustomerDetailsModal()" class="text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 text-xl transition-colors duration-200">&times;</button>
         </div>
@@ -22,175 +28,213 @@
 
             {{-- Customer Details (hidden initially) --}}
             <div id="customerDetailsData" class="hidden">
-                {{-- Main Content --}}
-                <div class="p-6 space-y-6">
-                    {{-- Status & Stats Row --}}
-                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                        {{-- Status Section --}}
-                        <div class="space-y-2">
-                            <div class="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                                <x-icon name="activity" class="h-4 w-4" />
-                                <span>Status</span>
-                            </div>
-                            <div id="detailCustomerStatusCard" class="rounded-xl p-3 border">
-                                <div class="flex items-center gap-2">
-                                    <span id="detailCustomerStatusDot" class="h-2.5 w-2.5 rounded-full"></span>
-                                    <p id="detailCustomerStatus" class="text-sm font-semibold">-</p>
+                {{-- Main Content: Two Column Layout --}}
+                <div class="flex flex-col lg:flex-row">
+                    {{-- Left Column: Customer Info & Measurements --}}
+                    <div class="lg:w-1/2 p-6 border-b lg:border-b-0 lg:border-r border-neutral-200 dark:border-neutral-800 space-y-5">
+                        {{-- Status & ID Row --}}
+                        <div class="grid grid-cols-2 gap-4">
+                            {{-- Status Section --}}
+                            <div class="space-y-2">
+                                <div class="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                                    <x-icon name="activity" class="h-4 w-4" />
+                                    <span>Status</span>
+                                </div>
+                                <div id="detailCustomerStatusCard" class="rounded-xl p-3 border">
+                                    <div class="flex items-center gap-2">
+                                        <span id="detailCustomerStatusDot" class="h-2.5 w-2.5 rounded-full"></span>
+                                        <p id="detailCustomerStatus" class="text-sm font-semibold">-</p>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                        {{-- Total Rentals --}}
-                        <div class="space-y-2">
-                            <div class="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                                <x-icon name="shopping-bag" class="h-4 w-4" />
-                                <span>Total Rentals</span>
-                            </div>
-                            <div class="bg-gradient-to-br from-violet-500/10 to-purple-500/10 dark:from-violet-500/20 dark:to-purple-500/20 rounded-xl p-3 border border-violet-200 dark:border-violet-800/50">
-                                <p id="detailTotalRentals" class="text-xl font-bold text-violet-600 dark:text-violet-400 font-geist-mono">0</p>
-                            </div>
-                        </div>
-
-                        {{-- Active Rentals --}}
-                        <div class="space-y-2">
-                            <div class="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                                <x-icon name="clock" class="h-4 w-4" />
-                                <span>Active Rentals</span>
-                            </div>
-                            <div class="bg-gradient-to-br from-amber-500/10 to-orange-500/10 dark:from-amber-500/20 dark:to-orange-500/20 rounded-xl p-3 border border-amber-200 dark:border-amber-800/50">
-                                <p id="detailActiveRentals" class="text-xl font-bold text-amber-600 dark:text-amber-400 font-geist-mono">0</p>
-                            </div>
-                        </div>
-
-                        {{-- Total Reservations --}}
-                        <div class="space-y-2">
-                            <div class="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                                <x-icon name="calendar" class="h-4 w-4" />
-                                <span>Reservations</span>
-                            </div>
-                            <div class="bg-gradient-to-br from-cyan-500/10 to-blue-500/10 dark:from-cyan-500/20 dark:to-blue-500/20 rounded-xl p-3 border border-cyan-200 dark:border-cyan-800/50">
-                                <p id="detailTotalReservations" class="text-xl font-bold text-cyan-600 dark:text-cyan-400 font-geist-mono">0</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Customer Information Section --}}
-                    <div class="space-y-3">
-                        <div class="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                            <x-icon name="user" class="h-4 w-4" />
-                            <span>Customer Information</span>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-3">
                             {{-- Customer ID --}}
-                            <div class="bg-neutral-50 dark:bg-neutral-900/50 rounded-xl p-3 border border-neutral-200 dark:border-neutral-800">
-                                <div class="flex items-center gap-1.5 mb-1">
-                                    <x-icon name="hash" class="h-3 w-3 text-neutral-400" />
-                                    <p class="text-xs text-neutral-500 dark:text-neutral-400">Customer ID</p>
+                            <div class="space-y-2">
+                                <div class="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                                    <x-icon name="hash" class="h-4 w-4" />
+                                    <span>Customer ID</span>
                                 </div>
-                                <p id="detailCustomerId" class="text-sm font-medium text-neutral-900 dark:text-white font-geist-mono">-</p>
-                            </div>
-
-                            {{-- Full Name --}}
-                            <div class="bg-neutral-50 dark:bg-neutral-900/50 rounded-xl p-3 border border-neutral-200 dark:border-neutral-800">
-                                <div class="flex items-center gap-1.5 mb-1">
-                                    <x-icon name="user" class="h-3 w-3 text-neutral-400" />
-                                    <p class="text-xs text-neutral-500 dark:text-neutral-400">Full Name</p>
+                                <div class="bg-neutral-50 dark:bg-neutral-900/50 rounded-xl p-3 border border-neutral-200 dark:border-neutral-800">
+                                    <p id="detailCustomerId" class="text-sm font-semibold text-neutral-900 dark:text-white font-geist-mono">-</p>
                                 </div>
-                                <p id="detailCustomerName" class="text-sm font-medium text-neutral-900 dark:text-white">-</p>
                             </div>
                         </div>
-                    </div>
 
-                    {{-- Contact Information Section --}}
-                    <div class="space-y-3">
-                        <div class="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                            <x-icon name="mail" class="h-4 w-4" />
-                            <span>Contact Information</span>
-                        </div>
-
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
-                            {{-- Email --}}
-                            <div class="bg-neutral-50 dark:bg-neutral-900/50 rounded-xl p-3 border border-neutral-200 dark:border-neutral-800">
-                                <div class="flex items-center gap-1.5 mb-1">
-                                    <x-icon name="mail" class="h-3 w-3 text-neutral-400" />
-                                    <p class="text-xs text-neutral-500 dark:text-neutral-400">Email Address</p>
-                                </div>
-                                <p id="detailCustomerEmail" class="text-sm font-medium text-neutral-900 dark:text-white break-all">-</p>
-                            </div>
-
-                            {{-- Phone --}}
-                            <div class="bg-neutral-50 dark:bg-neutral-900/50 rounded-xl p-3 border border-neutral-200 dark:border-neutral-800">
-                                <div class="flex items-center gap-1.5 mb-1">
-                                    <x-icon name="phone" class="h-3 w-3 text-neutral-400" />
-                                    <p class="text-xs text-neutral-500 dark:text-neutral-400">Contact Number</p>
-                                </div>
-                                <p id="detailCustomerPhone" class="text-sm font-medium text-neutral-900 dark:text-white font-geist-mono">-</p>
-                            </div>
-
-                            {{-- Address (full width) --}}
-                            <div class="lg:col-span-2 bg-neutral-50 dark:bg-neutral-900/50 rounded-xl p-3 border border-neutral-200 dark:border-neutral-800">
-                                <div class="flex items-center gap-1.5 mb-1">
-                                    <x-icon name="map-pin" class="h-3 w-3 text-neutral-400" />
-                                    <p class="text-xs text-neutral-500 dark:text-neutral-400">Address</p>
-                                </div>
-                                <p id="detailCustomerAddress" class="text-sm font-medium text-neutral-900 dark:text-white">-</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Recent Rentals Section --}}
-                    <div class="space-y-3">
-                        <div class="flex items-center justify-between">
+                        {{-- Contact Information Section --}}
+                        <div class="space-y-3">
                             <div class="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                                <x-icon name="shopping-bag" class="h-4 w-4" />
-                                <span>Recent Rentals</span>
+                                <x-icon name="mail" class="h-4 w-4" />
+                                <span>Contact Information</span>
                             </div>
-                            <span id="detailRentalsCount" class="text-xs text-neutral-500 dark:text-neutral-400 font-geist-mono">0 rentals</span>
+
+                            <div class="grid grid-cols-1 gap-3">
+                                {{-- Email --}}
+                                <div class="bg-neutral-50 dark:bg-neutral-900/50 rounded-xl p-3 border border-neutral-200 dark:border-neutral-800">
+                                    <div class="flex items-center gap-1.5 mb-1">
+                                        <x-icon name="mail" class="h-3 w-3 text-neutral-400" />
+                                        <p class="text-xs text-neutral-500 dark:text-neutral-400">Email Address</p>
+                                    </div>
+                                    <p id="detailCustomerEmail" class="text-sm font-medium text-neutral-900 dark:text-white break-all">-</p>
+                                </div>
+
+                                {{-- Phone --}}
+                                <div class="bg-neutral-50 dark:bg-neutral-900/50 rounded-xl p-3 border border-neutral-200 dark:border-neutral-800">
+                                    <div class="flex items-center gap-1.5 mb-1">
+                                        <x-icon name="phone" class="h-3 w-3 text-neutral-400" />
+                                        <p class="text-xs text-neutral-500 dark:text-neutral-400">Contact Number</p>
+                                    </div>
+                                    <p id="detailCustomerPhone" class="text-sm font-medium text-neutral-900 dark:text-white font-geist-mono">-</p>
+                                </div>
+
+                                {{-- Address --}}
+                                <div class="bg-neutral-50 dark:bg-neutral-900/50 rounded-xl p-3 border border-neutral-200 dark:border-neutral-800">
+                                    <div class="flex items-center gap-1.5 mb-1">
+                                        <x-icon name="map-pin" class="h-3 w-3 text-neutral-400" />
+                                        <p class="text-xs text-neutral-500 dark:text-neutral-400">Address</p>
+                                    </div>
+                                    <p id="detailCustomerAddress" class="text-sm font-medium text-neutral-900 dark:text-white">-</p>
+                                </div>
+                            </div>
                         </div>
 
-                        <div id="detailRecentRentals" class="bg-neutral-50 dark:bg-neutral-900/50 rounded-xl border border-neutral-200 dark:border-neutral-800 overflow-hidden">
-                            {{-- Rentals will be inserted here --}}
-                            <div class="p-4 text-center text-sm text-neutral-500 dark:text-neutral-400">
-                                No rentals found
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Recent Reservations Section --}}
-                    <div class="space-y-3">
-                        <div class="flex items-center justify-between">
+                        {{-- Measurements Section --}}
+                        <div class="space-y-3">
                             <div class="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                                <x-icon name="calendar" class="h-4 w-4" />
-                                <span>Recent Reservations</span>
+                                <x-icon name="ruler" class="h-4 w-4" />
+                                <span>Body Measurements</span>
                             </div>
-                            <span id="detailReservationsCount" class="text-xs text-neutral-500 dark:text-neutral-400 font-geist-mono">0 reservations</span>
+
+                            <div id="detailMeasurementsContainer" class="grid grid-cols-2 gap-3">
+                                {{-- Height --}}
+                                <div class="bg-gradient-to-br from-violet-500/10 to-purple-500/10 dark:from-violet-500/20 dark:to-purple-500/20 rounded-xl p-3 border border-violet-200 dark:border-violet-800/50">
+                                    <div class="flex items-center gap-1.5 mb-1">
+                                        <svg class="h-3 w-3 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7l4-4m0 0l4 4m-4-4v18"/>
+                                        </svg>
+                                        <p class="text-xs text-violet-600 dark:text-violet-400">Height</p>
+                                    </div>
+                                    <p id="detailMeasurementHeight" class="text-lg font-bold text-violet-600 dark:text-violet-400 font-geist-mono">-</p>
+                                </div>
+
+                                {{-- Chest --}}
+                                <div class="bg-gradient-to-br from-cyan-500/10 to-blue-500/10 dark:from-cyan-500/20 dark:to-blue-500/20 rounded-xl p-3 border border-cyan-200 dark:border-cyan-800/50">
+                                    <div class="flex items-center gap-1.5 mb-1">
+                                        <svg class="h-3 w-3 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
+                                        </svg>
+                                        <p class="text-xs text-cyan-600 dark:text-cyan-400">Chest</p>
+                                    </div>
+                                    <p id="detailMeasurementChest" class="text-lg font-bold text-cyan-600 dark:text-cyan-400 font-geist-mono">-</p>
+                                </div>
+
+                                {{-- Waist --}}
+                                <div class="bg-gradient-to-br from-amber-500/10 to-orange-500/10 dark:from-amber-500/20 dark:to-orange-500/20 rounded-xl p-3 border border-amber-200 dark:border-amber-800/50">
+                                    <div class="flex items-center gap-1.5 mb-1">
+                                        <svg class="h-3 w-3 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
+                                        </svg>
+                                        <p class="text-xs text-amber-600 dark:text-amber-400">Waist</p>
+                                    </div>
+                                    <p id="detailMeasurementWaist" class="text-lg font-bold text-amber-600 dark:text-amber-400 font-geist-mono">-</p>
+                                </div>
+
+                                {{-- Hips --}}
+                                <div class="bg-gradient-to-br from-rose-500/10 to-pink-500/10 dark:from-rose-500/20 dark:to-pink-500/20 rounded-xl p-3 border border-rose-200 dark:border-rose-800/50">
+                                    <div class="flex items-center gap-1.5 mb-1">
+                                        <svg class="h-3 w-3 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                                        </svg>
+                                        <p class="text-xs text-rose-600 dark:text-rose-400">Hips</p>
+                                    </div>
+                                    <p id="detailMeasurementHips" class="text-lg font-bold text-rose-600 dark:text-rose-400 font-geist-mono">-</p>
+                                </div>
+                            </div>
+
+                            {{-- No Measurements Message --}}
+                            <div id="detailNoMeasurements" class="hidden bg-neutral-50 dark:bg-neutral-900/50 rounded-xl p-4 border border-neutral-200 dark:border-neutral-800 text-center">
+                                <x-icon name="ruler" class="h-8 w-8 text-neutral-300 dark:text-neutral-600 mx-auto mb-2" />
+                                <p class="text-sm text-neutral-500 dark:text-neutral-400">No measurements recorded</p>
+                                <p class="text-xs text-neutral-400 dark:text-neutral-500 mt-1">Click "Edit Customer" to add measurements</p>
+                            </div>
                         </div>
 
-                        <div id="detailRecentReservations" class="bg-neutral-50 dark:bg-neutral-900/50 rounded-xl border border-neutral-200 dark:border-neutral-800 overflow-hidden">
-                            {{-- Reservations will be inserted here --}}
-                            <div class="p-4 text-center text-sm text-neutral-500 dark:text-neutral-400">
-                                No reservations found
+                        {{-- Timestamps --}}
+                        <div class="pt-4 border-t border-neutral-200 dark:border-neutral-800">
+                            <div class="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-3">
+                                <x-icon name="clock" class="h-4 w-4" />
+                                <span>Timeline</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="flex items-center gap-2 text-xs">
+                                    <div class="h-1.5 w-1.5 rounded-full bg-emerald-500"></div>
+                                    <span class="text-neutral-500 dark:text-neutral-400">Registered:</span>
+                                    <span id="detailCustomerCreated" class="text-neutral-700 dark:text-neutral-300 font-medium">-</span>
+                                </div>
+                                <div class="flex items-center gap-2 text-xs">
+                                    <div class="h-1.5 w-1.5 rounded-full bg-blue-500"></div>
+                                    <span class="text-neutral-500 dark:text-neutral-400">Updated:</span>
+                                    <span id="detailCustomerUpdated" class="text-neutral-700 dark:text-neutral-300 font-medium">-</span>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    {{-- Timestamps --}}
-                    <div class="pt-4 border-t border-neutral-200 dark:border-neutral-800">
-                        <div class="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-3">
-                            <x-icon name="clock" class="h-4 w-4" />
-                            <span>Timeline</span>
-                        </div>
-                        <div class="grid grid-cols-2 gap-3">
-                            <div class="flex items-center gap-2 text-xs">
-                                <div class="h-1.5 w-1.5 rounded-full bg-emerald-500"></div>
-                                <span class="text-neutral-500 dark:text-neutral-400">Registered:</span>
-                                <span id="detailCustomerCreated" class="text-neutral-700 dark:text-neutral-300 font-medium">-</span>
+                    {{-- Right Column: Activity & Stats --}}
+                    <div class="lg:w-1/2 p-6 space-y-5">
+                        {{-- Stats Row --}}
+                        <div class="grid grid-cols-3 gap-3">
+                            {{-- Total Rentals --}}
+                            <div class="bg-gradient-to-br from-violet-500/10 to-purple-500/10 dark:from-violet-500/20 dark:to-purple-500/20 rounded-xl p-4 border border-violet-200 dark:border-violet-800/50 text-center">
+                                <p id="detailTotalRentals" class="text-2xl font-bold text-violet-600 dark:text-violet-400 font-geist-mono">0</p>
+                                <p class="text-xs text-violet-600/70 dark:text-violet-400/70 mt-1">Total Rentals</p>
                             </div>
-                            <div class="flex items-center gap-2 text-xs">
-                                <div class="h-1.5 w-1.5 rounded-full bg-blue-500"></div>
-                                <span class="text-neutral-500 dark:text-neutral-400">Updated:</span>
-                                <span id="detailCustomerUpdated" class="text-neutral-700 dark:text-neutral-300 font-medium">-</span>
+
+                            {{-- Active Rentals --}}
+                            <div class="bg-gradient-to-br from-amber-500/10 to-orange-500/10 dark:from-amber-500/20 dark:to-orange-500/20 rounded-xl p-4 border border-amber-200 dark:border-amber-800/50 text-center">
+                                <p id="detailActiveRentals" class="text-2xl font-bold text-amber-600 dark:text-amber-400 font-geist-mono">0</p>
+                                <p class="text-xs text-amber-600/70 dark:text-amber-400/70 mt-1">Active</p>
+                            </div>
+
+                            {{-- Total Reservations --}}
+                            <div class="bg-gradient-to-br from-cyan-500/10 to-blue-500/10 dark:from-cyan-500/20 dark:to-blue-500/20 rounded-xl p-4 border border-cyan-200 dark:border-cyan-800/50 text-center">
+                                <p id="detailTotalReservations" class="text-2xl font-bold text-cyan-600 dark:text-cyan-400 font-geist-mono">0</p>
+                                <p class="text-xs text-cyan-600/70 dark:text-cyan-400/70 mt-1">Reservations</p>
+                            </div>
+                        </div>
+
+                        {{-- Recent Rentals Section --}}
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                                    <x-icon name="shopping-bag" class="h-4 w-4" />
+                                    <span>Recent Rentals</span>
+                                </div>
+                                <span id="detailRentalsCount" class="text-xs text-neutral-500 dark:text-neutral-400 font-geist-mono">0 rentals</span>
+                            </div>
+
+                            <div id="detailRecentRentals" class="bg-neutral-50 dark:bg-neutral-900/50 rounded-xl border border-neutral-200 dark:border-neutral-800 overflow-hidden max-h-48 overflow-y-auto">
+                                {{-- Rentals will be inserted here --}}
+                                <div class="p-4 text-center text-sm text-neutral-500 dark:text-neutral-400">
+                                    No rentals found
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Recent Reservations Section --}}
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                                    <x-icon name="calendar" class="h-4 w-4" />
+                                    <span>Recent Reservations</span>
+                                </div>
+                                <span id="detailReservationsCount" class="text-xs text-neutral-500 dark:text-neutral-400 font-geist-mono">0 reservations</span>
+                            </div>
+
+                            <div id="detailRecentReservations" class="bg-neutral-50 dark:bg-neutral-900/50 rounded-xl border border-neutral-200 dark:border-neutral-800 overflow-hidden max-h-48 overflow-y-auto">
+                                {{-- Reservations will be inserted here --}}
+                                <div class="p-4 text-center text-sm text-neutral-500 dark:text-neutral-400">
+                                    No reservations found
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -236,7 +280,7 @@
         backface-visibility: hidden;
     }
 
-    #customerDetailsModal .max-w-4xl {
+    #customerDetailsModal .max-w-5xl {
         will-change: transform;
         transform: translateZ(0);
     }
@@ -271,6 +315,29 @@
     .dark #customerDetailsContent::-webkit-scrollbar-thumb:hover {
         background-color: rgba(100, 100, 100, 0.7);
     }
+
+    /* Custom scrollbar for rentals/reservations lists */
+    #detailRecentRentals,
+    #detailRecentReservations {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(155, 155, 155, 0.3) transparent;
+    }
+
+    #detailRecentRentals::-webkit-scrollbar,
+    #detailRecentReservations::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    #detailRecentRentals::-webkit-scrollbar-track,
+    #detailRecentReservations::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    #detailRecentRentals::-webkit-scrollbar-thumb,
+    #detailRecentReservations::-webkit-scrollbar-thumb {
+        background-color: rgba(155, 155, 155, 0.3);
+        border-radius: 2px;
+    }
 </style>
 
 <script>
@@ -297,6 +364,7 @@
         document.getElementById('customerDetailsData').classList.add('hidden');
         document.getElementById('customerDetailsError').classList.add('hidden');
         document.getElementById('customerDetailsTitle').textContent = 'Loading...';
+        document.getElementById('customerDetailsAvatar').textContent = '--';
 
         try {
             var response = await axios.get(`/api/customers/${customerId}`);
@@ -321,9 +389,13 @@
 
     // Populate customer details in the modal
     function populateCustomerDetails(customer, rentalStats) {
-        // Title
+        // Title and Avatar
         var fullName = `${customer.first_name} ${customer.last_name}`;
         document.getElementById('customerDetailsTitle').textContent = fullName;
+        
+        // Generate initials for avatar
+        var initials = (customer.first_name?.charAt(0) || '') + (customer.last_name?.charAt(0) || '');
+        document.getElementById('customerDetailsAvatar').textContent = initials.toUpperCase();
 
         // Status with dynamic styling
         var statusName = customer.status?.status_name?.toLowerCase() || 'unknown';
@@ -354,14 +426,31 @@
         document.getElementById('detailActiveRentals').textContent = rentalStats?.active_rentals || 0;
         document.getElementById('detailTotalReservations').textContent = rentalStats?.total_reservations || 0;
 
-        // Customer Info
+        // Customer ID
         document.getElementById('detailCustomerId').textContent = `#${String(customer.customer_id).padStart(3, '0')}`;
-        document.getElementById('detailCustomerName').textContent = fullName;
 
         // Contact Info
         document.getElementById('detailCustomerEmail').textContent = customer.email || '-';
         document.getElementById('detailCustomerPhone').textContent = customer.contact_number || '-';
         document.getElementById('detailCustomerAddress').textContent = customer.address || '-';
+
+        // Measurements
+        var measurements = customer.measurement;
+        var measurementsContainer = document.getElementById('detailMeasurementsContainer');
+        var noMeasurementsMsg = document.getElementById('detailNoMeasurements');
+        
+        if (measurements && (measurements.height || measurements.chest || measurements.waist || measurements.hips)) {
+            measurementsContainer.classList.remove('hidden');
+            noMeasurementsMsg.classList.add('hidden');
+            
+            document.getElementById('detailMeasurementHeight').textContent = measurements.height ? `${measurements.height} cm` : '-';
+            document.getElementById('detailMeasurementChest').textContent = measurements.chest ? `${measurements.chest} in` : '-';
+            document.getElementById('detailMeasurementWaist').textContent = measurements.waist ? `${measurements.waist} in` : '-';
+            document.getElementById('detailMeasurementHips').textContent = measurements.hips ? `${measurements.hips} in` : '-';
+        } else {
+            measurementsContainer.classList.add('hidden');
+            noMeasurementsMsg.classList.remove('hidden');
+        }
 
         // Dates
         document.getElementById('detailCustomerCreated').textContent = customer.created_at
@@ -388,6 +477,7 @@
         if (!rentals || rentals.length === 0) {
             container.innerHTML = `
                 <div class="p-4 text-center text-sm text-neutral-500 dark:text-neutral-400">
+                    <x-icon name="shopping-bag" class="h-6 w-6 text-neutral-300 dark:text-neutral-600 mx-auto mb-2" />
                     No rentals found
                 </div>
             `;
@@ -413,17 +503,17 @@
                     var returnDate = rental.return_date ? formatCustomerDate(rental.return_date) : 'Not returned';
 
                     return `
-                        <div class="px-4 py-3 flex items-center justify-between">
+                        <div class="px-4 py-3 flex items-center justify-between hover:bg-neutral-100 dark:hover:bg-neutral-800/50 transition-colors">
                             <div class="flex items-center gap-3">
-                                <div class="h-8 w-8 rounded-lg bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center">
-                                    <span class="text-xs font-bold text-violet-600 dark:text-violet-400 font-geist-mono">#${rental.rental_id}</span>
+                                <div class="h-8 w-8 rounded-lg bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center flex-shrink-0">
+                                    <span class="text-[10px] font-bold text-violet-600 dark:text-violet-400 font-geist-mono">#${rental.rental_id}</span>
                                 </div>
-                                <div>
-                                    <p class="text-sm font-medium text-neutral-900 dark:text-white">${rentalDate}</p>
-                                    <p class="text-xs text-neutral-500 dark:text-neutral-400">Return: ${returnDate}</p>
+                                <div class="min-w-0">
+                                    <p class="text-sm font-medium text-neutral-900 dark:text-white truncate">${rentalDate}</p>
+                                    <p class="text-xs text-neutral-500 dark:text-neutral-400 truncate">Return: ${returnDate}</p>
                                 </div>
                             </div>
-                            <span class="inline-flex items-center rounded-full ${statusColor} px-2 py-1 text-[10px] font-medium border">
+                            <span class="inline-flex items-center rounded-full ${statusColor} px-2 py-1 text-[10px] font-medium border flex-shrink-0 ml-2">
                                 ${rental.status?.status_name || 'Unknown'}
                             </span>
                         </div>
@@ -431,7 +521,7 @@
                 }).join('')}
             </div>
             ${rentals.length > 5 ? `
-                <div class="px-4 py-2 bg-neutral-100 dark:bg-neutral-800/50 text-center">
+                <div class="px-4 py-2 bg-neutral-100 dark:bg-neutral-800/50 text-center border-t border-neutral-200 dark:border-neutral-700">
                     <span class="text-xs text-neutral-500 dark:text-neutral-400">+ ${rentals.length - 5} more rentals</span>
                 </div>
             ` : ''}
@@ -448,6 +538,7 @@
         if (!reservations || reservations.length === 0) {
             container.innerHTML = `
                 <div class="p-4 text-center text-sm text-neutral-500 dark:text-neutral-400">
+                    <x-icon name="calendar" class="h-6 w-6 text-neutral-300 dark:text-neutral-600 mx-auto mb-2" />
                     No reservations found
                 </div>
             `;
@@ -473,17 +564,17 @@
                     var eventDate = reservation.event_date ? formatCustomerDate(reservation.event_date) : '-';
 
                     return `
-                        <div class="px-4 py-3 flex items-center justify-between">
+                        <div class="px-4 py-3 flex items-center justify-between hover:bg-neutral-100 dark:hover:bg-neutral-800/50 transition-colors">
                             <div class="flex items-center gap-3">
-                                <div class="h-8 w-8 rounded-lg bg-cyan-100 dark:bg-cyan-900/30 flex items-center justify-center">
-                                    <span class="text-xs font-bold text-cyan-600 dark:text-cyan-400 font-geist-mono">#${reservation.reservation_id}</span>
+                                <div class="h-8 w-8 rounded-lg bg-cyan-100 dark:bg-cyan-900/30 flex items-center justify-center flex-shrink-0">
+                                    <span class="text-[10px] font-bold text-cyan-600 dark:text-cyan-400 font-geist-mono">#${reservation.reservation_id}</span>
                                 </div>
-                                <div>
-                                    <p class="text-sm font-medium text-neutral-900 dark:text-white">Reserved: ${reservationDate}</p>
-                                    <p class="text-xs text-neutral-500 dark:text-neutral-400">Event: ${eventDate}</p>
+                                <div class="min-w-0">
+                                    <p class="text-sm font-medium text-neutral-900 dark:text-white truncate">Reserved: ${reservationDate}</p>
+                                    <p class="text-xs text-neutral-500 dark:text-neutral-400 truncate">Event: ${eventDate}</p>
                                 </div>
                             </div>
-                            <span class="inline-flex items-center rounded-full ${statusColor} px-2 py-1 text-[10px] font-medium border">
+                            <span class="inline-flex items-center rounded-full ${statusColor} px-2 py-1 text-[10px] font-medium border flex-shrink-0 ml-2">
                                 ${reservation.status?.status_name || 'Unknown'}
                             </span>
                         </div>
@@ -491,7 +582,7 @@
                 }).join('')}
             </div>
             ${reservations.length > 5 ? `
-                <div class="px-4 py-2 bg-neutral-100 dark:bg-neutral-800/50 text-center">
+                <div class="px-4 py-2 bg-neutral-100 dark:bg-neutral-800/50 text-center border-t border-neutral-200 dark:border-neutral-700">
                     <span class="text-xs text-neutral-500 dark:text-neutral-400">+ ${reservations.length - 5} more reservations</span>
                 </div>
             ` : ''}
