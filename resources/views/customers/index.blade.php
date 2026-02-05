@@ -533,11 +533,12 @@
             }
 
             customers.forEach(customer => {
-                var statusColor = customer.status?.status_name === 'active'
+                var isActive = customer.status?.status_name?.toLowerCase() === 'active';
+                var statusColor = isActive
                     ? 'bg-emerald-500/15 text-emerald-600 border-emerald-500/40 dark:text-emerald-300'
                     : 'bg-red-500/15 text-red-600 border-red-500/40 dark:text-red-300';
 
-                var statusBgColor = customer.status?.status_name === 'active'
+                var statusBgColor = isActive
                     ? 'bg-emerald-500'
                     : 'bg-red-500';
 
@@ -550,7 +551,8 @@
                 });
 
                 var row = document.createElement('tr');
-                row.className = 'border-b border-neutral-200 hover:bg-neutral-100 dark:border-neutral-900/60 dark:hover:bg-white/5 transition-colors duration-300 ease-in-out';
+                row.className = 'border-b border-neutral-200 hover:bg-neutral-100 dark:border-neutral-900/60 dark:hover:bg-white/5 transition-colors duration-300 ease-in-out cursor-pointer';
+                row.setAttribute('data-customer-id', customer.customer_id);
                 row.innerHTML = `
                     <td class="py-3.5 pr-4 pl-4 text-neutral-500 font-geist-mono">#${String(customer.customer_id).padStart(3, '0')}</td>
                     <td class="py-3.5 pr-4 text-neutral-900 dark:text-neutral-100">${customer.first_name} ${customer.last_name}</td>
@@ -577,6 +579,18 @@
                     </td>
                 `;
                 tbody.appendChild(row);
+            });
+
+            // Attach event listeners to rows for opening details modal
+            document.querySelectorAll('#customersTableBody tr[data-customer-id]').forEach(row => {
+                row.addEventListener('click', (e) => {
+                    // Don't open details if clicking on action buttons
+                    if (e.target.closest('.edit-customer-btn') || e.target.closest('.change-status-btn')) {
+                        return;
+                    }
+                    var customerId = row.getAttribute('data-customer-id');
+                    openCustomerDetailsModal(customerId);
+                });
             });
 
             // Attach event listeners to edit and change status buttons
@@ -862,6 +876,9 @@
 
 {{-- Include Edit Customer Modal --}}
 @include('customers.partials.edit-customer-modal')
+
+{{-- Include Customer Details Modal --}}
+@include('customers.partials.customer-details-modal')
 
 </body>
 </html>

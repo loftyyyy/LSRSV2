@@ -39,13 +39,14 @@ class CustomerController extends Controller
 
         $customers = $query->get();
 
-        // Generate report statistics
+        // Generate report statistics (case-insensitive status comparison)
         $statistics = [
             'total_customers' => $customers->count(),
-            'active_customers' => $customers->where('status.status_name', 'active')->count(),
-            'inactive_customers' => $customers->where('status.status_name', 'inactive')->count(),
+            'active_customers' => $customers->filter(fn($c) => strtolower($c->status->status_name ?? '') === 'active')->count(),
+            'inactive_customers' => $customers->filter(fn($c) => strtolower($c->status->status_name ?? '') === 'inactive')->count(),
             'total_rentals' => $customers->sum(fn($c) => $c->rentals->count()),
             'customers_with_rentals' => $customers->filter(fn($c) => $c->rentals->count() > 0)->count(),
+            'total_reservations' => $customers->sum(fn($c) => $c->reservations->count()),
         ];
 
         // Customer rental history summary
@@ -94,8 +95,8 @@ class CustomerController extends Controller
 
         $statistics = [
             'total_customers' => $customers->count(),
-            'active_customers' => $customers->where('status.status_name', 'active')->count(),
-            'inactive_customers' => $customers->where('status.status_name', 'inactive')->count(),
+            'active_customers' => $customers->filter(fn($c) => strtolower($c->status->status_name ?? '') === 'active')->count(),
+            'inactive_customers' => $customers->filter(fn($c) => strtolower($c->status->status_name ?? '') === 'inactive')->count(),
             'total_rentals' => $customers->sum(fn($c) => $c->rentals->count()),
         ];
 
@@ -155,10 +156,10 @@ class CustomerController extends Controller
           return response()->json([
               'total_customers' => Customer::count(),
               'active_customers' => Customer::whereHas('status', function ($q) {
-                  $q->where('status_name', 'active');
+                  $q->whereRaw('LOWER(status_name) = ?', ['active']);
               })->count(),
               'inactive_customers' => Customer::whereHas('status', function ($q) {
-                   $q->where('status_name', 'inactive');
+                   $q->whereRaw('LOWER(status_name) = ?', ['inactive']);
                })->count(),
                'customers_with_rentals' => Customer::whereHas('rentals')->count(),
            ]);
@@ -260,7 +261,7 @@ class CustomerController extends Controller
         try {
             DB::beginTransaction();
 
-            $activeStatusId = CustomerStatus::where('status_name', 'active')
+            $activeStatusId = CustomerStatus::whereRaw('LOWER(status_name) = ?', ['active'])
                 ->value('status_id');
 
             if (!$activeStatusId) {
@@ -376,8 +377,8 @@ class CustomerController extends Controller
      */
     public function deactivate(Customer $customer): JsonResponse
     {
-         // Find inactive status ID
-        $inactiveStatus = \App\Models\CustomerStatus::where('status_name', 'inactive')->first();
+         // Find inactive status ID (case-insensitive)
+        $inactiveStatus = \App\Models\CustomerStatus::whereRaw('LOWER(status_name) = ?', ['inactive'])->first();
 
         if (!$inactiveStatus) {
             return response()->json([
@@ -402,8 +403,8 @@ class CustomerController extends Controller
      */
     public function reactivate(Customer $customer): JsonResponse
     {
-         // Find active status ID
-        $activeStatus = \App\Models\CustomerStatus::where('status_name', 'active')->first();
+         // Find active status ID (case-insensitive)
+        $activeStatus = \App\Models\CustomerStatus::whereRaw('LOWER(status_name) = ?', ['active'])->first();
 
         if (!$activeStatus) {
             return response()->json([

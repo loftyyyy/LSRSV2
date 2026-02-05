@@ -793,11 +793,12 @@
 
             const regDate = new Date(customer.registration_date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 
-            const statusColor = customer.status === 'active'
+            const isActive = customer.status?.toLowerCase() === 'active';
+            const statusColor = isActive
                 ? 'bg-emerald-500/15 text-emerald-600 border-emerald-500/40 dark:text-emerald-300'
                 : 'bg-red-500/15 text-red-600 border-red-500/40 dark:text-red-300';
 
-            const statusBgColor = customer.status === 'active' ? 'bg-emerald-500' : 'bg-red-500';
+            const statusBgColor = isActive ? 'bg-emerald-500' : 'bg-red-500';
 
             return `
                 <tr class="border-b border-neutral-200 hover:bg-neutral-100 dark:border-neutral-900/60 dark:hover:bg-white/5 transition-colors">
