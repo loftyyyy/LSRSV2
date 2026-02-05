@@ -106,47 +106,53 @@
 
                             <div id="detailMeasurementsContainer" class="grid grid-cols-2 gap-3">
                                 {{-- Height --}}
-                                <div class="bg-gradient-to-br from-violet-500/10 to-purple-500/10 dark:from-violet-500/20 dark:to-purple-500/20 rounded-xl p-3 border border-violet-200 dark:border-violet-800/50">
+                                <div class="bg-neutral-50 dark:bg-neutral-900/50 rounded-xl p-3 border border-neutral-200 dark:border-neutral-800">
                                     <div class="flex items-center gap-1.5 mb-1">
-                                        <svg class="h-3 w-3 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7l4-4m0 0l4 4m-4-4v18"/>
+                                        {{-- Height icon (vertical ruler with marks) --}}
+                                        <svg class="h-3.5 w-3.5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m0-16l-2 2m2-2l2 2m-2 14l-2-2m2 2l2-2M6 8h2M6 12h3M6 16h2"/>
                                         </svg>
-                                        <p class="text-xs text-violet-600 dark:text-violet-400">Height</p>
+                                        <p class="text-xs text-neutral-500 dark:text-neutral-400">Height</p>
                                     </div>
-                                    <p id="detailMeasurementHeight" class="text-lg font-bold text-violet-600 dark:text-violet-400 font-geist-mono">-</p>
+                                    <p id="detailMeasurementHeight" class="text-lg font-bold text-neutral-900 dark:text-white font-geist-mono">-</p>
                                 </div>
 
                                 {{-- Chest --}}
-                                <div class="bg-gradient-to-br from-cyan-500/10 to-blue-500/10 dark:from-cyan-500/20 dark:to-blue-500/20 rounded-xl p-3 border border-cyan-200 dark:border-cyan-800/50">
+                                <div class="bg-neutral-50 dark:bg-neutral-900/50 rounded-xl p-3 border border-neutral-200 dark:border-neutral-800">
                                     <div class="flex items-center gap-1.5 mb-1">
-                                        <svg class="h-3 w-3 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
+                                        {{-- Chest icon (horizontal expand/width measurement) --}}
+                                        <svg class="h-3.5 w-3.5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 12h16M4 12l3-3m-3 3l3 3m13-3l-3-3m3 3l-3 3"/>
                                         </svg>
-                                        <p class="text-xs text-cyan-600 dark:text-cyan-400">Chest</p>
+                                        <p class="text-xs text-neutral-500 dark:text-neutral-400">Chest</p>
                                     </div>
-                                    <p id="detailMeasurementChest" class="text-lg font-bold text-cyan-600 dark:text-cyan-400 font-geist-mono">-</p>
+                                    <p id="detailMeasurementChest" class="text-lg font-bold text-neutral-900 dark:text-white font-geist-mono">-</p>
                                 </div>
 
                                 {{-- Waist --}}
-                                <div class="bg-gradient-to-br from-amber-500/10 to-orange-500/10 dark:from-amber-500/20 dark:to-orange-500/20 rounded-xl p-3 border border-amber-200 dark:border-amber-800/50">
+                                <div class="bg-neutral-50 dark:bg-neutral-900/50 rounded-xl p-3 border border-neutral-200 dark:border-neutral-800">
                                     <div class="flex items-center gap-1.5 mb-1">
-                                        <svg class="h-3 w-3 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
+                                        {{-- Waist icon (belt/circle with inward arrows) --}}
+                                        <svg class="h-3.5 w-3.5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                            <circle cx="12" cy="12" r="8" stroke-dasharray="4 2"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h8"/>
                                         </svg>
-                                        <p class="text-xs text-amber-600 dark:text-amber-400">Waist</p>
+                                        <p class="text-xs text-neutral-500 dark:text-neutral-400">Waist</p>
                                     </div>
-                                    <p id="detailMeasurementWaist" class="text-lg font-bold text-amber-600 dark:text-amber-400 font-geist-mono">-</p>
+                                    <p id="detailMeasurementWaist" class="text-lg font-bold text-neutral-900 dark:text-white font-geist-mono">-</p>
                                 </div>
 
                                 {{-- Hips --}}
-                                <div class="bg-gradient-to-br from-rose-500/10 to-pink-500/10 dark:from-rose-500/20 dark:to-pink-500/20 rounded-xl p-3 border border-rose-200 dark:border-rose-800/50">
+                                <div class="bg-neutral-50 dark:bg-neutral-900/50 rounded-xl p-3 border border-neutral-200 dark:border-neutral-800">
                                     <div class="flex items-center gap-1.5 mb-1">
-                                        <svg class="h-3 w-3 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                                        {{-- Hips icon (wider horizontal measurement) --}}
+                                        <svg class="h-3.5 w-3.5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 12h18M3 12l2-2m-2 2l2 2m16-2l-2-2m2 2l-2 2"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M7 8v8M17 8v8"/>
                                         </svg>
-                                        <p class="text-xs text-rose-600 dark:text-rose-400">Hips</p>
+                                        <p class="text-xs text-neutral-500 dark:text-neutral-400">Hips</p>
                                     </div>
-                                    <p id="detailMeasurementHips" class="text-lg font-bold text-rose-600 dark:text-rose-400 font-geist-mono">-</p>
+                                    <p id="detailMeasurementHips" class="text-lg font-bold text-neutral-900 dark:text-white font-geist-mono">-</p>
                                 </div>
                             </div>
 
