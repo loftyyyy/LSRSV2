@@ -83,7 +83,7 @@ class InventoryController extends Controller
      {
          // Total Inventory Stats
          $totalItems = Inventory::count();
-         $totalValue = Inventory::sum('purchase_price') ?? 0;
+         $totalValue = Inventory::sum('rental_price') ?? 0;
 
          // Status Distribution
          $availableItems = Inventory::whereHas('status', fn($q) => $q->where('status_name', 'available'))->count();
@@ -91,21 +91,15 @@ class InventoryController extends Controller
          $damagedItems = Inventory::whereHas('status', fn($q) => $q->where('status_name', 'damaged'))->count();
          $maintenanceItems = Inventory::whereHas('status', fn($q) => $q->where('status_name', 'maintenance'))->count();
 
-         // Condition Distribution
-         $excellentCondition = Inventory::where('condition', 'excellent')->count();
-         $goodCondition = Inventory::where('condition', 'good')->count();
-         $fairCondition = Inventory::where('condition', 'fair')->count();
-         $poorCondition = Inventory::where('condition', 'poor')->count();
-
          // Item Type Distribution
          $itemTypeDistribution = Inventory::selectRaw('item_type, COUNT(*) as count')
              ->groupBy('item_type')
              ->get()
-             ->map(fn($item) => ['type' => $item->item_type, 'count' => $item->count])
+             ->map(fn($item) => ['type' => ucfirst($item->item_type), 'count' => $item->count])
              ->values();
 
          // Top Items by Rental Count
-         $topItems = Inventory::with(['status', 'rentals'])
+         $topItems = Inventory::with(['status'])
              ->withCount('rentals')
              ->orderBy('rentals_count', 'desc')
              ->limit(8)
@@ -117,19 +111,19 @@ class InventoryController extends Controller
                      'sku' => $item->sku,
                      'rental_count' => $item->rentals_count,
                      'status' => $item->status->status_name ?? 'unknown',
-                     'purchase_price' => $item->purchase_price,
+                     'rental_price' => $item->rental_price,
                  ];
              });
 
          // Value Distribution by Item Type
-         $valueByType = Inventory::selectRaw('item_type, SUM(purchase_price) as total_value, COUNT(*) as count')
+         $valueByType = Inventory::selectRaw('item_type, SUM(rental_price) as total_value, COUNT(*) as count')
              ->groupBy('item_type')
              ->orderBy('total_value', 'desc')
              ->limit(8)
              ->get()
              ->map(fn($item) => [
-                 'type' => $item->item_type,
-                 'value' => round($item->total_value, 2),
+                 'type' => ucfirst($item->item_type),
+                 'value' => round($item->total_value ?? 0, 2),
                  'count' => $item->count,
              ])
              ->values();
@@ -149,14 +143,6 @@ class InventoryController extends Controller
              ]);
          }
 
-         // Condition Distribution for Chart
-         $conditionDistribution = [
-             ['condition' => 'Excellent', 'count' => $excellentCondition],
-             ['condition' => 'Good', 'count' => $goodCondition],
-             ['condition' => 'Fair', 'count' => $fairCondition],
-             ['condition' => 'Poor', 'count' => $poorCondition],
-         ];
-
          // Status Distribution for Chart
          $statusDistribution = [
              ['status' => 'Available', 'count' => $availableItems],
@@ -164,6 +150,21 @@ class InventoryController extends Controller
              ['status' => 'Maintenance', 'count' => $maintenanceItems],
              ['status' => 'Damaged', 'count' => $damagedItems],
          ];
+
+         // Condition Distribution for Chart (based on status since condition column doesn't exist)
+         // Map statuses to conditions: available/rented = excellent, maintenance = fair, damaged = poor
+         $conditionDistribution = [
+             ['condition' => 'Excellent', 'count' => $availableItems],
+             ['condition' => 'Good', 'count' => $rentedItems],
+             ['condition' => 'Fair', 'count' => $maintenanceItems],
+             ['condition' => 'Poor', 'count' => $damagedItems],
+         ];
+
+         // Get damaged status ID for value at risk calculation
+         $damagedStatusId = InventoryStatus::where('status_name', 'damaged')->first()?->status_id ?? 0;
+         $valueAtRisk = $damagedStatusId > 0 
+             ? Inventory::where('status_id', $damagedStatusId)->sum('rental_price') 
+             : 0;
 
          return response()->json([
              'kpis' => [
@@ -173,14 +174,12 @@ class InventoryController extends Controller
                  'rented_items' => $rentedItems,
                  'damaged_items' => $damagedItems,
                  'maintenance_items' => $maintenanceItems,
-                 'excellent_condition' => $excellentCondition,
-                 'good_condition' => $goodCondition,
-                 'fair_condition' => $fairCondition,
-                 'poor_condition' => $poorCondition,
+                 'excellent_condition' => $availableItems,
+                 'good_condition' => $rentedItems,
+                 'fair_condition' => $maintenanceItems,
+                 'poor_condition' => $damagedItems,
                  'occupancy_rate' => $totalItems > 0 ? round(($rentedItems / $totalItems) * 100, 2) : 0,
-                 'value_at_risk' => round(Inventory::whereIn('status_id', [
-                     Inventory::whereHas('status', fn($q) => $q->where('status_name', 'damaged'))->first()?->status_id ?? 0,
-                 ])->sum('purchase_price'), 2),
+                 'value_at_risk' => round($valueAtRisk, 2),
              ],
              'top_items' => $topItems,
              'item_type_distribution' => $itemTypeDistribution,
