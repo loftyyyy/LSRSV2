@@ -301,63 +301,26 @@
     </main>
 
 <script>
-    // Use window object to store state to avoid redeclaration errors with Turbo
-    if (!window.inventoryReportsState) {
-        window.inventoryReportsState = {
-            initialized: false,
-            observer: null,
-            currentData: null,
-            currentItems: []
-        };
-    }
+    // Page state
+    var reportsState = {
+        observer: null,
+        currentData: null,
+        currentItems: []
+    };
     
     document.addEventListener('DOMContentLoaded', initializeReportsPage);
-    document.addEventListener('turbo:load', initializeReportsPage);
 
     function initializeReportsPage() {
-         // Check if we're on the reports page
-         if (!window.location.pathname.includes('/inventories/reports')) {
-             return;
-         }
+        // Load initial report on page load
+        generateReport();
 
-         // Guard against multiple initializations
-         if (window.inventoryReportsState.initialized) {
-             return;
-         }
+        // Add event listeners
+        const itemTypeFilterSelect = document.getElementById('itemTypeFilter');
+        const statusFilterSelect = document.getElementById('statusFilter');
 
-         window.inventoryReportsState.initialized = true;
-
-         // Clean up any previous listeners
-         if (globalThis.inventoryReportsCleanup) {
-             globalThis.inventoryReportsCleanup();
-         }
-
-         // Load initial report on page load
-         generateReport();
-
-         // Add event listeners
-         const itemTypeFilterSelect = document.getElementById('itemTypeFilter');
-         const statusFilterSelect = document.getElementById('statusFilter');
-
-         const handleFilterChange = () => generateReport();
-
-         itemTypeFilterSelect?.addEventListener('change', handleFilterChange);
-         statusFilterSelect?.addEventListener('change', handleFilterChange);
-
-        // Store cleanup function for next page leave
-        globalThis.inventoryReportsCleanup = () => {
-            itemTypeFilterSelect?.removeEventListener('change', handleFilterChange);
-            statusFilterSelect?.removeEventListener('change', handleFilterChange);
-            window.inventoryReportsState.initialized = false; // Reset flag when leaving page
-        };
+        itemTypeFilterSelect?.addEventListener('change', generateReport);
+        statusFilterSelect?.addEventListener('change', generateReport);
     }
-    
-    // Reset flag when navigating away from the page
-    document.addEventListener('turbo:before-visit', (event) => {
-        if (!event.detail.url.includes('/inventories/reports')) {
-            window.inventoryReportsState.initialized = false;
-        }
-    });
 
       async function generateReport() {
           try {
@@ -378,8 +341,8 @@
               const itemsData = itemsResponse.data;
 
               // Store data globally
-              window.inventoryReportsState.currentData = metricsData;
-              window.inventoryReportsState.currentItems = itemsData.data || [];
+              reportsState.currentData = metricsData;
+              reportsState.currentItems = itemsData.data || [];
               
               // Update statistics
               updateStatistics(metricsData.kpis);
@@ -774,14 +737,14 @@
      }
 
         // Set up dark mode observer immediately
-        if (!window.inventoryReportsState.observer) {
-            window.inventoryReportsState.observer = new MutationObserver((mutations) => {
+        if (!reportsState.observer) {
+            reportsState.observer = new MutationObserver((mutations) => {
                 mutations.forEach((mutation) => {
                     if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
                         // Small delay to ensure CSS transitions have completed
                         setTimeout(() => {
                             // Only update if we have data to work with
-                            if (!window.inventoryReportsState.currentData) {
+                            if (!reportsState.currentData) {
                                 return;
                             }
 
@@ -851,7 +814,7 @@
             });
 
             // Start observing immediately (not waiting for DOMContentLoaded)
-            window.inventoryReportsState.observer.observe(document.documentElement, {
+            reportsState.observer.observe(document.documentElement, {
                 attributes: true,
                 attributeFilter: ['class'],
                 subtree: false

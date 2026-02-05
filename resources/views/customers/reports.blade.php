@@ -301,67 +301,26 @@
     </main>
 
 <script>
-    // Initialize report page - use a guard flag to prevent multiple initializations
-    let reportsPageInitialized = false;
-    
-    // Use window object to store observer to avoid redeclaration errors with Turbo
-    if (!window.customerReportsState) {
-        window.customerReportsState = {
-            observer: null
-        };
-    }
+    // Page state
+    var customerReportsState = {
+        observer: null
+    };
     
     document.addEventListener('DOMContentLoaded', initializeReportsPage);
-    document.addEventListener('turbo:load', initializeReportsPage);
 
     function initializeReportsPage() {
-         // Check if we're on the reports page
-         if (!window.location.pathname.includes('/customers/reports')) {
-             return;
-         }
+        // Load initial report on page load
+        generateReport();
 
-         // Guard against multiple initializations
-         if (reportsPageInitialized) {
-             return;
-         }
+        // Add event listeners
+        const startDateInput = document.getElementById('startDate');
+        const endDateInput = document.getElementById('endDate');
+        const statusFilterSelect = document.getElementById('statusFilter');
 
-         reportsPageInitialized = true;
-
-         // Clean up any previous listeners
-         if (globalThis.reportsCleanup) {
-             globalThis.reportsCleanup();
-         }
-
-         // Load initial report on page load
-         generateReport();
-
-         // Add event listeners
-         const startDateInput = document.getElementById('startDate');
-         const endDateInput = document.getElementById('endDate');
-         const statusFilterSelect = document.getElementById('statusFilter');
-
-         const handleDateChange = () => generateReport();
-         const handleStatusChange = () => generateReport();
-
-         startDateInput?.addEventListener('change', handleDateChange);
-         endDateInput?.addEventListener('change', handleDateChange);
-         statusFilterSelect?.addEventListener('change', handleStatusChange);
-
-        // Store cleanup function for next page leave
-        globalThis.reportsCleanup = () => {
-            startDateInput?.removeEventListener('change', handleDateChange);
-            endDateInput?.removeEventListener('change', handleDateChange);
-            statusFilterSelect?.removeEventListener('change', handleStatusChange);
-            reportsPageInitialized = false; // Reset flag when leaving page
-        };
+        startDateInput?.addEventListener('change', generateReport);
+        endDateInput?.addEventListener('change', generateReport);
+        statusFilterSelect?.addEventListener('change', generateReport);
     }
-    
-    // Reset flag when navigating away from the page
-    document.addEventListener('turbo:before-visit', () => {
-        if (!event.detail.url.includes('/customers/reports')) {
-            reportsPageInitialized = false;
-        }
-    });
 
       async function generateReport() {
           try {
@@ -915,8 +874,8 @@
      }
 
         // Set up dark mode observer immediately
-        if (!window.customerReportsState.observer) {
-            window.customerReportsState.observer = new MutationObserver((mutations) => {
+        if (!customerReportsState.observer) {
+            customerReportsState.observer = new MutationObserver((mutations) => {
                 mutations.forEach((mutation) => {
                     if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
                         // Small delay to ensure CSS transitions have completed
@@ -1003,7 +962,7 @@
             });
 
             // Start observing immediately (not waiting for DOMContentLoaded)
-            window.customerReportsState.observer.observe(document.documentElement, {
+            customerReportsState.observer.observe(document.documentElement, {
                 attributes: true,
                 attributeFilter: ['class'],
                 subtree: false

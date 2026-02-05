@@ -170,74 +170,57 @@
 </main>
 
 <script>
-    document.addEventListener('turbo:load', function initializeReservationFilters() {
-        // Guard check to prevent duplicate initialization
-        if (globalThis.reservationFiltersInitialized) {
-            return;
-        }
-        globalThis.reservationFiltersInitialized = true;
+    document.addEventListener('DOMContentLoaded', function() {
+        var filterButton = document.getElementById('filter-button');
+        var filterButtonText = document.getElementById('filter-button-text');
+        var filterMenu = document.getElementById('filter-menu');
+        var iconDown = document.getElementById('icon-down');
+        var iconUp = document.getElementById('icon-up');
 
-        // Use IIFE to scope variables and prevent redeclaration issues
-        (function() {
-            var filterButton = document.getElementById('filter-button');
-            var filterButtonText = document.getElementById('filter-button-text');
-            var filterMenu = document.getElementById('filter-menu');
-            var iconDown = document.getElementById('icon-down');
-            var iconUp = document.getElementById('icon-up');
+        var isOpen = false;
 
-            var isOpen = false;
+        // Toggle dropdown
+        filterButton?.addEventListener('click', function(e) {
+            e.stopPropagation();
+            isOpen = !isOpen;
 
-            // Toggle dropdown
-            filterButton?.addEventListener('click', (e) => {
+            filterMenu.classList.toggle('opacity-0', !isOpen);
+            filterMenu.classList.toggle('scale-95', !isOpen);
+            filterMenu.classList.toggle('pointer-events-none', !isOpen);
+            filterMenu.classList.toggle('opacity-100', isOpen);
+            filterMenu.classList.toggle('scale-100', isOpen);
+            filterMenu.classList.toggle('pointer-events-auto', isOpen);
+
+            iconDown.classList.toggle('hidden', isOpen);
+            iconUp.classList.toggle('hidden', !isOpen);
+        });
+
+        // Update filter button text when a status is clicked
+        filterMenu?.querySelectorAll('li').forEach(function(item) {
+            item.addEventListener('click', function(e) {
                 e.stopPropagation();
-                isOpen = !isOpen;
+                filterButtonText.textContent = item.textContent;
+                isOpen = false;
 
-                filterMenu.classList.toggle('opacity-0', !isOpen);
-                filterMenu.classList.toggle('scale-95', !isOpen);
-                filterMenu.classList.toggle('pointer-events-none', !isOpen);
-                filterMenu.classList.toggle('opacity-100', isOpen);
-                filterMenu.classList.toggle('scale-100', isOpen);
-                filterMenu.classList.toggle('pointer-events-auto', isOpen);
+                filterMenu.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+                filterMenu.classList.remove('opacity-100', 'scale-100', 'pointer-events-auto');
 
-                iconDown.classList.toggle('hidden', isOpen);
-                iconUp.classList.toggle('hidden', !isOpen);
+                iconDown.classList.remove('hidden');
+                iconUp.classList.add('hidden');
             });
+        });
 
-            // Update filter button text when a status is clicked
-            filterMenu?.querySelectorAll('li').forEach(item => {
-                item.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    filterButtonText.textContent = item.textContent;
-                    isOpen = false;
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function() {
+            if (isOpen) {
+                isOpen = false;
+                filterMenu.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+                filterMenu.classList.remove('opacity-100', 'scale-100', 'pointer-events-auto');
 
-                    filterMenu.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
-                    filterMenu.classList.remove('opacity-100', 'scale-100', 'pointer-events-auto');
-
-                    iconDown.classList.remove('hidden');
-                    iconUp.classList.add('hidden');
-                });
-            });
-
-            // Close dropdown when clicking outside (function needs to be named to allow removal)
-            function closeOnClickOutside() {
-                if (isOpen) {
-                    isOpen = false;
-                    filterMenu.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
-                    filterMenu.classList.remove('opacity-100', 'scale-100', 'pointer-events-auto');
-
-                    iconDown.classList.remove('hidden');
-                    iconUp.classList.add('hidden');
-                }
+                iconDown.classList.remove('hidden');
+                iconUp.classList.add('hidden');
             }
-
-            document.addEventListener('click', closeOnClickOutside);
-
-            // Cleanup on page leave
-            document.addEventListener('turbo:before-visit', function cleanup() {
-                globalThis.reservationFiltersInitialized = false;
-                document.removeEventListener('click', closeOnClickOutside);
-            }, { once: true });
-        })();
+        });
     });
 </script>
 </body>

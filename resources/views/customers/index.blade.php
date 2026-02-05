@@ -210,34 +210,32 @@
 
 
 <script>
-    // Use globalThis to avoid redeclaration errors when Turbo navigates between pages
-    if (!globalThis.customerState) {
-        globalThis.customerState = {
-            currentPage: 1,
-            perPage: 15,
-            searchQuery: '',
-            statusFilter: '',
-            sortBy: 'created_at',
-            sortOrder: 'desc',
-            totalPages: 1,
-            totalCount: 0,
-            isLoading: false,
-            allCustomers: [],
-            // Stats tracking (always shows total, not filtered)
-            totalCustomersCount: 0,
-            activeCustomersCount: 0,
-            inactiveCustomersCount: 0,
-            customersWithRentalsCount: 0,
-            // Dynamic status mappings
-            statuses: {},
-            activeStatusId: null,
-            inactiveStatusId: null,
-            // Request cancellation
-            abortController: null
-        };
-    }
+    // Page state
+    var customerState = {
+        currentPage: 1,
+        perPage: 15,
+        searchQuery: '',
+        statusFilter: '',
+        sortBy: 'created_at',
+        sortOrder: 'desc',
+        totalPages: 1,
+        totalCount: 0,
+        isLoading: false,
+        allCustomers: [],
+        // Stats tracking (always shows total, not filtered)
+        totalCustomersCount: 0,
+        activeCustomersCount: 0,
+        inactiveCustomersCount: 0,
+        customersWithRentalsCount: 0,
+        // Dynamic status mappings
+        statuses: {},
+        activeStatusId: null,
+        inactiveStatusId: null,
+        // Request cancellation
+        abortController: null
+    };
 
-    // Debounce timer for search (use var to allow redeclaration)
+    // Debounce timer for search
     var searchDebounceTimer;
 
     // Initialize customer page
@@ -246,31 +244,8 @@
         var filterMenu = document.getElementById('filter-menu');
         var filterButtonText = document.getElementById('filter-button-text');
 
-        // Guard against missing elements
-        if (!searchInput || !filterMenu) {
-            return;
-        }
-
-        // Only initialize once per page visit
-        if (globalThis.customerPageInitialized) {
-            return;
-        }
-        globalThis.customerPageInitialized = true;
-
-        // Cancel any pending requests from previous navigation
-        if (globalThis.customerState.abortController) {
-            globalThis.customerState.abortController.abort();
-        }
-        globalThis.customerState.abortController = new AbortController();
-
-        // Reset state when page is loaded
-        globalThis.customerState.currentPage = 1;
-        globalThis.customerState.searchQuery = '';
-        globalThis.customerState.statusFilter = '';
-        globalThis.customerState.isLoading = false;
-        globalThis.customerState.allCustomers = []; // Clear any leftover customers
-        globalThis.customerState.totalPages = 1;
-        globalThis.customerState.totalCount = 0;
+        // Create abort controller for API requests
+        customerState.abortController = new AbortController();
 
         // Load statuses first, then stats and customers
         fetchStatuses().then(() => {
@@ -281,8 +256,8 @@
         // Search with debounce
         searchInput.addEventListener('input', function(e) {
             clearTimeout(searchDebounceTimer);
-            globalThis.customerState.searchQuery = e.target.value;
-            globalThis.customerState.currentPage = 1;
+            customerState.searchQuery = e.target.value;
+            customerState.currentPage = 1;
 
             // Update search indicators immediately
             updateSearchIndicators();
@@ -299,14 +274,14 @@
                 filterButtonText.textContent = statusText;
 
                 if (statusText === 'All Status') {
-                    globalThis.customerState.statusFilter = '';
+                    customerState.statusFilter = '';
                 } else if (statusText === 'Active') {
-                    globalThis.customerState.statusFilter = String(globalThis.customerState.activeStatusId);
+                    customerState.statusFilter = String(customerState.activeStatusId);
                 } else if (statusText === 'Inactive') {
-                    globalThis.customerState.statusFilter = String(globalThis.customerState.inactiveStatusId);
+                    customerState.statusFilter = String(customerState.inactiveStatusId);
                 }
 
-                globalThis.customerState.currentPage = 1;
+                customerState.currentPage = 1;
                 fetchCustomers();
             });
         });
@@ -325,12 +300,6 @@
         if (!filterButton || !filterMenu) {
             return;
         }
-
-        // Only attach event listeners once per visit
-        if (globalThis.filterDropdownInitialized) {
-            return;
-        }
-        globalThis.filterDropdownInitialized = true;
 
         var isOpen = false;
 
@@ -360,23 +329,8 @@
         });
     }
 
-    // Listen to DOMContentLoaded and turbo:load only (NOT turbo:render to avoid duplicate initialization)
+    // Initialize on page load
     document.addEventListener('DOMContentLoaded', initializeCustomerPage);
-    document.addEventListener('turbo:load', initializeCustomerPage);
-
-    // Clean up when leaving the page (reset flags and abort requests)
-    document.addEventListener('turbo:before-visit', function() {
-        // Reset page initialization flag so it can be re-initialized on next visit
-        globalThis.customerPageInitialized = false;
-
-        // Reset filter dropdown flag so it can be re-initialized on next visit
-        globalThis.filterDropdownInitialized = false;
-
-        // Abort any pending requests
-        if (globalThis.customerState && globalThis.customerState.abortController) {
-            globalThis.customerState.abortController.abort();
-        }
-    });
 
     // Fetch customer statuses (dynamically populate status ID mappings)
     async function fetchStatuses() {
@@ -386,20 +340,20 @@
 
             // Build mappings for status names to IDs
             statuses.forEach(status => {
-                globalThis.customerState.statuses[status.status_id] = status.status_name;
+                customerState.statuses[status.status_id] = status.status_name;
 
                 // Store active/inactive status IDs for later use
                 if (status.status_name.toLowerCase() === 'active') {
-                    globalThis.customerState.activeStatusId = status.status_id;
+                    customerState.activeStatusId = status.status_id;
                 } else if (status.status_name.toLowerCase() === 'inactive') {
-                    globalThis.customerState.inactiveStatusId = status.status_id;
+                    customerState.inactiveStatusId = status.status_id;
                 }
             });
         } catch (error) {
             console.error('Error fetching statuses:', error);
             // Fallback to default status IDs if API fails
-            globalThis.customerState.activeStatusId = 1;
-            globalThis.customerState.inactiveStatusId = 2;
+            customerState.activeStatusId = 1;
+            customerState.inactiveStatusId = 2;
         }
     }
 
@@ -407,15 +361,15 @@
     async function fetchStats() {
         try {
             var response = await axios.get('/api/customers/stats', {
-                signal: globalThis.customerState.abortController.signal
+                signal: customerState.abortController.signal
             });
             var data = response.data;
 
             // Store total counts regardless of current filters
-            globalThis.customerState.totalCustomersCount = data.total_customers || 0;
-            globalThis.customerState.activeCustomersCount = data.active_customers || 0;
-            globalThis.customerState.inactiveCustomersCount = data.inactive_customers || 0;
-            globalThis.customerState.customersWithRentalsCount = data.customers_with_rentals || 0;
+            customerState.totalCustomersCount = data.total_customers || 0;
+            customerState.activeCustomersCount = data.active_customers || 0;
+            customerState.inactiveCustomersCount = data.inactive_customers || 0;
+            customerState.customersWithRentalsCount = data.customers_with_rentals || 0;
 
             // Update KPI displays
             var totalCountEl = document.getElementById('totalCustomersCount');
@@ -423,10 +377,10 @@
             var inactiveCountEl = document.getElementById('inactiveCustomersCount');
             var rentalsCountEl = document.getElementById('customersWithRentalsCount');
 
-            if (totalCountEl) totalCountEl.textContent = globalThis.customerState.totalCustomersCount;
-            if (activeCountEl) activeCountEl.textContent = globalThis.customerState.activeCustomersCount;
-            if (inactiveCountEl) inactiveCountEl.textContent = globalThis.customerState.inactiveCustomersCount;
-            if (rentalsCountEl) rentalsCountEl.textContent = globalThis.customerState.customersWithRentalsCount;
+            if (totalCountEl) totalCountEl.textContent = customerState.totalCustomersCount;
+            if (activeCountEl) activeCountEl.textContent = customerState.activeCustomersCount;
+            if (inactiveCountEl) inactiveCountEl.textContent = customerState.inactiveCustomersCount;
+            if (rentalsCountEl) rentalsCountEl.textContent = customerState.customersWithRentalsCount;
 
         } catch (error) {
             // Don't show error if request was cancelled (user navigated away)
@@ -441,45 +395,45 @@
 
     // Fetch customers from API
     async function fetchCustomers() {
-        if (globalThis.customerState.isLoading) return;
+        if (customerState.isLoading) return;
 
-        globalThis.customerState.isLoading = true;
+        customerState.isLoading = true;
         showLoadingState();
 
         try {
             var params = new URLSearchParams({
-                page: globalThis.customerState.currentPage,
-                per_page: globalThis.customerState.perPage,
+                page: customerState.currentPage,
+                per_page: customerState.perPage,
                 include_history: 'true',
-                sort_by: globalThis.customerState.sortBy,
-                sort_order: globalThis.customerState.sortOrder
+                sort_by: customerState.sortBy,
+                sort_order: customerState.sortOrder
             });
 
-            if (globalThis.customerState.searchQuery) {
-                params.append('search', globalThis.customerState.searchQuery);
+            if (customerState.searchQuery) {
+                params.append('search', customerState.searchQuery);
             }
 
-            if (globalThis.customerState.statusFilter) {
-                params.append('status_id', globalThis.customerState.statusFilter);
+            if (customerState.statusFilter) {
+                params.append('status_id', customerState.statusFilter);
             }
 
             var url = `/api/customers?${params.toString()}`;
 
             var response = await axios.get(url, {
-                signal: globalThis.customerState.abortController.signal
+                signal: customerState.abortController.signal
             });
             var data = response.data;
 
             if (!data.data || !Array.isArray(data.data)) {
                 showEmptyState('No customers found.');
                 hideLoadingState();
-                globalThis.customerState.isLoading = false;
+                customerState.isLoading = false;
                 return;
             }
 
-            globalThis.customerState.totalPages = data.last_page;
-            globalThis.customerState.totalCount = data.total;
-            globalThis.customerState.allCustomers = data.data;
+            customerState.totalPages = data.last_page;
+            customerState.totalCount = data.total;
+            customerState.allCustomers = data.data;
 
             renderTable(data.data);
             updatePagination(data);
@@ -491,7 +445,7 @@
             // Don't show error if request was cancelled (user navigated away)
             if (error.name === 'AbortError' || error.code === 'ECONNABORTED' || error.code === 'ERR_CANCELED') {
                 console.log('Customers request cancelled (user navigated away)');
-                globalThis.customerState.isLoading = false;
+                customerState.isLoading = false;
                 hideLoadingState();
                 return;
             }
@@ -505,7 +459,7 @@
             showEmptyState(errorMessage);
             hideLoadingState();
         } finally {
-            globalThis.customerState.isLoading = false;
+            customerState.isLoading = false;
         }
     }
 
@@ -518,7 +472,7 @@
             return;
         }
 
-        var query = globalThis.customerState.searchQuery.trim().toLowerCase();
+        var query = customerState.searchQuery.trim().toLowerCase();
 
         if (!query) {
             searchIndicatorsDiv.innerHTML = '';
@@ -568,9 +522,9 @@
                 // Show custom message based on search or filter
                 let emptyMessage = 'No customers found';
 
-                if (globalThis.customerState.searchQuery) {
-                    emptyMessage = `No matches found for "${globalThis.customerState.searchQuery}"`;
-                } else if (globalThis.customerState.statusFilter) {
+                if (customerState.searchQuery) {
+                    emptyMessage = `No matches found for "${customerState.searchQuery}"`;
+                } else if (customerState.statusFilter) {
                     emptyMessage = 'No customers with this status';
                 }
 
@@ -795,16 +749,16 @@
 
     // Pagination handlers
     function previousPage() {
-        if (globalThis.customerState.currentPage > 1) {
-            globalThis.customerState.currentPage--;
+        if (customerState.currentPage > 1) {
+            customerState.currentPage--;
             fetchCustomers();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     }
 
     function nextPage() {
-        if (globalThis.customerState.currentPage < globalThis.customerState.totalPages) {
-            globalThis.customerState.currentPage++;
+        if (customerState.currentPage < customerState.totalPages) {
+            customerState.currentPage++;
             fetchCustomers();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
@@ -858,15 +812,15 @@
 
     // Toggle sort on column header click
     function toggleSort(column) {
-        globalThis.customerState.currentPage = 1;
+        customerState.currentPage = 1;
 
-        if (globalThis.customerState.sortBy === column) {
+        if (customerState.sortBy === column) {
             // Toggle sort order if same column clicked
-            globalThis.customerState.sortOrder = globalThis.customerState.sortOrder === 'asc' ? 'desc' : 'asc';
+            customerState.sortOrder = customerState.sortOrder === 'asc' ? 'desc' : 'asc';
         } else {
             // Set new column and default to ascending
-            globalThis.customerState.sortBy = column;
-            globalThis.customerState.sortOrder = 'asc';
+            customerState.sortBy = column;
+            customerState.sortOrder = 'asc';
         }
 
         fetchCustomers();
@@ -892,10 +846,10 @@
             if (!columnMatch) return;
 
             var column = columnMatch[1];
-            if (column === globalThis.customerState.sortBy) {
+            if (column === customerState.sortBy) {
                 var indicator = header.querySelector('.sort-indicator');
                 if (indicator) {
-                    indicator.textContent = globalThis.customerState.sortOrder === 'asc' ? '↑' : '↓';
+                    indicator.textContent = customerState.sortOrder === 'asc' ? '↑' : '↓';
                     indicator.style.fontWeight = '600';
                 }
             }

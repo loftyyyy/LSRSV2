@@ -185,144 +185,84 @@
 
 
 <script>
-    // DEBUG: Log when script is loaded (helps trace Turbo navigation issues)
-    console.log('[Inventory] Script loaded at', new Date().toISOString());
-    console.log('[Inventory] Current allItems:', globalThis.inventoryState?.allItems?.length || 0);
-    console.log('[Inventory] inventoryPageInitialized:', globalThis.inventoryPageInitialized);
-    
-    // CRITICAL: Always reset the initialization flag when the script runs
-    // This ensures fresh initialization on every page visit (both Turbo and hard refresh)
-    globalThis.inventoryPageInitialized = false;
-    globalThis.inventoryFilterDropdownInitialized = false;
+    // Page state
+    var inventoryState = {
+        currentPage: 1,
+        perPage: 15,
+        searchQuery: '',
+        statusFilter: '',
+        sortBy: 'created_at',
+        sortOrder: 'desc',
+        totalPages: 1,
+        totalCount: 0,
+        isLoading: false,
+        allItems: [],
+        // Stats tracking (always shows total, not filtered)
+        totalItemsCount: 0,
+        availableItemsCount: 0,
+        underRepairItemsCount: 0,
+        inventoryValueCount: 0,
+        // Dynamic status mappings
+        statuses: {},
+        // Request cancellation
+        abortController: null
+    };
 
-    // Use globalThis to avoid redeclaration errors when Turbo navigates between pages
-    if (!globalThis.inventoryState) {
-        globalThis.inventoryState = {
-            currentPage: 1,
-            perPage: 15,
-            searchQuery: '',
-            statusFilter: '',
-            sortBy: 'created_at',
-            sortOrder: 'desc',
-            totalPages: 1,
-            totalCount: 0,
-            isLoading: false,
-            allItems: [],
-            // Stats tracking (always shows total, not filtered)
-            totalItemsCount: 0,
-            availableItemsCount: 0,
-            underRepairItemsCount: 0,
-            inventoryValueCount: 0,
-            // Dynamic status mappings
-            statuses: {},
-            // Request cancellation
-            abortController: null
-        };
-    } else {
-        // Reset state for fresh page load
-        globalThis.inventoryState.currentPage = 1;
-        globalThis.inventoryState.searchQuery = '';
-        globalThis.inventoryState.statusFilter = '';
-        globalThis.inventoryState.isLoading = false;
-        globalThis.inventoryState.allItems = [];
-        
-        // Abort any pending requests from previous navigation
-        if (globalThis.inventoryState.abortController) {
-            globalThis.inventoryState.abortController.abort();
-            globalThis.inventoryState.abortController = null;
-        }
-    }
-
-    // Debounce timer for search (use var to allow redeclaration)
+    // Debounce timer for search
     var searchDebounceTimer;
 
     // Initialize inventory page
     function initializeInventoryPage() {
-        console.log('[Inventory] initializeInventoryPage() called');
-        console.log('[Inventory] inventoryPageInitialized flag:', globalThis.inventoryPageInitialized);
-        
         var searchInput = document.getElementById('searchInput');
         var filterMenu = document.getElementById('filter-menu');
         var filterButtonText = document.getElementById('filter-button-text');
 
-        // Guard against missing elements (we're not on the inventory page)
-        if (!searchInput || !filterMenu) {
-            console.log('[Inventory] Missing DOM elements, not on inventory page');
-            return;
-        }
+        // Create abort controller for API requests
+        inventoryState.abortController = new AbortController();
 
-        // Only initialize once per page visit
-        if (globalThis.inventoryPageInitialized) {
-            console.log('[Inventory] Already initialized, skipping');
-            return;
-        }
-        globalThis.inventoryPageInitialized = true;
-        console.log('[Inventory] Starting initialization...');
-
-        // Reset state for fresh page load
-        globalThis.inventoryState.currentPage = 1;
-        globalThis.inventoryState.searchQuery = '';
-        globalThis.inventoryState.statusFilter = '';
-        globalThis.inventoryState.isLoading = false;
-        globalThis.inventoryState.allItems = [];
-        
-        // Clear search input
-        searchInput.value = '';
-        
-        // Reset filter button text
-        if (filterButtonText) {
-            filterButtonText.textContent = 'Filter Status';
-        }
-
-        // Abort any pending requests and create fresh abort controller
-        if (globalThis.inventoryState.abortController) {
-            globalThis.inventoryState.abortController.abort();
-        }
-        globalThis.inventoryState.abortController = new AbortController();
-
-         // Load statuses first, then stats and items
+        // Load statuses first, then stats and items
         fetchStatuses().then(() => {
             fetchStats();
             fetchInventoryItems();
         });
 
-         // Search with debounce
-         searchInput.addEventListener('input', function(e) {
-             clearTimeout(searchDebounceTimer);
-             globalThis.inventoryState.searchQuery = e.target.value;
-             globalThis.inventoryState.currentPage = 1;
+        // Search with debounce
+        searchInput.addEventListener('input', function(e) {
+            clearTimeout(searchDebounceTimer);
+            inventoryState.searchQuery = e.target.value;
+            inventoryState.currentPage = 1;
 
-             // Update search indicators immediately
-             updateSearchIndicators();
+            // Update search indicators immediately
+            updateSearchIndicators();
 
-             searchDebounceTimer = setTimeout(() => {
-                 fetchInventoryItems();
-             }, 300);
-         });
+            searchDebounceTimer = setTimeout(() => {
+                fetchInventoryItems();
+            }, 300);
+        });
 
-         // Filter by status
-         filterMenu.querySelectorAll('li').forEach(item => {
-             item.addEventListener('click', function(e) {
-                 var statusText = item.textContent.trim();
-                 filterButtonText.textContent = statusText;
+        // Filter by status
+        filterMenu.querySelectorAll('li').forEach(item => {
+            item.addEventListener('click', function(e) {
+                var statusText = item.textContent.trim();
+                filterButtonText.textContent = statusText;
 
-                 if (statusText === 'All Status') {
-                     globalThis.inventoryState.statusFilter = '';
-                 } else {
-                     // Convert "Available" -> "available", "Maintenance" -> "maintenance", etc.
-                     globalThis.inventoryState.statusFilter = statusText.toLowerCase().replace(' ', '_');
-                 }
+                if (statusText === 'All Status') {
+                    inventoryState.statusFilter = '';
+                } else {
+                    // Convert "Available" -> "available", "Maintenance" -> "maintenance", etc.
+                    inventoryState.statusFilter = statusText.toLowerCase().replace(' ', '_');
+                }
 
-                 globalThis.inventoryState.currentPage = 1;
-                 fetchInventoryItems();
-             });
-         });
+                inventoryState.currentPage = 1;
+                fetchInventoryItems();
+            });
+        });
 
         // Initialize filter dropdown
         initializeFilterDropdown();
     }
 
-    // Initialize filter dropdown (only setup listeners if not already done)
+    // Initialize filter dropdown
     function initializeFilterDropdown() {
         var filterButton = document.getElementById('filter-button');
         var filterMenu = document.getElementById('filter-menu');
@@ -332,12 +272,6 @@
         if (!filterButton || !filterMenu) {
             return;
         }
-
-        // Only attach event listeners once per visit
-        if (globalThis.inventoryFilterDropdownInitialized) {
-            return;
-        }
-        globalThis.inventoryFilterDropdownInitialized = true;
 
         var isOpen = false;
 
@@ -367,69 +301,8 @@
         });
     }
 
-    // EVENT LISTENER SETUP - Only add once globally to prevent duplicate handlers
-    // This is critical for Turbo.js: document persists across navigations, so we track if listeners are added
-    if (!globalThis.inventoryEventListenersAdded) {
-        globalThis.inventoryEventListenersAdded = true;
-        
-        // Listen to DOMContentLoaded for initial page load
-        document.addEventListener('DOMContentLoaded', initializeInventoryPage);
-        
-        // Listen to turbo:load for Turbo navigation
-        document.addEventListener('turbo:load', function() {
-            console.log('[Inventory] turbo:load fired');
-            // Only initialize if we're actually on the inventory page
-            if (document.getElementById('inventoryTableBody')) {
-                // CRITICAL: Reset the flag here to ensure re-initialization on Turbo navigation
-                // The inline script at the top may not re-run when Turbo restores from cache
-                globalThis.inventoryPageInitialized = false;
-                globalThis.inventoryFilterDropdownInitialized = false;
-                initializeInventoryPage();
-            }
-        });
-
-        // Clear the table before Turbo caches the page to prevent stale data
-        document.addEventListener('turbo:before-cache', function() {
-            console.log('[Inventory] turbo:before-cache fired');
-            var tbody = document.getElementById('inventoryTableBody');
-            if (tbody) {
-                tbody.innerHTML = '';
-            }
-            // Also hide pagination and show empty state for clean cache
-            var paginationControls = document.getElementById('paginationControls');
-            if (paginationControls) {
-                paginationControls.style.display = 'none';
-            }
-        });
-
-        // Clean up when leaving the page (reset flags and abort requests)
-        document.addEventListener('turbo:before-visit', function() {
-            // Only run cleanup if we ARE currently on the inventory page (tbody exists means we're on it)
-            if (!document.getElementById('inventoryTableBody')) {
-                return;
-            }
-            
-            console.log('[Inventory] turbo:before-visit fired - cleaning up');
-            
-            // Reset page initialization flag so it can be re-initialized on next visit
-            globalThis.inventoryPageInitialized = false;
-            
-            // Reset filter dropdown flag so it can be re-initialized on next visit
-            globalThis.inventoryFilterDropdownInitialized = false;
-            
-            // Abort any pending requests
-            if (globalThis.inventoryState && globalThis.inventoryState.abortController) {
-                globalThis.inventoryState.abortController.abort();
-                globalThis.inventoryState.abortController = null;
-            }
-            
-            // Clear the items array to prevent stale data
-            if (globalThis.inventoryState) {
-                globalThis.inventoryState.allItems = [];
-                globalThis.inventoryState.isLoading = false;
-            }
-        });
-    }
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', initializeInventoryPage);
 
     // Fetch inventory statuses (dynamically populate status ID mappings)
     async function fetchStatuses() {
@@ -440,7 +313,7 @@
             // Build mappings for status names to IDs
             if (Array.isArray(statuses)) {
                 statuses.forEach(status => {
-                    globalThis.inventoryState.statuses[status.status_id] = status.status_name;
+                    inventoryState.statuses[status.status_id] = status.status_name;
                 });
             }
         } catch (error) {
@@ -453,22 +326,22 @@
     async function fetchStats() {
         try {
             // Ensure abortController exists
-            if (!globalThis.inventoryState.abortController) {
-                globalThis.inventoryState.abortController = new AbortController();
+            if (!inventoryState.abortController) {
+                inventoryState.abortController = new AbortController();
             }
             
             var response = await axios.get('/api/inventories/reports/statistics', {
-                signal: globalThis.inventoryState.abortController.signal
+                signal: inventoryState.abortController.signal
             });
             var data = response.data;
 
             // Store total counts regardless of current filters
             // Map the API response fields to frontend state
-            globalThis.inventoryState.totalItemsCount = data.total_items || 0;
-            globalThis.inventoryState.availableItemsCount = data.available_items || 0;
-            globalThis.inventoryState.underRepairItemsCount = data.under_maintenance || 0;
+            inventoryState.totalItemsCount = data.total_items || 0;
+            inventoryState.availableItemsCount = data.available_items || 0;
+            inventoryState.underRepairItemsCount = data.under_maintenance || 0;
             // Note: inventory_value is not provided by this endpoint, we'll fetch it separately if needed
-            globalThis.inventoryState.inventoryValueCount = data.inventory_value || 0;
+            inventoryState.inventoryValueCount = data.inventory_value || 0;
 
              // Update KPI displays
              var totalCountEl = document.getElementById('totalItemsCount');
@@ -476,10 +349,10 @@
              var underRepairCountEl = document.getElementById('underRepairItemsCount');
              var valueCountEl = document.getElementById('inventoryValueCount');
 
-             if (totalCountEl) totalCountEl.textContent = globalThis.inventoryState.totalItemsCount;
-             if (availableCountEl) availableCountEl.textContent = globalThis.inventoryState.availableItemsCount;
-             if (underRepairCountEl) underRepairCountEl.textContent = globalThis.inventoryState.underRepairItemsCount;
-             if (valueCountEl) valueCountEl.textContent = '₱' + (globalThis.inventoryState.inventoryValueCount || 0).toLocaleString();
+             if (totalCountEl) totalCountEl.textContent = inventoryState.totalItemsCount;
+             if (availableCountEl) availableCountEl.textContent = inventoryState.availableItemsCount;
+             if (underRepairCountEl) underRepairCountEl.textContent = inventoryState.underRepairItemsCount;
+             if (valueCountEl) valueCountEl.textContent = '₱' + (inventoryState.inventoryValueCount || 0).toLocaleString();
 
          } catch (error) {
              // Don't show error if request was cancelled (user navigated away)
@@ -494,49 +367,49 @@
 
      // Fetch inventory items from API
      async function fetchInventoryItems() {
-         if (globalThis.inventoryState.isLoading) return;
+         if (inventoryState.isLoading) return;
 
-         globalThis.inventoryState.isLoading = true;
+         inventoryState.isLoading = true;
          showLoadingState();
 
          try {
              // Ensure abortController exists
-             if (!globalThis.inventoryState.abortController) {
-                 globalThis.inventoryState.abortController = new AbortController();
+             if (!inventoryState.abortController) {
+                 inventoryState.abortController = new AbortController();
              }
              
              var params = new URLSearchParams({
-                 page: globalThis.inventoryState.currentPage,
-                 per_page: globalThis.inventoryState.perPage,
-                 sort_by: globalThis.inventoryState.sortBy,
-                 sort_order: globalThis.inventoryState.sortOrder
+                 page: inventoryState.currentPage,
+                 per_page: inventoryState.perPage,
+                 sort_by: inventoryState.sortBy,
+                 sort_order: inventoryState.sortOrder
              });
 
-             if (globalThis.inventoryState.searchQuery) {
-                 params.append('search', globalThis.inventoryState.searchQuery);
+             if (inventoryState.searchQuery) {
+                 params.append('search', inventoryState.searchQuery);
              }
 
-             if (globalThis.inventoryState.statusFilter) {
-                 params.append('status', globalThis.inventoryState.statusFilter);
+             if (inventoryState.statusFilter) {
+                 params.append('status', inventoryState.statusFilter);
              }
 
              var url = `/api/inventories?${params.toString()}`;
 
              var response = await axios.get(url, {
-                 signal: globalThis.inventoryState.abortController.signal
+                 signal: inventoryState.abortController.signal
              });
              var data = response.data;
 
              if (!data.data || !Array.isArray(data.data)) {
                  showEmptyState('No items found.');
                  hideLoadingState();
-                 globalThis.inventoryState.isLoading = false;
+                 inventoryState.isLoading = false;
                  return;
              }
 
-             globalThis.inventoryState.totalPages = data.last_page;
-             globalThis.inventoryState.totalCount = data.total;
-             globalThis.inventoryState.allItems = data.data;
+             inventoryState.totalPages = data.last_page;
+             inventoryState.totalCount = data.total;
+             inventoryState.allItems = data.data;
 
              renderTable(data.data);
              updatePagination(data);
@@ -546,7 +419,7 @@
              // Don't show error if request was cancelled (user navigated away)
              if (error.name === 'AbortError' || error.code === 'ECONNABORTED' || error.code === 'ERR_CANCELED') {
                  console.log('Items request cancelled (user navigated away)');
-                 globalThis.inventoryState.isLoading = false;
+                 inventoryState.isLoading = false;
                  hideLoadingState();
                  return;
              }
@@ -560,7 +433,7 @@
              showEmptyState(errorMessage);
              hideLoadingState();
          } finally {
-             globalThis.inventoryState.isLoading = false;
+             inventoryState.isLoading = false;
          }
       }
 
@@ -573,7 +446,7 @@
               return;
           }
 
-          var query = globalThis.inventoryState.searchQuery.trim().toLowerCase();
+          var query = inventoryState.searchQuery.trim().toLowerCase();
 
           if (!query) {
               searchIndicatorsDiv.innerHTML = '';
@@ -623,9 +496,9 @@
                  // Show custom message based on search or filter
                  let emptyMessage = 'No items found';
 
-                 if (globalThis.inventoryState.searchQuery) {
-                     emptyMessage = `No matches found for "${globalThis.inventoryState.searchQuery}"`;
-                 } else if (globalThis.inventoryState.statusFilter) {
+                 if (inventoryState.searchQuery) {
+                     emptyMessage = `No matches found for "${inventoryState.searchQuery}"`;
+                 } else if (inventoryState.statusFilter) {
                      emptyMessage = 'No items with this status';
                  }
 
@@ -862,16 +735,16 @@
 
     // Pagination handlers
     function previousPage() {
-        if (globalThis.inventoryState.currentPage > 1) {
-            globalThis.inventoryState.currentPage--;
+        if (inventoryState.currentPage > 1) {
+            inventoryState.currentPage--;
             fetchInventoryItems();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     }
 
     function nextPage() {
-        if (globalThis.inventoryState.currentPage < globalThis.inventoryState.totalPages) {
-            globalThis.inventoryState.currentPage++;
+        if (inventoryState.currentPage < inventoryState.totalPages) {
+            inventoryState.currentPage++;
             fetchInventoryItems();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }

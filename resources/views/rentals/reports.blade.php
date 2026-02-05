@@ -586,17 +586,6 @@
             });
         }
 
-        document.addEventListener('turbo:load', function() {
-            if (window.location.pathname === '/rentals/reports') {
-                cleanupCharts();
-                initializeRentalReports();
-            }
-        });
-
-         document.addEventListener('turbo:before-visit', function() {
-             cleanupCharts();
-         });
-
          // Set up dark mode observer for theme switching
          if (!window.rentalState.observer) {
              window.rentalState.observer = new MutationObserver((mutations) => {

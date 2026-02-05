@@ -747,18 +747,6 @@
             }
         }
 
-        // Event listeners for Turbo navigation
-        document.addEventListener('turbo:load', function() {
-            if (window.location.pathname === '/dashboard') {
-                cleanupCharts();
-                initializeDashboard();
-            }
-        });
-
-         document.addEventListener('turbo:before-visit', function() {
-             cleanupCharts();
-         });
-
          // Set up dark mode observer for theme switching
          if (!window.dashboardState.observer) {
              window.dashboardState.observer = new MutationObserver((mutations) => {
