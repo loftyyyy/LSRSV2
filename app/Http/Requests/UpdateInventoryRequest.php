@@ -32,6 +32,8 @@ class UpdateInventoryRequest extends FormRequest
             'design' => ['sometimes', 'required', 'string', 'max:255'],
             'condition' => ['sometimes', 'required', 'in:good,damaged,under repaired,retired'],
             'rental_price' => ['sometimes', 'required', 'numeric', 'min:0', 'max:999999.99'],
+            'selling_price' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],
+            'deposit_amount' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],
             'status_id' => ['sometimes', 'required', 'exists:inventory_statuses,status_id'],
         ];
     }
