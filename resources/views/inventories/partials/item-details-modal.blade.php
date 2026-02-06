@@ -4,8 +4,8 @@
         {{-- Header --}}
         <div class="flex-shrink-0 flex items-center justify-between px-6 py-4 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/80 dark:bg-neutral-900/50 rounded-t-3xl">
             <div>
-                <p class="text-xs uppercase tracking-[0.2em] text-neutral-500 dark:text-neutral-500">Item Details</p>
                 <h3 id="itemDetailsTitle" class="text-lg font-semibold text-neutral-900 dark:text-white">Loading...</h3>
+                <p id="itemDetailsSubtitle" class="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">Loading...</p>
             </div>
             <button onclick="closeItemDetailsModal()" class="text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 text-xl transition-colors duration-200">&times;</button>
         </div>
@@ -76,133 +76,115 @@
                     {{-- Right: Item Information --}}
                     <div class="lg:w-1/2 p-6 space-y-5">
                         {{-- Status Section --}}
-                        <div class="space-y-3">
-                            <div class="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                                <x-icon name="activity" class="h-4 w-4" />
-                                <span>Status</span>
+                        <div id="detailStatusCard" class="rounded-xl p-4 border">
+                            <div class="flex items-center gap-2">
+                                <span id="detailStatusDot" class="h-2 w-2 rounded-full"></span>
+                                <span id="detailItemStatus" class="text-sm font-semibold">-</span>
                             </div>
-                            <div id="detailStatusCard" class="rounded-xl p-3 border">
-                                <div class="flex items-center gap-2">
-                                    <span id="detailStatusDot" class="h-2.5 w-2.5 rounded-full"></span>
-                                    <p id="detailItemStatus" class="text-sm font-semibold">-</p>
-                                </div>
-                            </div>
+                            <p id="detailStatusSubtitle" class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">-</p>
                         </div>
 
-                        {{-- Pricing Section --}}
-                        <div class="space-y-3">
-                            <div class="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                                <x-icon name="currency-peso" class="h-4 w-4" />
-                                <span>Pricing</span>
+                        {{-- Overview & Pricing Row --}}
+                        <div class="grid grid-cols-2 gap-4">
+                            {{-- Overview Section --}}
+                            <div class="space-y-3">
+                                <div class="flex items-center gap-2 text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                                    <x-icon name="info" class="h-3.5 w-3.5" />
+                                    <span>Overview</span>
+                                </div>
+                                <div class="space-y-3">
+                                    {{-- SKU --}}
+                                    <div>
+                                        <p class="text-xs text-neutral-500 dark:text-neutral-400 mb-1">SKU</p>
+                                        <p id="detailItemSku" class="text-sm font-medium text-neutral-900 dark:text-white">-</p>
+                                    </div>
+                                    {{-- Type --}}
+                                    <div>
+                                        <div class="flex items-center gap-1.5 mb-1">
+                                            <x-icon name="tag" class="h-3 w-3 text-neutral-400" />
+                                            <p class="text-xs text-neutral-500 dark:text-neutral-400">Type</p>
+                                        </div>
+                                        <p id="detailItemType" class="text-sm font-medium text-neutral-900 dark:text-white">-</p>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="bg-gradient-to-br from-violet-500/10 to-purple-500/10 dark:from-violet-500/20 dark:to-purple-500/20 rounded-xl p-4 border border-violet-200 dark:border-violet-800/50">
-                                {{-- Main Rental Price --}}
-                                <p id="detailItemPrice" class="text-2xl font-bold text-violet-600 dark:text-violet-400 font-geist-mono">-</p>
-                                <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">Rental Price</p>
-
-                                {{-- Additional Pricing Info --}}
-                                <div class="mt-3 pt-3 border-t border-violet-200/50 dark:border-violet-800/30 space-y-1.5">
+                            
+                            {{-- Pricing Section --}}
+                            <div class="space-y-3">
+                                <div class="flex items-center gap-2 text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                                    <x-icon name="currency-peso" class="h-3.5 w-3.5" />
+                                    <span>Pricing</span>
+                                </div>
+                                <div class="space-y-3">
+                                    {{-- Rental Price --}}
+                                    <div>
+                                        <p id="detailItemPrice" class="text-xl font-bold text-neutral-900 dark:text-white font-geist-mono">-</p>
+                                        <p class="text-xs text-neutral-500 dark:text-neutral-400">Rental price</p>
+                                    </div>
+                                    {{-- Selling Price --}}
                                     <div id="detailSellingPriceRow" class="hidden flex items-center justify-between">
-                                        <span class="text-xs text-neutral-500 dark:text-neutral-400">Selling Price</span>
-                                        <span id="detailItemSellingPrice" class="text-sm font-medium text-emerald-600 dark:text-emerald-400 font-geist-mono">-</span>
+                                        <span class="text-xs text-neutral-500 dark:text-neutral-400">Selling price</span>
+                                        <span id="detailItemSellingPrice" class="text-sm font-medium text-neutral-900 dark:text-white font-geist-mono">-</span>
                                     </div>
+                                    {{-- Deposit --}}
                                     <div class="flex items-center justify-between">
-                                        <span class="text-xs text-neutral-500 dark:text-neutral-400">Security Deposit</span>
-                                        <span id="detailItemDeposit" class="text-sm font-medium text-amber-600 dark:text-amber-400 font-geist-mono">-</span>
+                                        <span class="text-xs text-neutral-500 dark:text-neutral-400">Deposit</span>
+                                        <span id="detailItemDeposit" class="text-sm font-medium text-neutral-900 dark:text-white font-geist-mono">-</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        {{-- Item Information Section --}}
+                        {{-- Specifications Section --}}
                         <div class="space-y-3">
-                            <div class="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                                <x-icon name="package" class="h-4 w-4" />
-                                <span>Item Information</span>
+                            <div class="flex items-center gap-2 text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                                <x-icon name="list" class="h-3.5 w-3.5" />
+                                <span>Specifications</span>
                             </div>
-
                             <div class="grid grid-cols-2 gap-3">
-                                {{-- SKU --}}
-                                <div class="bg-neutral-50 dark:bg-neutral-900/50 rounded-xl p-3 border border-neutral-200 dark:border-neutral-800">
-                                    <div class="flex items-center gap-1.5 mb-1">
-                                        <x-icon name="barcode" class="h-3 w-3 text-neutral-400" />
-                                        <p class="text-xs text-neutral-500 dark:text-neutral-400">SKU</p>
-                                    </div>
-                                    <p id="detailItemSku" class="text-sm font-medium text-neutral-900 dark:text-white font-geist-mono">-</p>
-                                </div>
-                                
-                                {{-- Type --}}
-                                <div class="bg-neutral-50 dark:bg-neutral-900/50 rounded-xl p-3 border border-neutral-200 dark:border-neutral-800">
-                                    <div class="flex items-center gap-1.5 mb-1">
-                                        <x-icon name="tag" class="h-3 w-3 text-neutral-400" />
-                                        <p class="text-xs text-neutral-500 dark:text-neutral-400">Type</p>
-                                    </div>
-                                    <p id="detailItemType" class="text-sm font-medium text-neutral-900 dark:text-white">-</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        {{-- Physical Details Section --}}
-                        <div class="space-y-3">
-                            <div class="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                                <x-icon name="palette" class="h-4 w-4" />
-                                <span>Physical Details</span>
-                            </div>
-
-                            <div class="grid grid-cols-3 gap-3">
                                 {{-- Size --}}
-                                <div class="bg-neutral-50 dark:bg-neutral-900/50 rounded-xl p-3 border border-neutral-200 dark:border-neutral-800">
+                                <div class="rounded-xl p-3 border border-neutral-200 dark:border-neutral-800">
                                     <div class="flex items-center gap-1.5 mb-1">
                                         <x-icon name="ruler" class="h-3 w-3 text-neutral-400" />
                                         <p class="text-xs text-neutral-500 dark:text-neutral-400">Size</p>
                                     </div>
                                     <p id="detailItemSize" class="text-sm font-medium text-neutral-900 dark:text-white">-</p>
                                 </div>
-                                
                                 {{-- Color --}}
-                                <div class="bg-neutral-50 dark:bg-neutral-900/50 rounded-xl p-3 border border-neutral-200 dark:border-neutral-800">
+                                <div class="rounded-xl p-3 border border-neutral-200 dark:border-neutral-800">
                                     <div class="flex items-center gap-1.5 mb-1">
                                         <x-icon name="palette" class="h-3 w-3 text-neutral-400" />
                                         <p class="text-xs text-neutral-500 dark:text-neutral-400">Color</p>
                                     </div>
                                     <p id="detailItemColor" class="text-sm font-medium text-neutral-900 dark:text-white">-</p>
                                 </div>
-                                
-                                {{-- Design --}}
-                                <div class="bg-neutral-50 dark:bg-neutral-900/50 rounded-xl p-3 border border-neutral-200 dark:border-neutral-800">
-                                    <div class="flex items-center gap-1.5 mb-1">
-                                        <x-icon name="sparkles" class="h-3 w-3 text-neutral-400" />
-                                        <p class="text-xs text-neutral-500 dark:text-neutral-400">Design</p>
-                                    </div>
-                                    <p id="detailItemDesign" class="text-sm font-medium text-neutral-900 dark:text-white">-</p>
+                            </div>
+                            {{-- Design --}}
+                            <div class="rounded-xl p-3 border border-neutral-200 dark:border-neutral-800">
+                                <div class="flex items-center gap-1.5 mb-1">
+                                    <x-icon name="sparkles" class="h-3 w-3 text-neutral-400" />
+                                    <p class="text-xs text-neutral-500 dark:text-neutral-400">Design</p>
                                 </div>
+                                <p id="detailItemDesign" class="text-sm font-medium text-neutral-900 dark:text-white">-</p>
                             </div>
                         </div>
 
-                        {{-- Timestamps --}}
+                        {{-- Timeline --}}
                         <div class="pt-4 border-t border-neutral-200 dark:border-neutral-800">
-                            <div class="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-3">
-                                <x-icon name="clock" class="h-4 w-4" />
+                            <div class="flex items-center gap-2 text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-3">
+                                <x-icon name="clock" class="h-3.5 w-3.5" />
                                 <span>Timeline</span>
                             </div>
-                            <div class="grid grid-cols-2 gap-3">
-                                <div class="flex items-center gap-2 text-xs">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="flex items-center gap-2">
                                     <div class="h-1.5 w-1.5 rounded-full bg-emerald-500"></div>
-                                    <span class="text-neutral-500 dark:text-neutral-400">Added:</span>
-                                    <span id="detailItemCreated" class="text-neutral-700 dark:text-neutral-300 font-medium">-</span>
+                                    <span class="text-xs text-neutral-500 dark:text-neutral-400">Added:</span>
+                                    <span id="detailItemCreated" class="text-xs text-neutral-700 dark:text-neutral-300">-</span>
                                 </div>
-                                <div class="flex items-center gap-2 text-xs">
+                                <div class="flex items-center gap-2">
                                     <div class="h-1.5 w-1.5 rounded-full bg-blue-500"></div>
-                                    <span class="text-neutral-500 dark:text-neutral-400">Updated:</span>
-                                    <span id="detailItemUpdated" class="text-neutral-700 dark:text-neutral-300 font-medium">-</span>
-                                </div>
-                            </div>
-                            {{-- Updated By --}}
-                            <div id="detailUpdatedBySection" class="hidden mt-3 pt-3 border-t border-neutral-100 dark:border-neutral-800/50">
-                                <div class="flex items-center gap-2 text-xs">
-                                    <div class="h-1.5 w-1.5 rounded-full bg-violet-500"></div>
-                                    <span class="text-neutral-500 dark:text-neutral-400">Last updated by:</span>
-                                    <span id="detailUpdatedByName" class="text-neutral-700 dark:text-neutral-300 font-medium">-</span>
+                                    <span class="text-xs text-neutral-500 dark:text-neutral-400">Updated:</span>
+                                    <span id="detailItemUpdated" class="text-xs text-neutral-700 dark:text-neutral-300">-</span>
                                 </div>
                             </div>
                         </div>
@@ -353,47 +335,60 @@
 
     // Populate item details in the modal
     function populateItemDetails(item) {
-        // Title
+        // Title and Subtitle
         document.getElementById('itemDetailsTitle').textContent = item.name || 'Item Details';
+        var subtitleParts = [item.sku, item.item_type, item.color, 'Size ' + item.size].filter(Boolean);
+        document.getElementById('itemDetailsSubtitle').textContent = subtitleParts.join(' • ') || 'Item Details';
 
         // Status with dynamic styling
         var statusName = item.status?.status_name || 'unknown';
         var statusCard = document.getElementById('detailStatusCard');
         var statusDot = document.getElementById('detailStatusDot');
         var statusText = document.getElementById('detailItemStatus');
-        
+        var statusSubtitle = document.getElementById('detailStatusSubtitle');
+
         var statusConfig = {
-            'available': { 
-                label: 'Available', 
-                cardClass: 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800/50 text-emerald-700 dark:text-emerald-300',
-                dotClass: 'bg-emerald-500'
+            'available': {
+                label: 'Available',
+                subtitle: 'Ready for rent',
+                cardClass: 'bg-emerald-500/10 dark:bg-emerald-500/20 border-emerald-500/30 dark:border-emerald-500/30',
+                dotClass: 'bg-emerald-500',
+                textClass: 'text-emerald-700 dark:text-emerald-400'
             },
-            'rented': { 
-                label: 'Rented', 
-                cardClass: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800/50 text-blue-700 dark:text-blue-300',
-                dotClass: 'bg-blue-500'
+            'rented': {
+                label: 'Rented',
+                subtitle: 'Currently rented',
+                cardClass: 'bg-blue-500/10 dark:bg-blue-500/20 border-blue-500/30 dark:border-blue-500/30',
+                dotClass: 'bg-blue-500',
+                textClass: 'text-blue-700 dark:text-blue-400'
             },
-            'maintenance': { 
-                label: 'Maintenance', 
-                cardClass: 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800/50 text-amber-700 dark:text-amber-300',
-                dotClass: 'bg-amber-500'
+            'maintenance': {
+                label: 'Maintenance',
+                subtitle: 'Under maintenance',
+                cardClass: 'bg-amber-500/10 dark:bg-amber-500/20 border-amber-500/30 dark:border-amber-500/30',
+                dotClass: 'bg-amber-500',
+                textClass: 'text-amber-700 dark:text-amber-400'
             },
-            'retired': { 
-                label: 'Retired', 
-                cardClass: 'bg-neutral-100 dark:bg-neutral-800/50 border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400',
-                dotClass: 'bg-neutral-500'
+            'retired': {
+                label: 'Retired',
+                subtitle: 'No longer available',
+                cardClass: 'bg-neutral-500/10 dark:bg-neutral-500/20 border-neutral-500/30 dark:border-neutral-500/30',
+                dotClass: 'bg-neutral-500',
+                textClass: 'text-neutral-700 dark:text-neutral-400'
             }
         };
-        
+
         var config = statusConfig[statusName] || statusConfig['retired'];
-        statusCard.className = `flex-1 rounded-2xl p-4 border ${config.cardClass}`;
+        statusCard.className = `rounded-xl p-4 border ${config.cardClass}`;
         statusDot.className = `h-2 w-2 rounded-full ${config.dotClass}`;
+        statusText.className = `text-sm font-semibold ${config.textClass}`;
         statusText.textContent = config.label;
+        statusSubtitle.textContent = config.subtitle;
 
         // Info fields
         document.getElementById('detailItemSku').textContent = item.sku || '-';
-        document.getElementById('detailItemType').textContent = item.item_type 
-            ? item.item_type.charAt(0).toUpperCase() + item.item_type.slice(1) 
+        document.getElementById('detailItemType').textContent = item.item_type
+            ? item.item_type.charAt(0).toUpperCase() + item.item_type.slice(1)
             : '-';
         document.getElementById('detailItemSize').textContent = item.size || '-';
         document.getElementById('detailItemColor').textContent = item.color || '-';
@@ -417,23 +412,12 @@
         document.getElementById('detailItemDeposit').textContent = `₱${depositAmount.toLocaleString()}`;
 
         // Dates
-        document.getElementById('detailItemCreated').textContent = item.created_at 
-            ? formatDate(item.created_at) 
+        document.getElementById('detailItemCreated').textContent = item.created_at
+            ? formatDate(item.created_at)
             : '-';
-        document.getElementById('detailItemUpdated').textContent = item.updated_at 
-            ? formatDate(item.updated_at) 
+        document.getElementById('detailItemUpdated').textContent = item.updated_at
+            ? formatDate(item.updated_at)
             : '-';
-
-        // Updated By
-        var updatedBySection = document.getElementById('detailUpdatedBySection');
-        var updatedByName = document.getElementById('detailUpdatedByName');
-        if (item.updated_by_user && item.updated_by_user.name) {
-            updatedBySection.classList.remove('hidden');
-            updatedByName.textContent = item.updated_by_user.name;
-        } else {
-            updatedBySection.classList.add('hidden');
-            updatedByName.textContent = '-';
-        }
 
         // Images
         renderItemDetailsImages(item.images || []);
