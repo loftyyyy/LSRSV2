@@ -32,7 +32,7 @@ class StoreReservationRequest extends FormRequest
             'items.*.item_id' => 'required_with:items|exists:inventories,item_id',
             'items.*.quantity' => 'sometimes|integer|min:1',
             'items.*.rental_price' => 'sometimes|numeric|min:0',
-            'items.*.notes' => 'sometimes|string|max:500',
+            'items.*.notes' => 'nullable|string|max:500',
         ];
     }
 
