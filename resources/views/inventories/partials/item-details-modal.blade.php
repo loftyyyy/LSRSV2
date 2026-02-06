@@ -118,9 +118,10 @@
                                 <div class="space-y-3">
                                     {{-- Rental Price --}}
                                     <div>
-                                        <p id="detailItemPrice" class="text-xl font-bold text-neutral-900 dark:text-white font-geist-mono">-</p>
+                                        <p id="detailItemPrice" class="text-xl font-bold text-violet-600 dark:text-violet-400 font-geist-mono">-</p>
                                         <p class="text-xs text-neutral-500 dark:text-neutral-400">Rental price</p>
                                     </div>
+                                    <hr class="border-neutral-200 dark:border-neutral-800">
                                     {{-- Selling Price --}}
                                     <div id="detailSellingPriceRow" class="hidden flex items-center justify-between">
                                         <span class="text-xs text-neutral-500 dark:text-neutral-400">Selling price</span>
