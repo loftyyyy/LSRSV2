@@ -87,8 +87,8 @@
                         {{-- Overview & Pricing Row --}}
                         <div class="grid grid-cols-2 gap-4">
                             {{-- Overview Section --}}
-                            <div class="space-y-3">
-                                <div class="flex items-center gap-2 text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                            <div class="rounded-xl p-4 border border-neutral-200 dark:border-neutral-800">
+                                <div class="flex items-center gap-2 text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-3">
                                     <x-icon name="info" class="h-3.5 w-3.5" />
                                     <span>Overview</span>
                                 </div>
@@ -108,10 +108,10 @@
                                     </div>
                                 </div>
                             </div>
-                            
+
                             {{-- Pricing Section --}}
-                            <div class="space-y-3">
-                                <div class="flex items-center gap-2 text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                            <div class="rounded-xl p-4 border border-neutral-200 dark:border-neutral-800">
+                                <div class="flex items-center gap-2 text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-3">
                                     <x-icon name="currency-peso" class="h-3.5 w-3.5" />
                                     <span>Pricing</span>
                                 </div>
@@ -185,6 +185,14 @@
                                     <div class="h-1.5 w-1.5 rounded-full bg-blue-500"></div>
                                     <span class="text-xs text-neutral-500 dark:text-neutral-400">Updated:</span>
                                     <span id="detailItemUpdated" class="text-xs text-neutral-700 dark:text-neutral-300">-</span>
+                                </div>
+                            </div>
+                            {{-- Last Updated By --}}
+                            <div id="detailUpdatedBySection" class="mt-3 pt-3 border-t border-neutral-200 dark:border-neutral-800">
+                                <div class="flex items-center gap-2">
+                                    <div class="h-1.5 w-1.5 rounded-full bg-violet-500"></div>
+                                    <span class="text-xs text-neutral-500 dark:text-neutral-400">Last updated by:</span>
+                                    <span id="detailUpdatedByName" class="text-xs text-neutral-700 dark:text-neutral-300">-</span>
                                 </div>
                             </div>
                         </div>
@@ -418,6 +426,14 @@
         document.getElementById('detailItemUpdated').textContent = item.updated_at
             ? formatDate(item.updated_at)
             : '-';
+
+        // Last Updated By
+        var updatedByName = document.getElementById('detailUpdatedByName');
+        if (item.updated_by_user && item.updated_by_user.name) {
+            updatedByName.textContent = item.updated_by_user.name;
+        } else {
+            updatedByName.textContent = 'System';
+        }
 
         // Images
         renderItemDetailsImages(item.images || []);
