@@ -128,25 +128,62 @@
                 </div>
             </div>
 
-            {{-- Rental Price --}}
+            {{-- Pricing Section --}}
             <div class="space-y-3">
                 <div class="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
                     <x-icon name="currency-peso" class="h-4 w-4" />
                     <span>Pricing</span>
                 </div>
-                <div class="space-y-2">
-                    <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Rental Price (PHP) *</label>
-                    <div class="flex items-center rounded-2xl bg-white px-3 py-2.5 border border-neutral-300 focus-within:border-neutral-500 dark:border-neutral-800 dark:bg-black/60 transition-colors duration-300 ease-in-out">
-                        <span class="text-neutral-500 mr-2">₱</span>
-                        <input
-                            type="number"
-                            name="rental_price"
-                            required
-                            step="0.01"
-                            min="0"
-                            placeholder="0.00"
-                            class="w-full bg-transparent text-xs text-neutral-700 placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500 focus:outline-none transition-colors duration-300 ease-in-out"
-                        />
+
+                <div class="grid grid-cols-3 gap-4">
+                    {{-- Rental Price --}}
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Rental Price (PHP) *</label>
+                        <div class="flex items-center rounded-2xl bg-white px-3 py-2.5 border border-neutral-300 focus-within:border-neutral-500 dark:border-neutral-800 dark:bg-black/60 transition-colors duration-300 ease-in-out">
+                            <span class="text-neutral-500 mr-2">₱</span>
+                            <input
+                                type="number"
+                                name="rental_price"
+                                required
+                                step="0.01"
+                                min="0"
+                                placeholder="0.00"
+                                class="w-full bg-transparent text-xs text-neutral-700 placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500 focus:outline-none transition-colors duration-300 ease-in-out"
+                            />
+                        </div>
+                    </div>
+
+                    {{-- Selling Price --}}
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Selling Price (PHP) <span class="text-neutral-400 text-xs">(Optional)</span></label>
+                        <div class="flex items-center rounded-2xl bg-white px-3 py-2.5 border border-neutral-300 focus-within:border-neutral-500 dark:border-neutral-800 dark:bg-black/60 transition-colors duration-300 ease-in-out">
+                            <span class="text-neutral-500 mr-2">₱</span>
+                            <input
+                                type="number"
+                                name="selling_price"
+                                step="0.01"
+                                min="0"
+                                placeholder="0.00"
+                                class="w-full bg-transparent text-xs text-neutral-700 placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500 focus:outline-none transition-colors duration-300 ease-in-out"
+                            />
+                        </div>
+                    </div>
+
+                    {{-- Deposit Amount --}}
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Deposit Amount (PHP)</label>
+                        <div class="flex items-center rounded-2xl bg-white px-3 py-2.5 border border-neutral-300 focus-within:border-neutral-500 dark:border-neutral-800 dark:bg-black/60 transition-colors duration-300 ease-in-out">
+                            <span class="text-neutral-500 mr-2">₱</span>
+                            <input
+                                type="number"
+                                name="deposit_amount"
+                                step="0.01"
+                                min="0"
+                                placeholder="0.00"
+                                value="0"
+                                class="w-full bg-transparent text-xs text-neutral-700 placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500 focus:outline-none transition-colors duration-300 ease-in-out"
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
@@ -583,6 +620,17 @@
             payload.append('color', formData.get('color'));
             payload.append('design', formData.get('design'));
             payload.append('rental_price', parseFloat(formData.get('rental_price')));
+
+            // Optional pricing fields
+            var sellingPrice = formData.get('selling_price');
+            if (sellingPrice && sellingPrice.trim() !== '') {
+                payload.append('selling_price', parseFloat(sellingPrice));
+            }
+
+            var depositAmount = formData.get('deposit_amount');
+            if (depositAmount && depositAmount.trim() !== '') {
+                payload.append('deposit_amount', parseFloat(depositAmount));
+            }
 
             // Add images and their metadata
             globalThis.addItemModalState.selectedImages.forEach((img, index) => {
