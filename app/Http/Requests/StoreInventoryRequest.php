@@ -19,17 +19,19 @@ class StoreInventoryRequest extends FormRequest
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
-     public function rules(): array
-     {
-         return [
-             'sku' => ['nullable', 'string', 'max:50', 'unique:inventories,sku'],
-             'item_type' => ['required', 'in:gown,suit'],
-             'name' => ['required', 'string', 'max:255'],
-             'size' => ['required', 'string', 'max:50'],
-             'color' => ['required', 'string', 'max:100'],
-             'design' => ['required', 'string', 'max:255'],
-             'rental_price' => ['required', 'numeric', 'min:0', 'max:999999.99'],
-             'status_id' => ['nullable', 'exists:inventory_statuses,status_id'],
-         ];
-     }
+    public function rules(): array
+    {
+        return [
+            'sku' => ['nullable', 'string', 'max:50', 'unique:inventories,sku'],
+            'item_type' => ['required', 'in:gown,suit'],
+            'name' => ['required', 'string', 'max:255'],
+            'size' => ['required', 'string', 'max:50'],
+            'color' => ['required', 'string', 'max:100'],
+            'design' => ['required', 'string', 'max:255'],
+            'rental_price' => ['required', 'numeric', 'min:0', 'max:999999.99'],
+            'selling_price' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],
+            'deposit_amount' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],
+            'status_id' => ['nullable', 'exists:inventory_statuses,status_id'],
+        ];
+    }
 }
