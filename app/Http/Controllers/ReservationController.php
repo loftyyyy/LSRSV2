@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Reservation;
-use App\Models\Item;
+use App\Models\Inventory;
 use App\Models\ReservationItem;
 use App\Http\Requests\StoreReservationRequest;
 use App\Http\Requests\UpdateReservationRequest;
@@ -217,7 +217,7 @@ class ReservationController extends Controller
             if ($request->has('items')) {
                 foreach ($request->items as $itemData) {
                     // Check item availability
-                    $item = Item::findOrFail($itemData['item_id']);
+                    $item = Inventory::findOrFail($itemData['item_id']);
 
                     $isAvailable = $this->checkItemAvailabilityForDateRange(
                         $itemData['item_id'],
@@ -228,7 +228,7 @@ class ReservationController extends Controller
                     if (!$isAvailable) {
                         DB::rollBack();
                         return response()->json([
-                            'message' => "Item '{$item->item_name}' is not available for the selected dates",
+                            'message' => "Item '{$item->name}' is not available for the selected dates",
                             'error' => 'ITEM_NOT_AVAILABLE',
                             'item_id' => $item->item_id
                         ], 422);
@@ -311,7 +311,7 @@ class ReservationController extends Controller
                 // Add new/updated items
                 foreach ($request->items as $itemData) {
                     // Check availability for the updated dates
-                    $item = Item::findOrFail($itemData['item_id']);
+                    $item = Inventory::findOrFail($itemData['item_id']);
 
                     $isAvailable = $this->checkItemAvailabilityForDateRange(
                         $itemData['item_id'],
@@ -323,7 +323,7 @@ class ReservationController extends Controller
                     if (!$isAvailable) {
                         DB::rollBack();
                         return response()->json([
-                            'message' => "Item '{$item->item_name}' is not available for the updated dates",
+                            'message' => "Item '{$item->name}' is not available for the updated dates",
                             'error' => 'ITEM_NOT_AVAILABLE',
                             'item_id' => $item->item_id
                         ], 422);
@@ -407,11 +407,11 @@ class ReservationController extends Controller
      */
     public function browseAvailableItems(Request $request): JsonResponse
     {
-        $query = Item::with(['category', 'itemStatus']);
+        $query = Inventory::with(['status', 'images']);
 
-        // Filter by category (gowns, suits, and etc.)
-        if ($request->has('category_id')) {
-            $query->where('category_id', $request->get('category_id'));
+        // Filter by item type (gowns, suits)
+        if ($request->has('item_type')) {
+            $query->where('item_type', $request->get('item_type'));
         }
 
         // Filter by size
@@ -426,17 +426,17 @@ class ReservationController extends Controller
 
         // Filter by availability status (available items only)
         if ($request->get('available_only', true)) {
-            $query->whereHas('itemStatus', function ($statusQuery) {
-                $statusQuery->where('status_name', 'Available');
+            $query->whereHas('status', function ($statusQuery) {
+                $statusQuery->where('status_name', 'available');
             });
         }
 
-        // Search by name or code
+        // Search by name or SKU
         if ($request->has('search')) {
             $search = $request->get('search');
             $query->where(function ($q) use ($search) {
-                $q->where('item_name', 'like', "%{$search}%")
-                    ->orWhere('item_code', 'like', "%{$search}%");
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('sku', 'like', "%{$search}%");
             });
         }
 
@@ -458,7 +458,7 @@ class ReservationController extends Controller
                     })
                         ->whereHas('status', function ($statusQ) {
                             // Exclude cancelled reservations
-                            $statusQ->where('status_name', '!=', 'Cancelled');
+                            $statusQ->where('status_name', '!=', 'cancelled');
                         });
                 });
             });
@@ -480,13 +480,13 @@ class ReservationController extends Controller
      */
     public function checkItemDetails(Request $request, $itemId): JsonResponse
     {
-        $item = Item::with([
-            'category',
-            'itemStatus',
+        $item = Inventory::with([
+            'status',
+            'images',
             'reservationItems.reservation' => function ($query) {
                 $query->where('end_date', '>=', now())
                       ->whereHas('status', function ($statusQ) {
-                          $statusQ->where('status_name', '!=', 'Cancelled');
+                          $statusQ->where('status_name', '!=', 'cancelled');
                       });
             }
         ])->findOrFail($itemId);
@@ -520,7 +520,7 @@ class ReservationController extends Controller
                           });
                     })
                     ->whereHas('status', function ($statusQ) {
-                        $statusQ->where('status_name', '!=', 'Cancelled');
+                        $statusQ->where('status_name', '!=', 'cancelled');
                     });
                 })
                 ->count();
@@ -531,7 +531,7 @@ class ReservationController extends Controller
         return response()->json([
             'data' => $item,
             'availability' => [
-                'is_currently_available' => $item->itemStatus->status_name === 'Available',
+                'is_currently_available' => $item->status->status_name === 'available',
                 'next_available_date' => $nextAvailableDate,
                 'is_available_for_requested_dates' => $isAvailableForDates,
                 'upcoming_reservations' => $item->reservationItems->count()
