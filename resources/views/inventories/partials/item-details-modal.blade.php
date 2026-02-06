@@ -188,7 +188,7 @@
                                 </div>
                             </div>
                             {{-- Last Updated By --}}
-                            <div id="detailUpdatedBySection" class="mt-3 pt-3 border-t border-neutral-200 dark:border-neutral-800">
+                            <div id="detailUpdatedBySection" class="hidden mt-3 pt-3 border-t border-neutral-200 dark:border-neutral-800">
                                 <div class="flex items-center gap-2">
                                     <div class="h-1.5 w-1.5 rounded-full bg-violet-500"></div>
                                     <span class="text-xs text-neutral-500 dark:text-neutral-400">Last updated by:</span>
@@ -427,12 +427,14 @@
             ? formatDate(item.updated_at)
             : '-';
 
-        // Last Updated By
+        // Last Updated By (only show if updated by a user)
+        var updatedBySection = document.getElementById('detailUpdatedBySection');
         var updatedByName = document.getElementById('detailUpdatedByName');
         if (item.updated_by_user && item.updated_by_user.name) {
+            updatedBySection.classList.remove('hidden');
             updatedByName.textContent = item.updated_by_user.name;
         } else {
-            updatedByName.textContent = 'System';
+            updatedBySection.classList.add('hidden');
         }
 
         // Images
