@@ -12,6 +12,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 class ReservationController extends Controller
@@ -221,7 +222,7 @@ class ReservationController extends Controller
             $reservation = Reservation::create($validatedData);
 
             // Add items to reservation if provided
-            if ($request->has('items')) {
+            if ($request->has('items') && !empty($request->items)) {
                 foreach ($request->items as $itemData) {
                     // Check item availability
                     $item = Inventory::findOrFail($itemData['item_id']);
@@ -263,6 +264,11 @@ class ReservationController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('Reservation creation failed:', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
             return response()->json([
                 'message' => 'Failed to create reservation',
                 'error' => $e->getMessage()
