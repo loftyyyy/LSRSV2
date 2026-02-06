@@ -23,7 +23,7 @@ class StoreReservationRequest extends FormRequest
     {
         return [
             'customer_id' => 'required|exists:customers,customer_id',
-            'status_id' => 'required|exists:reservation_statuses,status_id',
+            'status_id' => 'sometimes|exists:reservation_statuses,status_id',
             'start_date' => 'required|date|after_or_equal:today',
             'end_date' => 'required|date|after:start_date',
 

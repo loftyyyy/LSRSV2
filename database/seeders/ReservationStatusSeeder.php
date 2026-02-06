@@ -13,11 +13,13 @@ class ReservationStatusSeeder extends Seeder
      */
      public function run(): void
      {
-         DB::table('reservation_statuses')->insert([
-             ['status_name' => 'confirmed'],
-             ['status_name' => 'cancelled'],
-             ['status_name' => 'expired'],
+         $statuses = ['pending', 'confirmed', 'cancelled', 'expired'];
 
-         ]);
+         foreach ($statuses as $status) {
+             DB::table('reservation_statuses')->updateOrInsert(
+                 ['status_name' => $status],
+                 ['status_name' => $status]
+             );
+         }
      }
 }

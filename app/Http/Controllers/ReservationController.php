@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Reservation;
 use App\Models\Inventory;
 use App\Models\ReservationItem;
+use App\Models\ReservationStatus;
 use App\Http\Requests\StoreReservationRequest;
 use App\Http\Requests\UpdateReservationRequest;
 use Illuminate\Http\JsonResponse;
@@ -205,10 +206,16 @@ class ReservationController extends Controller
         try {
             DB::beginTransaction();
 
-            // Set the clerk who created the reservation
+            // Set the clerk who created the reservation and default status
             $validatedData = $request->validated();
             $validatedData['reserved_by'] = Auth::id();
             $validatedData['reservation_date'] = now();
+
+            // Set default status to 'pending' if not provided
+            if (!isset($validatedData['status_id'])) {
+                $pendingStatus = ReservationStatus::where('status_name', 'pending')->first();
+                $validatedData['status_id'] = $pendingStatus?->status_id ?? 1;
+            }
 
             // Create the reservation
             $reservation = Reservation::create($validatedData);

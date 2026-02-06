@@ -17,6 +17,7 @@ class ReservationItem extends Model
         'item_id',
         'quantity',
         'rental_price',
+        'fulfillment_status',
         'notes',
     ];
 
@@ -34,11 +35,11 @@ class ReservationItem extends Model
     }
 
     /**
-     * Get the item details
+     * Get the item details (from inventories table)
      */
     public function item()
     {
-        return $this->belongsTo(Item::class, 'item_id', 'item_id');
+        return $this->belongsTo(Inventory::class, 'item_id', 'item_id');
     }
 
     /**
