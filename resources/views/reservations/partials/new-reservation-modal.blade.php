@@ -501,7 +501,7 @@
             });
 
             return `
-                <div class="flex items-center justify-between p-3 rounded-xl border ${isSelected ? 'border-violet-500 bg-violet-50 dark:bg-violet-900/20' : 'border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700'} transition-colors duration-200">
+                <div class="group flex items-center justify-between p-3 rounded-xl border ${isSelected ? 'border-violet-500 bg-violet-50 dark:bg-violet-900/20' : 'border-neutral-200 dark:border-neutral-800 hover:border-violet-300 hover:bg-violet-50/50 dark:hover:border-violet-800 dark:hover:bg-violet-900/10'} transition-colors duration-200">
                     <div class="flex items-center gap-3">
                         <div class="h-12 w-12 rounded-lg bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center overflow-hidden">
                             ${item.images && item.images.length > 0
@@ -518,7 +518,7 @@
                     <button
                         type="button"
                         onclick="${isSelected ? `removeItemFromReservation(${item.item_id})` : `addItemToReservation(${JSON.stringify(item).replace(/"/g, '&quot;')})`}"
-                        class="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium ${isSelected ? 'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400' : 'bg-violet-100 text-violet-700 hover:bg-violet-200 dark:bg-violet-900/30 dark:text-violet-300'} transition-colors duration-200"
+                        class="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium ${isSelected ? 'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50' : 'border border-violet-300 bg-white text-violet-700 hover:bg-violet-100 hover:border-violet-400 dark:border-violet-700 dark:bg-violet-900/30 dark:text-violet-300 dark:hover:bg-violet-900/50'} transition-colors duration-200"
                     >
                         ${isSelected ? 'Remove' : 'Add'}
                     </button>

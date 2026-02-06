@@ -29,7 +29,7 @@ class StoreReservationRequest extends FormRequest
 
             // Items array validation
             'items' => 'sometimes|array|min:1',
-            'items.*.item_id' => 'required_with:items|exists:items,item_id',
+            'items.*.item_id' => 'required_with:items|exists:inventories,item_id',
             'items.*.quantity' => 'sometimes|integer|min:1',
             'items.*.rental_price' => 'sometimes|numeric|min:0',
             'items.*.notes' => 'sometimes|string|max:500',
