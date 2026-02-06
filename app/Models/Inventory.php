@@ -19,12 +19,16 @@ class Inventory extends Model
         'color',
         'design',
         'rental_price',
+        'selling_price',
+        'deposit_amount',
         'status_id',
         'updated_by'
     ];
 
     protected $casts = [
         'rental_price' => 'decimal:2',
+        'selling_price' => 'decimal:2',
+        'deposit_amount' => 'decimal:2',
     ];
 
     public function status()
@@ -92,5 +96,35 @@ class Inventory extends Model
         }
 
         return sprintf('%s-%03d', $prefix, $nextNumber);
+    }
+
+    /**
+     * Check if item is available for sale
+     */
+    public function isAvailableForSale(): bool
+    {
+        return $this->selling_price !== null 
+            && $this->selling_price > 0 
+            && $this->status?->status_name === 'available';
+    }
+
+    /**
+     * Check if item is sold
+     */
+    public function isSold(): bool
+    {
+        return $this->status?->status_name === 'sold';
+    }
+
+    /**
+     * Scope to get items available for sale
+     */
+    public function scopeAvailableForSale($query)
+    {
+        return $query->whereNotNull('selling_price')
+            ->where('selling_price', '>', 0)
+            ->whereHas('status', function ($q) {
+                $q->where('status_name', 'available');
+            });
     }
 }

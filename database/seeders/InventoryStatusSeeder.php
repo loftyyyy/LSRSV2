@@ -22,6 +22,7 @@ class InventoryStatusSeeder extends Seeder
             ['status_name' => 'maintenance'],
             ['status_name' => 'retired'],
             ['status_name' => 'reserved'],
+            ['status_name' => 'sold'],
         ]);
     }
 }

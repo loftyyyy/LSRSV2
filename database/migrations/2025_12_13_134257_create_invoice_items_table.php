@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('invoice_id')->constrained('invoices', 'invoice_id')->cascadeOnDelete();
             $table->string('description'); // "Gown Rental - Red Evening Gown"
-            $table->enum('item_type', ['rental_fee', 'deposit', 'penalty', 'damage_fee', 'late_fee', 'cleaning_fee', 'extension_fee', 'other']);
+            $table->enum('item_type', ['rental_fee', 'sale', 'deposit', 'penalty', 'damage_fee', 'late_fee', 'cleaning_fee', 'extension_fee', 'other']);
             $table->foreignId('item_id')->nullable()->constrained('inventories', 'item_id')->nullOnDelete(); // Link to actual item if applicable
             $table->integer('quantity')->default(1);
             $table->decimal('unit_price', 10, 2);

@@ -28,7 +28,26 @@ return new class extends Migration
             $table->foreignId('returned_to')->nullable()->constrained('users', 'user_id')->nullOnDelete();
             $table->text('return_notes')->nullable(); // Document damages, condition, etc.
             $table->foreignId('status_id')->constrained('rental_statuses', 'status_id')->cascadeOnDelete();
+            
+            // Deposit tracking fields
+            $table->decimal('deposit_amount', 10, 2)->default(0)->comment('Security deposit amount collected at pickup');
+            $table->enum('deposit_status', [
+                'not_collected',      // No deposit required or not yet collected
+                'held',               // Deposit currently held
+                'returned_full',      // Full amount returned to customer
+                'returned_partial',   // Partial return (deductions applied)
+                'forfeited'           // Entire deposit forfeited (damage/no-show)
+            ])->default('not_collected');
+            $table->decimal('deposit_returned_amount', 10, 2)->default(0)->comment('Amount actually returned to customer');
+            $table->decimal('deposit_deducted_amount', 10, 2)->default(0)->comment('Amount deducted from deposit (damage, late fees, etc.)');
+            $table->foreignId('deposit_collected_by')->nullable()->constrained('users', 'user_id')->nullOnDelete()->comment('Staff who collected the deposit');
+            $table->dateTime('deposit_collected_at')->nullable()->comment('When deposit was collected');
+            
             $table->timestamps();
+            
+            // Indexes for deposit reporting
+            $table->index(['deposit_status', 'deposit_collected_at']);
+            $table->index(['customer_id', 'deposit_status']);
         });
     }
 

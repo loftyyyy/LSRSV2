@@ -20,6 +20,8 @@ return new class extends Migration
             $table->string('color');
             $table->string('design');
             $table->decimal('rental_price', 10,2)->default(0);
+            $table->decimal('selling_price', 10,2)->nullable()->comment('Sale price for occasional item sales');
+            $table->decimal('deposit_amount', 10,2)->default(0);
             $table->foreignId('status_id')->constrained('inventory_statuses', 'status_id')->cascadeOnDelete();
             $table->foreignId('updated_by')->nullable()->constrained('users', 'user_id')->cascadeOnDelete();
             $table->timestamps();
