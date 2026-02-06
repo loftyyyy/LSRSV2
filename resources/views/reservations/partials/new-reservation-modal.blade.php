@@ -470,7 +470,10 @@
 
         try {
             var response = await axios.get('/api/reservations/items/browse');
-            var items = response.data.data || response.data;
+            // Handle paginated response: response.data = { data: { data: [...items], current_page, ... }, message }
+            var responseData = response.data.data || response.data;
+            // If paginated, items are in responseData.data; otherwise responseData is the items array
+            var items = Array.isArray(responseData) ? responseData : (responseData.data || []);
 
             reservationState.availableItems = items;
             loadingEl.classList.add('hidden');
