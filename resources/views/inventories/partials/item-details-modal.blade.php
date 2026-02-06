@@ -91,14 +91,28 @@
                                 </div>
                             </div>
                             
-                            {{-- Price Section --}}
+                            {{-- Pricing Section --}}
                             <div class="space-y-3">
                                 <div class="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
                                     <x-icon name="currency-peso" class="h-4 w-4" />
-                                    <span>Rental Price</span>
+                                    <span>Pricing</span>
                                 </div>
-                                <div class="bg-gradient-to-br from-violet-500/10 to-purple-500/10 dark:from-violet-500/20 dark:to-purple-500/20 rounded-xl p-3 border border-violet-200 dark:border-violet-800/50">
-                                    <p id="detailItemPrice" class="text-xl font-bold text-violet-600 dark:text-violet-400 font-geist-mono">-</p>
+                                <div class="space-y-2">
+                                    {{-- Rental Price --}}
+                                    <div class="bg-gradient-to-br from-violet-500/10 to-purple-500/10 dark:from-violet-500/20 dark:to-purple-500/20 rounded-xl p-3 border border-violet-200 dark:border-violet-800/50">
+                                        <p class="text-xs text-neutral-500 dark:text-neutral-400 mb-1">Rental Price</p>
+                                        <p id="detailItemPrice" class="text-lg font-bold text-violet-600 dark:text-violet-400 font-geist-mono">-</p>
+                                    </div>
+                                    {{-- Selling Price --}}
+                                    <div id="detailSellingPriceSection" class="hidden bg-gradient-to-br from-emerald-500/10 to-teal-500/10 dark:from-emerald-500/20 dark:to-teal-500/20 rounded-xl p-3 border border-emerald-200 dark:border-emerald-800/50">
+                                        <p class="text-xs text-neutral-500 dark:text-neutral-400 mb-1">Selling Price</p>
+                                        <p id="detailItemSellingPrice" class="text-lg font-bold text-emerald-600 dark:text-emerald-400 font-geist-mono">-</p>
+                                    </div>
+                                    {{-- Deposit Amount --}}
+                                    <div class="bg-gradient-to-br from-amber-500/10 to-orange-500/10 dark:from-amber-500/20 dark:to-orange-500/20 rounded-xl p-3 border border-amber-200 dark:border-amber-800/50">
+                                        <p class="text-xs text-neutral-500 dark:text-neutral-400 mb-1">Deposit Amount</p>
+                                        <p id="detailItemDeposit" class="text-lg font-bold text-amber-600 dark:text-amber-400 font-geist-mono">-</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -387,9 +401,24 @@
         document.getElementById('detailItemSize').textContent = item.size || '-';
         document.getElementById('detailItemColor').textContent = item.color || '-';
         document.getElementById('detailItemDesign').textContent = item.design || '-';
-        document.getElementById('detailItemPrice').textContent = item.rental_price 
-            ? `₱${parseFloat(item.rental_price).toLocaleString()}` 
+        document.getElementById('detailItemPrice').textContent = item.rental_price
+            ? `₱${parseFloat(item.rental_price).toLocaleString()}`
             : '-';
+
+        // Selling Price (only show if set)
+        var sellingPriceSection = document.getElementById('detailSellingPriceSection');
+        var sellingPriceElement = document.getElementById('detailItemSellingPrice');
+        if (item.selling_price && parseFloat(item.selling_price) > 0) {
+            sellingPriceSection.classList.remove('hidden');
+            sellingPriceElement.textContent = `₱${parseFloat(item.selling_price).toLocaleString()}`;
+        } else {
+            sellingPriceSection.classList.add('hidden');
+        }
+
+        // Deposit Amount
+        document.getElementById('detailItemDeposit').textContent = item.deposit_amount
+            ? `₱${parseFloat(item.deposit_amount).toLocaleString()}`
+            : '₱0';
 
         // Dates
         document.getElementById('detailItemCreated').textContent = item.created_at 
