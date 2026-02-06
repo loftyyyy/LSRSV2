@@ -75,43 +75,40 @@
 
                     {{-- Right: Item Information --}}
                     <div class="lg:w-1/2 p-6 space-y-5">
-                        {{-- Status & Price Row --}}
-                        <div class="grid grid-cols-2 gap-4">
-                            {{-- Status Section --}}
-                            <div class="space-y-3">
-                                <div class="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                                    <x-icon name="activity" class="h-4 w-4" />
-                                    <span>Status</span>
-                                </div>
-                                <div id="detailStatusCard" class="rounded-xl p-3 border">
-                                    <div class="flex items-center gap-2">
-                                        <span id="detailStatusDot" class="h-2.5 w-2.5 rounded-full"></span>
-                                        <p id="detailItemStatus" class="text-sm font-semibold">-</p>
-                                    </div>
+                        {{-- Status Section --}}
+                        <div class="space-y-3">
+                            <div class="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                                <x-icon name="activity" class="h-4 w-4" />
+                                <span>Status</span>
+                            </div>
+                            <div id="detailStatusCard" class="rounded-xl p-3 border">
+                                <div class="flex items-center gap-2">
+                                    <span id="detailStatusDot" class="h-2.5 w-2.5 rounded-full"></span>
+                                    <p id="detailItemStatus" class="text-sm font-semibold">-</p>
                                 </div>
                             </div>
-                            
-                            {{-- Pricing Section --}}
-                            <div class="space-y-3">
-                                <div class="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                                    <x-icon name="currency-peso" class="h-4 w-4" />
-                                    <span>Pricing</span>
-                                </div>
-                                <div class="bg-gradient-to-br from-violet-500/10 to-purple-500/10 dark:from-violet-500/20 dark:to-purple-500/20 rounded-xl p-4 border border-violet-200 dark:border-violet-800/50">
-                                    {{-- Main Rental Price --}}
-                                    <p id="detailItemPrice" class="text-2xl font-bold text-violet-600 dark:text-violet-400 font-geist-mono">-</p>
-                                    <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">Rental Price</p>
-                                    
-                                    {{-- Additional Pricing Info --}}
-                                    <div class="mt-3 pt-3 border-t border-violet-200/50 dark:border-violet-800/30 space-y-1.5">
-                                        <div id="detailSellingPriceRow" class="hidden flex items-center justify-between">
-                                            <span class="text-xs text-neutral-500 dark:text-neutral-400">Selling Price</span>
-                                            <span id="detailItemSellingPrice" class="text-sm font-medium text-emerald-600 dark:text-emerald-400 font-geist-mono">-</span>
-                                        </div>
-                                        <div class="flex items-center justify-between">
-                                            <span class="text-xs text-neutral-500 dark:text-neutral-400">Security Deposit</span>
-                                            <span id="detailItemDeposit" class="text-sm font-medium text-amber-600 dark:text-amber-400 font-geist-mono">-</span>
-                                        </div>
+                        </div>
+
+                        {{-- Pricing Section --}}
+                        <div class="space-y-3">
+                            <div class="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                                <x-icon name="currency-peso" class="h-4 w-4" />
+                                <span>Pricing</span>
+                            </div>
+                            <div class="bg-gradient-to-br from-violet-500/10 to-purple-500/10 dark:from-violet-500/20 dark:to-purple-500/20 rounded-xl p-4 border border-violet-200 dark:border-violet-800/50">
+                                {{-- Main Rental Price --}}
+                                <p id="detailItemPrice" class="text-2xl font-bold text-violet-600 dark:text-violet-400 font-geist-mono">-</p>
+                                <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">Rental Price</p>
+
+                                {{-- Additional Pricing Info --}}
+                                <div class="mt-3 pt-3 border-t border-violet-200/50 dark:border-violet-800/30 space-y-1.5">
+                                    <div id="detailSellingPriceRow" class="hidden flex items-center justify-between">
+                                        <span class="text-xs text-neutral-500 dark:text-neutral-400">Selling Price</span>
+                                        <span id="detailItemSellingPrice" class="text-sm font-medium text-emerald-600 dark:text-emerald-400 font-geist-mono">-</span>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-xs text-neutral-500 dark:text-neutral-400">Security Deposit</span>
+                                        <span id="detailItemDeposit" class="text-sm font-medium text-amber-600 dark:text-amber-400 font-geist-mono">-</span>
                                     </div>
                                 </div>
                             </div>
