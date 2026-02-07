@@ -166,15 +166,6 @@ class InventoryController extends Controller
              ? Inventory::where('status_id', $damagedStatusId)->sum('rental_price') 
              : 0;
  
-         // New metrics: Deposit and Selling Price
-         $totalDepositExposure = Inventory::sum('deposit_amount') ?? 0;
-         $itemsForSale = Inventory::whereNotNull('selling_price')
-             ->where('selling_price', '>', 0)
-             ->count();
-         $totalSaleValue = Inventory::whereNotNull('selling_price')
-             ->where('selling_price', '>', 0)
-             ->sum('selling_price') ?? 0;
- 
          return response()->json([
              'kpis' => [
                  'total_items' => $totalItems,
@@ -189,9 +180,6 @@ class InventoryController extends Controller
                  'poor_condition' => $damagedItems,
                  'occupancy_rate' => $totalItems > 0 ? round(($rentedItems / $totalItems) * 100, 2) : 0,
                  'value_at_risk' => round($valueAtRisk, 2),
-                 'total_deposit_exposure' => round($totalDepositExposure, 2),
-                 'items_for_sale' => $itemsForSale,
-                 'total_sale_value' => round($totalSaleValue, 2),
              ],
              'top_items' => $topItems,
              'item_type_distribution' => $itemTypeDistribution,

@@ -239,33 +239,6 @@
                     Not yet
                 </div>
             </div>
-
-            <div class="rounded-2xl p-6 border border-neutral-200 bg-white dark:border-neutral-900 dark:bg-neutral-950/60 shadow-sm dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
-                <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
-                    Total Deposit Exposure
-                </div>
-                <div id="statTotalDepositExposure" class="text-3xl font-semibold text-cyan-600 dark:text-cyan-400 transition-colors duration-300 ease-in-out">
-                    ₱0
-                </div>
-            </div>
-
-            <div class="rounded-2xl p-6 border border-neutral-200 bg-white dark:border-neutral-900 dark:bg-neutral-950/60 shadow-sm dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
-                <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
-                    Items for Sale
-                </div>
-                <div id="statItemsForSale" class="text-3xl font-semibold text-pink-600 dark:text-pink-400 transition-colors duration-300 ease-in-out">
-                    0
-                </div>
-            </div>
-
-            <div class="rounded-2xl p-6 border border-neutral-200 bg-white dark:border-neutral-900 dark:bg-neutral-950/60 shadow-sm dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
-                <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
-                    Total Sale Value
-                </div>
-                <div id="statTotalSaleValue" class="text-3xl font-semibold text-teal-600 dark:text-teal-400 transition-colors duration-300 ease-in-out">
-                    ₱0
-                </div>
-            </div>
         </section>
 
         {{-- Charts Section --}}
@@ -321,13 +294,11 @@
                             <th class="py-2.5 pr-4 font-medium">Color</th>
                             <th class="py-2.5 pr-4 font-medium">Status</th>
                             <th class="py-2.5 pr-4 font-medium">Rental Price</th>
-                            <th class="py-2.5 pr-4 font-medium">Deposit</th>
-                            <th class="py-2.5 pr-4 font-medium">Selling Price</th>
                         </tr>
                         </thead>
                         <tbody id="reportTableBody" class="text-[13px]">
                             <tr class="border-b border-neutral-200 dark:border-neutral-900/60">
-                                <td colspan="9" class="py-8 text-center text-neutral-500 dark:text-neutral-400">
+                                <td colspan="7" class="py-8 text-center text-neutral-500 dark:text-neutral-400">
                                     Click "Generate Report" to view inventory details
                                 </td>
                             </tr>
@@ -408,9 +379,6 @@
          document.getElementById('statTotalValue').textContent = '₱' + (kpis.total_value || 0).toLocaleString();
          document.getElementById('statOccupancyRate').textContent = (kpis.occupancy_rate || 0) + '%';
          document.getElementById('statDamagedItems').textContent = kpis.damaged_items || 0;
-         document.getElementById('statTotalDepositExposure').textContent = '₱' + (kpis.total_deposit_exposure || 0).toLocaleString();
-         document.getElementById('statItemsForSale').textContent = kpis.items_for_sale || 0;
-         document.getElementById('statTotalSaleValue').textContent = '₱' + (kpis.total_sale_value || 0).toLocaleString();
      }
 
       function updateCharts(data) {
@@ -683,7 +651,7 @@
         if (!items || items.length === 0) {
             tbody.innerHTML = `
                 <tr class="border-b border-neutral-200 dark:border-neutral-900/60">
-                    <td colspan="9" class="py-8 text-center text-neutral-500 dark:text-neutral-400">
+                    <td colspan="7" class="py-8 text-center text-neutral-500 dark:text-neutral-400">
                         No items found for the selected filters
                     </td>
                 </tr>
@@ -707,14 +675,6 @@
                 : 'bg-red-500';
 
             const itemType = item.item_type ? item.item_type.charAt(0).toUpperCase() + item.item_type.slice(1) : 'N/A';
-            
-            // Format deposit and selling price (show "-" if null or 0)
-            const depositDisplay = item.deposit_amount && item.deposit_amount > 0 
-                ? '₱' + item.deposit_amount.toLocaleString() 
-                : '-';
-            const sellingPriceDisplay = item.selling_price && item.selling_price > 0 
-                ? '₱' + item.selling_price.toLocaleString() 
-                : '-';
 
             return `
                 <tr class="border-b border-neutral-200 hover:bg-neutral-100 dark:border-neutral-900/60 dark:hover:bg-white/5 transition-colors">
@@ -727,11 +687,9 @@
                         <span class="inline-flex items-center rounded-full ${statusColor} px-2 py-1 text-[10px] font-medium border">
                             <span class="mr-1 h-1.5 w-1.5 rounded-full ${statusBgColor}"></span>
                             ${statusName.charAt(0).toUpperCase() + statusName.slice(1)}
-                            </span>
+                        </span>
                     </td>
                     <td class="py-3.5 pr-4 font-geist-mono">₱${(item.rental_price || 0).toLocaleString()}</td>
-                    <td class="py-3.5 pr-4 font-geist-mono text-neutral-500">${depositDisplay}</td>
-                    <td class="py-3.5 pr-4 font-geist-mono text-neutral-500">${sellingPriceDisplay}</td>
                 </tr>
             `;
         }).join('');
