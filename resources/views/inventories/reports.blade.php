@@ -6,9 +6,9 @@
         (function() {
             var savedMode = localStorage.getItem('darkMode');
             var isDarkMode = savedMode !== null ? savedMode === 'true' : true;
-            if (isDarkMode) {
-                document.documentElement.classList.add('dark');
-            }
+            document.documentElement.classList.toggle('dark', isDarkMode);
+            document.documentElement.style.colorScheme = isDarkMode ? 'dark' : 'light';
+            document.documentElement.style.backgroundColor = isDarkMode ? '#000000' : '#f5f5f5';
         })();
     </script>
     <meta charset="UTF-8">

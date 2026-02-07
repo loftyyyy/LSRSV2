@@ -97,26 +97,22 @@
 
     <script>
         // Use globalThis to store isDarkMode to prevent redeclaration on page navigation
-        if (!globalThis.isDarkMode) {
-            globalThis.isDarkMode = null;
+        if (typeof globalThis.isDarkMode === 'undefined' || globalThis.isDarkMode === null) {
+            var savedMode = localStorage.getItem('darkMode');
+
+            if (savedMode !== null) {
+                // User preference exists
+                globalThis.isDarkMode = savedMode === 'true';
+            } else {
+                // Default to dark mode (as per your requirement)
+                globalThis.isDarkMode = true;
+                localStorage.setItem('darkMode', 'true');
+            }
         }
 
-        var savedMode = localStorage.getItem('darkMode');
-
-        if (savedMode !== null) {
-            // User preference exists
-            globalThis.isDarkMode = savedMode === 'true';
-        } else {
-            // Default to dark mode (as per your requirement)
-            globalThis.isDarkMode = true;
-            localStorage.setItem('darkMode', 'true');
-        }
-
-        if (globalThis.isDarkMode) {
-            document.documentElement.classList.add('dark');
-        } else {
-            document.documentElement.classList.remove('dark');
-        }
+        // Keep global state in sync with the current root class.
+        // The class is applied very early in each page head to avoid theme flash.
+        globalThis.isDarkMode = document.documentElement.classList.contains('dark');
 
         window.addEventListener('DOMContentLoaded', function () {
             updateToggleUI(globalThis.isDarkMode);
@@ -128,8 +124,12 @@
 
             if (globalThis.isDarkMode) {
                 document.documentElement.classList.add('dark');
+                document.documentElement.style.colorScheme = 'dark';
+                document.documentElement.style.backgroundColor = '#000000';
             } else {
                 document.documentElement.classList.remove('dark');
+                document.documentElement.style.colorScheme = 'light';
+                document.documentElement.style.backgroundColor = '#f5f5f5';
             }
 
             updateToggleUI(globalThis.isDarkMode);
