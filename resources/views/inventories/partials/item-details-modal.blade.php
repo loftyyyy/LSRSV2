@@ -34,9 +34,9 @@
                                     <span class="text-sm">No photos available</span>
                                 </div>
                             </div>
-                            
+
                             {{-- Left Arrow --}}
-                            <button 
+                            <button
                                 type="button"
                                 id="itemDetailsPrevBtn"
                                 onclick="navigateDetailsImage(-1)"
@@ -47,9 +47,9 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                                 </svg>
                             </button>
-                            
+
                             {{-- Right Arrow --}}
-                            <button 
+                            <button
                                 type="button"
                                 id="itemDetailsNextBtn"
                                 onclick="navigateDetailsImage(1)"
@@ -60,13 +60,13 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                                 </svg>
                             </button>
-                            
+
                             {{-- Image Counter --}}
                             <div id="itemDetailsImageCounter" class="hidden absolute bottom-3 right-3 bg-black/60 text-white text-xs font-medium px-2.5 py-1 rounded-full backdrop-blur-sm">
                                 1 / 1
                             </div>
                         </div>
-                        
+
                         {{-- Thumbnails Row --}}
                         <div id="itemDetailsThumbnails" class="flex gap-2 overflow-x-auto pb-2 mt-4">
                             {{-- Thumbnails will be inserted here --}}
@@ -337,7 +337,7 @@
             console.error('Error loading item details:', error);
             document.getElementById('itemDetailsLoading').classList.add('hidden');
             document.getElementById('itemDetailsError').classList.remove('hidden');
-            document.getElementById('itemDetailsErrorMessage').textContent = 
+            document.getElementById('itemDetailsErrorMessage').textContent =
                 error.response?.data?.message || error.message || 'Failed to load item details';
         }
     }
@@ -406,12 +406,17 @@
             ? `₱${parseFloat(item.rental_price).toLocaleString()}`
             : '-';
 
-        // Selling Price (only show if set)
+        // Selling Price (only show when item is sellable)
         var sellingPriceRow = document.getElementById('detailSellingPriceRow');
         var sellingPriceElement = document.getElementById('detailItemSellingPrice');
-        if (item.selling_price && parseFloat(item.selling_price) > 0) {
+        var isSellable = item.is_sellable === true || item.is_sellable === 1 || item.is_sellable === '1';
+        if (isSellable) {
             sellingPriceRow.classList.remove('hidden');
-            sellingPriceElement.textContent = `₱${parseFloat(item.selling_price).toLocaleString()}`;
+            if (item.selling_price && parseFloat(item.selling_price) > 0) {
+                sellingPriceElement.textContent = `₱${parseFloat(item.selling_price).toLocaleString()}`;
+            } else {
+                sellingPriceElement.textContent = '-';
+            }
         } else {
             sellingPriceRow.classList.add('hidden');
         }
@@ -473,31 +478,31 @@
             if (!a.is_primary && b.is_primary) return 1;
             return (a.display_order || 0) - (b.display_order || 0);
         });
-        
+
         // Store sorted images for navigation
         globalThis.itemDetailsModalState.sortedImages = sortedImages;
 
         // Set main image
         var selectedIndex = globalThis.itemDetailsModalState.selectedImageIndex;
         var mainImage = sortedImages[selectedIndex] || sortedImages[0];
-        
+
         // Main image with primary badge overlay if applicable
-        var primaryBadge = mainImage.is_primary 
+        var primaryBadge = mainImage.is_primary
             ? `<span class="absolute top-3 left-3 bg-violet-600 text-white text-xs font-medium px-2.5 py-1 rounded-full shadow-lg flex items-center gap-1.5">
                     <svg class="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401z" clip-rule="evenodd" />
                     </svg>
                     Primary
-               </span>` 
+               </span>`
             : '';
-        
+
         // View type badge
-        var viewTypeBadge = mainImage.view_type 
+        var viewTypeBadge = mainImage.view_type
             ? `<span class="absolute bottom-3 left-3 bg-black/60 text-white text-xs font-medium px-2.5 py-1 rounded-full backdrop-blur-sm">
                     ${mainImage.view_type.charAt(0).toUpperCase() + mainImage.view_type.slice(1)} View
                </span>`
             : '';
-        
+
         mainImageContainer.innerHTML = `
             <div class="relative w-full h-full">
                 <img src="${mainImage.image_url}" alt="${mainImage.caption || 'Item photo'}" class="w-full h-full object-contain">
@@ -505,7 +510,7 @@
                 ${viewTypeBadge}
             </div>
         `;
-        
+
         // Show/hide navigation arrows based on image count
         if (sortedImages.length > 1) {
             // Show arrows (they will appear on hover due to CSS)
@@ -514,10 +519,10 @@
             nextBtn.classList.remove('hidden');
             nextBtn.classList.add('flex');
             imageCounter.classList.remove('hidden');
-            
+
             // Update counter
             imageCounter.textContent = `${selectedIndex + 1} / ${sortedImages.length}`;
-            
+
             // Disable prev button if at first image
             if (selectedIndex === 0) {
                 prevBtn.classList.add('opacity-30', 'cursor-not-allowed');
@@ -526,7 +531,7 @@
                 prevBtn.classList.remove('opacity-30', 'cursor-not-allowed');
                 prevBtn.classList.add('hover:bg-white', 'dark:hover:bg-neutral-700');
             }
-            
+
             // Disable next button if at last image
             if (selectedIndex === sortedImages.length - 1) {
                 nextBtn.classList.add('opacity-30', 'cursor-not-allowed');
@@ -547,10 +552,10 @@
         thumbnailsContainer.innerHTML = sortedImages.map((img, index) => {
             var isSelected = index === selectedIndex;
             var isPrimary = img.is_primary;
-            
+
             return `
-                <button 
-                    type="button" 
+                <button
+                    type="button"
                     onclick="selectDetailsImage(${index})"
                     class="relative flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden border-2 transition-all duration-200 ${isSelected ? 'border-violet-500 ring-2 ring-violet-500/30' : 'border-neutral-200 dark:border-neutral-700 hover:border-violet-400'}"
                     title="${img.view_type ? img.view_type.charAt(0).toUpperCase() + img.view_type.slice(1) + ' View' : 'Photo'}"
@@ -565,18 +570,18 @@
             `;
         }).join('');
     }
-    
+
     // Navigate to previous/next image
     function navigateDetailsImage(direction) {
         var sortedImages = globalThis.itemDetailsModalState.sortedImages || [];
         if (sortedImages.length <= 1) return;
-        
+
         var currentIndex = globalThis.itemDetailsModalState.selectedImageIndex;
         var newIndex = currentIndex + direction;
-        
+
         // Boundary checks
         if (newIndex < 0 || newIndex >= sortedImages.length) return;
-        
+
         globalThis.itemDetailsModalState.selectedImageIndex = newIndex;
         var images = globalThis.itemDetailsModalState.currentItem?.images || [];
         renderItemDetailsImages(images);
@@ -614,7 +619,7 @@
     function openEditFromDetails() {
         var itemId = globalThis.itemDetailsModalState.currentItemId;
         closeItemDetailsModal();
-        
+
         // Small delay to allow close animation
         setTimeout(() => {
             openEditItemModal(itemId);
@@ -624,15 +629,15 @@
     // Handle keyboard navigation
     document.addEventListener('keydown', function(e) {
         if (!globalThis.itemDetailsModalState.isOpen) return;
-        
+
         // Check if other modals are open (edit modal, status modal)
-        var otherModalsOpen = globalThis.editItemModalState?.isOpen || 
+        var otherModalsOpen = globalThis.editItemModalState?.isOpen ||
             document.getElementById('changeItemStatusModal')?.classList.contains('flex');
-        
+
         if (e.key === 'Escape' && !otherModalsOpen) {
             closeItemDetailsModal();
         }
-        
+
         // Arrow key navigation for images (only when no other modals are open)
         if (!otherModalsOpen) {
             if (e.key === 'ArrowLeft') {
