@@ -1,6 +1,16 @@
 <!doctype html>
 <html lang="en">
 <head>
+    {{-- Prevent flash of wrong theme --}}
+    <script>
+        (function() {
+            var savedMode = localStorage.getItem('darkMode');
+            var isDarkMode = savedMode !== null ? savedMode === 'true' : true;
+            if (isDarkMode) {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -229,6 +239,33 @@
                     Not yet
                 </div>
             </div>
+
+            <div class="rounded-2xl p-6 border border-neutral-200 bg-white dark:border-neutral-900 dark:bg-neutral-950/60 shadow-sm dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
+                <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
+                    Total Deposit Exposure
+                </div>
+                <div id="statTotalDepositExposure" class="text-3xl font-semibold text-cyan-600 dark:text-cyan-400 transition-colors duration-300 ease-in-out">
+                    ₱0
+                </div>
+            </div>
+
+            <div class="rounded-2xl p-6 border border-neutral-200 bg-white dark:border-neutral-900 dark:bg-neutral-950/60 shadow-sm dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
+                <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
+                    Items for Sale
+                </div>
+                <div id="statItemsForSale" class="text-3xl font-semibold text-pink-600 dark:text-pink-400 transition-colors duration-300 ease-in-out">
+                    0
+                </div>
+            </div>
+
+            <div class="rounded-2xl p-6 border border-neutral-200 bg-white dark:border-neutral-900 dark:bg-neutral-950/60 shadow-sm dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
+                <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
+                    Total Sale Value
+                </div>
+                <div id="statTotalSaleValue" class="text-3xl font-semibold text-teal-600 dark:text-teal-400 transition-colors duration-300 ease-in-out">
+                    ₱0
+                </div>
+            </div>
         </section>
 
         {{-- Charts Section --}}
@@ -369,6 +406,9 @@
          document.getElementById('statTotalValue').textContent = '₱' + (kpis.total_value || 0).toLocaleString();
          document.getElementById('statOccupancyRate').textContent = (kpis.occupancy_rate || 0) + '%';
          document.getElementById('statDamagedItems').textContent = kpis.damaged_items || 0;
+         document.getElementById('statTotalDepositExposure').textContent = '₱' + (kpis.total_deposit_exposure || 0).toLocaleString();
+         document.getElementById('statItemsForSale').textContent = kpis.items_for_sale || 0;
+         document.getElementById('statTotalSaleValue').textContent = '₱' + (kpis.total_sale_value || 0).toLocaleString();
      }
 
       function updateCharts(data) {
