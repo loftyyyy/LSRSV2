@@ -2,15 +2,7 @@
 <html lang="en">
 <head>
     {{-- Prevent flash of wrong theme --}}
-    <script>
-        (function() {
-            var savedMode = localStorage.getItem('darkMode');
-            var isDarkMode = savedMode !== null ? savedMode === 'true' : true;
-            document.documentElement.classList.toggle('dark', isDarkMode);
-            document.documentElement.style.colorScheme = isDarkMode ? 'dark' : 'light';
-            document.documentElement.style.backgroundColor = isDarkMode ? '#000000' : '#f5f5f5';
-        })();
-    </script>
+    @include('components.theme-init')
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard · Love &amp; Styles</title>
