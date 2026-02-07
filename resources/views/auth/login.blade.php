@@ -47,6 +47,9 @@
                 <span id="iconSun" class="hidden">
                     <x-icon name="sun" class="h-2.5 w-2.5" />
                 </span>
+                <span id="iconSystem" class="hidden">
+                    <x-icon name="monitor" class="h-2.5 w-2.5" />
+                </span>
             </span>
         </span>
         <span id="modeLabel" class="text-[11px]">Dark</span>
@@ -326,19 +329,56 @@
 
 <script>
     // Theme toggle
-    let isDarkMode = localStorage.getItem('darkMode') !== 'false';
-    if (isDarkMode) {
-        document.documentElement.classList.add('dark');
+    function getThemeState() {
+        if (globalThis.themeController && typeof globalThis.themeController.getState === 'function') {
+            return globalThis.themeController.getState();
+        }
+
+        return {
+            isDark: document.documentElement.classList.contains('dark'),
+            preference: null
+        };
     }
+
+    let themeState = getThemeState();
+
+    function updateToggleUI() {
+        var isDarkMode = !!themeState.isDark;
+        var preference = themeState.preference;
+        var label = preference === null ? 'System' : (isDarkMode ? 'Dark' : 'Light');
+        var knobPosition = preference === null ? 'translateX(7px)' : (isDarkMode ? 'translateX(14px)' : 'translateX(0)');
+
+        document.getElementById('modeLabel').textContent = label;
+        document.getElementById('iconMoon').classList.toggle('hidden', !isDarkMode || preference === null);
+        document.getElementById('iconSun').classList.toggle('hidden', isDarkMode || preference === null);
+        document.getElementById('iconSystem').classList.toggle('hidden', preference !== null);
+        document.getElementById('toggleKnob').style.transform = knobPosition;
+    }
+
     function toggleDarkMode() {
-        isDarkMode = !isDarkMode;
-        localStorage.setItem('darkMode', isDarkMode);
-        document.documentElement.classList.toggle('dark', isDarkMode);
-        document.getElementById('modeLabel').textContent = isDarkMode ? 'Dark' : 'Light';
-        document.getElementById('iconMoon').classList.toggle('hidden', !isDarkMode);
-        document.getElementById('iconSun').classList.toggle('hidden', isDarkMode);
-        document.getElementById('toggleKnob').style.transform = isDarkMode ? 'translateX(14px)' : 'translateX(0)';
+        if (globalThis.themeController && typeof globalThis.themeController.togglePreference === 'function') {
+            globalThis.themeController.togglePreference();
+        } else {
+            themeState = { isDark: !themeState.isDark, preference: themeState.isDark ? 'light' : 'dark' };
+            document.documentElement.classList.toggle('dark', themeState.isDark);
+            document.documentElement.style.colorScheme = themeState.isDark ? 'dark' : 'light';
+        }
+
+        themeState = getThemeState();
+        updateToggleUI();
     }
+
+    window.addEventListener('theme:changed', function (event) {
+        themeState = event && event.detail
+            ? {
+                isDark: event.detail.isDark,
+                preference: event.detail.preference
+            }
+            : getThemeState();
+        updateToggleUI();
+    });
+
+    updateToggleUI();
 
     // Password field toggles
     function togglePassword() {

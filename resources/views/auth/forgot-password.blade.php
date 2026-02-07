@@ -36,11 +36,14 @@
         >
             <span class="inline-flex h-5 w-8 items-center rounded-full bg-amber-500/20 dark:bg-violet-600/20 px-0.5 relative transition-all duration-300" id="toggleTrack">
                 <span class="flex h-4 w-4 items-center justify-center rounded-full bg-amber-400 dark:bg-violet-500 shadow-sm text-black dark:text-white transition-all duration-300 ease-in-out" id="toggleKnob" style="transform: translateX(12px);">
-                    <span id="iconMoon" class="block dark:block">
+                    <span id="iconMoon" class="block">
                         <x-icon name="moon" class="h-2.5 w-2.5" />
                     </span>
-                    <span id="iconSun" class="hidden dark:hidden">
+                    <span id="iconSun" class="hidden">
                         <x-icon name="sun" class="h-2.5 w-2.5" />
+                    </span>
+                    <span id="iconSystem" class="hidden">
+                        <x-icon name="monitor" class="h-2.5 w-2.5" />
                     </span>
                 </span>
             </span>
@@ -107,62 +110,74 @@
 
     {{-- Theme Script --}}
     <script>
-        let isDarkMode;
+        function getThemeState() {
+            if (globalThis.themeController && typeof globalThis.themeController.getState === 'function') {
+                return globalThis.themeController.getState();
+            }
 
-        // Initialize theme on page load
-        const savedMode = localStorage.getItem('darkMode');
-
-        if (savedMode !== null) {
-            isDarkMode = savedMode === 'true';
-        } else {
-            // Default to dark mode
-            isDarkMode = true;
-            localStorage.setItem('darkMode', 'true');
+            return {
+                isDark: document.documentElement.classList.contains('dark'),
+                preference: null
+            };
         }
 
-        // Apply theme immediately
-        if (isDarkMode) {
-            document.documentElement.classList.add('dark');
-        } else {
-            document.documentElement.classList.remove('dark');
-        }
+        let themeState = getThemeState();
 
         // Update UI after DOM is ready
         window.addEventListener('DOMContentLoaded', function () {
-            updateToggleUI(isDarkMode);
+            updateToggleUI(themeState);
         });
 
         function toggleDarkMode() {
-            isDarkMode = !isDarkMode;
-            localStorage.setItem('darkMode', isDarkMode.toString());
-
-            if (isDarkMode) {
-                document.documentElement.classList.add('dark');
+            if (globalThis.themeController && typeof globalThis.themeController.togglePreference === 'function') {
+                globalThis.themeController.togglePreference();
             } else {
-                document.documentElement.classList.remove('dark');
+                themeState = { isDark: !themeState.isDark, preference: themeState.isDark ? 'light' : 'dark' };
+                document.documentElement.classList.toggle('dark', themeState.isDark);
+                document.documentElement.style.colorScheme = themeState.isDark ? 'dark' : 'light';
             }
 
-            updateToggleUI(isDarkMode);
+            themeState = getThemeState();
+            updateToggleUI(themeState);
         }
 
-        function updateToggleUI(dark) {
+        window.addEventListener('theme:changed', function (event) {
+            themeState = event && event.detail
+                ? {
+                    isDark: event.detail.isDark,
+                    preference: event.detail.preference
+                }
+                : getThemeState();
+            updateToggleUI(themeState);
+        });
+
+        function updateToggleUI(state) {
             const knob = document.getElementById('toggleKnob');
             const modeLabel = document.getElementById('modeLabel');
             const moonIcon = document.getElementById('iconMoon');
             const sunIcon = document.getElementById('iconSun');
+            const systemIcon = document.getElementById('iconSystem');
+            const isDark = !!state.isDark;
+            const preference = state.preference;
 
-            if (dark) {
-                // Dark Mode Active
+            if (preference === null) {
+                knob.style.transform = 'translateX(6px)';
+                modeLabel.textContent = 'System';
+                moonIcon.classList.add('hidden');
+                sunIcon.classList.add('hidden');
+                systemIcon.classList.remove('hidden');
+            } else if (isDark) {
                 knob.style.transform = 'translateX(12px)';
                 modeLabel.textContent = 'Dark';
                 moonIcon.classList.remove('hidden');
                 sunIcon.classList.add('hidden');
+                systemIcon.classList.add('hidden');
             } else {
-                // Light Mode Active
                 knob.style.transform = 'translateX(0)';
                 modeLabel.textContent = 'Light';
                 moonIcon.classList.add('hidden');
                 sunIcon.classList.remove('hidden');
+                systemIcon.classList.add('hidden');
             }
         }
     </script>

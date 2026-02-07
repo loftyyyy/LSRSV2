@@ -43,28 +43,15 @@ html:not(.dark) input:-webkit-autofill {
     -webkit-box-shadow: 0 0 0px 1000px #000000 inset;
 }
 
-/* Smooth theme transition for all elements */
-*,
-*::before,
-*::after {
-    transition:
-        background-color 200ms ease-out,
-        border-color 200ms ease-out,
-        color 200ms ease-out,
-        fill 200ms ease-out,
-        stroke 200ms ease-out,
-        box-shadow 200ms ease-out;
-}
-
-/* Exclude elements that shouldn't transition (performance optimization) */
+/* Keep theme transitions opt-in to avoid page-load flicker */
+.theme-transition,
+.theme-transition::before,
+.theme-transition::after,
+a,
+button,
 input,
 textarea,
-select,
-button,
-a,
-[data-no-transition],
-.no-theme-transition,
-.no-theme-transition * {
+select {
     transition:
         background-color 200ms ease-out,
         border-color 200ms ease-out,

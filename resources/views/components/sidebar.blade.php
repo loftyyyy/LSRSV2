@@ -58,12 +58,16 @@
             <span class="flex items-center gap-2">
                 <span class="inline-flex h-6 w-10 items-center rounded-full bg-amber-500/20 dark:bg-violet-600/20 px-0.5 relative transition-all duration-300" id="toggleTrack">
                     <span class="flex h-5 w-5 items-center justify-center rounded-full bg-amber-400 dark:bg-violet-500 shadow-sm text-black dark:text-white transition-all duration-300 ease-in-out" id="toggleKnob" style="transform: translateX(16px);">
-                        <span id="iconMoon" class="block dark:block">
+                        <span id="iconMoon" class="block">
                             <x-icon name="moon" class="h-3 w-3" />
                         </span>
 
-                        <span id="iconSun" class="hidden dark:hidden">
+                        <span id="iconSun" class="hidden">
                             <x-icon name="sun" class="h-3 w-3" />
+                        </span>
+
+                        <span id="iconSystem" class="hidden">
+                            <x-icon name="monitor" class="h-3 w-3" />
                         </span>
                     </span>
                 </span>
@@ -97,73 +101,78 @@
     >
 
     <script>
-        // Use globalThis to store isDarkMode to prevent redeclaration on page navigation
-        if (typeof globalThis.isDarkMode === 'undefined' || globalThis.isDarkMode === null) {
-            var savedMode = localStorage.getItem('darkMode');
-
-            if (savedMode !== null) {
-                // User preference exists
-                globalThis.isDarkMode = savedMode === 'true';
-            } else {
-                // Default to dark mode (as per your requirement)
-                globalThis.isDarkMode = true;
-                localStorage.setItem('darkMode', 'true');
+        function getThemeState() {
+            if (globalThis.themeController && typeof globalThis.themeController.getState === 'function') {
+                return globalThis.themeController.getState();
             }
+
+            return {
+                isDark: document.documentElement.classList.contains('dark'),
+                preference: null
+            };
         }
 
-        // Keep global state in sync with the current root class.
-        // The class is applied very early in each page head to avoid theme flash.
-        globalThis.isDarkMode = document.documentElement.classList.contains('dark');
-
         window.addEventListener('DOMContentLoaded', function () {
-            updateToggleUI(globalThis.isDarkMode);
+            updateToggleUI(getThemeState());
+        });
+
+        window.addEventListener('theme:changed', function (event) {
+            var state = event && event.detail
+                ? {
+                    isDark: event.detail.isDark,
+                    preference: event.detail.preference
+                }
+                : getThemeState();
+
+            updateToggleUI(state);
         });
 
         function toggleDarkMode() {
-            globalThis.isDarkMode = !globalThis.isDarkMode;
-            localStorage.setItem('darkMode', globalThis.isDarkMode.toString());
-
-            if (globalThis.isDarkMode) {
-                document.documentElement.classList.add('dark');
-                document.documentElement.style.colorScheme = 'dark';
-                document.documentElement.style.backgroundColor = '#000000';
+            if (globalThis.themeController && typeof globalThis.themeController.togglePreference === 'function') {
+                globalThis.themeController.togglePreference();
             } else {
-                document.documentElement.classList.remove('dark');
-                document.documentElement.style.colorScheme = 'light';
-                document.documentElement.style.backgroundColor = '#f5f5f5';
+                var isDark = !document.documentElement.classList.contains('dark');
+                document.documentElement.classList.toggle('dark', isDark);
+                updateToggleUI({ isDark: isDark, preference: isDark ? 'dark' : 'light' });
             }
 
-            updateToggleUI(globalThis.isDarkMode);
+            updateToggleUI(getThemeState());
         }
 
-        function updateToggleUI(dark) {
+        function updateToggleUI(state) {
             const knob = document.getElementById('toggleKnob');
-            const track = document.getElementById('toggleTrack');
             const modeLabel = document.getElementById('modeLabel');
             const modeStatus = document.getElementById('modeStatus');
             const moonIcon = document.getElementById('iconMoon');
             const sunIcon = document.getElementById('iconSun');
+            const systemIcon = document.getElementById('iconSystem');
+            const isDark = !!state.isDark;
+            const preference = state.preference;
 
-            if (dark) {
-                // Dark Mode Active
+            if (preference === null) {
+                knob.style.transform = 'translateX(8px)';
+                modeLabel.textContent = 'System Mode';
+                modeStatus.textContent = isDark ? 'Dark' : 'Light';
+
+                moonIcon.classList.add('hidden');
+                sunIcon.classList.add('hidden');
+                systemIcon.classList.remove('hidden');
+            } else if (isDark) {
                 knob.style.transform = 'translateX(16px)';
-
                 modeLabel.textContent = 'Dark Mode';
                 modeStatus.textContent = 'On';
 
-                // Show moon icon
                 moonIcon.classList.remove('hidden');
                 sunIcon.classList.add('hidden');
+                systemIcon.classList.add('hidden');
             } else {
-                // Light Mode Active
                 knob.style.transform = 'translateX(0)';
-
                 modeLabel.textContent = 'Light Mode';
                 modeStatus.textContent = 'Off';
 
-                // Show sun icon
                 moonIcon.classList.add('hidden');
                 sunIcon.classList.remove('hidden');
+                systemIcon.classList.add('hidden');
             }
         }
     </script>
