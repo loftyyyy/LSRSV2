@@ -27,6 +27,7 @@
 
             <a
                 href="{{ route($item['route']) }}"
+                data-turbo="false"
                 class="group flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200
                        {{ $isActive
                             ? 'bg-violet-600 dark:text-neutral-900 text-neutral-100 shadow-[0_0_0_1px_rgba(167,139,250,0.7)]'
