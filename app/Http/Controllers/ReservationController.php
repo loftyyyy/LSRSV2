@@ -161,10 +161,17 @@ class ReservationController extends Controller
         // Search functionality
         if ($request->has('search')) {
             $search = $request->get('search');
-            $query->whereHas('customer', function ($customerQuery) use ($search) {
-                $customerQuery->where('first_name', 'like', "%{$search}%")
-                    ->orWhere('last_name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%");
+            $query->where(function ($q) use ($search) {
+                $q->where('reservation_id', 'like', "%{$search}%")
+                    ->orWhereHas('customer', function ($customerQuery) use ($search) {
+                        $customerQuery->where('first_name', 'like', "%{$search}%")
+                            ->orWhere('last_name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('items.item', function ($itemQuery) use ($search) {
+                        $itemQuery->where('name', 'like', "%{$search}%")
+                            ->orWhere('sku', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -176,6 +183,14 @@ class ReservationController extends Controller
         // Filter by status
         if ($request->has('status_id')) {
             $query->where('status_id', $request->get('status_id'));
+        }
+
+        // Filter by status name
+        if ($request->has('status')) {
+            $statusName = $request->get('status');
+            $query->whereHas('status', function ($statusQuery) use ($statusName) {
+                $statusQuery->whereRaw('LOWER(status_name) = ?', [strtolower($statusName)]);
+            });
         }
 
         // Filter by date range
@@ -192,9 +207,14 @@ class ReservationController extends Controller
             $query->where('end_date', '<=', $request->get('end_date_to'));
         }
 
+        // Sort
+        $sortBy = $request->get('sort_by', 'created_at');
+        $sortOrder = $request->get('sort_order', 'desc');
+        $query->orderBy($sortBy, $sortOrder);
+
         // Pagination
         $perPage = $request->get('per_page', 15);
-        $reservations = $query->orderBy('created_at', 'desc')->paginate($perPage);
+        $reservations = $query->paginate($perPage);
 
         return response()->json($reservations);
     }
