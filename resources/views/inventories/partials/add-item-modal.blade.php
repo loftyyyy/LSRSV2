@@ -155,15 +155,29 @@
 
                     {{-- Selling Price --}}
                     <div class="space-y-2">
-                        <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Selling Price (PHP) <span class="text-neutral-400 text-xs">(Optional)</span></label>
+                        <div class="flex items-center justify-between gap-2">
+                            <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Selling Price (PHP) <span class="text-neutral-400 text-xs">(Optional)</span></label>
+                            <label for="addItemIsSellable" class="inline-flex items-center gap-2 text-xs font-medium text-neutral-600 dark:text-neutral-400 cursor-pointer select-none">
+                                <input
+                                    type="checkbox"
+                                    id="addItemIsSellable"
+                                    name="is_sellable"
+                                    value="1"
+                                    class="h-4 w-4 rounded border-neutral-300 text-violet-600 focus:ring-violet-500 dark:border-neutral-700 dark:bg-black/60"
+                                />
+                                <span>Sellable</span>
+                            </label>
+                        </div>
                         <div class="flex items-center rounded-2xl bg-white px-3 py-2.5 border border-neutral-300 focus-within:border-neutral-500 dark:border-neutral-800 dark:bg-black/60 transition-colors duration-300 ease-in-out">
                             <span class="text-neutral-500 mr-2">₱</span>
                             <input
                                 type="number"
+                                id="addItemSellingPrice"
                                 name="selling_price"
                                 step="0.01"
                                 min="0"
                                 placeholder="0.00"
+                                disabled
                                 class="w-full bg-transparent text-xs text-neutral-700 placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500 focus:outline-none transition-colors duration-300 ease-in-out"
                             />
                         </div>
@@ -368,6 +382,7 @@
 
         // Reset form
         document.getElementById('addItemForm').reset();
+        syncSellableState();
         clearImagePreviews();
         hideMessages();
     }
@@ -381,6 +396,7 @@
 
         // Reset form and state
         document.getElementById('addItemForm').reset();
+        syncSellableState();
         clearImagePreviews();
         hideMessages();
         globalThis.addItemModalState.isSubmitting = false;
@@ -391,6 +407,21 @@
     function hideMessages() {
         document.getElementById('addItemError').classList.add('hidden');
         document.getElementById('addItemSuccess').classList.add('hidden');
+    }
+
+    function syncSellableState() {
+        var isSellableCheckbox = document.getElementById('addItemIsSellable');
+        var sellingPriceInput = document.getElementById('addItemSellingPrice');
+        var isSellable = isSellableCheckbox.checked;
+
+        sellingPriceInput.disabled = !isSellable;
+        if (!isSellable) {
+            sellingPriceInput.value = '';
+        }
+
+        var wrapper = sellingPriceInput.parentElement;
+        wrapper.classList.toggle('opacity-60', !isSellable);
+        wrapper.classList.toggle('cursor-not-allowed', !isSellable);
     }
 
     // Show error message
@@ -586,6 +617,19 @@
             }
         }
 
+        var isSellable = formData.get('is_sellable') === '1';
+        var sellingPrice = formData.get('selling_price');
+        if (isSellable) {
+            if (!sellingPrice || sellingPrice.trim() === '') {
+                errors.push('Selling price is required when item is marked as sellable');
+            } else {
+                var parsedSellingPrice = parseFloat(sellingPrice);
+                if (isNaN(parsedSellingPrice) || parsedSellingPrice < 0) {
+                    errors.push('Please enter a valid selling price');
+                }
+            }
+        }
+
         return errors;
     }
 
@@ -622,8 +666,11 @@
             payload.append('rental_price', parseFloat(formData.get('rental_price')));
 
             // Optional pricing fields
+            var isSellable = formData.get('is_sellable') === '1';
+            payload.append('is_sellable', isSellable ? 1 : 0);
+
             var sellingPrice = formData.get('selling_price');
-            if (sellingPrice && sellingPrice.trim() !== '') {
+            if (isSellable && sellingPrice && sellingPrice.trim() !== '') {
                 payload.append('selling_price', parseFloat(sellingPrice));
             }
 
@@ -684,4 +731,7 @@
             closeAddItemModal();
         }
     });
+
+    document.getElementById('addItemIsSellable').addEventListener('change', syncSellableState);
+    syncSellableState();
 </script>

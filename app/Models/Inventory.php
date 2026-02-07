@@ -19,6 +19,7 @@ class Inventory extends Model
         'color',
         'design',
         'rental_price',
+        'is_sellable',
         'selling_price',
         'deposit_amount',
         'status_id',
@@ -27,6 +28,7 @@ class Inventory extends Model
 
     protected $casts = [
         'rental_price' => 'decimal:2',
+        'is_sellable' => 'boolean',
         'selling_price' => 'decimal:2',
         'deposit_amount' => 'decimal:2',
     ];
