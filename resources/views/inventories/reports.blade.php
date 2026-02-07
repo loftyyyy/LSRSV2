@@ -321,11 +321,13 @@
                             <th class="py-2.5 pr-4 font-medium">Color</th>
                             <th class="py-2.5 pr-4 font-medium">Status</th>
                             <th class="py-2.5 pr-4 font-medium">Rental Price</th>
+                            <th class="py-2.5 pr-4 font-medium">Deposit</th>
+                            <th class="py-2.5 pr-4 font-medium">Selling Price</th>
                         </tr>
                         </thead>
                         <tbody id="reportTableBody" class="text-[13px]">
                             <tr class="border-b border-neutral-200 dark:border-neutral-900/60">
-                                <td colspan="7" class="py-8 text-center text-neutral-500 dark:text-neutral-400">
+                                <td colspan="9" class="py-8 text-center text-neutral-500 dark:text-neutral-400">
                                     Click "Generate Report" to view inventory details
                                 </td>
                             </tr>
@@ -681,7 +683,7 @@
         if (!items || items.length === 0) {
             tbody.innerHTML = `
                 <tr class="border-b border-neutral-200 dark:border-neutral-900/60">
-                    <td colspan="7" class="py-8 text-center text-neutral-500 dark:text-neutral-400">
+                    <td colspan="9" class="py-8 text-center text-neutral-500 dark:text-neutral-400">
                         No items found for the selected filters
                     </td>
                 </tr>
@@ -705,6 +707,14 @@
                 : 'bg-red-500';
 
             const itemType = item.item_type ? item.item_type.charAt(0).toUpperCase() + item.item_type.slice(1) : 'N/A';
+            
+            // Format deposit and selling price (show "-" if null or 0)
+            const depositDisplay = item.deposit_amount && item.deposit_amount > 0 
+                ? '₱' + item.deposit_amount.toLocaleString() 
+                : '-';
+            const sellingPriceDisplay = item.selling_price && item.selling_price > 0 
+                ? '₱' + item.selling_price.toLocaleString() 
+                : '-';
 
             return `
                 <tr class="border-b border-neutral-200 hover:bg-neutral-100 dark:border-neutral-900/60 dark:hover:bg-white/5 transition-colors">
@@ -717,9 +727,11 @@
                         <span class="inline-flex items-center rounded-full ${statusColor} px-2 py-1 text-[10px] font-medium border">
                             <span class="mr-1 h-1.5 w-1.5 rounded-full ${statusBgColor}"></span>
                             ${statusName.charAt(0).toUpperCase() + statusName.slice(1)}
-                        </span>
+                            </span>
                     </td>
                     <td class="py-3.5 pr-4 font-geist-mono">₱${(item.rental_price || 0).toLocaleString()}</td>
+                    <td class="py-3.5 pr-4 font-geist-mono text-neutral-500">${depositDisplay}</td>
+                    <td class="py-3.5 pr-4 font-geist-mono text-neutral-500">${sellingPriceDisplay}</td>
                 </tr>
             `;
         }).join('');
