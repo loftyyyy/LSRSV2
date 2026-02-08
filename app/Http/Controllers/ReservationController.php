@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\Reservation;
 use App\Models\Inventory;
 use App\Models\ReservationItem;
@@ -36,6 +37,12 @@ class ReservationController extends Controller
         // Filter by status
         if ($request->has('status_id')) {
             $query->where('status_id', $request->get('status_id'));
+        }
+        if ($request->has('status')) {
+            $statusName = $request->get('status');
+            $query->whereHas('status', function ($statusQuery) use ($statusName) {
+                $statusQuery->whereRaw('LOWER(status_name) = ?', [strtolower($statusName)]);
+            });
         }
 
         // Filter by customer
@@ -83,7 +90,7 @@ class ReservationController extends Controller
         return response()->json([
             'summary' => $summary,
             'reservations' => $reservations,
-            'filters' => $request->only(['start_date', 'end_date', 'status_id', 'customer_id', 'reserved_by'])
+            'filters' => $request->only(['start_date', 'end_date', 'status_id', 'status', 'customer_id', 'reserved_by'])
         ]);
     }
 
@@ -103,6 +110,12 @@ class ReservationController extends Controller
         }
         if ($request->has('status_id')) {
             $query->where('status_id', $request->get('status_id'));
+        }
+        if ($request->has('status')) {
+            $statusName = $request->get('status');
+            $query->whereHas('status', function ($statusQuery) use ($statusName) {
+                $statusQuery->whereRaw('LOWER(status_name) = ?', [strtolower($statusName)]);
+            });
         }
         if ($request->has('customer_id')) {
             $query->where('customer_id', $request->get('customer_id'));
@@ -130,7 +143,7 @@ class ReservationController extends Controller
             }),
         ];
 
-        $filters = $request->only(['start_date', 'end_date', 'status_id', 'customer_id', 'reserved_by']);
+        $filters = $request->only(['start_date', 'end_date', 'status_id', 'status', 'customer_id', 'reserved_by']);
 
         // Generate PDF
         $pdf = Pdf::loadView('reports.reservations', [
@@ -150,6 +163,14 @@ class ReservationController extends Controller
     public function showReservationPage(): View
     {
         return view('reservations.index');
+    }
+
+    /**
+     * Display Reservation Reports Page
+     */
+    public function showReportsPage(): View
+    {
+        return view('reservations.reports');
     }
     /**
      * Display a listing of the resource.

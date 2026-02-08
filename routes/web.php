@@ -39,6 +39,7 @@ Route::middleware(['guest'])->group(function () {
        Route::get('/inventories', [InventoryController::class, 'showInventoryPage'])->name('inventories');
        Route::get('/inventories/reports', [InventoryController::class, 'showReportsPage'])->name('inventories.reports');
        Route::get('/reservations', [ReservationController::class, 'showReservationPage'])->name('reservations');
+       Route::get('/reservations/reports', [ReservationController::class, 'showReportsPage'])->name('reservations.reports');
        Route::get('/rentals', [RentalController::class, 'showRentalPage'])->name('rentals');
        Route::get('/rentals/reports', [RentalController::class, 'showReportsPage'])->name('rentals.reports');
        Route::get('/invoices', [InvoiceController::class, 'showInvoicePage'])->name('invoices');

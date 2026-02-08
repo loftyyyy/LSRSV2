@@ -40,12 +40,12 @@
             </div>
 
             <div class="flex items-center gap-3 text-xs">
-                <button type="button" onclick="openReservationReportsModal()" class="inline-flex items-center gap-2 rounded-xl border border-neutral-300 bg-white px-3.5 py-2 text-neutral-700 hover:bg-violet-600 dark:hover:text-black hover:text-white dark:border-neutral-800 dark:bg-neutral-950/80 dark:text-neutral-200 transition-colors duration-300 ease-in-out">
+                <a href="/reservations/reports" class="inline-flex items-center gap-2 rounded-xl border border-neutral-300 bg-white px-3.5 py-2 text-neutral-700 hover:bg-violet-600 dark:hover:text-black hover:text-white dark:border-neutral-800 dark:bg-neutral-950/80 dark:text-neutral-200 transition-colors duration-300 ease-in-out">
                     <span class="inline-flex h-5 w-5 items-center justify-center rounded-md">
                         <x-icon name="chart-column" class="h-4 w-4" />
                     </span>
                     <span class="text-[14px] font-medium tracking-wide">Reports</span>
-                </button>
+                </a>
 
                 <button type="button" onclick="openBrowseItemsModal()" class="inline-flex items-center gap-2 rounded-xl border border-neutral-300 bg-white px-3.5 py-2 text-neutral-700 hover:bg-violet-600 dark:hover:text-black hover:text-white dark:border-neutral-800 dark:bg-neutral-950/80 dark:text-neutral-200 transition-colors duration-300 ease-in-out">
                     <span class="inline-flex h-5 w-5 items-center justify-center rounded-md">
@@ -191,9 +191,6 @@
     </section>
 </main>
 
-{{-- Reservation Reports Modal --}}
-@include('reservations.partials.reports-modal')
-
 {{-- Browse Items Modal --}}
 @include('reservations.partials.browse-items-modal')
 
@@ -221,20 +218,6 @@
     };
 
     var searchDebounceTimer;
-
-    if (!globalThis.reservationReportsModalState) {
-        globalThis.reservationReportsModalState = {
-            isOpen: false,
-            isLoading: false,
-            summary: null,
-            filters: {
-                start_date: '',
-                end_date: ''
-            }
-        };
-    }
-
-    var reservationReportsModalState = globalThis.reservationReportsModalState;
 
     function initializeReservationPage() {
         var searchInput = document.getElementById('searchInput');
@@ -648,170 +631,6 @@
             fetchReservations();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
-    }
-
-    function openReservationReportsModal() {
-        reservationReportsModalState.isOpen = true;
-        var modal = document.getElementById('reservationReportsModal');
-        if (!modal) {
-            return;
-        }
-
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-
-        var startInput = document.getElementById('reportsStartDate');
-        var endInput = document.getElementById('reportsEndDate');
-
-        if (startInput) {
-            startInput.value = reservationReportsModalState.filters.start_date || '';
-        }
-        if (endInput) {
-            endInput.value = reservationReportsModalState.filters.end_date || '';
-        }
-
-        fetchReservationReports();
-    }
-
-    function closeReservationReportsModal() {
-        reservationReportsModalState.isOpen = false;
-        var modal = document.getElementById('reservationReportsModal');
-        if (!modal) {
-            return;
-        }
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-    }
-
-    function applyReservationReportsFilters() {
-        var startInput = document.getElementById('reportsStartDate');
-        var endInput = document.getElementById('reportsEndDate');
-
-        reservationReportsModalState.filters.start_date = startInput && startInput.value ? startInput.value : '';
-        reservationReportsModalState.filters.end_date = endInput && endInput.value ? endInput.value : '';
-
-        fetchReservationReports();
-    }
-
-    function buildReservationReportsParams() {
-        var params = new URLSearchParams();
-        if (reservationReportsModalState.filters.start_date) {
-            params.append('start_date', reservationReportsModalState.filters.start_date);
-        }
-        if (reservationReportsModalState.filters.end_date) {
-            params.append('end_date', reservationReportsModalState.filters.end_date);
-        }
-        return params;
-    }
-
-    function updateReservationReportsExportLink(params) {
-        var exportBtn = document.getElementById('reservationReportsExportBtn');
-        if (!exportBtn) {
-            return;
-        }
-        var query = params.toString();
-        exportBtn.href = '/api/reservations/reports/pdf' + (query ? ('?' + query) : '');
-    }
-
-    async function fetchReservationReports() {
-        if (reservationReportsModalState.isLoading) {
-            return;
-        }
-
-        var loadingEl = document.getElementById('reservationReportsLoading');
-        var dataEl = document.getElementById('reservationReportsData');
-        if (loadingEl) {
-            loadingEl.classList.remove('hidden');
-        }
-        if (dataEl) {
-            dataEl.classList.add('hidden');
-        }
-
-        reservationReportsModalState.isLoading = true;
-
-        try {
-            var params = buildReservationReportsParams();
-            updateReservationReportsExportLink(params);
-
-            var response = await axios.get('/api/reservations/reports/generate?' + params.toString());
-            reservationReportsModalState.summary = response.data && response.data.summary ? response.data.summary : {};
-
-            renderReservationReportsSummary(reservationReportsModalState.summary);
-
-            if (loadingEl) {
-                loadingEl.classList.add('hidden');
-            }
-            if (dataEl) {
-                dataEl.classList.remove('hidden');
-            }
-        } catch (error) {
-            if (loadingEl) {
-                loadingEl.classList.add('hidden');
-            }
-            if (dataEl) {
-                dataEl.classList.remove('hidden');
-            }
-            showErrorNotification('Failed to load reservation reports.');
-            console.error('Error loading reservation reports:', error);
-        } finally {
-            reservationReportsModalState.isLoading = false;
-        }
-    }
-
-    function renderKeyValueRows(targetId, record, formatter) {
-        var el = document.getElementById(targetId);
-        if (!el) {
-            return;
-        }
-
-        var entries = record && typeof record === 'object' ? Object.entries(record) : [];
-        if (!entries.length) {
-            el.innerHTML = '<p class="text-xs text-neutral-500 dark:text-neutral-400">No data available</p>';
-            return;
-        }
-
-        el.innerHTML = entries.map(function(entry) {
-            var key = entry[0];
-            var value = entry[1];
-            var label = formatter ? formatter(key) : key;
-            return '<div class="flex items-center justify-between rounded-lg px-2.5 py-2 bg-neutral-50 dark:bg-neutral-900/50"><span class="truncate pr-3">' + label + '</span><span class="font-medium text-neutral-800 dark:text-neutral-100">' + Number(value || 0).toLocaleString() + '</span></div>';
-        }).join('');
-    }
-
-    function renderReservationReportsSummary(summary) {
-        var totalReservations = summary.total_reservations || 0;
-        var totalItems = summary.total_items_reserved || 0;
-        var totalRevenue = summary.total_revenue || 0;
-        var averageItems = summary.average_items_per_reservation || 0;
-
-        var totalReservationsEl = document.getElementById('reportsTotalReservations');
-        var totalItemsEl = document.getElementById('reportsTotalItems');
-        var totalRevenueEl = document.getElementById('reportsTotalRevenue');
-        var averageItemsEl = document.getElementById('reportsAverageItems');
-
-        if (totalReservationsEl) totalReservationsEl.textContent = Number(totalReservations).toLocaleString();
-        if (totalItemsEl) totalItemsEl.textContent = Number(totalItems).toLocaleString();
-        if (totalRevenueEl) totalRevenueEl.textContent = '₱' + Number(totalRevenue).toLocaleString();
-        if (averageItemsEl) averageItemsEl.textContent = Number(averageItems).toLocaleString();
-
-        renderKeyValueRows('reportsByStatus', summary.by_status, function(key) {
-            return String(key || 'Unknown').charAt(0).toUpperCase() + String(key || 'Unknown').slice(1);
-        });
-
-        renderKeyValueRows('reportsByMonth', summary.by_month, function(key) {
-            var parts = String(key || '').split('-');
-            if (parts.length === 2) {
-                var date = new Date(Number(parts[0]), Number(parts[1]) - 1, 1);
-                if (!isNaN(date.getTime())) {
-                    return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-                }
-            }
-            return key || 'Unknown';
-        });
-
-        renderKeyValueRows('reportsByClerk', summary.by_clerk, function(key) {
-            return key || 'Unknown Clerk';
-        });
     }
 
     if (!globalThis.browseItemsModalState) {
@@ -1366,27 +1185,9 @@
         });
     }
 
-    function initializeReservationReportsModal() {
-        var modal = document.getElementById('reservationReportsModal');
-        if (modal) {
-            modal.addEventListener('click', function(e) {
-                if (e.target === modal && reservationReportsModalState.isOpen) {
-                    closeReservationReportsModal();
-                }
-            });
-        }
-
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && reservationReportsModalState.isOpen) {
-                closeReservationReportsModal();
-            }
-        });
-    }
-
     document.addEventListener('DOMContentLoaded', function() {
         initializeReservationPage();
         initializeBrowseItemsModal();
-        initializeReservationReportsModal();
     });
 </script>
 </body>
