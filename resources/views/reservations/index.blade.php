@@ -47,7 +47,7 @@
                     <span class="text-[14px] font-medium tracking-wide">Reports</span>
                 </button>
 
-                <button type="button" class="inline-flex items-center gap-2 rounded-xl border border-neutral-300 bg-white px-3.5 py-2 text-neutral-700 hover:bg-violet-600 dark:hover:text-black hover:text-white dark:border-neutral-800 dark:bg-neutral-950/80 dark:text-neutral-200 transition-colors duration-300 ease-in-out">
+                <button type="button" onclick="openBrowseItemsModal()" class="inline-flex items-center gap-2 rounded-xl border border-neutral-300 bg-white px-3.5 py-2 text-neutral-700 hover:bg-violet-600 dark:hover:text-black hover:text-white dark:border-neutral-800 dark:bg-neutral-950/80 dark:text-neutral-200 transition-colors duration-300 ease-in-out">
                     <span class="inline-flex h-5 w-5 items-center justify-center rounded-md">
                         <x-icon name="eye" class="h-4 w-4" />
                     </span>
@@ -190,6 +190,57 @@
         </div>
     </section>
 </main>
+
+{{-- Browse Items Modal --}}
+<div id="browseItemsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center px-2 py-6 bg-black/60 backdrop-blur-sm overflow-y-auto">
+    <div class="w-full max-w-5xl bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-3xl shadow-2xl flex flex-col max-h-[calc(100vh-3rem)] my-auto">
+        <div class="flex-shrink-0 flex items-center justify-between px-6 py-4 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/80 rounded-t-3xl dark:bg-neutral-900/50">
+            <div>
+                <p class="text-xs uppercase tracking-[0.2em] text-neutral-500 dark:text-neutral-500">Browse</p>
+                <h3 class="text-lg font-semibold text-neutral-900 dark:text-white">Available Items</h3>
+            </div>
+            <button type="button" onclick="closeBrowseItemsModal()" class="text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 text-xl transition-colors duration-200">&times;</button>
+        </div>
+
+        <div class="flex-shrink-0 px-6 py-4 border-b border-neutral-200 dark:border-neutral-800">
+            <div class="flex items-center gap-3 rounded-2xl bg-white px-4 py-2.5 border border-neutral-300 focus-within:border-neutral-500 dark:border-neutral-800 dark:bg-black/60 transition-colors duration-300 ease-in-out">
+                <x-icon name="search" class="h-4 w-4 text-neutral-500 transition-colors duration-300 ease-in-out" />
+                <input
+                    type="text"
+                    id="browseItemsSearchInput"
+                    placeholder="Search items by name, SKU, type, color, or size..."
+                    class="w-full bg-transparent text-xs text-neutral-700 placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500 focus:outline-none transition-colors duration-300 ease-in-out"
+                />
+            </div>
+        </div>
+
+        <div class="flex-1 overflow-y-auto px-6 py-4">
+            <div id="browseItemsLoading" class="text-center py-12">
+                <div class="animate-spin h-7 w-7 border-2 border-violet-600 border-t-transparent rounded-full mx-auto"></div>
+                <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-3">Loading items...</p>
+            </div>
+
+            <div id="browseItemsEmpty" class="hidden text-center py-12">
+                <x-icon name="package" class="h-10 w-10 text-neutral-400 mx-auto mb-2" />
+                <p class="text-sm text-neutral-500 dark:text-neutral-400">No items found</p>
+            </div>
+
+            <div id="browseItemsGrid" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4">
+                {{-- Browse items are populated dynamically --}}
+            </div>
+        </div>
+
+        <div class="flex-shrink-0 px-6 py-4 border-t border-neutral-200 dark:border-neutral-800 bg-neutral-50/80 dark:bg-neutral-900/50 rounded-b-3xl">
+            <button
+                type="button"
+                onclick="closeBrowseItemsModal()"
+                class="w-full inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-[14px] font-medium border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-100 dark:border-neutral-800 dark:bg-neutral-950/80 dark:text-neutral-200 dark:hover:bg-neutral-900 transition-colors duration-100 ease-in-out"
+            >
+                Close
+            </button>
+        </div>
+    </div>
+</div>
 
 {{-- Include New Reservation Modal --}}
 @include('reservations.partials.new-reservation-modal')
@@ -627,7 +678,213 @@
         }
     }
 
-    document.addEventListener('DOMContentLoaded', initializeReservationPage);
+    if (!globalThis.browseItemsModalState) {
+        globalThis.browseItemsModalState = {
+            isOpen: false,
+            isLoading: false,
+            loaded: false,
+            items: [],
+            filteredItems: []
+        };
+    }
+
+    var browseItemsModalState = globalThis.browseItemsModalState;
+
+    function openBrowseItemsModal() {
+        browseItemsModalState.isOpen = true;
+
+        var modal = document.getElementById('browseItemsModal');
+        if (!modal) {
+            return;
+        }
+
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+
+        var searchInput = document.getElementById('browseItemsSearchInput');
+        if (searchInput) {
+            searchInput.value = '';
+        }
+
+        if (!browseItemsModalState.loaded) {
+            fetchBrowseItems();
+        } else {
+            browseItemsModalState.filteredItems = browseItemsModalState.items.slice();
+            renderBrowseItems();
+        }
+    }
+
+    function closeBrowseItemsModal() {
+        browseItemsModalState.isOpen = false;
+
+        var modal = document.getElementById('browseItemsModal');
+        if (!modal) {
+            return;
+        }
+
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+
+    async function fetchBrowseItems() {
+        if (browseItemsModalState.isLoading) {
+            return;
+        }
+
+        browseItemsModalState.isLoading = true;
+        toggleBrowseItemsState('loading');
+
+        try {
+            var response = await axios.get('/api/reservations/items/browse');
+            var responseData = response.data && response.data.data ? response.data.data : response.data;
+            var items = Array.isArray(responseData) ? responseData : (responseData && responseData.data ? responseData.data : []);
+
+            browseItemsModalState.items = items;
+            browseItemsModalState.filteredItems = items.slice();
+            browseItemsModalState.loaded = true;
+
+            renderBrowseItems();
+        } catch (error) {
+            console.error('Error fetching browse items:', error);
+            browseItemsModalState.items = [];
+            browseItemsModalState.filteredItems = [];
+            browseItemsModalState.loaded = true;
+            renderBrowseItems();
+        } finally {
+            browseItemsModalState.isLoading = false;
+        }
+    }
+
+    function toggleBrowseItemsState(state) {
+        var loadingEl = document.getElementById('browseItemsLoading');
+        var emptyEl = document.getElementById('browseItemsEmpty');
+        var gridEl = document.getElementById('browseItemsGrid');
+
+        if (!loadingEl || !emptyEl || !gridEl) {
+            return;
+        }
+
+        loadingEl.classList.toggle('hidden', state !== 'loading');
+        emptyEl.classList.toggle('hidden', state !== 'empty');
+        gridEl.classList.toggle('hidden', state !== 'grid');
+    }
+
+    function renderBrowseItems() {
+        var gridEl = document.getElementById('browseItemsGrid');
+        var emptyEl = document.getElementById('browseItemsEmpty');
+
+        if (!gridEl || !emptyEl) {
+            return;
+        }
+
+        var items = browseItemsModalState.filteredItems;
+        if (!Array.isArray(items) || items.length === 0) {
+            emptyEl.querySelector('p').textContent = browseItemsModalState.items.length
+                ? 'No items match your search'
+                : 'No items found';
+            toggleBrowseItemsState('empty');
+            gridEl.innerHTML = '';
+            return;
+        }
+
+        gridEl.innerHTML = items.map(function(item) {
+            var imageSource = item.images && item.images.length > 0
+                ? '/storage/' + item.images[0].image_path
+                : '';
+
+            var statusName = item.status && item.status.status_name
+                ? String(item.status.status_name).toLowerCase()
+                : 'available';
+
+            var statusClass = statusName === 'available'
+                ? 'bg-emerald-500/15 text-emerald-600 border-emerald-500/40 dark:text-emerald-300'
+                : statusName === 'rented'
+                ? 'bg-blue-500/15 text-blue-600 border-blue-500/40 dark:text-blue-300'
+                : statusName === 'maintenance'
+                ? 'bg-amber-500/15 text-amber-600 border-amber-500/40 dark:text-amber-300'
+                : 'bg-neutral-500/15 text-neutral-600 border-neutral-500/40 dark:text-neutral-300';
+
+            var statusLabel = statusName.charAt(0).toUpperCase() + statusName.slice(1);
+            var itemType = item.item_type ? (item.item_type.charAt(0).toUpperCase() + item.item_type.slice(1)) : 'Item';
+            var rentalPrice = Number(item.rental_price || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+            return '' +
+                '<div class="rounded-2xl border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900/30 p-4 transition-colors duration-300 ease-in-out">' +
+                    '<div class="flex items-start gap-4">' +
+                        '<div class="h-16 w-16 flex-shrink-0 rounded-xl border border-neutral-200 bg-neutral-100 dark:border-neutral-800 dark:bg-neutral-900 overflow-hidden flex items-center justify-center">' +
+                            (imageSource
+                                ? '<img src="' + imageSource + '" alt="' + (item.name || 'Item image') + '" class="h-full w-full object-cover" loading="lazy">'
+                                : '<svg class="h-6 w-6 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>') +
+                        '</div>' +
+                        '<div class="min-w-0 flex-1">' +
+                            '<div class="flex items-center justify-between gap-3">' +
+                                '<p class="text-sm font-semibold text-neutral-900 dark:text-white truncate">' + (item.name || 'Unnamed Item') + '</p>' +
+                                '<span class="inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium ' + statusClass + '">' + statusLabel + '</span>' +
+                            '</div>' +
+                            '<p class="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400 truncate">' + (item.sku || 'No SKU') + '</p>' +
+                            '<p class="mt-1 text-xs text-neutral-600 dark:text-neutral-300">' + itemType + ' · Size ' + (item.size || '-') + ' · ' + (item.color || '-') + '</p>' +
+                            '<p class="mt-2 text-sm font-semibold text-violet-600 dark:text-violet-400 font-geist-mono">₱' + rentalPrice + '<span class="text-xs font-normal text-neutral-500 dark:text-neutral-400"> / day</span></p>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>';
+        }).join('');
+
+        toggleBrowseItemsState('grid');
+    }
+
+    function filterBrowseItems(query) {
+        var normalizedQuery = String(query || '').trim().toLowerCase();
+
+        if (!normalizedQuery) {
+            browseItemsModalState.filteredItems = browseItemsModalState.items.slice();
+            renderBrowseItems();
+            return;
+        }
+
+        browseItemsModalState.filteredItems = browseItemsModalState.items.filter(function(item) {
+            return [
+                item.name,
+                item.sku,
+                item.item_type,
+                item.color,
+                item.size
+            ].some(function(value) {
+                return String(value || '').toLowerCase().indexOf(normalizedQuery) !== -1;
+            });
+        });
+
+        renderBrowseItems();
+    }
+
+    function initializeBrowseItemsModal() {
+        var searchInput = document.getElementById('browseItemsSearchInput');
+        var modal = document.getElementById('browseItemsModal');
+
+        if (searchInput) {
+            searchInput.addEventListener('input', function(e) {
+                filterBrowseItems(e.target.value);
+            });
+        }
+
+        if (modal) {
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal && browseItemsModalState.isOpen) {
+                    closeBrowseItemsModal();
+                }
+            });
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && browseItemsModalState.isOpen) {
+                closeBrowseItemsModal();
+            }
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeReservationPage();
+        initializeBrowseItemsModal();
+    });
 </script>
 </body>
 </html>
