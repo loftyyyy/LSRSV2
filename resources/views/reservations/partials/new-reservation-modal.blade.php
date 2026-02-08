@@ -26,23 +26,25 @@
                         {{-- Customer Selection --}}
                         <div class="space-y-2">
                             <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Customer *</label>
-                            <div class="flex items-center rounded-2xl bg-white px-3 py-2.5 border border-neutral-300 focus-within:border-neutral-500 dark:border-neutral-800 dark:bg-black/60 transition-colors duration-300 ease-in-out">
-                                <x-icon name="user" class="h-4 w-4 text-neutral-500 mr-2 transition-colors duration-300 ease-in-out dark:text-neutral-400" />
-                                <select
-                                    name="customer_id"
-                                    id="customerSelect"
-                                    required
-                                    class="flex-1 min-w-0 bg-transparent text-xs text-neutral-700 placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500 focus:outline-none transition-colors duration-300 ease-in-out"
-                                >
-                                    <option value="">Select a customer</option>
-                                    {{-- Options will be populated via JavaScript --}}
-                                </select>
+                            <div class="flex items-center gap-2">
+                                <div class="flex-1 flex items-center rounded-2xl bg-white px-3 py-2.5 border border-neutral-300 focus-within:border-neutral-500 dark:border-neutral-800 dark:bg-black/60 transition-colors duration-300 ease-in-out">
+                                    <x-icon name="user" class="h-4 w-4 text-neutral-500 mr-2 transition-colors duration-300 ease-in-out dark:text-neutral-400" />
+                                    <select
+                                        name="customer_id"
+                                        id="customerSelect"
+                                        required
+                                        class="w-full bg-transparent text-xs text-neutral-700 placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500 focus:outline-none transition-colors duration-300 ease-in-out"
+                                    >
+                                        <option value="">Select a customer</option>
+                                        {{-- Options will be populated via JavaScript --}}
+                                    </select>
+                                </div>
                                 <a
                                     href="{{ url('/customers') }}"
                                     title="Go to Customers"
-                                    class="ml-2 inline-flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-violet-600 text-white hover:bg-violet-500 dark:text-black dark:hover:text-white transition-colors duration-200"
+                                    class="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-violet-600 text-white hover:bg-violet-500 dark:text-black dark:hover:text-white transition-colors duration-200"
                                 >
-                                    <x-icon name="plus" class="h-3.5 w-3.5" />
+                                    <x-icon name="plus" class="h-4 w-4" />
                                 </a>
                             </div>
                         </div>
