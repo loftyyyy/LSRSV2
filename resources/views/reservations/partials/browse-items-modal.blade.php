@@ -9,12 +9,18 @@
             <div class="flex items-center gap-2">
                 <a
                     href="{{ url('/inventories') }}"
-                    class="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-medium bg-violet-600 text-white hover:bg-violet-500 dark:text-black dark:hover:text-white transition-colors duration-200"
+                    class="inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-medium bg-violet-600 text-white hover:bg-violet-500 dark:text-black dark:hover:text-white shadow-sm shadow-violet-600/30 transition-colors duration-200"
                 >
                     <x-icon name="plus" class="h-3.5 w-3.5" />
                     <span>Add Item</span>
                 </a>
-                <button type="button" onclick="closeBrowseItemsModal()" class="text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 text-xl transition-colors duration-200">&times;</button>
+                <button
+                    type="button"
+                    onclick="closeBrowseItemsModal()"
+                    class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-neutral-200 text-neutral-500 hover:text-neutral-800 hover:bg-white dark:border-neutral-700 dark:text-neutral-300 dark:hover:text-neutral-100 dark:hover:bg-neutral-800 transition-colors duration-200"
+                >
+                    &times;
+                </button>
             </div>
         </div>
 
