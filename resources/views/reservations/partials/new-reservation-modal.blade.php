@@ -32,11 +32,18 @@
                                     name="customer_id"
                                     id="customerSelect"
                                     required
-                                    class="w-full bg-transparent text-xs text-neutral-700 placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500 focus:outline-none transition-colors duration-300 ease-in-out"
+                                    class="flex-1 min-w-0 bg-transparent text-xs text-neutral-700 placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500 focus:outline-none transition-colors duration-300 ease-in-out"
                                 >
                                     <option value="">Select a customer</option>
                                     {{-- Options will be populated via JavaScript --}}
                                 </select>
+                                <a
+                                    href="{{ url('/customers') }}"
+                                    title="Go to Customers"
+                                    class="ml-2 inline-flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-violet-600 text-white hover:bg-violet-500 dark:text-black dark:hover:text-white transition-colors duration-200"
+                                >
+                                    <x-icon name="plus" class="h-3.5 w-3.5" />
+                                </a>
                             </div>
                         </div>
 
