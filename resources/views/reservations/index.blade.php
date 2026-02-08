@@ -649,7 +649,7 @@
             currentItemId: null,
             currentItem: null,
             selectedImageIndex: 0,
-            images: []
+            sortedImages: []
         };
     }
 
@@ -806,6 +806,7 @@
         browseItemDetailsModalState.isOpen = true;
         browseItemDetailsModalState.currentItemId = itemId;
         browseItemDetailsModalState.selectedImageIndex = 0;
+        browseItemDetailsModalState.sortedImages = [];
 
         var modal = document.getElementById('browseItemDetailsModal');
         if (!modal) {
@@ -851,7 +852,7 @@
         browseItemDetailsModalState.currentItemId = null;
         browseItemDetailsModalState.currentItem = null;
         browseItemDetailsModalState.selectedImageIndex = 0;
-        browseItemDetailsModalState.images = [];
+        browseItemDetailsModalState.sortedImages = [];
 
         var modal = document.getElementById('browseItemDetailsModal');
         if (!modal) {
@@ -873,38 +874,38 @@
         var statusMap = {
             available: {
                 label: 'Available',
-                subtitle: 'Ready for reservation',
+                subtitle: 'Ready for rent',
                 cardClass: 'bg-emerald-500/10 dark:bg-emerald-500/20 border-emerald-500/30 dark:border-emerald-500/30',
                 dotClass: 'bg-emerald-500',
-                textClass: 'text-emerald-700 dark:text-emerald-300'
+                textClass: 'text-emerald-700 dark:text-emerald-400'
             },
             rented: {
                 label: 'Rented',
                 subtitle: 'Currently rented',
                 cardClass: 'bg-blue-500/10 dark:bg-blue-500/20 border-blue-500/30 dark:border-blue-500/30',
                 dotClass: 'bg-blue-500',
-                textClass: 'text-blue-700 dark:text-blue-300'
+                textClass: 'text-blue-700 dark:text-blue-400'
             },
             maintenance: {
                 label: 'Maintenance',
                 subtitle: 'Under maintenance',
                 cardClass: 'bg-amber-500/10 dark:bg-amber-500/20 border-amber-500/30 dark:border-amber-500/30',
                 dotClass: 'bg-amber-500',
-                textClass: 'text-amber-700 dark:text-amber-300'
+                textClass: 'text-amber-700 dark:text-amber-400'
             },
             retired: {
                 label: 'Retired',
-                subtitle: 'No longer in service',
+                subtitle: 'No longer available',
                 cardClass: 'bg-neutral-500/10 dark:bg-neutral-500/20 border-neutral-500/30 dark:border-neutral-500/30',
                 dotClass: 'bg-neutral-500',
-                textClass: 'text-neutral-700 dark:text-neutral-300'
+                textClass: 'text-neutral-700 dark:text-neutral-400'
             },
             unknown: {
                 label: 'Unknown',
                 subtitle: 'Status unavailable',
                 cardClass: 'bg-neutral-500/10 dark:bg-neutral-500/20 border-neutral-500/30 dark:border-neutral-500/30',
                 dotClass: 'bg-neutral-500',
-                textClass: 'text-neutral-700 dark:text-neutral-300'
+                textClass: 'text-neutral-700 dark:text-neutral-400'
             }
         };
 
@@ -922,26 +923,34 @@
         document.getElementById('browseItemDetailColor').textContent = item.color || '-';
         document.getElementById('browseItemDetailDesign').textContent = item.design || '-';
 
-        var rentalPrice = item.rental_price ? Number(item.rental_price).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00';
-        var depositAmount = item.deposit_amount ? Number(item.deposit_amount).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00';
-        document.getElementById('browseItemDetailRentalPrice').textContent = '₱' + rentalPrice + ' / day';
-        document.getElementById('browseItemDetailDeposit').textContent = '₱' + depositAmount;
+        document.getElementById('browseItemDetailRentalPrice').textContent = item.rental_price
+            ? ('₱' + parseFloat(item.rental_price).toLocaleString())
+            : '-';
+
+        var depositAmount = item.deposit_amount ? parseFloat(item.deposit_amount) : 0;
+        document.getElementById('browseItemDetailDeposit').textContent = '₱' + depositAmount.toLocaleString();
 
         var sellable = item.is_sellable === true || item.is_sellable === 1 || item.is_sellable === '1';
         var sellingRow = document.getElementById('browseItemDetailSellingPriceRow');
         if (sellable) {
             sellingRow.classList.remove('hidden');
-            document.getElementById('browseItemDetailSellingPrice').textContent = item.selling_price
-                ? ('₱' + Number(item.selling_price).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }))
-                : '-';
+            if (item.selling_price && parseFloat(item.selling_price) > 0) {
+                document.getElementById('browseItemDetailSellingPrice').textContent = '₱' + parseFloat(item.selling_price).toLocaleString();
+            } else {
+                document.getElementById('browseItemDetailSellingPrice').textContent = '-';
+            }
         } else {
             sellingRow.classList.add('hidden');
         }
 
-        document.getElementById('browseItemDetailCreated').textContent = item.created_at ? formatDate(item.created_at) : '-';
-        document.getElementById('browseItemDetailUpdated').textContent = item.updated_at ? formatDate(item.updated_at) : '-';
+        document.getElementById('browseItemDetailCreated').textContent = item.created_at
+            ? formatBrowseItemDetailsDate(item.created_at)
+            : '-';
+        document.getElementById('browseItemDetailUpdated').textContent = item.updated_at
+            ? formatBrowseItemDetailsDate(item.updated_at)
+            : '-';
 
-        var updatedByRow = document.getElementById('browseItemDetailUpdatedByRow');
+        var updatedByRow = document.getElementById('browseItemDetailUpdatedBySection');
         if (item.updated_by_user && item.updated_by_user.name) {
             updatedByRow.classList.remove('hidden');
             document.getElementById('browseItemDetailUpdatedBy').textContent = item.updated_by_user.name;
@@ -955,16 +964,22 @@
     function renderBrowseItemDetailsImages(images) {
         var mainImageEl = document.getElementById('browseItemDetailsMainImage');
         var thumbnailsEl = document.getElementById('browseItemDetailsThumbnails');
+        var prevBtn = document.getElementById('browseItemDetailsPrevBtn');
+        var nextBtn = document.getElementById('browseItemDetailsNextBtn');
+        var imageCounter = document.getElementById('browseItemDetailsImageCounter');
 
-        if (!mainImageEl || !thumbnailsEl) {
+        if (!mainImageEl || !thumbnailsEl || !prevBtn || !nextBtn || !imageCounter) {
             return;
         }
 
         if (!images.length) {
-            mainImageEl.innerHTML = '<div class="text-neutral-400 dark:text-neutral-600 flex flex-col items-center gap-2"><svg class="h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg><span class="text-sm">No photos available</span></div>';
+            mainImageEl.innerHTML = '<div class="text-neutral-400 dark:text-neutral-600 flex flex-col items-center gap-3"><svg class="h-16 w-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg><span class="text-sm">No photos available</span></div>';
             thumbnailsEl.innerHTML = '';
-            browseItemDetailsModalState.images = [];
+            browseItemDetailsModalState.sortedImages = [];
             browseItemDetailsModalState.selectedImageIndex = 0;
+            prevBtn.classList.add('hidden');
+            nextBtn.classList.add('hidden');
+            imageCounter.classList.add('hidden');
             return;
         }
 
@@ -978,34 +993,121 @@
             return (a.display_order || 0) - (b.display_order || 0);
         });
 
-        browseItemDetailsModalState.images = sortedImages;
+        browseItemDetailsModalState.sortedImages = sortedImages;
 
         if (browseItemDetailsModalState.selectedImageIndex >= sortedImages.length) {
             browseItemDetailsModalState.selectedImageIndex = 0;
         }
 
-        var currentImage = sortedImages[browseItemDetailsModalState.selectedImageIndex];
-        mainImageEl.innerHTML = '<img src="' + currentImage.image_url + '" alt="' + (currentImage.caption || 'Item photo') + '" class="h-full w-full object-contain">';
+        var selectedIndex = browseItemDetailsModalState.selectedImageIndex;
+        var currentImage = sortedImages[selectedIndex] || sortedImages[0];
+
+        var primaryBadge = currentImage.is_primary
+            ? '<span class="absolute top-3 left-3 bg-violet-600 text-white text-xs font-medium px-2.5 py-1 rounded-full shadow-lg flex items-center gap-1.5"><svg class="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401z" clip-rule="evenodd" /></svg>Primary</span>'
+            : '';
+
+        var viewTypeBadge = currentImage.view_type
+            ? '<span class="absolute bottom-3 left-3 bg-black/60 text-white text-xs font-medium px-2.5 py-1 rounded-full backdrop-blur-sm">' +
+                currentImage.view_type.charAt(0).toUpperCase() + currentImage.view_type.slice(1) + ' View</span>'
+            : '';
+
+        mainImageEl.innerHTML = '<div class="relative w-full h-full"><img src="' + currentImage.image_url + '" alt="' + (currentImage.caption || 'Item photo') + '" class="w-full h-full object-contain">' + primaryBadge + viewTypeBadge + '</div>';
+
+        if (sortedImages.length > 1) {
+            prevBtn.classList.remove('hidden');
+            prevBtn.classList.add('flex');
+            nextBtn.classList.remove('hidden');
+            nextBtn.classList.add('flex');
+            imageCounter.classList.remove('hidden');
+
+            imageCounter.textContent = (selectedIndex + 1) + ' / ' + sortedImages.length;
+
+            if (selectedIndex === 0) {
+                prevBtn.classList.add('opacity-30', 'cursor-not-allowed');
+                prevBtn.classList.remove('hover:bg-white', 'dark:hover:bg-neutral-700');
+            } else {
+                prevBtn.classList.remove('opacity-30', 'cursor-not-allowed');
+                prevBtn.classList.add('hover:bg-white', 'dark:hover:bg-neutral-700');
+            }
+
+            if (selectedIndex === sortedImages.length - 1) {
+                nextBtn.classList.add('opacity-30', 'cursor-not-allowed');
+                nextBtn.classList.remove('hover:bg-white', 'dark:hover:bg-neutral-700');
+            } else {
+                nextBtn.classList.remove('opacity-30', 'cursor-not-allowed');
+                nextBtn.classList.add('hover:bg-white', 'dark:hover:bg-neutral-700');
+            }
+        } else {
+            prevBtn.classList.add('hidden');
+            prevBtn.classList.remove('flex');
+            nextBtn.classList.add('hidden');
+            nextBtn.classList.remove('flex');
+            imageCounter.classList.add('hidden');
+        }
 
         thumbnailsEl.innerHTML = sortedImages.map(function(image, index) {
             var selectedClass = index === browseItemDetailsModalState.selectedImageIndex
                 ? 'border-violet-500 ring-2 ring-violet-500/30'
                 : 'border-neutral-200 dark:border-neutral-700 hover:border-violet-400';
 
+            var primaryDot = image.is_primary
+                ? '<span class="absolute top-0.5 right-0.5 w-4 h-4 bg-violet-600 rounded-full flex items-center justify-center shadow"><svg class="h-2.5 w-2.5 text-white" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401z" clip-rule="evenodd" /></svg></span>'
+                : '';
+
+            var title = image.view_type
+                ? image.view_type.charAt(0).toUpperCase() + image.view_type.slice(1) + ' View'
+                : 'Photo';
+
             return '' +
-                '<button type="button" onclick="selectBrowseItemDetailsImage(' + index + ')" class="relative flex-shrink-0 h-16 w-16 rounded-xl overflow-hidden border-2 ' + selectedClass + '">' +
+                '<button type="button" onclick="selectBrowseItemDetailsImage(' + index + ')" class="relative flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden border-2 transition-all duration-200 ' + selectedClass + '" title="' + title + '">' +
                     '<img src="' + image.image_url + '" alt="' + (image.caption || 'Thumbnail') + '" class="h-full w-full object-cover">' +
+                    primaryDot +
                 '</button>';
         }).join('');
     }
 
+    function navigateBrowseItemDetailsImage(direction) {
+        var sortedImages = browseItemDetailsModalState.sortedImages || [];
+        if (sortedImages.length <= 1) {
+            return;
+        }
+
+        var currentIndex = browseItemDetailsModalState.selectedImageIndex;
+        var newIndex = currentIndex + direction;
+
+        if (newIndex < 0 || newIndex >= sortedImages.length) {
+            return;
+        }
+
+        browseItemDetailsModalState.selectedImageIndex = newIndex;
+        var currentItemImages = browseItemDetailsModalState.currentItem && browseItemDetailsModalState.currentItem.images
+            ? browseItemDetailsModalState.currentItem.images
+            : [];
+        renderBrowseItemDetailsImages(currentItemImages);
+    }
+
     function selectBrowseItemDetailsImage(index) {
-        if (!Array.isArray(browseItemDetailsModalState.images) || !browseItemDetailsModalState.images.length) {
+        if (!Array.isArray(browseItemDetailsModalState.sortedImages) || !browseItemDetailsModalState.sortedImages.length) {
             return;
         }
 
         browseItemDetailsModalState.selectedImageIndex = index;
-        renderBrowseItemDetailsImages(browseItemDetailsModalState.images);
+        var currentItemImages = browseItemDetailsModalState.currentItem && browseItemDetailsModalState.currentItem.images
+            ? browseItemDetailsModalState.currentItem.images
+            : [];
+        renderBrowseItemDetailsImages(currentItemImages);
+    }
+
+    function formatBrowseItemDetailsDate(dateString) {
+        var date = new Date(dateString);
+        if (isNaN(date.getTime())) {
+            return '-';
+        }
+        return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        });
     }
 
     function filterBrowseItems(query) {
@@ -1060,16 +1162,24 @@
         }
 
         document.addEventListener('keydown', function(e) {
-            if (e.key !== 'Escape') {
+            if (browseItemDetailsModalState.isOpen && e.key === 'ArrowLeft') {
+                e.preventDefault();
+                navigateBrowseItemDetailsImage(-1);
                 return;
             }
 
-            if (browseItemDetailsModalState.isOpen) {
+            if (browseItemDetailsModalState.isOpen && e.key === 'ArrowRight') {
+                e.preventDefault();
+                navigateBrowseItemDetailsImage(1);
+                return;
+            }
+
+            if (e.key === 'Escape' && browseItemDetailsModalState.isOpen) {
                 closeBrowseItemDetailsModal();
                 return;
             }
 
-            if (browseItemsModalState.isOpen) {
+            if (e.key === 'Escape' && browseItemsModalState.isOpen) {
                 closeBrowseItemsModal();
             }
         });
