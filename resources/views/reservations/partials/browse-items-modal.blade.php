@@ -6,7 +6,16 @@
                 <p class="text-xs uppercase tracking-[0.2em] text-neutral-500 dark:text-neutral-500">Browse</p>
                 <h3 class="text-lg font-semibold text-neutral-900 dark:text-white">Available Items</h3>
             </div>
-            <button type="button" onclick="closeBrowseItemsModal()" class="text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 text-xl transition-colors duration-200">&times;</button>
+            <div class="flex items-center gap-2">
+                <a
+                    href="{{ url('/inventories') }}"
+                    class="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-medium bg-violet-600 text-white hover:bg-violet-500 dark:text-black dark:hover:text-white transition-colors duration-200"
+                >
+                    <x-icon name="plus" class="h-3.5 w-3.5" />
+                    <span>Add Item</span>
+                </a>
+                <button type="button" onclick="closeBrowseItemsModal()" class="text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 text-xl transition-colors duration-200">&times;</button>
+            </div>
         </div>
 
         <div class="flex-shrink-0 px-6 py-4 border-b border-neutral-200 dark:border-neutral-800">
