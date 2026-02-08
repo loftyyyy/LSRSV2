@@ -194,6 +194,9 @@
 {{-- Browse Items Modal --}}
 @include('reservations.partials.browse-items-modal')
 
+{{-- Browse Item Details Modal --}}
+@include('reservations.partials.browse-item-details-modal')
+
 {{-- Include New Reservation Modal --}}
 @include('reservations.partials.new-reservation-modal')
 
@@ -640,7 +643,18 @@
         };
     }
 
+    if (!globalThis.browseItemDetailsModalState) {
+        globalThis.browseItemDetailsModalState = {
+            isOpen: false,
+            currentItemId: null,
+            currentItem: null,
+            selectedImageIndex: 0,
+            images: []
+        };
+    }
+
     var browseItemsModalState = globalThis.browseItemsModalState;
+    var browseItemDetailsModalState = globalThis.browseItemDetailsModalState;
 
     function openBrowseItemsModal() {
         browseItemsModalState.isOpen = true;
@@ -668,6 +682,10 @@
 
     function closeBrowseItemsModal() {
         browseItemsModalState.isOpen = false;
+
+        if (browseItemDetailsModalState.isOpen) {
+            closeBrowseItemDetailsModal();
+        }
 
         var modal = document.getElementById('browseItemsModal');
         if (!modal) {
@@ -761,7 +779,7 @@
             var rentalPrice = Number(item.rental_price || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
             return '' +
-                '<div class="rounded-2xl border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900/30 p-4 transition-colors duration-300 ease-in-out">' +
+                '<button type="button" onclick="openBrowseItemDetailsModal(' + item.item_id + ')" class="w-full text-left rounded-2xl border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900/30 p-4 transition-colors duration-300 ease-in-out hover:border-violet-300 dark:hover:border-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-500/40">' +
                     '<div class="flex items-start gap-4">' +
                         '<div class="h-16 w-16 flex-shrink-0 rounded-xl border border-neutral-200 bg-neutral-100 dark:border-neutral-800 dark:bg-neutral-900 overflow-hidden flex items-center justify-center">' +
                             (imageSource
@@ -778,10 +796,216 @@
                             '<p class="mt-2 text-sm font-semibold text-violet-600 dark:text-violet-400 font-geist-mono">₱' + rentalPrice + '<span class="text-xs font-normal text-neutral-500 dark:text-neutral-400"> / day</span></p>' +
                         '</div>' +
                     '</div>' +
-                '</div>';
+                '</button>';
         }).join('');
 
         toggleBrowseItemsState('grid');
+    }
+
+    async function openBrowseItemDetailsModal(itemId) {
+        browseItemDetailsModalState.isOpen = true;
+        browseItemDetailsModalState.currentItemId = itemId;
+        browseItemDetailsModalState.selectedImageIndex = 0;
+
+        var modal = document.getElementById('browseItemDetailsModal');
+        if (!modal) {
+            return;
+        }
+
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+
+        document.getElementById('browseItemDetailsLoading').classList.remove('hidden');
+        document.getElementById('browseItemDetailsError').classList.add('hidden');
+        document.getElementById('browseItemDetailsData').classList.add('hidden');
+        document.getElementById('browseItemDetailsTitle').textContent = 'Loading...';
+        document.getElementById('browseItemDetailsSubtitle').textContent = 'Loading...';
+
+        try {
+            var response = await axios.get('/api/inventories/' + itemId);
+            var item = response.data && response.data.data ? response.data.data : null;
+
+            if (!item) {
+                throw new Error('Unable to load item details.');
+            }
+
+            browseItemDetailsModalState.currentItem = item;
+            populateBrowseItemDetails(item);
+
+            document.getElementById('browseItemDetailsLoading').classList.add('hidden');
+            document.getElementById('browseItemDetailsData').classList.remove('hidden');
+        } catch (error) {
+            console.error('Error loading browse item details:', error);
+
+            document.getElementById('browseItemDetailsLoading').classList.add('hidden');
+            document.getElementById('browseItemDetailsError').classList.remove('hidden');
+            document.getElementById('browseItemDetailsErrorMessage').textContent =
+                (error.response && error.response.data && error.response.data.message)
+                    ? error.response.data.message
+                    : (error.message || 'Failed to load item details');
+        }
+    }
+
+    function closeBrowseItemDetailsModal() {
+        browseItemDetailsModalState.isOpen = false;
+        browseItemDetailsModalState.currentItemId = null;
+        browseItemDetailsModalState.currentItem = null;
+        browseItemDetailsModalState.selectedImageIndex = 0;
+        browseItemDetailsModalState.images = [];
+
+        var modal = document.getElementById('browseItemDetailsModal');
+        if (!modal) {
+            return;
+        }
+
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+
+    function populateBrowseItemDetails(item) {
+        var titleEl = document.getElementById('browseItemDetailsTitle');
+        var subtitleEl = document.getElementById('browseItemDetailsSubtitle');
+
+        titleEl.textContent = item.name || 'Item Details';
+        subtitleEl.textContent = [item.sku, item.item_type, item.color, item.size ? ('Size ' + item.size) : null].filter(Boolean).join(' • ') || 'Item Details';
+
+        var statusName = item.status && item.status.status_name ? String(item.status.status_name).toLowerCase() : 'unknown';
+        var statusMap = {
+            available: {
+                label: 'Available',
+                subtitle: 'Ready for reservation',
+                cardClass: 'bg-emerald-500/10 dark:bg-emerald-500/20 border-emerald-500/30 dark:border-emerald-500/30',
+                dotClass: 'bg-emerald-500',
+                textClass: 'text-emerald-700 dark:text-emerald-300'
+            },
+            rented: {
+                label: 'Rented',
+                subtitle: 'Currently rented',
+                cardClass: 'bg-blue-500/10 dark:bg-blue-500/20 border-blue-500/30 dark:border-blue-500/30',
+                dotClass: 'bg-blue-500',
+                textClass: 'text-blue-700 dark:text-blue-300'
+            },
+            maintenance: {
+                label: 'Maintenance',
+                subtitle: 'Under maintenance',
+                cardClass: 'bg-amber-500/10 dark:bg-amber-500/20 border-amber-500/30 dark:border-amber-500/30',
+                dotClass: 'bg-amber-500',
+                textClass: 'text-amber-700 dark:text-amber-300'
+            },
+            retired: {
+                label: 'Retired',
+                subtitle: 'No longer in service',
+                cardClass: 'bg-neutral-500/10 dark:bg-neutral-500/20 border-neutral-500/30 dark:border-neutral-500/30',
+                dotClass: 'bg-neutral-500',
+                textClass: 'text-neutral-700 dark:text-neutral-300'
+            },
+            unknown: {
+                label: 'Unknown',
+                subtitle: 'Status unavailable',
+                cardClass: 'bg-neutral-500/10 dark:bg-neutral-500/20 border-neutral-500/30 dark:border-neutral-500/30',
+                dotClass: 'bg-neutral-500',
+                textClass: 'text-neutral-700 dark:text-neutral-300'
+            }
+        };
+
+        var statusConfig = statusMap[statusName] || statusMap.unknown;
+        document.getElementById('browseItemDetailStatusCard').className = 'rounded-xl p-4 border ' + statusConfig.cardClass;
+        document.getElementById('browseItemDetailStatusDot').className = 'h-2 w-2 rounded-full ' + statusConfig.dotClass;
+        var statusTextEl = document.getElementById('browseItemDetailStatusText');
+        statusTextEl.className = 'text-sm font-semibold ' + statusConfig.textClass;
+        statusTextEl.textContent = statusConfig.label;
+        document.getElementById('browseItemDetailStatusSubtitle').textContent = statusConfig.subtitle;
+
+        document.getElementById('browseItemDetailSku').textContent = item.sku || '-';
+        document.getElementById('browseItemDetailType').textContent = item.item_type ? (item.item_type.charAt(0).toUpperCase() + item.item_type.slice(1)) : '-';
+        document.getElementById('browseItemDetailSize').textContent = item.size || '-';
+        document.getElementById('browseItemDetailColor').textContent = item.color || '-';
+        document.getElementById('browseItemDetailDesign').textContent = item.design || '-';
+
+        var rentalPrice = item.rental_price ? Number(item.rental_price).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00';
+        var depositAmount = item.deposit_amount ? Number(item.deposit_amount).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00';
+        document.getElementById('browseItemDetailRentalPrice').textContent = '₱' + rentalPrice + ' / day';
+        document.getElementById('browseItemDetailDeposit').textContent = '₱' + depositAmount;
+
+        var sellable = item.is_sellable === true || item.is_sellable === 1 || item.is_sellable === '1';
+        var sellingRow = document.getElementById('browseItemDetailSellingPriceRow');
+        if (sellable) {
+            sellingRow.classList.remove('hidden');
+            document.getElementById('browseItemDetailSellingPrice').textContent = item.selling_price
+                ? ('₱' + Number(item.selling_price).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }))
+                : '-';
+        } else {
+            sellingRow.classList.add('hidden');
+        }
+
+        document.getElementById('browseItemDetailCreated').textContent = item.created_at ? formatDate(item.created_at) : '-';
+        document.getElementById('browseItemDetailUpdated').textContent = item.updated_at ? formatDate(item.updated_at) : '-';
+
+        var updatedByRow = document.getElementById('browseItemDetailUpdatedByRow');
+        if (item.updated_by_user && item.updated_by_user.name) {
+            updatedByRow.classList.remove('hidden');
+            document.getElementById('browseItemDetailUpdatedBy').textContent = item.updated_by_user.name;
+        } else {
+            updatedByRow.classList.add('hidden');
+        }
+
+        renderBrowseItemDetailsImages(Array.isArray(item.images) ? item.images : []);
+    }
+
+    function renderBrowseItemDetailsImages(images) {
+        var mainImageEl = document.getElementById('browseItemDetailsMainImage');
+        var thumbnailsEl = document.getElementById('browseItemDetailsThumbnails');
+
+        if (!mainImageEl || !thumbnailsEl) {
+            return;
+        }
+
+        if (!images.length) {
+            mainImageEl.innerHTML = '<div class="text-neutral-400 dark:text-neutral-600 flex flex-col items-center gap-2"><svg class="h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg><span class="text-sm">No photos available</span></div>';
+            thumbnailsEl.innerHTML = '';
+            browseItemDetailsModalState.images = [];
+            browseItemDetailsModalState.selectedImageIndex = 0;
+            return;
+        }
+
+        var sortedImages = images.slice().sort(function(a, b) {
+            if (a.is_primary && !b.is_primary) {
+                return -1;
+            }
+            if (!a.is_primary && b.is_primary) {
+                return 1;
+            }
+            return (a.display_order || 0) - (b.display_order || 0);
+        });
+
+        browseItemDetailsModalState.images = sortedImages;
+
+        if (browseItemDetailsModalState.selectedImageIndex >= sortedImages.length) {
+            browseItemDetailsModalState.selectedImageIndex = 0;
+        }
+
+        var currentImage = sortedImages[browseItemDetailsModalState.selectedImageIndex];
+        mainImageEl.innerHTML = '<img src="' + currentImage.image_url + '" alt="' + (currentImage.caption || 'Item photo') + '" class="h-full w-full object-contain">';
+
+        thumbnailsEl.innerHTML = sortedImages.map(function(image, index) {
+            var selectedClass = index === browseItemDetailsModalState.selectedImageIndex
+                ? 'border-violet-500 ring-2 ring-violet-500/30'
+                : 'border-neutral-200 dark:border-neutral-700 hover:border-violet-400';
+
+            return '' +
+                '<button type="button" onclick="selectBrowseItemDetailsImage(' + index + ')" class="relative flex-shrink-0 h-16 w-16 rounded-xl overflow-hidden border-2 ' + selectedClass + '">' +
+                    '<img src="' + image.image_url + '" alt="' + (image.caption || 'Thumbnail') + '" class="h-full w-full object-cover">' +
+                '</button>';
+        }).join('');
+    }
+
+    function selectBrowseItemDetailsImage(index) {
+        if (!Array.isArray(browseItemDetailsModalState.images) || !browseItemDetailsModalState.images.length) {
+            return;
+        }
+
+        browseItemDetailsModalState.selectedImageIndex = index;
+        renderBrowseItemDetailsImages(browseItemDetailsModalState.images);
     }
 
     function filterBrowseItems(query) {
@@ -810,7 +1034,8 @@
 
     function initializeBrowseItemsModal() {
         var searchInput = document.getElementById('browseItemsSearchInput');
-        var modal = document.getElementById('browseItemsModal');
+        var browseModal = document.getElementById('browseItemsModal');
+        var detailsModal = document.getElementById('browseItemDetailsModal');
 
         if (searchInput) {
             searchInput.addEventListener('input', function(e) {
@@ -818,16 +1043,33 @@
             });
         }
 
-        if (modal) {
-            modal.addEventListener('click', function(e) {
-                if (e.target === modal && browseItemsModalState.isOpen) {
+        if (browseModal) {
+            browseModal.addEventListener('click', function(e) {
+                if (e.target === browseModal && browseItemsModalState.isOpen) {
                     closeBrowseItemsModal();
                 }
             });
         }
 
+        if (detailsModal) {
+            detailsModal.addEventListener('click', function(e) {
+                if (e.target === detailsModal && browseItemDetailsModalState.isOpen) {
+                    closeBrowseItemDetailsModal();
+                }
+            });
+        }
+
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && browseItemsModalState.isOpen) {
+            if (e.key !== 'Escape') {
+                return;
+            }
+
+            if (browseItemDetailsModalState.isOpen) {
+                closeBrowseItemDetailsModal();
+                return;
+            }
+
+            if (browseItemsModalState.isOpen) {
                 closeBrowseItemsModal();
             }
         });
