@@ -111,6 +111,9 @@
                             <div class="flex items-center gap-3 rounded-2xl bg-white px-4 py-2.5 border border-neutral-300 focus-within:border-neutral-500 dark:border-neutral-800 dark:bg-black/60 transition-colors duration-300 ease-in-out">
                                 <x-icon name="search" class="h-4 w-4 text-neutral-500 transition-colors duration-300 ease-in-out" />
                                 <input id="searchInput" type="text" placeholder="Search by customer, item, or ID..." class="w-full bg-transparent text-xs text-neutral-700 placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500 focus:outline-none transition-colors duration-300 ease-in-out">
+                                <button id="clearSearchBtn" type="button" class="hidden inline-flex h-5 w-5 items-center justify-center rounded-md text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 transition-colors duration-200" aria-label="Clear search">
+                                    &times;
+                                </button>
                             </div>
                             <div id="searchIndicators" class="mt-2 flex flex-wrap gap-1.5 px-0"></div>
                         </div>
@@ -214,17 +217,20 @@
         totalPages: 1,
         totalCount: 0,
         isLoading: false,
-        abortController: null
+        listAbortController: null,
+        statsAbortController: null
     };
 
     var searchDebounceTimer;
 
     function initializeReservationPage() {
         var searchInput = document.getElementById('searchInput');
+        var clearSearchBtn = document.getElementById('clearSearchBtn');
         var filterMenu = document.getElementById('filter-menu');
         var filterButtonText = document.getElementById('filter-button-text');
 
-        reservationState.abortController = new AbortController();
+        reservationState.listAbortController = null;
+        reservationState.statsAbortController = null;
 
         fetchReservationStats();
         fetchReservations();
@@ -240,6 +246,30 @@
                 searchDebounceTimer = setTimeout(function() {
                     fetchReservations();
                 }, 300);
+            });
+
+            searchInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    clearTimeout(searchDebounceTimer);
+                    reservationState.searchQuery = e.target.value;
+                    reservationState.currentPage = 1;
+                    updateSearchIndicators();
+                    fetchReservations();
+                }
+            });
+        }
+
+        if (clearSearchBtn) {
+            clearSearchBtn.addEventListener('click', function() {
+                reservationState.searchQuery = '';
+                reservationState.currentPage = 1;
+                if (searchInput) {
+                    searchInput.value = '';
+                    searchInput.focus();
+                }
+                updateSearchIndicators();
+                fetchReservations();
             });
         }
 
@@ -302,12 +332,13 @@
 
     async function fetchReservationStats() {
         try {
-            if (!reservationState.abortController) {
-                reservationState.abortController = new AbortController();
+            if (reservationState.statsAbortController) {
+                reservationState.statsAbortController.abort();
             }
+            reservationState.statsAbortController = new AbortController();
 
             var response = await axios.get('/api/reservations/reports/generate', {
-                signal: reservationState.abortController.signal
+                signal: reservationState.statsAbortController.signal
             });
 
             var summary = response.data && response.data.summary ? response.data.summary : {};
@@ -343,18 +374,15 @@
     }
 
     async function fetchReservations() {
-        if (reservationState.isLoading) {
-            return;
+        if (reservationState.listAbortController) {
+            reservationState.listAbortController.abort();
         }
+        reservationState.listAbortController = new AbortController();
 
         reservationState.isLoading = true;
         showLoadingState();
 
         try {
-            if (!reservationState.abortController) {
-                reservationState.abortController = new AbortController();
-            }
-
             var params = new URLSearchParams({
                 page: reservationState.currentPage,
                 per_page: reservationState.perPage,
@@ -362,8 +390,9 @@
                 sort_order: reservationState.sortOrder
             });
 
-            if (reservationState.searchQuery) {
-                params.append('search', reservationState.searchQuery);
+            var normalizedSearchQuery = reservationState.searchQuery.trim();
+            if (normalizedSearchQuery) {
+                params.append('search', normalizedSearchQuery);
             }
 
             if (reservationState.statusFilter) {
@@ -371,7 +400,7 @@
             }
 
             var response = await axios.get('/api/reservations?' + params.toString(), {
-                signal: reservationState.abortController.signal
+                signal: reservationState.listAbortController.signal
             });
 
             var data = response.data;
@@ -413,6 +442,12 @@
         }
 
         var query = reservationState.searchQuery.trim().toLowerCase();
+        var clearSearchBtn = document.getElementById('clearSearchBtn');
+
+        if (clearSearchBtn) {
+            clearSearchBtn.classList.toggle('hidden', !query);
+        }
+
         if (!query) {
             searchIndicatorsDiv.innerHTML = '';
             return;
