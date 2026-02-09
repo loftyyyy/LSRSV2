@@ -78,7 +78,7 @@
             <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
                 Active Reservations
             </div>
-            <div id="activeReservationsCount" class="text-3xl font-semibold text-amber-500 transition-colors duration-300 ease-in-out">
+            <div id="activeReservationsCount" class="text-3xl font-semibold text-sky-600 dark:text-sky-400 transition-colors duration-300 ease-in-out">
                 0
             </div>
         </div>
@@ -86,7 +86,7 @@
             <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
                 Total Items Reserved
             </div>
-            <div id="totalItemsReservedCount" class="text-3xl font-semibold text-green-500 transition-colors duration-300 ease-in-out">
+            <div id="totalItemsReservedCount" class="text-3xl font-semibold text-indigo-600 dark:text-indigo-400 transition-colors duration-300 ease-in-out">
                 0
             </div>
         </div>
@@ -94,7 +94,7 @@
             <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
                 Estimated Revenue
             </div>
-            <div id="estimatedRevenueCount" class="text-3xl font-semibold text-violet-600 transition-colors duration-300 ease-in-out">
+            <div id="estimatedRevenueCount" class="text-3xl font-semibold text-emerald-600 dark:text-emerald-400 transition-colors duration-300 ease-in-out">
                 ₱0
             </div>
         </div>
