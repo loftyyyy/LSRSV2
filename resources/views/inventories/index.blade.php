@@ -70,7 +70,7 @@
             <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
                 Available
             </div>
-            <div id="availableItemsCount" class="text-3xl font-semibold text-amber-500 transition-colors duration-300 ease-in-out">
+            <div id="availableItemsCount" class="text-3xl font-semibold text-sky-600 dark:text-sky-400 transition-colors duration-300 ease-in-out">
                 0
             </div>
         </div>
@@ -78,7 +78,7 @@
             <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
                 Maintenance
             </div>
-            <div id="underRepairItemsCount" class="text-3xl font-semibold text-green-500 transition-colors duration-300 ease-in-out">
+            <div id="underRepairItemsCount" class="text-3xl font-semibold text-amber-600 dark:text-amber-400 transition-colors duration-300 ease-in-out">
                 0
             </div>
         </div>
@@ -86,7 +86,7 @@
             <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
                 Inventory Value
             </div>
-            <div id="inventoryValueCount" class="text-3xl font-semibold text-violet-600 transition-colors duration-300 ease-in-out">
+            <div id="inventoryValueCount" class="text-3xl font-semibold text-emerald-600 dark:text-emerald-400 transition-colors duration-300 ease-in-out">
                 ₱0
             </div>
         </div>

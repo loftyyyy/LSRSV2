@@ -70,7 +70,7 @@
             <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
                 Active Customers
             </div>
-            <div id="activeCustomersCount" class="text-3xl font-semibold text-amber-500 transition-colors duration-300 ease-in-out">
+            <div id="activeCustomersCount" class="text-3xl font-semibold text-emerald-600 dark:text-emerald-400 transition-colors duration-300 ease-in-out">
                 0
             </div>
         </div>
@@ -78,7 +78,7 @@
             <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
                 Inactive Customers
             </div>
-            <div id="inactiveCustomersCount" class="text-3xl font-semibold text-green-500 transition-colors duration-300 ease-in-out">
+            <div id="inactiveCustomersCount" class="text-3xl font-semibold text-rose-600 dark:text-rose-400 transition-colors duration-300 ease-in-out">
                 0
             </div>
         </div>
@@ -86,7 +86,7 @@
             <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
                 Customers with Rentals
             </div>
-            <div id="customersWithRentalsCount" class="text-3xl font-semibold text-violet-600 transition-colors duration-300 ease-in-out">
+            <div id="customersWithRentalsCount" class="text-3xl font-semibold text-indigo-600 dark:text-indigo-400 transition-colors duration-300 ease-in-out">
                 0
             </div>
         </div>
