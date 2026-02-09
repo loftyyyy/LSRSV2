@@ -55,10 +55,10 @@
     {{-- Stats --}}
     <section class="grid grid-cols-4 gap-6 mb-8">
         @foreach ([
-            ['label' => 'Active Rentals', 'value' => '3', 'color' => 'text-neutral-900 dark:text-white'],
-            ['label' => 'Due This Week', 'value' => '3', 'color' => 'text-amber-500'],
-            ['label' => 'Overdue', 'value' => '1', 'color' => 'text-red-500'],
-            ['label' => 'Late Penalties', 'value' => '$NaN', 'color' => 'text-violet-600'],
+            ['label' => 'Active Rentals', 'value' => '3', 'color' => 'text-sky-600 dark:text-sky-400'],
+            ['label' => 'Due This Week', 'value' => '3', 'color' => 'text-amber-600 dark:text-amber-400'],
+            ['label' => 'Overdue', 'value' => '1', 'color' => 'text-rose-600 dark:text-rose-400'],
+            ['label' => 'Late Penalties', 'value' => '$NaN', 'color' => 'text-rose-600 dark:text-rose-400'],
         ] as $stat)
             <div class="rounded-2xl p-6 border border-neutral-200 bg-white dark:border-neutral-900 dark:bg-neutral-950/60 shadow-sm dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
                 <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
