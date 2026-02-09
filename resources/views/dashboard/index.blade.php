@@ -93,7 +93,7 @@
                      <div class="flex items-center justify-between">
                          <div>
                              <p class="text-sm font-medium text-neutral-500 dark:text-neutral-400">Total Customers</p>
-                             <p class="text-2xl font-semibold text-neutral-900 dark:text-white mt-1" id="kpi-total-customers">0</p>
+                             <p class="text-2xl font-semibold text-indigo-600 dark:text-indigo-400 mt-1" id="kpi-total-customers">0</p>
                              <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-2" id="kpi-new-customers">+0 this month</p>
                          </div>
                          <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
@@ -107,7 +107,7 @@
                      <div class="flex items-center justify-between">
                          <div>
                              <p class="text-sm font-medium text-neutral-500 dark:text-neutral-400">Active Rentals</p>
-                             <p class="text-2xl font-semibold text-neutral-900 dark:text-white mt-1" id="kpi-active-rentals">0</p>
+                             <p class="text-2xl font-semibold text-sky-600 dark:text-sky-400 mt-1" id="kpi-active-rentals">0</p>
                              <p class="text-xs text-red-600 dark:text-red-400 mt-2" id="kpi-overdue-rentals">0 overdue</p>
                          </div>
                          <div class="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center">
@@ -121,7 +121,7 @@
                      <div class="flex items-center justify-between">
                          <div>
                              <p class="text-sm font-medium text-neutral-500 dark:text-neutral-400">Inventory Items</p>
-                             <p class="text-2xl font-semibold text-neutral-900 dark:text-white mt-1" id="kpi-total-items">0</p>
+                             <p class="text-2xl font-semibold text-indigo-600 dark:text-indigo-400 mt-1" id="kpi-total-items">0</p>
                              <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-2">
                                  <span id="kpi-occupancy-rate">0</span>% occupancy
                              </p>
@@ -137,8 +137,8 @@
                      <div class="flex items-center justify-between">
                          <div>
                              <p class="text-sm font-medium text-neutral-500 dark:text-neutral-400">Revenue (30d)</p>
-                             <p class="text-2xl font-semibold text-neutral-900 dark:text-white mt-1" id="kpi-revenue">$0.00</p>
-                             <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-2" id="kpi-payment-status">0 pending</p>
+                             <p class="text-2xl font-semibold text-emerald-600 dark:text-emerald-400 mt-1" id="kpi-revenue">$0.00</p>
+                             <p class="text-xs text-amber-600 dark:text-amber-400 mt-2" id="kpi-payment-status">0 pending</p>
                          </div>
                          <div class="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center">
                              <x-icon name="credit-card" class="w-6 h-6 text-orange-600 dark:text-orange-400" />
@@ -152,7 +152,7 @@
                 <!-- Active Customers -->
                 <div class="bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800 p-4">
                     <p class="text-xs font-medium text-neutral-500 dark:text-neutral-400">Active Customers</p>
-                    <p class="text-lg font-semibold text-blue-600 dark:text-blue-400 mt-1" id="secondary-active-customers">0</p>
+                    <p class="text-lg font-semibold text-emerald-600 dark:text-emerald-400 mt-1" id="secondary-active-customers">0</p>
                 </div>
 
                 <!-- Rented Items -->
@@ -164,13 +164,13 @@
                 <!-- Available Items -->
                 <div class="bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800 p-4">
                     <p class="text-xs font-medium text-neutral-500 dark:text-neutral-400">Available Items</p>
-                    <p class="text-lg font-semibold text-purple-600 dark:text-purple-400 mt-1" id="secondary-available-items">0</p>
+                    <p class="text-lg font-semibold text-sky-600 dark:text-sky-400 mt-1" id="secondary-available-items">0</p>
                 </div>
 
                 <!-- Pending Reservations -->
                 <div class="bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800 p-4">
                     <p class="text-xs font-medium text-neutral-500 dark:text-neutral-400">Pending Reservations</p>
-                    <p class="text-lg font-semibold text-cyan-600 dark:text-cyan-400 mt-1" id="secondary-pending-reservations">0</p>
+                    <p class="text-lg font-semibold text-amber-600 dark:text-amber-400 mt-1" id="secondary-pending-reservations">0</p>
                 </div>
 
                 <!-- Damaged Items -->
@@ -182,7 +182,7 @@
                 <!-- Total Invoices -->
                 <div class="bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800 p-4">
                     <p class="text-xs font-medium text-neutral-500 dark:text-neutral-400">Total Invoices</p>
-                    <p class="text-lg font-semibold text-orange-600 dark:text-orange-400 mt-1" id="secondary-total-invoices">0</p>
+                    <p class="text-lg font-semibold text-indigo-600 dark:text-indigo-400 mt-1" id="secondary-total-invoices">0</p>
                 </div>
             </div>
         </section>
