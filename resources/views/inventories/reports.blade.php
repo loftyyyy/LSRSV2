@@ -164,7 +164,7 @@
                  <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
                      Total Items
                  </div>
-                 <div id="statTotalItems" class="text-3xl font-semibold text-neutral-900 dark:text-white transition-colors duration-300 ease-in-out">
+                 <div id="statTotalItems" class="text-3xl font-semibold text-indigo-600 dark:text-indigo-400 transition-colors duration-300 ease-in-out">
                      0
                  </div>
              </div>
@@ -173,7 +173,7 @@
                  <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
                      Available Items
                  </div>
-                 <div id="statAvailableItems" class="text-3xl font-semibold text-green-600 dark:text-green-400 transition-colors duration-300 ease-in-out">
+                 <div id="statAvailableItems" class="text-3xl font-semibold text-sky-600 dark:text-sky-400 transition-colors duration-300 ease-in-out">
                      0
                  </div>
              </div>
@@ -182,7 +182,7 @@
                  <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
                      Rented Items
                  </div>
-                 <div id="statRentedItems" class="text-3xl font-semibold text-blue-600 dark:text-blue-400 transition-colors duration-300 ease-in-out">
+                 <div id="statRentedItems" class="text-3xl font-semibold text-violet-600 dark:text-violet-400 transition-colors duration-300 ease-in-out">
                      0
                  </div>
              </div>
@@ -200,7 +200,7 @@
                  <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
                      Total Inventory Value
                  </div>
-                 <div id="statTotalValue" class="text-3xl font-semibold text-violet-600 dark:text-violet-400 transition-colors duration-300 ease-in-out">
+                 <div id="statTotalValue" class="text-3xl font-semibold text-emerald-600 dark:text-emerald-400 transition-colors duration-300 ease-in-out">
                      0
                  </div>
              </div>
@@ -209,7 +209,7 @@
                  <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
                      Occupancy Rate
                  </div>
-                 <div id="statOccupancyRate" class="text-3xl font-semibold text-purple-600 dark:text-purple-400 transition-colors duration-300 ease-in-out">
+                 <div id="statOccupancyRate" class="text-3xl font-semibold text-cyan-600 dark:text-cyan-400 transition-colors duration-300 ease-in-out">
                      0%
                  </div>
              </div>
