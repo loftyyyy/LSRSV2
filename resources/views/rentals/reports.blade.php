@@ -88,7 +88,7 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-sm font-medium text-neutral-500 dark:text-neutral-400">Total Rentals</p>
-                            <p class="text-2xl font-semibold text-neutral-900 dark:text-white mt-1" id="kpi-total-rentals">0</p>
+                            <p class="text-2xl font-semibold text-indigo-600 dark:text-indigo-400 mt-1" id="kpi-total-rentals">0</p>
                             <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-2" id="kpi-active-rentals">0 active</p>
                         </div>
                         <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
@@ -104,7 +104,7 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-sm font-medium text-neutral-500 dark:text-neutral-400">Total Revenue</p>
-                            <p class="text-2xl font-semibold text-neutral-900 dark:text-white mt-1" id="kpi-total-revenue">$0.00</p>
+                            <p class="text-2xl font-semibold text-emerald-600 dark:text-emerald-400 mt-1" id="kpi-total-revenue">$0.00</p>
                             <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-2" id="kpi-monthly-revenue">$0 this month</p>
                         </div>
                         <div class="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center">
@@ -120,11 +120,11 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-sm font-medium text-neutral-500 dark:text-neutral-400">Overdue Rentals</p>
-                            <p class="text-2xl font-semibold text-red-600 dark:text-red-400 mt-1" id="kpi-overdue">0</p>
+                            <p class="text-2xl font-semibold text-rose-600 dark:text-rose-400 mt-1" id="kpi-overdue">0</p>
                             <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-2" id="kpi-completed">0 completed</p>
                         </div>
-                        <div class="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
-                            <svg class="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="w-12 h-12 bg-rose-100 dark:bg-rose-900/30 rounded-full flex items-center justify-center">
+                            <svg class="w-6 h-6 text-rose-600 dark:text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4v2m0 4v2m0-14H8m4 0H4m20 0h-4m0 0V4m0 0h-4"></path>
                             </svg>
                         </div>
@@ -136,11 +136,11 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-sm font-medium text-neutral-500 dark:text-neutral-400">Avg Duration</p>
-                            <p class="text-2xl font-semibold text-purple-600 dark:text-purple-400 mt-1" id="kpi-avg-duration">0</p>
+                            <p class="text-2xl font-semibold text-sky-600 dark:text-sky-400 mt-1" id="kpi-avg-duration">0</p>
                             <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-2">days per rental</p>
                         </div>
-                        <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center">
-                            <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="w-12 h-12 bg-sky-100 dark:bg-sky-900/30 rounded-full flex items-center justify-center">
+                            <svg class="w-6 h-6 text-sky-600 dark:text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                             </svg>
                         </div>
@@ -152,17 +152,17 @@
             <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
                 <div class="bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800 p-4">
                     <p class="text-xs font-medium text-neutral-500 dark:text-neutral-400">Late Returns</p>
-                    <p class="text-lg font-semibold text-orange-600 dark:text-orange-400 mt-1" id="secondary-late">0</p>
+                    <p class="text-lg font-semibold text-amber-600 dark:text-amber-400 mt-1" id="secondary-late">0</p>
                 </div>
 
                 <div class="bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800 p-4">
                     <p class="text-xs font-medium text-neutral-500 dark:text-neutral-400">Cancelled</p>
-                    <p class="text-lg font-semibold text-red-600 dark:text-red-400 mt-1" id="secondary-cancelled">0</p>
+                    <p class="text-lg font-semibold text-rose-600 dark:text-rose-400 mt-1" id="secondary-cancelled">0</p>
                 </div>
 
                 <div class="bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800 p-4">
                     <p class="text-xs font-medium text-neutral-500 dark:text-neutral-400">Completed</p>
-                    <p class="text-lg font-semibold text-green-600 dark:text-green-400 mt-1" id="secondary-completed">0</p>
+                    <p class="text-lg font-semibold text-emerald-600 dark:text-emerald-400 mt-1" id="secondary-completed">0</p>
                 </div>
             </div>
         </section>
