@@ -162,7 +162,7 @@
                  <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
                      Total Customers
                  </div>
-                 <div id="statTotalCustomers" class="text-3xl font-semibold text-green-600 dark:text-green-400 transition-colors duration-300 ease-in-out">
+                 <div id="statTotalCustomers" class="text-3xl font-semibold text-indigo-600 dark:text-indigo-400 transition-colors duration-300 ease-in-out">
                      0
                  </div>
              </div>
@@ -171,7 +171,7 @@
                  <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
                      Active Customers
                  </div>
-                 <div id="statActiveCustomers" class="text-3xl font-semibold text-blue-600 dark:text-blue-400 transition-colors duration-300 ease-in-out">
+                 <div id="statActiveCustomers" class="text-3xl font-semibold text-sky-600 dark:text-sky-400 transition-colors duration-300 ease-in-out">
                      0
                  </div>
              </div>
@@ -180,7 +180,7 @@
                  <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
                      Inactive Customers
                  </div>
-                 <div id="statInactiveCustomers" class="text-3xl font-semibold text-red-600 dark:text-red-400 transition-colors duration-300 ease-in-out">
+                 <div id="statInactiveCustomers" class="text-3xl font-semibold text-rose-600 dark:text-rose-400 transition-colors duration-300 ease-in-out">
                      0
                  </div>
              </div>
@@ -189,7 +189,7 @@
                  <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
                      Customers with Rentals
                  </div>
-                 <div id="statCustomersWithRentals" class="text-3xl font-semibold text-emerald-600 dark:text-emerald-400 transition-colors duration-300 ease-in-out">
+                 <div id="statCustomersWithRentals" class="text-3xl font-semibold text-cyan-600 dark:text-cyan-400 transition-colors duration-300 ease-in-out">
                      0
                  </div>
              </div>
@@ -198,7 +198,7 @@
                  <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
                      Total Rentals
                  </div>
-                 <div id="statTotalRentals" class="text-3xl font-semibold text-amber-600 dark:text-amber-400 transition-colors duration-300 ease-in-out">
+                 <div id="statTotalRentals" class="text-3xl font-semibold text-sky-600 dark:text-sky-400 transition-colors duration-300 ease-in-out">
                      0
                  </div>
              </div>
@@ -207,7 +207,7 @@
                  <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
                      Avg Rentals per Customer
                  </div>
-                 <div id="statAvgRentals" class="text-3xl font-semibold text-purple-600 dark:text-purple-400 transition-colors duration-300 ease-in-out">
+                 <div id="statAvgRentals" class="text-3xl font-semibold text-indigo-600 dark:text-indigo-400 transition-colors duration-300 ease-in-out">
                      0.0
                  </div>
              </div>
@@ -216,7 +216,7 @@
                  <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
                      Total Reservations
                  </div>
-                 <div id="statTotalReservations" class="text-3xl font-semibold text-cyan-600 dark:text-cyan-400 transition-colors duration-300 ease-in-out">
+                 <div id="statTotalReservations" class="text-3xl font-semibold text-indigo-600 dark:text-indigo-400 transition-colors duration-300 ease-in-out">
                      0
                  </div>
              </div>
