@@ -86,19 +86,19 @@
     <section class="grid grid-cols-1 gap-6 mb-8 md:grid-cols-2 lg:grid-cols-4">
         <div class="rounded-2xl p-6 border border-neutral-200 bg-white dark:border-neutral-900 dark:bg-neutral-950/60 shadow-sm dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
             <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2">Total Reservations</div>
-            <div id="statTotalReservations" class="text-3xl font-semibold text-neutral-900 dark:text-white">0</div>
+            <div id="statTotalReservations" class="text-3xl font-semibold text-indigo-600 dark:text-indigo-400">0</div>
         </div>
         <div class="rounded-2xl p-6 border border-neutral-200 bg-white dark:border-neutral-900 dark:bg-neutral-950/60 shadow-sm dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
             <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2">Total Items Reserved</div>
-            <div id="statTotalItems" class="text-3xl font-semibold text-emerald-600 dark:text-emerald-400">0</div>
+            <div id="statTotalItems" class="text-3xl font-semibold text-cyan-600 dark:text-cyan-400">0</div>
         </div>
         <div class="rounded-2xl p-6 border border-neutral-200 bg-white dark:border-neutral-900 dark:bg-neutral-950/60 shadow-sm dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
             <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2">Total Revenue</div>
-            <div id="statRevenue" class="text-3xl font-semibold text-violet-600 dark:text-violet-400 font-geist-mono">₱0</div>
+            <div id="statRevenue" class="text-3xl font-semibold text-emerald-600 dark:text-emerald-400 font-geist-mono">₱0</div>
         </div>
         <div class="rounded-2xl p-6 border border-neutral-200 bg-white dark:border-neutral-900 dark:bg-neutral-950/60 shadow-sm dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
             <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2">Avg Items / Reservation</div>
-            <div id="statAvgItems" class="text-3xl font-semibold text-amber-600 dark:text-amber-400">0</div>
+            <div id="statAvgItems" class="text-3xl font-semibold text-sky-600 dark:text-sky-400">0</div>
         </div>
     </section>
 
