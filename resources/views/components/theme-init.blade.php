@@ -25,10 +25,6 @@
         color-scheme: light;
     }
 
-    html.theme-preload body {
-        opacity: 0 !important;
-    }
-
     html.theme-preload *,
     html.theme-preload *::before,
     html.theme-preload *::after {
@@ -159,7 +155,7 @@
             });
         }
 
-        var preloadTimeout = window.setTimeout(cleanupAfterFirstPaint, 1200);
+        var preloadTimeout = window.setTimeout(cleanupAfterFirstPaint, 250);
 
         function onWindowLoad() {
             window.clearTimeout(preloadTimeout);
