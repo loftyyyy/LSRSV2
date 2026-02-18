@@ -86,7 +86,7 @@ html {
 
 body > main {
     opacity: 1;
-    transition: opacity 180ms ease-out;
+    transition: opacity 120ms ease-out;
 }
 
 html.page-enter body > main {
@@ -95,5 +95,5 @@ html.page-enter body > main {
 
 html.page-leaving body > main {
     opacity: 0.84;
-    transition-duration: 120ms;
+    transition-duration: 90ms;
 }
