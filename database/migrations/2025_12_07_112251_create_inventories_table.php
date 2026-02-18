@@ -26,6 +26,9 @@ return new class extends Migration
             $table->foreignId('status_id')->constrained('inventory_statuses', 'status_id')->cascadeOnDelete();
             $table->foreignId('updated_by')->nullable()->constrained('users', 'user_id')->cascadeOnDelete();
             $table->timestamps();
+
+            $table->index(['status_id', 'item_type'], 'inventories_status_item_type_idx');
+            $table->index(['status_id', 'created_at'], 'inventories_status_created_at_idx');
         });
     }
 

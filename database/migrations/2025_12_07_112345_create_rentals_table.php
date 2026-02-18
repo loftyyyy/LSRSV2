@@ -48,6 +48,12 @@ return new class extends Migration
             // Indexes for deposit reporting
             $table->index(['deposit_status', 'deposit_collected_at']);
             $table->index(['customer_id', 'deposit_status']);
+
+            // Indexes for performance
+            $table->index(['return_date', 'due_date'], 'rentals_return_due_idx');
+            $table->index(['status_id', 'created_at'], 'rentals_status_created_at_idx');
+            $table->index(['customer_id', 'return_date'], 'rentals_customer_return_date_idx');
+            $table->index(['item_id', 'created_at'], 'rentals_item_created_at_idx');
         });
     }
 

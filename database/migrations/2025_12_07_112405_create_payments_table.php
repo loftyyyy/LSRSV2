@@ -22,6 +22,10 @@ return new class extends Migration
             $table->foreignId('processed_by')->constrained('users', 'user_id')->cascadeOnDelete();
             $table->foreignId('status_id')->constrained('payment_statuses', 'status_id')->cascadeOnDelete();
             $table->timestamps();
+
+            $table->index(['status_id', 'payment_date'], 'payments_status_payment_date_idx');
+            $table->index(['invoice_id', 'payment_date'], 'payments_invoice_payment_date_idx');
+            $table->index(['processed_by', 'created_at'], 'payments_processed_by_created_at_idx');
         });
     }
 

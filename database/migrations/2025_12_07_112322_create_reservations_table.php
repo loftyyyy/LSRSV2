@@ -20,6 +20,11 @@ return new class extends Migration
             $table->date('start_date');
             $table->date('end_date');
             $table->timestamps();
+
+            $table->index(['status_id', 'reservation_date'], 'reservations_status_reservation_date_idx');
+            $table->index(['customer_id', 'reservation_date'], 'reservations_customer_reservation_date_idx');
+            $table->index(['reserved_by', 'reservation_date'], 'reservations_reserved_by_reservation_date_idx');
+            $table->index(['status_id', 'start_date', 'end_date'], 'reservations_status_start_end_idx');
         });
     }
 

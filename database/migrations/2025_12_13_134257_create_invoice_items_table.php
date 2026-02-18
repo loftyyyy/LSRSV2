@@ -21,6 +21,9 @@ return new class extends Migration
             $table->decimal('unit_price', 10, 2);
             $table->decimal('total_price', 10, 2); // quantity * unit_price
             $table->timestamps();
+
+            $table->index(['invoice_id', 'item_type'], 'invoice_items_invoice_item_type_idx');
+            $table->index(['item_id', 'item_type'], 'invoice_items_item_item_type_idx');
         });
     }
 

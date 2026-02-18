@@ -21,6 +21,9 @@ return new class extends Migration
             $table->decimal('rental_price', 10, 2)->nullable();
             $table->timestamps();
             $table->unique(['reservation_id', 'item_id']); // Prevent duplicate items in same reservation
+
+            $table->index(['item_id', 'fulfillment_status'], 'reservation_items_item_fulfillment_idx');
+            $table->index(['reservation_id', 'fulfillment_status'], 'reservation_items_reservation_fulfillment_idx');
         });
     }
 

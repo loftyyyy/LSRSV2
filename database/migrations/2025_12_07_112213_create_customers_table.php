@@ -22,6 +22,8 @@ return new class extends Migration
             $table->foreignId('status_id')->constrained('customer_statuses', 'status_id')->cascadeOnDelete();
             $table->foreignId('updated_by')->nullable()->constrained('users', 'user_id')->nullOnDelete();
             $table->timestamps();
+
+            $table->index(['status_id', 'created_at'], 'customers_status_created_at_idx');
         });
     }
 
