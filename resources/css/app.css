@@ -80,19 +80,20 @@ select {
 }
 
 /* Smooth page content transitions during subsystem navigation */
+html {
+    scrollbar-gutter: stable;
+}
+
 body > main {
     opacity: 1;
-    transform: translateY(0);
-    transition: opacity 220ms ease-out, transform 220ms ease-out;
+    transition: opacity 180ms ease-out;
 }
 
 html.page-enter body > main {
     opacity: 0;
-    transform: translateY(6px);
 }
 
 html.page-leaving body > main {
     opacity: 0.84;
-    transform: translateY(2px);
-    transition-duration: 140ms;
+    transition-duration: 120ms;
 }
