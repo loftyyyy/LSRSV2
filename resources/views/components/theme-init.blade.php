@@ -92,6 +92,7 @@
         }
 
         root.classList.add('theme-preload');
+        root.classList.add('page-enter');
         try {
             localStorage.removeItem('darkMode');
         } catch (_e) {
@@ -152,6 +153,9 @@
         function cleanupAfterFirstPaint() {
             requestAnimationFrame(function () {
                 root.classList.remove('theme-preload');
+                requestAnimationFrame(function () {
+                    root.classList.remove('page-enter');
+                });
             });
         }
 

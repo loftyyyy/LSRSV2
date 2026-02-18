@@ -28,6 +28,7 @@
             <a
                 href="{{ route($item['route']) }}"
                 data-turbo="false"
+                data-subsystem-link="true"
                 class="group flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200
                        {{ $isActive
                             ? 'bg-violet-600 dark:text-neutral-900 text-neutral-100 shadow-[0_0_0_1px_rgba(167,139,250,0.7)]'
@@ -114,6 +115,20 @@
 
         window.addEventListener('DOMContentLoaded', function () {
             updateToggleUI(getThemeState());
+
+            document.querySelectorAll('[data-subsystem-link="true"]').forEach(function (link) {
+                link.addEventListener('click', function (event) {
+                    if (event.defaultPrevented) {
+                        return;
+                    }
+
+                    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) {
+                        return;
+                    }
+
+                    document.documentElement.classList.add('page-leaving');
+                });
+            });
         });
 
         window.addEventListener('theme:changed', function (event) {
