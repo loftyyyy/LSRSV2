@@ -4,7 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
+use App\Models\Inventory;
+use App\Models\InventoryMovement;
 use App\Models\InventoryStatus;
+use App\Models\Reservation;
+use App\Models\ReservationItem;
+use App\Models\ReservationItemAllocation;
 use App\Models\ReservationStatus;
 use App\Models\Rental;
 use App\Models\RentalStatus;
@@ -480,27 +485,100 @@ class RentalController extends Controller
     {
         $request->validate([
             'reservation_id' => 'nullable|exists:reservations,reservation_id',
-            'item_id' => 'required|exists:inventories,item_id',
+            'reservation_item_id' => 'nullable|exists:reservation_items,reservation_item_id',
+            'variant_id' => 'nullable|exists:inventory_variants,variant_id',
+            'item_id' => 'nullable|exists:inventories,item_id',
             'customer_id' => 'required|exists:customers,customer_id',
             'released_date' => 'required|date',
             'due_date' => 'required|date|after:released_date',
             'release_notes' => 'nullable|string',
         ]);
 
+        if (!$request->item_id && !$request->reservation_item_id && !$request->variant_id) {
+            return response()->json([
+                'message' => 'Provide item_id, reservation_item_id, or variant_id when releasing an item.'
+            ], 422);
+        }
+
         DB::beginTransaction();
         try {
-            // Get the "Rented Out" status
-             $rentedStatus = $this->findRentalStatusByName('rented');
-             if (!$rentedStatus) {
-                 return response()->json([
-                     'message' => 'Rented Out status not found in the system.'
+            $rentedStatus = $this->findRentalStatusByName('rented');
+            if (!$rentedStatus) {
+                return response()->json([
+                    'message' => 'Rented Out status not found in the system.'
                 ], 500);
             }
 
-            // Create the rental record
+            $availableInventoryStatus = $this->findInventoryStatusByName('available');
+            $rentedInventoryStatus = $this->findInventoryStatusByName('rented');
+            if (!$availableInventoryStatus || !$rentedInventoryStatus) {
+                return response()->json([
+                    'message' => 'Required inventory statuses (available/rented) are missing.'
+                ], 500);
+            }
+
+            $reservation = $request->reservation_id
+                ? Reservation::find($request->reservation_id)
+                : null;
+
+            $reservationItem = null;
+            if ($request->reservation_item_id) {
+                $reservationItem = ReservationItem::with('reservation')
+                    ->find($request->reservation_item_id);
+                $reservation = $reservation ?: $reservationItem?->reservation;
+            }
+
+            $item = $request->item_id
+                ? Inventory::findOrFail($request->item_id)
+                : null;
+
+            if (!$reservationItem && $reservation) {
+                $variantIdForLookup = $request->variant_id ?: $item?->variant_id;
+                if ($variantIdForLookup) {
+                    $reservationItem = $reservation->items()
+                        ->where('variant_id', $variantIdForLookup)
+                        ->orderBy('reservation_item_id')
+                        ->first();
+                }
+            }
+
+            if (!$item) {
+                $variantIdForLookup = $request->variant_id ?: $reservationItem?->variant_id;
+                if ($variantIdForLookup) {
+                    $item = Inventory::where('variant_id', $variantIdForLookup)
+                        ->where('status_id', $availableInventoryStatus->status_id)
+                        ->orderBy('item_id')
+                        ->lockForUpdate()
+                        ->first();
+                }
+            }
+
+            if (!$item) {
+                return response()->json([
+                    'message' => 'No available physical item could be allocated for this release.'
+                ], 422);
+            }
+
+            if ($reservationItem && $reservationItem->variant_id && $item->variant_id !== $reservationItem->variant_id) {
+                return response()->json([
+                    'message' => 'Selected item does not belong to the reservation variant.'
+                ], 422);
+            }
+
+            $alreadyRented = Rental::where('item_id', $item->item_id)
+                ->whereNull('return_date')
+                ->exists();
+            if ($alreadyRented || $item->status_id !== $availableInventoryStatus->status_id) {
+                return response()->json([
+                    'message' => 'Selected item is not currently available for release.'
+                ], 422);
+            }
+
+            $fromStatusId = $item->status_id;
+
             $rental = Rental::create([
-                'reservation_id' => $request->reservation_id,
-                'item_id' => $request->item_id,
+                'reservation_id' => $reservation?->reservation_id ?? $request->reservation_id,
+                'item_id' => $item->item_id,
                 'customer_id' => $request->customer_id,
                 'released_by' => auth()->id(),
                 'released_date' => $request->released_date,
@@ -510,26 +588,57 @@ class RentalController extends Controller
                 'extension_count' => 0,
             ]);
 
-            // Update reservation status if exists
-             if ($request->reservation_id) {
-                 $reservation = \App\Models\Reservation::find($request->reservation_id);
-                 if ($reservation) {
-                     $completedStatus = $this->findReservationStatusByName('completed')
-                         ?? $this->findReservationStatusByName('confirmed');
-                     if ($completedStatus) {
-                         $reservation->update(['status_id' => $completedStatus->status_id]);
-                     }
-                 }
-             }
+            $reservationItemId = null;
+            if ($reservationItem) {
+                $allocation = ReservationItemAllocation::firstOrNew([
+                    'reservation_item_id' => $reservationItem->reservation_item_id,
+                    'item_id' => $item->item_id,
+                ]);
 
-             // Update item availability
-             $item = \App\Models\Inventory::find($request->item_id);
-             if ($item) {
-                 $rentedInventoryStatus = $this->findInventoryStatusByName('rented');
-                 if ($rentedInventoryStatus) {
-                     $item->update(['status_id' => $rentedInventoryStatus->status_id]);
-                 }
-             }
+                if ($allocation->exists && $allocation->allocation_status === 'released' && $allocation->returned_at === null) {
+                    return response()->json([
+                        'message' => 'This item is already released for the reservation and has not been returned yet.'
+                    ], 422);
+                }
+
+                $allocation->allocation_status = 'released';
+                $allocation->allocated_at = $allocation->allocated_at ?: now();
+                $allocation->released_at = now();
+                $allocation->updated_by = auth()->id();
+                $allocation->save();
+
+                $reservationItemId = $reservationItem->reservation_item_id;
+                $this->syncReservationItemFulfillment($reservationItem);
+            }
+
+            $item->update(['status_id' => $rentedInventoryStatus->status_id]);
+
+            $this->createInventoryMovement(
+                $item,
+                'release',
+                $fromStatusId,
+                $rentedInventoryStatus->status_id,
+                [
+                    'reservation_id' => $reservation?->reservation_id,
+                    'reservation_item_id' => $reservationItemId,
+                    'rental_id' => $rental->rental_id,
+                    'notes' => $request->release_notes,
+                ]
+            );
+
+            if ($reservation) {
+                $hasPendingItems = $reservation->items()
+                    ->where('fulfillment_status', 'pending')
+                    ->exists();
+
+                $targetStatus = $hasPendingItems
+                    ? $this->findReservationStatusByName('confirmed')
+                    : ($this->findReservationStatusByName('completed') ?? $this->findReservationStatusByName('confirmed'));
+
+                if ($targetStatus) {
+                    $reservation->update(['status_id' => $targetStatus->status_id]);
+                }
+            }
 
             DB::commit();
 
@@ -570,6 +679,14 @@ class RentalController extends Controller
 
         DB::beginTransaction();
         try {
+            $availableInventoryStatus = $this->findInventoryStatusByName('available');
+            $rentedInventoryStatus = $this->findInventoryStatusByName('rented');
+            if (!$availableInventoryStatus || !$rentedInventoryStatus) {
+                return response()->json([
+                    'message' => 'Required inventory statuses (available/rented) are missing.'
+                ], 500);
+            }
+
             // Update rental with return information
             $rental->update([
                 'return_date' => $request->input('return_date'),
@@ -581,18 +698,57 @@ class RentalController extends Controller
             $this->createOrUpdatePenaltyInvoice($rental);
 
             // Update rental status to returned
-             $returnedStatus = $this->findRentalStatusByName('returned');
-             if ($returnedStatus) {
+            $returnedStatus = $this->findRentalStatusByName('returned');
+            if ($returnedStatus) {
                  $rental->update(['status_id' => $returnedStatus->status_id]);
-             }
+            }
 
-             // Update item availability back to available
-             if ($rental->item) {
-                 $availableInventoryStatus = $this->findInventoryStatusByName('available');
-                 if ($availableInventoryStatus) {
-                     $rental->item->update(['status_id' => $availableInventoryStatus->status_id]);
-                 }
-             }
+            $reservationItemId = null;
+            if ($rental->reservation_id) {
+                $allocation = ReservationItemAllocation::where('item_id', $rental->item_id)
+                    ->whereHas('reservationItem', function ($query) use ($rental) {
+                        $query->where('reservation_id', $rental->reservation_id);
+                    })
+                    ->whereIn('allocation_status', ['allocated', 'released'])
+                    ->orderByDesc('id')
+                    ->first();
+
+                if ($allocation) {
+                    $allocation->update([
+                        'allocation_status' => 'returned',
+                        'returned_at' => now(),
+                        'updated_by' => auth()->id(),
+                    ]);
+
+                    $reservationItemId = $allocation->reservation_item_id;
+                    if ($allocation->reservationItem) {
+                        $this->syncReservationItemFulfillment($allocation->reservationItem);
+                    }
+                }
+            }
+
+            if ($rental->item) {
+                $fromStatusId = $rental->item->status_id;
+                $rental->item->update(['status_id' => $availableInventoryStatus->status_id]);
+
+                $returnNotes = $request->input('return_notes');
+                if ($request->filled('condition_notes')) {
+                    $returnNotes = trim(($returnNotes ? $returnNotes . ' | ' : '') . 'Condition: ' . $request->input('condition_notes'));
+                }
+
+                $this->createInventoryMovement(
+                    $rental->item,
+                    'return',
+                    $fromStatusId ?: $rentedInventoryStatus->status_id,
+                    $availableInventoryStatus->status_id,
+                    [
+                        'reservation_id' => $rental->reservation_id,
+                        'reservation_item_id' => $reservationItemId,
+                        'rental_id' => $rental->rental_id,
+                        'notes' => $returnNotes,
+                    ]
+                );
+            }
 
             DB::commit();
 
@@ -1015,6 +1171,43 @@ class RentalController extends Controller
     private function findReservationStatusByName(string $name): ?ReservationStatus
     {
         return ReservationStatus::whereRaw('LOWER(status_name) = ?', [strtolower($name)])->first();
+    }
+
+    private function syncReservationItemFulfillment(ReservationItem $reservationItem): void
+    {
+        $releasedCount = $reservationItem->allocations()
+            ->whereIn('allocation_status', ['released', 'returned'])
+            ->count();
+
+        $newStatus = $releasedCount >= (int) $reservationItem->quantity
+            ? 'fulfilled'
+            : 'pending';
+
+        if ($reservationItem->fulfillment_status !== $newStatus) {
+            $reservationItem->update(['fulfillment_status' => $newStatus]);
+        }
+    }
+
+    private function createInventoryMovement(
+        Inventory $item,
+        string $movementType,
+        ?int $fromStatusId,
+        ?int $toStatusId,
+        array $context = []
+    ): void {
+        InventoryMovement::create([
+            'item_id' => $item->item_id,
+            'variant_id' => $item->variant_id,
+            'reservation_id' => $context['reservation_id'] ?? null,
+            'reservation_item_id' => $context['reservation_item_id'] ?? null,
+            'rental_id' => $context['rental_id'] ?? null,
+            'movement_type' => $movementType,
+            'quantity' => 1,
+            'from_status_id' => $fromStatusId,
+            'to_status_id' => $toStatusId,
+            'performed_by' => auth()->id(),
+            'notes' => $context['notes'] ?? null,
+        ]);
     }
 
 }
