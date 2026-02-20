@@ -14,14 +14,14 @@ return new class extends Migration
         Schema::create('reservation_items', function (Blueprint $table) {
             $table->id('reservation_item_id');
             $table->foreignId('reservation_id')->constrained('reservations', 'reservation_id')->cascadeOnDelete();
-            $table->foreignId('item_id')->constrained('inventories', 'item_id')->cascadeOnDelete();
+            $table->foreignId('item_id')->nullable()->constrained('inventories', 'item_id')->nullOnDelete();
             $table->foreignId('variant_id')->nullable()->constrained('inventory_variants', 'variant_id')->nullOnDelete();
             $table->enum('fulfillment_status', ['pending', 'fulfilled', 'cancelled'])->default('pending');
             $table->string('notes')->nullable();
             $table->integer('quantity')->default(1); // If you rent multiple of same item
             $table->decimal('rental_price', 10, 2)->nullable();
             $table->timestamps();
-            $table->unique(['reservation_id', 'item_id']); // Prevent duplicate items in same reservation
+            $table->unique(['reservation_id', 'variant_id'], 'reservation_items_reservation_variant_unique');
 
             $table->index(['item_id', 'fulfillment_status'], 'reservation_items_item_fulfillment_idx');
             $table->index(['reservation_id', 'fulfillment_status'], 'reservation_items_reservation_fulfillment_idx');

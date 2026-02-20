@@ -29,7 +29,8 @@ class StoreReservationRequest extends FormRequest
 
             // Items array validation
             'items' => 'sometimes|array|min:1',
-            'items.*.item_id' => 'required_with:items|exists:inventories,item_id',
+            'items.*.item_id' => 'nullable|exists:inventories,item_id',
+            'items.*.variant_id' => 'required_with:items|exists:inventory_variants,variant_id',
             'items.*.quantity' => 'sometimes|integer|min:1',
             'items.*.rental_price' => 'sometimes|numeric|min:0',
             'items.*.notes' => 'nullable|string|max:500',
@@ -54,8 +55,8 @@ class StoreReservationRequest extends FormRequest
             'end_date.after' => 'End date must be after start date',
             'items.array' => 'Items must be an array',
             'items.min' => 'At least one item must be selected',
-            'items.*.item_id.required_with' => 'Item ID is required',
-            'items.*.item_id.exists' => 'The selected item does not exist',
+            'items.*.variant_id.required_with' => 'Variant is required',
+            'items.*.variant_id.exists' => 'The selected variant does not exist',
             'items.*.quantity.integer' => 'Quantity must be a number',
             'items.*.quantity.min' => 'Quantity must be at least 1',
             'items.*.rental_price.numeric' => 'Rental price must be a number',
@@ -75,7 +76,7 @@ class StoreReservationRequest extends FormRequest
             'status_id' => 'status',
             'start_date' => 'rental start date',
             'end_date' => 'rental end date',
-            'items.*.item_id' => 'item',
+            'items.*.variant_id' => 'item variant',
             'items.*.quantity' => 'quantity',
             'items.*.rental_price' => 'rental price',
         ];

@@ -6,10 +6,12 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\Reservation;
 use App\Models\Inventory;
 use App\Models\InventoryStatus;
+use App\Models\InventoryVariant;
 use App\Models\ReservationItem;
 use App\Models\ReservationStatus;
 use App\Http\Requests\StoreReservationRequest;
 use App\Http\Requests\UpdateReservationRequest;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -25,7 +27,7 @@ class ReservationController extends Controller
      */
     public function report(Request $request):JsonResponse
     {
-        $query = Reservation::with(['customer', 'status', 'reservedBy', 'items.item']);
+        $query = Reservation::with(['customer', 'status', 'reservedBy', 'items.item', 'items.variant']);
 
         // Filter by date range
         if ($request->has('start_date')) {
@@ -100,7 +102,7 @@ class ReservationController extends Controller
      */
     public function generatePDF(Request $request)
     {
-         $query = Reservation::with(['customer', 'status', 'reservedBy', 'items.item']);
+         $query = Reservation::with(['customer', 'status', 'reservedBy', 'items.item', 'items.variant']);
 
         // Apply same filters as report method
         if ($request->has('start_date')) {
@@ -178,7 +180,7 @@ class ReservationController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $query = Reservation::with(['customer', 'status', 'reservedBy', 'items.item']);
+        $query = Reservation::with(['customer', 'status', 'reservedBy', 'items.item', 'items.variant']);
 
         // Search functionality
         if ($request->has('search')) {
@@ -190,9 +192,11 @@ class ReservationController extends Controller
                             ->orWhere('last_name', 'like', "%{$search}%")
                             ->orWhere('email', 'like', "%{$search}%");
                     })
-                    ->orWhereHas('items.item', function ($itemQuery) use ($search) {
-                        $itemQuery->where('name', 'like', "%{$search}%")
-                            ->orWhere('sku', 'like', "%{$search}%");
+                    ->orWhereHas('items.variant', function ($variantQuery) use ($search) {
+                        $variantQuery->where('name', 'like', "%{$search}%")
+                            ->orWhere('design', 'like', "%{$search}%")
+                            ->orWhere('color', 'like', "%{$search}%")
+                            ->orWhere('size', 'like', "%{$search}%");
                     });
             });
         }
@@ -266,30 +270,38 @@ class ReservationController extends Controller
             // Add items to reservation if provided
             if ($request->has('items') && !empty($request->items)) {
                 foreach ($request->items as $itemData) {
-                    // Check item availability
-                    $item = Inventory::findOrFail($itemData['item_id']);
+                    $variant = InventoryVariant::findOrFail($itemData['variant_id']);
+                    $requestedQuantity = (int) ($itemData['quantity'] ?? 1);
 
-                    $isAvailable = $this->checkItemAvailabilityForDateRange(
-                        $itemData['item_id'],
+                    if ($requestedQuantity < 1) {
+                        DB::rollBack();
+                        return response()->json([
+                            'message' => 'Quantity must be at least 1',
+                            'error' => 'INVALID_QUANTITY',
+                        ], 422);
+                    }
+
+                    $availableCount = $this->getAvailableVariantUnitsForDateRange(
+                        $variant->variant_id,
                         $validatedData['start_date'],
                         $validatedData['end_date']
                     );
 
-                    if (!$isAvailable) {
+                    if ($availableCount < $requestedQuantity) {
                         DB::rollBack();
                         return response()->json([
-                            'message' => "Item '{$item->name}' is not available for the selected dates",
-                            'error' => 'ITEM_NOT_AVAILABLE',
-                            'item_id' => $item->item_id
+                            'message' => "Variant '{$variant->name}' has only {$availableCount} available unit(s) for the selected dates",
+                            'error' => 'VARIANT_NOT_AVAILABLE',
+                            'variant_id' => $variant->variant_id,
                         ], 422);
                     }
 
-                    // Create reservation item
                     ReservationItem::create([
                         'reservation_id' => $reservation->reservation_id,
-                        'item_id' => $itemData['item_id'],
-                        'quantity' => $itemData['quantity'] ?? 1,
-                        'rental_price' => $itemData['rental_price'] ?? $item->rental_price,
+                        'item_id' => null,
+                        'variant_id' => $variant->variant_id,
+                        'quantity' => $requestedQuantity,
+                        'rental_price' => $itemData['rental_price'] ?? $variant->rental_price,
                         'notes' => $itemData['notes'] ?? null
                     ]);
                 }
@@ -297,7 +309,7 @@ class ReservationController extends Controller
 
             DB::commit();
 
-            $reservation->load(['customer', 'status', 'reservedBy', 'items.item']);
+            $reservation->load(['customer', 'status', 'reservedBy', 'items.item', 'items.variant']);
 
             return response()->json([
                 'message' => 'Reservation created successfully',
@@ -327,7 +339,8 @@ class ReservationController extends Controller
             'customer',
             'status',
             'reservedBy',
-            'items',
+            'items.item',
+            'items.variant',
             'rentals',
             'invoices'
         ]);
@@ -346,7 +359,7 @@ class ReservationController extends Controller
             DB::beginTransaction();
 
             // Check if reservation can be updated
-            if ($reservation->status->status_name === 'Completed') {
+            if (strtolower($reservation->status->status_name) === 'completed') {
                 return response()->json([
                     'message' => 'Cannot update a completed reservation'
                 ], 422);
@@ -365,39 +378,49 @@ class ReservationController extends Controller
 
                 // Add new/updated items
                 foreach ($request->items as $itemData) {
-                    // Check availability for the updated dates
-                    $item = Inventory::findOrFail($itemData['item_id']);
+                    $variant = InventoryVariant::findOrFail($itemData['variant_id']);
+                    $requestedQuantity = (int) ($itemData['quantity'] ?? 1);
 
-                    $isAvailable = $this->checkItemAvailabilityForDateRange(
-                        $itemData['item_id'],
-                        $validatedData['start_date'] ?? $reservation->start_date,
-                        $validatedData['end_date'] ?? $reservation->end_date,
-                        $reservation->reservation_id // Exclude current reservation
-                    );
-
-                    if (!$isAvailable) {
+                    if ($requestedQuantity < 1) {
                         DB::rollBack();
                         return response()->json([
-                            'message' => "Item '{$item->name}' is not available for the updated dates",
-                            'error' => 'ITEM_NOT_AVAILABLE',
-                            'item_id' => $item->item_id
+                            'message' => 'Quantity must be at least 1',
+                            'error' => 'INVALID_QUANTITY',
                         ], 422);
                     }
 
-                    // Update or create reservation item
+                    $availableCount = $this->getAvailableVariantUnitsForDateRange(
+                        $variant->variant_id,
+                        $validatedData['start_date'] ?? $reservation->start_date,
+                        $validatedData['end_date'] ?? $reservation->end_date,
+                        $reservation->reservation_id
+                    );
+
+                    if ($availableCount < $requestedQuantity) {
+                        DB::rollBack();
+                        return response()->json([
+                            'message' => "Variant '{$variant->name}' has only {$availableCount} available unit(s) for the selected dates",
+                            'error' => 'VARIANT_NOT_AVAILABLE',
+                            'variant_id' => $variant->variant_id,
+                        ], 422);
+                    }
+
                     if (isset($itemData['reservation_item_id'])) {
                         ReservationItem::where('reservation_item_id', $itemData['reservation_item_id'])
                             ->update([
-                                'quantity' => $itemData['quantity'] ?? 1,
-                                'rental_price' => $itemData['rental_price'] ?? $item->rental_price,
+                                'item_id' => null,
+                                'variant_id' => $variant->variant_id,
+                                'quantity' => $requestedQuantity,
+                                'rental_price' => $itemData['rental_price'] ?? $variant->rental_price,
                                 'notes' => $itemData['notes'] ?? null
                             ]);
                     } else {
                         ReservationItem::create([
                             'reservation_id' => $reservation->reservation_id,
-                            'item_id' => $itemData['item_id'],
-                            'quantity' => $itemData['quantity'] ?? 1,
-                            'rental_price' => $itemData['rental_price'] ?? $item->rental_price,
+                            'item_id' => null,
+                            'variant_id' => $variant->variant_id,
+                            'quantity' => $requestedQuantity,
+                            'rental_price' => $itemData['rental_price'] ?? $variant->rental_price,
                             'notes' => $itemData['notes'] ?? null
                         ]);
                     }
@@ -406,7 +429,7 @@ class ReservationController extends Controller
 
             DB::commit();
 
-            $reservation->load(['customer', 'status', 'reservedBy', 'items.item']);
+            $reservation->load(['customer', 'status', 'reservedBy', 'items.item', 'items.variant']);
 
             return response()->json([
                 'message' => 'Reservation updated successfully',
@@ -462,9 +485,8 @@ class ReservationController extends Controller
      */
     public function browseAvailableItems(Request $request): JsonResponse
     {
-        $query = Inventory::with(['status', 'images']);
+        $query = InventoryVariant::query();
 
-        // Filter by item type (gowns, suits)
         if ($request->has('item_type')) {
             $query->where('item_type', $request->get('item_type'));
         }
@@ -479,50 +501,70 @@ class ReservationController extends Controller
             $query->where('color', $request->get('color'));
         }
 
-        // Filter by availability status (available items only)
-        if ($request->get('available_only', true)) {
-            $query->whereHas('status', function ($statusQuery) {
-                $statusQuery->where('status_name', 'available');
-            });
-        }
-
-        // Search by name or SKU
         if ($request->has('search')) {
             $search = $request->get('search');
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('sku', 'like', "%{$search}%");
+                    ->orWhere('design', 'like', "%{$search}%")
+                    ->orWhere('size', 'like', "%{$search}%")
+                    ->orWhere('color', 'like', "%{$search}%");
             });
         }
 
-        // Check availability for specific date range
-        if ($request->has('start_date') && $request->has('end_date')) {
-            $startDate = $request->get('start_date');
-            $endDate = $request->get('end_date');
+        $variants = $query
+            ->orderBy('name')
+            ->paginate($request->get('per_page', 20));
 
-            // Exclude items that are already reserved in this date range
-            $query->whereDoesntHave('reservationItems', function ($resQuery) use ($startDate, $endDate) {
-                $resQuery->whereHas('reservation', function ($dateQuery) use ($startDate, $endDate) {
-                    $dateQuery->where(function ($q) use ($startDate, $endDate) {
-                        $q->whereBetween('start_date', [$startDate, $endDate])
-                            ->orWhereBetween('end_date', [$startDate, $endDate])
-                            ->orWhere(function ($innerQ) use ($startDate, $endDate) {
-                                $innerQ->where('start_date', '<=', $startDate)
-                                    ->where('end_date', '>=', $endDate);
-                            });
-                    })
-                        ->whereHas('status', function ($statusQ) {
-                            // Exclude cancelled reservations
-                            $statusQ->where('status_name', '!=', 'cancelled');
-                        });
+        $startDate = $request->get('start_date');
+        $endDate = $request->get('end_date');
+        $availableOnly = filter_var($request->get('available_only', true), FILTER_VALIDATE_BOOLEAN);
+
+        $mapped = $variants->getCollection()->map(function ($variant) use ($startDate, $endDate) {
+            $availableCount = $this->getAvailableVariantUnitsForDateRange(
+                $variant->variant_id,
+                $startDate,
+                $endDate
+            );
+
+            $representativeItem = Inventory::with(['status', 'images' => function ($q) {
+                $q->where('is_primary', true)->orWhereIn('image_id', function ($subQ) {
+                    $subQ->selectRaw('MIN(image_id)')
+                        ->from('inventory_images')
+                        ->groupBy('item_id');
                 });
-            });
+            }])
+                ->where('variant_id', $variant->variant_id)
+                ->orderBy('item_id')
+                ->first();
+
+            return [
+                'variant_id' => $variant->variant_id,
+                'item_type' => $variant->item_type,
+                'name' => $variant->name,
+                'size' => $variant->size,
+                'color' => $variant->color,
+                'design' => $variant->design,
+                'rental_price' => $variant->rental_price,
+                'deposit_amount' => $variant->deposit_amount,
+                'is_sellable' => $variant->is_sellable,
+                'selling_price' => $variant->selling_price,
+                'available_quantity' => $availableCount,
+                'total_units' => $variant->total_units,
+                'representative_item_id' => $representativeItem?->item_id,
+                'representative_sku' => $representativeItem?->sku,
+                'status' => $representativeItem?->status,
+                'images' => $representativeItem?->images ?? [],
+            ];
+        });
+
+        if ($availableOnly) {
+            $mapped = $mapped->filter(fn ($variant) => $variant['available_quantity'] > 0)->values();
         }
 
-        $items = $query->paginate($request->get('per_page', 20));
+        $variants->setCollection($mapped);
 
         return response()->json([
-            'data' => $items,
+            'data' => $variants,
             'message' => 'Available items retrieved successfully'
         ]);
     }
@@ -535,61 +577,57 @@ class ReservationController extends Controller
      */
     public function checkItemDetails(Request $request, $itemId): JsonResponse
     {
-        $item = Inventory::with([
-            'status',
-            'images',
-            'reservationItems.reservation' => function ($query) {
-                $query->where('end_date', '>=', now())
-                      ->whereHas('status', function ($statusQ) {
-                          $statusQ->where('status_name', '!=', 'cancelled');
-                      });
-            }
-        ])->findOrFail($itemId);
+        $variant = InventoryVariant::findOrFail($itemId);
+        $representativeItem = Inventory::with(['status', 'images'])->where('variant_id', $variant->variant_id)->orderBy('item_id')->first();
 
-        // Calculate next available date if item is currently reserved
-        $nextAvailableDate = null;
-        if ($item->reservationItems->isNotEmpty()) {
-            $lastReservation = $item->reservationItems
-                ->sortByDesc('reservation.end_date')
-                ->first();
+        $startDate = $request->get('start_date');
+        $endDate = $request->get('end_date');
 
-            if ($lastReservation && $lastReservation->reservation) {
-                $nextAvailableDate = $lastReservation->reservation->end_date->addDay();
-            }
-        }
+        $availableCount = $this->getAvailableVariantUnitsForDateRange(
+            $variant->variant_id,
+            $startDate,
+            $endDate
+        );
 
-        // Check availability for specific date range
-        $isAvailableForDates = true;
-        if ($request->has('start_date') && $request->has('end_date')) {
-            $startDate = $request->get('start_date');
-            $endDate = $request->get('end_date');
+        $isAvailableForDates = $availableCount > 0;
 
-            $conflictingReservations = $item->reservationItems()
-                ->whereHas('reservation', function ($query) use ($startDate, $endDate) {
-                    $query->where(function ($q) use ($startDate, $endDate) {
-                        $q->whereBetween('start_date', [$startDate, $endDate])
-                          ->orWhereBetween('end_date', [$startDate, $endDate])
-                          ->orWhere(function ($innerQ) use ($startDate, $endDate) {
-                              $innerQ->where('start_date', '<=', $startDate)
-                                     ->where('end_date', '>=', $endDate);
-                          });
-                    })
-                    ->whereHas('status', function ($statusQ) {
-                        $statusQ->where('status_name', '!=', 'cancelled');
-                    });
-                })
-                ->count();
+        $nextAvailableDate = Reservation::whereHas('items', function ($query) use ($variant) {
+            $query->where('variant_id', $variant->variant_id);
+        })
+            ->whereDate('end_date', '>=', now()->toDateString())
+            ->whereHas('status', function ($statusQ) {
+                $statusQ->whereRaw('LOWER(status_name) != ?', ['cancelled']);
+            })
+            ->orderBy('end_date')
+            ->value('end_date');
 
-            $isAvailableForDates = $conflictingReservations === 0;
-        }
+        $nextAvailableDate = $nextAvailableDate ? Carbon::parse($nextAvailableDate)->addDay() : null;
 
         return response()->json([
-            'data' => $item,
+            'data' => [
+                'variant_id' => $variant->variant_id,
+                'name' => $variant->name,
+                'item_type' => $variant->item_type,
+                'size' => $variant->size,
+                'color' => $variant->color,
+                'design' => $variant->design,
+                'rental_price' => $variant->rental_price,
+                'deposit_amount' => $variant->deposit_amount,
+                'is_sellable' => $variant->is_sellable,
+                'selling_price' => $variant->selling_price,
+                'total_units' => $variant->total_units,
+                'representative_sku' => $representativeItem?->sku,
+                'status' => $representativeItem?->status,
+                'images' => $representativeItem?->images ?? [],
+                'created_at' => $variant->created_at,
+                'updated_at' => $variant->updated_at,
+            ],
             'availability' => [
-                'is_currently_available' => $item->status->status_name === 'available',
+                'is_currently_available' => $availableCount > 0,
                 'next_available_date' => $nextAvailableDate,
                 'is_available_for_requested_dates' => $isAvailableForDates,
-                'upcoming_reservations' => $item->reservationItems->count()
+                'upcoming_reservations' => ReservationItem::where('variant_id', $variant->variant_id)->count(),
+                'available_quantity' => $availableCount,
             ],
             'message' => 'Item details retrieved successfully'
         ]);
@@ -604,13 +642,13 @@ class ReservationController extends Controller
     public function cancelReservation(Request $request, Reservation $reservation): JsonResponse
     {
         // Check if reservation can be cancelled
-        if ($reservation->status->status_name === 'Completed') {
+        if (strtolower($reservation->status->status_name) === 'completed') {
             return response()->json([
                 'message' => 'Cannot cancel a completed reservation'
             ], 422);
         }
 
-        if ($reservation->status->status_name === 'Cancelled') {
+        if (strtolower($reservation->status->status_name) === 'cancelled') {
             return response()->json([
                 'message' => 'Reservation is already cancelled'
             ], 422);
@@ -628,7 +666,7 @@ class ReservationController extends Controller
         }
 
         // Find cancelled status
-        $cancelledStatus = \App\Models\ReservationStatus::where('status_name', 'Cancelled')->first();
+        $cancelledStatus = \App\Models\ReservationStatus::whereRaw('LOWER(status_name) = ?', ['cancelled'])->first();
 
         if (!$cancelledStatus) {
             return response()->json([
@@ -650,14 +688,14 @@ class ReservationController extends Controller
             ->value('status_id');
 
         foreach ($reservation->items as $reservationItem) {
-            if ($availableStatusId) {
+            if ($availableStatusId && $reservationItem->item_id) {
                 $reservationItem->item()->update([
                     'status_id' => $availableStatusId
                 ]);
             }
         }
 
-        $reservation->load(['customer', 'status', 'reservedBy', 'items.item']);
+        $reservation->load(['customer', 'status', 'reservedBy', 'items.item', 'items.variant']);
 
         return response()->json([
             'message' => 'Reservation cancelled successfully',
@@ -668,28 +706,52 @@ class ReservationController extends Controller
     /**
      * Helper method: Check item availability for a date range
      */
-    private function checkItemAvailabilityForDateRange($itemId, $startDate, $endDate, $excludeReservationId = null): bool
+    private function getAvailableVariantUnitsForDateRange(int $variantId, ?string $startDate, ?string $endDate, ?int $excludeReservationId = null): int
     {
-        $query = ReservationItem::where('item_id', $itemId)
-            ->whereHas('reservation', function ($resQuery) use ($startDate, $endDate, $excludeReservationId) {
-                $resQuery->where(function ($q) use ($startDate, $endDate) {
+        $rentableUnits = Inventory::where('variant_id', $variantId)
+            ->whereHas('status', function ($query) {
+                $query->whereRaw('LOWER(status_name) NOT IN (?, ?)', ['retired', 'sold']);
+            })
+            ->count();
+
+        if (!$startDate || !$endDate) {
+            $availableStatusId = InventoryStatus::whereRaw('LOWER(status_name) = ?', ['available'])->value('status_id');
+            if (!$availableStatusId) {
+                return 0;
+            }
+
+            return Inventory::where('variant_id', $variantId)
+                ->where('status_id', $availableStatusId)
+                ->count();
+        }
+
+        $reservedUnits = ReservationItem::where('variant_id', $variantId)
+            ->whereHas('reservation', function ($query) use ($startDate, $endDate, $excludeReservationId) {
+                $query->where(function ($q) use ($startDate, $endDate) {
                     $q->whereBetween('start_date', [$startDate, $endDate])
-                      ->orWhereBetween('end_date', [$startDate, $endDate])
-                      ->orWhere(function ($innerQ) use ($startDate, $endDate) {
-                          $innerQ->where('start_date', '<=', $startDate)
-                                 ->where('end_date', '>=', $endDate);
-                      });
-                })
-                ->whereHas('status', function ($statusQ) {
-                    $statusQ->where('status_name', '!=', 'Cancelled');
+                        ->orWhereBetween('end_date', [$startDate, $endDate])
+                        ->orWhere(function ($innerQ) use ($startDate, $endDate) {
+                            $innerQ->where('start_date', '<=', $startDate)
+                                ->where('end_date', '>=', $endDate);
+                        });
+                })->whereHas('status', function ($statusQ) {
+                    $statusQ->whereRaw('LOWER(status_name) != ?', ['cancelled']);
                 });
 
                 if ($excludeReservationId) {
-                    $resQuery->where('reservation_id', '!=', $excludeReservationId);
+                    $query->where('reservation_id', '!=', $excludeReservationId);
                 }
-            });
+            })
+            ->sum('quantity');
 
-        return $query->count() === 0;
+        $rentedUnits = DB::table('rentals')
+            ->join('inventories', 'rentals.item_id', '=', 'inventories.item_id')
+            ->where('inventories.variant_id', $variantId)
+            ->whereDate('rentals.released_date', '<=', $endDate)
+            ->whereDate(DB::raw('COALESCE(rentals.return_date, rentals.due_date)'), '>=', $startDate)
+            ->count();
+
+        return max($rentableUnits - $reservedUnits - $rentedUnits, 0);
     }
 
     /**
@@ -697,13 +759,13 @@ class ReservationController extends Controller
      */
     public function confirmReservation(Reservation $reservation): JsonResponse
     {
-        if ($reservation->status->status_name !== 'Pending') {
+        if (strtolower($reservation->status->status_name) !== 'pending') {
             return response()->json([
                 'message' => 'Only pending reservations can be confirmed'
             ], 422);
         }
 
-        $confirmedStatus = \App\Models\ReservationStatus::where('status_name', 'Confirmed')->first();
+        $confirmedStatus = \App\Models\ReservationStatus::whereRaw('LOWER(status_name) = ?', ['confirmed'])->first();
 
         $reservation->update([
             'status_id' => $confirmedStatus->status_id,
@@ -711,7 +773,7 @@ class ReservationController extends Controller
             'confirmed_by' => Auth::id()
         ]);
 
-        $reservation->load(['customer', 'status', 'reservedBy', 'items.item']);
+        $reservation->load(['customer', 'status', 'reservedBy', 'items.item', 'items.variant']);
 
         return response()->json([
             'message' => 'Reservation confirmed successfully',
