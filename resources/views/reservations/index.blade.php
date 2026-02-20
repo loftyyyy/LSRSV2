@@ -214,6 +214,9 @@
 {{-- Include New Reservation Modal --}}
 @include('reservations.partials.new-reservation-modal')
 
+{{-- Include Edit Reservation Modal --}}
+@include('reservations.partials.edit-reservation-modal')
+
 {{-- Axios for API calls --}}
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
@@ -233,6 +236,13 @@
     };
 
     var searchDebounceTimer;
+    var reservationEditState = {
+        isOpen: false,
+        isSubmitting: false,
+        currentReservationId: null,
+        customersLoaded: false,
+        customers: []
+    };
 
     function initializeReservationPage() {
         var searchInput = document.getElementById('searchInput');
@@ -501,6 +511,10 @@
         reservations.forEach(function(reservation) {
             var statusName = ((reservation.status && reservation.status.status_name) || 'unknown').toLowerCase();
             var statusLabel = statusName.charAt(0).toUpperCase() + statusName.slice(1);
+            var isPending = statusName === 'pending';
+            var disabledEditTitle = statusName === 'confirmed'
+                ? 'Editing is disabled for confirmed reservations.'
+                : 'Only pending reservations can be edited.';
 
             var statusColor = statusName === 'confirmed'
                 ? 'bg-emerald-500/15 text-emerald-600 border-emerald-500/40 dark:text-emerald-300'
@@ -538,6 +552,10 @@
                 return total + ((Number(item.rental_price) || 0) * (Number(item.quantity) || 1));
             }, 0);
 
+            var actionButtonHtml = isPending
+                ? '<button type="button" onclick="openEditReservationModal(' + reservation.reservation_id + ')" class="rounded-lg p-1.5 hover:bg-violet-600 hover:text-white transition-colors duration-300 ease-in-out" aria-label="Edit pending reservation" title="Edit reservation"><x-icon name="edit" class="h-3.5 w-3.5" /></button>'
+                : '<button type="button" aria-disabled="true" tabindex="-1" class="group relative rounded-lg p-1.5 text-neutral-400 dark:text-neutral-600 cursor-not-allowed" aria-label="Edit disabled" title="' + disabledEditTitle + '"><span class="relative inline-flex items-center justify-center"><x-icon name="edit" class="h-3.5 w-3.5" /><span class="absolute inset-0 flex items-center justify-center pointer-events-none"><span class="block w-5 border-t-2 border-current rotate-[-35deg] opacity-90"></span></span></span></button>';
+
             var row = document.createElement('tr');
             row.className = 'border-b border-neutral-200 hover:bg-neutral-100 dark:border-neutral-900/60 dark:hover:bg-white/5 transition-colors duration-300 ease-in-out';
             row.innerHTML = '' +
@@ -548,7 +566,7 @@
                 '<td class="py-3.5 pr-2 text-neutral-600 dark:text-neutral-300 font-geist-mono">' + formatDate(reservation.end_date) + '</td>' +
                 '<td class="py-3.5 pr-2"><span class="inline-flex items-center rounded-full ' + statusColor + ' px-2 py-1 text-[11px] font-medium border transition-colors duration-300 ease-in-out"><span class="mr-1.5 h-1.5 w-1.5 rounded-full ' + statusBgColor + '"></span>' + statusLabel + '</span></td>' +
                 '<td class="py-3.5 pr-4 text-left text-neutral-900 dark:text-neutral-100 font-geist-mono">₱' + totalAmount.toLocaleString() + '</td>' +
-                '<td class="py-3.5 pl-2 text-left text-neutral-500 dark:text-neutral-400"><div class="inline-flex items-center gap-2"><button class="rounded-lg p-1.5 hover:bg-violet-600 hover:text-white transition-colors duration-300 ease-in-out" aria-label="Edit"><x-icon name="edit" class="h-3.5 w-3.5" /></button><button class="rounded-lg p-1.5 text-red-500 hover:bg-red-500/15 hover:text-red-400 transition-colors duration-300 ease-in-out" aria-label="Delete"><x-icon name="trash" class="h-3.5 w-3.5" /></button></div></td>';
+                '<td class="py-3.5 pl-2 text-left text-neutral-500 dark:text-neutral-400"><div class="inline-flex items-center gap-2">' + actionButtonHtml + '</div></td>';
 
             tbody.appendChild(row);
         });
@@ -679,6 +697,286 @@
             fetchReservations();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
+    }
+
+    function openEditReservationModal(reservationId) {
+        if (!reservationId) {
+            return;
+        }
+
+        reservationEditState.currentReservationId = reservationId;
+        reservationEditState.isOpen = true;
+
+        hideEditReservationMessages();
+
+        var modal = document.getElementById('editReservationModal');
+        if (!modal) {
+            return;
+        }
+
+        var form = document.getElementById('editReservationForm');
+        if (form) {
+            form.reset();
+        }
+
+        document.getElementById('editReservationId').value = String(reservationId);
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+
+        loadCustomersForEditReservation()
+            .then(function() {
+                return axios.get('/api/reservations/' + reservationId);
+            })
+            .then(function(response) {
+                var reservation = response.data && response.data.data ? response.data.data : null;
+                if (!reservation) {
+                    throw new Error('Unable to load reservation details.');
+                }
+
+                var statusName = ((reservation.status && reservation.status.status_name) || '').toLowerCase();
+                if (statusName !== 'pending') {
+                    closeEditReservationModal();
+                    showErrorNotification(statusName === 'confirmed'
+                        ? 'Editing is disabled for confirmed reservations.'
+                        : 'Only pending reservations can be edited.');
+                    return;
+                }
+
+                populateEditReservationForm(reservation);
+                var passwordInput = document.getElementById('editReservationPassword');
+                if (passwordInput) {
+                    passwordInput.focus();
+                }
+            })
+            .catch(function(error) {
+                console.error('Error opening edit reservation modal:', error);
+                closeEditReservationModal();
+                var message = error.response && error.response.data && error.response.data.message
+                    ? error.response.data.message
+                    : (error.message || 'Failed to load reservation details.');
+                showErrorNotification(message);
+            });
+    }
+
+    function closeEditReservationModal() {
+        reservationEditState.isOpen = false;
+        reservationEditState.currentReservationId = null;
+
+        var modal = document.getElementById('editReservationModal');
+        if (!modal) {
+            return;
+        }
+
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        hideEditReservationMessages();
+    }
+
+    function hideEditReservationMessages() {
+        var errorEl = document.getElementById('editReservationError');
+        var successEl = document.getElementById('editReservationSuccess');
+        if (errorEl) {
+            errorEl.classList.add('hidden');
+        }
+        if (successEl) {
+            successEl.classList.add('hidden');
+        }
+    }
+
+    function showEditReservationError(message) {
+        var errorEl = document.getElementById('editReservationError');
+        var successEl = document.getElementById('editReservationSuccess');
+
+        if (successEl) {
+            successEl.classList.add('hidden');
+        }
+
+        if (errorEl) {
+            var messageEl = errorEl.querySelector('p');
+            if (messageEl) {
+                messageEl.textContent = message;
+            }
+            errorEl.classList.remove('hidden');
+        }
+    }
+
+    function showEditReservationSuccess(message) {
+        var errorEl = document.getElementById('editReservationError');
+        var successEl = document.getElementById('editReservationSuccess');
+
+        if (errorEl) {
+            errorEl.classList.add('hidden');
+        }
+
+        if (successEl) {
+            var messageEl = successEl.querySelector('p');
+            if (messageEl) {
+                messageEl.textContent = message;
+            }
+            successEl.classList.remove('hidden');
+        }
+    }
+
+    function setEditReservationSubmitting(isSubmitting) {
+        reservationEditState.isSubmitting = isSubmitting;
+
+        var button = document.getElementById('submitEditReservationBtn');
+        var buttonText = document.getElementById('submitEditReservationBtnText');
+        var buttonLoading = document.getElementById('submitEditReservationBtnLoading');
+
+        if (button) {
+            button.disabled = isSubmitting;
+        }
+        if (buttonText) {
+            buttonText.classList.toggle('hidden', isSubmitting);
+        }
+        if (buttonLoading) {
+            buttonLoading.classList.toggle('hidden', !isSubmitting);
+        }
+    }
+
+    async function loadCustomersForEditReservation() {
+        if (reservationEditState.customersLoaded && reservationEditState.customers.length) {
+            return reservationEditState.customers;
+        }
+
+        var response = await axios.get('/api/customers', {
+            params: {
+                per_page: 100,
+                sort_by: 'first_name',
+                sort_order: 'asc'
+            }
+        });
+
+        var responseData = response.data && response.data.data ? response.data.data : response.data;
+        var customers = Array.isArray(responseData) ? responseData : (responseData.data || []);
+        var activeCustomers = customers.filter(function(customer) {
+            return ((customer.status && customer.status.status_name) || '').toLowerCase() === 'active';
+        });
+
+        reservationEditState.customers = activeCustomers;
+        reservationEditState.customersLoaded = true;
+        return activeCustomers;
+    }
+
+    function populateEditReservationCustomerOptions(selectedCustomerId) {
+        var select = document.getElementById('editReservationCustomer');
+        if (!select) {
+            return;
+        }
+
+        select.innerHTML = '<option value="">Select customer</option>';
+
+        reservationEditState.customers.forEach(function(customer) {
+            var option = document.createElement('option');
+            option.value = String(customer.customer_id);
+            option.textContent = [customer.first_name, customer.last_name].filter(Boolean).join(' ').trim() || customer.email || 'Unknown Customer';
+            if (String(customer.customer_id) === String(selectedCustomerId)) {
+                option.selected = true;
+            }
+            select.appendChild(option);
+        });
+    }
+
+    function populateEditReservationForm(reservation) {
+        document.getElementById('editReservationId').value = String(reservation.reservation_id || '');
+        document.getElementById('editReservationStartDate').value = reservation.start_date ? String(reservation.start_date).split('T')[0] : '';
+        document.getElementById('editReservationEndDate').value = reservation.end_date ? String(reservation.end_date).split('T')[0] : '';
+        document.getElementById('editReservationPassword').value = '';
+
+        populateEditReservationCustomerOptions(reservation.customer_id);
+    }
+
+    async function verifyReservationEditPassword(password) {
+        var response = await axios.post('/api/verify-password', { password: password });
+        return !!(response.data && response.data.valid);
+    }
+
+    function initializeEditReservationModal() {
+        var form = document.getElementById('editReservationForm');
+        var modal = document.getElementById('editReservationModal');
+        var startDateInput = document.getElementById('editReservationStartDate');
+        var endDateInput = document.getElementById('editReservationEndDate');
+
+        if (startDateInput && endDateInput) {
+            startDateInput.addEventListener('change', function() {
+                endDateInput.min = startDateInput.value || '';
+            });
+        }
+
+        if (form) {
+            form.addEventListener('submit', async function(event) {
+                event.preventDefault();
+
+                if (reservationEditState.isSubmitting) {
+                    return;
+                }
+
+                hideEditReservationMessages();
+
+                var reservationId = document.getElementById('editReservationId').value;
+                var customerId = document.getElementById('editReservationCustomer').value;
+                var startDate = document.getElementById('editReservationStartDate').value;
+                var endDate = document.getElementById('editReservationEndDate').value;
+                var password = document.getElementById('editReservationPassword').value;
+
+                if (!reservationId || !customerId || !startDate || !endDate) {
+                    showEditReservationError('Please complete all required fields.');
+                    return;
+                }
+
+                if (!password || !password.trim()) {
+                    showEditReservationError('Please enter your password to confirm this update.');
+                    return;
+                }
+
+                setEditReservationSubmitting(true);
+
+                try {
+                    var passwordValid = await verifyReservationEditPassword(password.trim());
+                    if (!passwordValid) {
+                        showEditReservationError('Invalid password. Please try again.');
+                        return;
+                    }
+
+                    await axios.put('/api/reservations/' + reservationId, {
+                        customer_id: customerId,
+                        start_date: startDate,
+                        end_date: endDate
+                    });
+
+                    showEditReservationSuccess('Reservation updated successfully.');
+
+                    setTimeout(function() {
+                        closeEditReservationModal();
+                        fetchReservations();
+                        fetchReservationStats();
+                    }, 900);
+                } catch (error) {
+                    console.error('Error updating reservation:', error);
+                    var message = error.response && error.response.data && error.response.data.message
+                        ? error.response.data.message
+                        : (error.message || 'Failed to update reservation.');
+                    showEditReservationError(message);
+                } finally {
+                    setEditReservationSubmitting(false);
+                }
+            });
+        }
+
+        if (modal) {
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal && reservationEditState.isOpen) {
+                    closeEditReservationModal();
+                }
+            });
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && reservationEditState.isOpen) {
+                closeEditReservationModal();
+            }
+        });
     }
 
     if (!globalThis.browseItemsModalState) {
@@ -1237,6 +1535,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         initializeReservationPage();
         initializeBrowseItemsModal();
+        initializeEditReservationModal();
     });
 </script>
 </body>

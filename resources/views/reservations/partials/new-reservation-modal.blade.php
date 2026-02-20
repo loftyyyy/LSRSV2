@@ -148,7 +148,8 @@
                                     <th class="py-2 pr-3 font-medium">Item</th>
                                     <th class="py-2 pr-3 font-medium">Size</th>
                                     <th class="py-2 pr-3 font-medium">Color</th>
-                                    <th class="py-2 pr-3 font-medium text-right">Price/Day</th>
+                                    <th class="py-2 pr-3 font-medium text-right">Rental Price</th>
+                                    <th class="py-2 pr-3 font-medium text-right">Deposit Amount</th>
                                     <th class="py-2 pr-3 font-medium text-center">Qty</th>
                                     <th class="py-2 font-medium text-right">Subtotal</th>
                                     <th class="py-2 pl-2 font-medium"></th>
@@ -168,7 +169,7 @@
                         <span id="estimatedTotal" class="text-lg font-semibold text-violet-600 dark:text-violet-400">₱0.00</span>
                     </div>
                     <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
-                        Based on <span id="totalDays">0</span> day(s) rental period
+                        Computed as rental price + deposit amount per item
                     </p>
                 </div>
             </div>
@@ -541,7 +542,8 @@
                             <p class="text-sm font-medium text-neutral-900 dark:text-white">${item.name}</p>
                             <p class="text-xs text-neutral-500 dark:text-neutral-400">${item.representative_sku || 'No SKU'} &bull; ${item.size} &bull; ${item.color}</p>
                             <p class="text-xs text-neutral-500 dark:text-neutral-400">Available: ${item.available_quantity ?? 0}</p>
-                            <p class="text-xs font-medium text-violet-600 dark:text-violet-400">₱${parseFloat(item.rental_price).toLocaleString('en-PH', {minimumFractionDigits: 2})}/day</p>
+                            <p class="text-xs font-medium text-violet-600 dark:text-violet-400">Rental: ₱${parseFloat(item.rental_price).toLocaleString('en-PH', {minimumFractionDigits: 2})}</p>
+                            <p class="text-xs text-neutral-500 dark:text-neutral-400">Deposit: ₱${parseFloat(item.deposit_amount || 0).toLocaleString('en-PH', {minimumFractionDigits: 2})}</p>
                         </div>
                     </div>
                     <button
@@ -571,6 +573,7 @@
                 size: item.size,
                 color: item.color,
                 rental_price: parseFloat(item.rental_price),
+                deposit_amount: parseFloat(item.deposit_amount || 0),
                 quantity: 1,
                 notes: '',
                 available_quantity: Number(item.available_quantity || 0)
@@ -622,16 +625,15 @@
         tableEl.classList.remove('hidden');
         summaryEl.classList.remove('hidden');
 
-        var rentalDays = calculateRentalDays();
-
         bodyEl.innerHTML = reservationState.selectedItems.map(function(item) {
-            var subtotal = item.rental_price * item.quantity * rentalDays;
+            var subtotal = (item.rental_price + item.deposit_amount) * item.quantity;
             return `
                 <tr class="text-[13px]">
                     <td class="py-2.5 pr-3 text-neutral-900 dark:text-neutral-100">${item.name}</td>
                     <td class="py-2.5 pr-3 text-neutral-600 dark:text-neutral-400">${item.size}</td>
                     <td class="py-2.5 pr-3 text-neutral-600 dark:text-neutral-400">${item.color}</td>
                     <td class="py-2.5 pr-3 text-right text-neutral-700 dark:text-neutral-300 font-geist-mono">₱${item.rental_price.toLocaleString('en-PH', {minimumFractionDigits: 2})}</td>
+                    <td class="py-2.5 pr-3 text-right text-neutral-700 dark:text-neutral-300 font-geist-mono">₱${item.deposit_amount.toLocaleString('en-PH', {minimumFractionDigits: 2})}</td>
                     <td class="py-2.5 pr-3 text-center">
                         <input
                             type="number"
@@ -676,15 +678,13 @@
     }
 
     function updateTotalSummary() {
-        var rentalDays = calculateRentalDays();
         var total = 0;
 
         reservationState.selectedItems.forEach(function(item) {
-            total += item.rental_price * item.quantity * rentalDays;
+            total += (item.rental_price + item.deposit_amount) * item.quantity;
         });
 
         document.getElementById('estimatedTotal').textContent = '₱' + total.toLocaleString('en-PH', {minimumFractionDigits: 2});
-        document.getElementById('totalDays').textContent = rentalDays;
     }
 
     function updateRentalDuration() {

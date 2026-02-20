@@ -358,10 +358,10 @@ class ReservationController extends Controller
         try {
             DB::beginTransaction();
 
-            // Check if reservation can be updated
-            if (strtolower($reservation->status->status_name) === 'completed') {
+            // Only pending reservations can be updated
+            if (strtolower($reservation->status->status_name) !== 'pending') {
                 return response()->json([
-                    'message' => 'Cannot update a completed reservation'
+                    'message' => 'Only pending reservations can be updated'
                 ], 422);
             }
 
