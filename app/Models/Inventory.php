@@ -12,6 +12,7 @@ class Inventory extends Model
     protected $table = 'inventories';
     protected $primaryKey = 'item_id';
     protected $fillable = [
+        'variant_id',
         'sku',
         'item_type',
         'name',
@@ -36,6 +37,11 @@ class Inventory extends Model
     public function status()
     {
         return $this->belongsTo(InventoryStatus::class, 'status_id', 'status_id');
+    }
+
+    public function variant()
+    {
+        return $this->belongsTo(InventoryVariant::class, 'variant_id', 'variant_id');
     }
 
     public function updatedByUser()

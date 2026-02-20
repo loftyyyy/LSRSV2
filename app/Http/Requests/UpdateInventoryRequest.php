@@ -24,13 +24,13 @@ class UpdateInventoryRequest extends FormRequest
         $inventoryId = $this->route('inventory')->item_id ?? null;
 
         return [
+            'variant_id' => ['sometimes', 'nullable', 'exists:inventory_variants,variant_id'],
             'sku' => ['nullable', 'string', 'max:50', 'unique:inventories,sku,' . $inventoryId . ',item_id'],
             'item_type' => ['sometimes', 'required', 'in:gown,suit'],
             'name' => ['sometimes', 'required', 'string', 'max:255'],
             'size' => ['sometimes', 'required', 'string', 'max:50'],
             'color' => ['sometimes', 'required', 'string', 'max:100'],
             'design' => ['sometimes', 'required', 'string', 'max:255'],
-            'condition' => ['sometimes', 'required', 'in:good,damaged,under repaired,retired'],
             'rental_price' => ['sometimes', 'required', 'numeric', 'min:0', 'max:999999.99'],
             'is_sellable' => ['sometimes', 'boolean'],
             'selling_price' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],

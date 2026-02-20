@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Inventory;
+use App\Models\InventoryVariant;
 use App\Models\InventoryStatus;
 use App\Http\Requests\StoreInventoryRequest;
 use App\Http\Requests\UpdateInventoryRequest;
@@ -81,15 +82,13 @@ class InventoryController extends Controller
       */
      public function getMetrics(): JsonResponse
      {
-         // Total Inventory Stats
          $totalItems = Inventory::count();
          $totalValue = Inventory::sum('rental_price') ?? 0;
 
-         // Status Distribution
          $availableItems = Inventory::whereHas('status', fn($q) => $q->where('status_name', 'available'))->count();
          $rentedItems = Inventory::whereHas('status', fn($q) => $q->where('status_name', 'rented'))->count();
-         $damagedItems = Inventory::whereHas('status', fn($q) => $q->where('status_name', 'damaged'))->count();
          $maintenanceItems = Inventory::whereHas('status', fn($q) => $q->where('status_name', 'maintenance'))->count();
+         $retiredItems = Inventory::whereHas('status', fn($q) => $q->where('status_name', 'retired'))->count();
 
          // Item Type Distribution
          $itemTypeDistribution = Inventory::selectRaw('item_type, COUNT(*) as count')
@@ -143,27 +142,23 @@ class InventoryController extends Controller
              ]);
          }
 
-         // Status Distribution for Chart
          $statusDistribution = [
              ['status' => 'Available', 'count' => $availableItems],
              ['status' => 'Rented', 'count' => $rentedItems],
              ['status' => 'Maintenance', 'count' => $maintenanceItems],
-             ['status' => 'Damaged', 'count' => $damagedItems],
+             ['status' => 'Retired', 'count' => $retiredItems],
          ];
 
-         // Condition Distribution for Chart (based on status since condition column doesn't exist)
-         // Map statuses to conditions: available/rented = excellent, maintenance = fair, damaged = poor
          $conditionDistribution = [
              ['condition' => 'Excellent', 'count' => $availableItems],
              ['condition' => 'Good', 'count' => $rentedItems],
              ['condition' => 'Fair', 'count' => $maintenanceItems],
-             ['condition' => 'Poor', 'count' => $damagedItems],
+             ['condition' => 'Poor', 'count' => $retiredItems],
          ];
 
-          // Get damaged status ID for value at risk calculation
-         $damagedStatusId = InventoryStatus::where('status_name', 'damaged')->first()?->status_id ?? 0;
-         $valueAtRisk = $damagedStatusId > 0 
-             ? Inventory::where('status_id', $damagedStatusId)->sum('rental_price') 
+         $retiredStatusId = InventoryStatus::where('status_name', 'retired')->first()?->status_id ?? 0;
+         $valueAtRisk = $retiredStatusId > 0
+             ? Inventory::where('status_id', $retiredStatusId)->sum('rental_price')
              : 0;
  
          return response()->json([
@@ -172,12 +167,13 @@ class InventoryController extends Controller
                  'total_value' => round($totalValue, 2),
                  'available_items' => $availableItems,
                  'rented_items' => $rentedItems,
-                 'damaged_items' => $damagedItems,
                  'maintenance_items' => $maintenanceItems,
+                 'retired_items' => $retiredItems,
+                 'inactive_items' => $retiredItems,
                  'excellent_condition' => $availableItems,
                  'good_condition' => $rentedItems,
                  'fair_condition' => $maintenanceItems,
-                 'poor_condition' => $damagedItems,
+                 'poor_condition' => $retiredItems,
                  'occupancy_rate' => $totalItems > 0 ? round(($rentedItems / $totalItems) * 100, 2) : 0,
                  'value_at_risk' => round($valueAtRisk, 2),
              ],
@@ -197,7 +193,7 @@ class InventoryController extends Controller
     public function index(Request $request): JsonResponse
     {
         // Load primary image with inventory items
-        $query = Inventory::with(['status', 'images' => function ($q) {
+        $query = Inventory::with(['status', 'variant', 'images' => function ($q) {
             $q->where('is_primary', true)
                 ->orWhereIn('image_id', function ($subQ) {
                     $subQ->selectRaw('MIN(image_id)')
@@ -224,9 +220,8 @@ class InventoryController extends Controller
             $query->where('item_type', $request->get('item_type'));
         }
 
-        // Filter by condition
-        if ($request->has('condition')) {
-            $query->where('condition', $request->get('condition'));
+        if ($request->has('variant_id')) {
+            $query->where('variant_id', $request->get('variant_id'));
         }
 
          // Filter by status
@@ -264,15 +259,18 @@ class InventoryController extends Controller
      public function store(StoreInventoryRequest $request): JsonResponse
      {
          $data = $request->validated();
-         
-         // Set default status to 'available' if not provided
+
          if (empty($data['status_id'])) {
              $availableStatus = InventoryStatus::where('status_name', 'available')->first();
              if ($availableStatus) {
                  $data['status_id'] = $availableStatus->status_id;
              }
          }
-         
+
+         if (empty($data['variant_id'])) {
+             $data['variant_id'] = $this->resolveVariantId($data);
+         }
+
          $inventory = Inventory::create($data);
          
          // Handle image uploads if present
@@ -327,7 +325,9 @@ class InventoryController extends Controller
              }
          }
          
-         $inventory->load(['status', 'images']);
+         $this->refreshVariantCounters($inventory->variant_id);
+
+         $inventory->load(['status', 'variant', 'images']);
 
          return response()->json([
              'success' => true,
@@ -344,6 +344,7 @@ class InventoryController extends Controller
     {
         $inventory->load([
             'status',
+            'variant',
             'updatedByUser',
             'rentals',
             'reservationItems',
@@ -381,9 +382,35 @@ class InventoryController extends Controller
     {
         $data = $request->validated();
         $data['updated_by'] = auth()->id();
-        
+
+        $oldVariantId = $inventory->variant_id;
+
+        if (array_key_exists('variant_id', $data)) {
+            if (empty($data['variant_id'])) {
+                $data['variant_id'] = $this->resolveVariantId(array_merge($inventory->toArray(), $data));
+            }
+        } elseif (
+            isset($data['item_type'])
+            || isset($data['name'])
+            || isset($data['size'])
+            || isset($data['color'])
+            || isset($data['design'])
+            || isset($data['rental_price'])
+            || isset($data['deposit_amount'])
+            || isset($data['is_sellable'])
+            || array_key_exists('selling_price', $data)
+        ) {
+            $data['variant_id'] = $this->resolveVariantId(array_merge($inventory->toArray(), $data));
+        }
+
         $inventory->update($data);
-        $inventory->load(['status', 'updatedByUser']);
+
+        if ($oldVariantId !== $inventory->variant_id) {
+            $this->refreshVariantCounters($oldVariantId);
+        }
+        $this->refreshVariantCounters($inventory->variant_id);
+
+        $inventory->load(['status', 'variant', 'updatedByUser']);
 
         return response()->json([
             'message' => 'Inventory item updated successfully',
@@ -396,6 +423,8 @@ class InventoryController extends Controller
      */
     public function destroy(Inventory $inventory): JsonResponse
     {
+        $variantId = $inventory->variant_id;
+
         // Check if inventory item has active rentals
         $hasActiveRentals = $inventory->rentals()
             ->whereNull('return_date')
@@ -432,6 +461,7 @@ class InventoryController extends Controller
         }
 
         $inventory->delete();
+        $this->refreshVariantCounters($variantId);
 
         return response()->json([
             'message' => 'Inventory item and all associated images deleted successfully'
@@ -444,7 +474,7 @@ class InventoryController extends Controller
      */
     public function getAvailableItems(Request $request): JsonResponse
     {
-        $query = Inventory::with(['status', 'images' => function ($q) {
+        $query = Inventory::with(['status', 'variant', 'images' => function ($q) {
             $q->where('is_primary', true);
         }])
             ->whereHas('status', function ($q) {
@@ -463,22 +493,21 @@ class InventoryController extends Controller
 
             // Exclude items with active rentals in the date range
             $query->whereDoesntHave('rentals', function ($q) use ($startDate, $endDate) {
-                $q->where(function ($subQ) use ($startDate, $endDate) {
-                    $subQ->whereBetween('rental_date', [$startDate, $endDate])
-                        ->orWhereBetween('return_date', [$startDate, $endDate])
-                        ->orWhere(function ($dateQ) use ($startDate, $endDate) {
-                            $dateQ->where('rental_date', '<=', $startDate)
-                                ->where('return_date', '>=', $endDate);
-                        });
-                })->whereNull('return_date');
+                $q->whereNull('return_date')
+                    ->whereDate('released_date', '<=', $endDate)
+                    ->whereDate('due_date', '>=', $startDate);
             });
 
             // Exclude items with active reservations in the date range
             $query->whereDoesntHave('reservationItems', function ($q) use ($startDate, $endDate) {
                 $q->whereHas('reservation', function ($resQ) use ($startDate, $endDate) {
                     $resQ->where(function ($subQ) use ($startDate, $endDate) {
-                        $subQ->whereBetween('event_date', [$startDate, $endDate])
-                            ->orWhereBetween('expected_return_date', [$startDate, $endDate]);
+                        $subQ->whereBetween('start_date', [$startDate, $endDate])
+                            ->orWhereBetween('end_date', [$startDate, $endDate])
+                            ->orWhere(function ($innerQ) use ($startDate, $endDate) {
+                                $innerQ->where('start_date', '<=', $startDate)
+                                    ->where('end_date', '>=', $endDate);
+                            });
                     })->whereHas('status', function ($statusQ) {
                         $statusQ->where('status_name', '!=', 'cancelled');
                     });
@@ -502,11 +531,15 @@ class InventoryController extends Controller
             'status_id' => 'required|exists:inventory_statuses,status_id'
         ]);
 
+        $oldVariantId = $inventory->variant_id;
+
         $inventory->update([
             'status_id' => $request->status_id,
             'updated_by' => auth()->id()
         ]);
-        $inventory->load(['status', 'updatedByUser']);
+        $this->refreshVariantCounters($oldVariantId);
+
+        $inventory->load(['status', 'variant', 'updatedByUser']);
 
         return response()->json([
             'message' => 'Inventory status updated successfully',
@@ -519,20 +552,9 @@ class InventoryController extends Controller
      */
     public function updateCondition(Request $request, Inventory $inventory): JsonResponse
     {
-        $request->validate([
-            'condition' => 'required|in:excellent,good,fair,poor'
-        ]);
-
-        $inventory->update([
-            'condition' => $request->condition,
-            'updated_by' => auth()->id()
-        ]);
-        $inventory->load(['status', 'updatedByUser']);
-
         return response()->json([
-            'message' => 'Inventory condition updated successfully',
-            'data' => $inventory
-        ]);
+            'message' => 'Condition updates are no longer supported. Use inventory status updates (available, rented, maintenance, retired).'
+        ], 422);
     }
 
     /**
@@ -550,6 +572,9 @@ class InventoryController extends Controller
             })->count(),
             'under_maintenance' => Inventory::whereHas('status', function ($q) {
                 $q->where('status_name', 'maintenance');
+            })->count(),
+            'retired_items' => Inventory::whereHas('status', function ($q) {
+                $q->where('status_name', 'retired');
             })->count(),
             'inventory_value' => Inventory::sum('rental_price') ?? 0,
             'by_item_type' => Inventory::select('item_type', DB::raw('count(*) as count'))
@@ -583,7 +608,7 @@ class InventoryController extends Controller
      */
     private function getInventorySummaryReport(Request $request): array
     {
-        $query = Inventory::with(['status', 'images']);
+        $query = Inventory::with(['status', 'variant', 'images']);
 
         if ($request->has('item_type')) {
             $query->where('item_type', $request->get('item_type'));
@@ -597,7 +622,7 @@ class InventoryController extends Controller
             'total_count' => $inventories->count(),
             'total_value' => $inventories->sum('rental_price'),
             'by_status' => $inventories->groupBy('status.status_name'),
-            'by_condition' => $inventories->groupBy('condition'),
+            'by_variant' => $inventories->groupBy('variant_id'),
             'items_with_complete_images' => $inventories->filter(function ($item) {
                 return $this->hasCompleteImages($item);
             })->count()
@@ -633,7 +658,7 @@ class InventoryController extends Controller
 
         if ($request->has('start_date') && $request->has('end_date')) {
             $query->whereHas('rentals', function ($q) use ($request) {
-                $q->whereBetween('rental_date', [
+                $q->whereBetween('released_date', [
                     $request->get('start_date'),
                     $request->get('end_date')
                 ]);
@@ -658,11 +683,18 @@ class InventoryController extends Controller
     {
         $items = Inventory::with(['status', 'images'])->get();
 
+        $conditionBuckets = [
+            'excellent' => $items->where('status.status_name', 'available'),
+            'good' => $items->where('status.status_name', 'rented'),
+            'fair' => $items->where('status.status_name', 'maintenance'),
+            'poor' => $items->where('status.status_name', 'retired'),
+        ];
+
         return [
             'title' => 'Condition Report',
             'items' => $items,
-            'by_condition' => $items->groupBy('condition'),
-            'maintenance_needed' => $items->where('condition', 'poor')
+            'by_condition' => $conditionBuckets,
+            'maintenance_needed' => $conditionBuckets['fair']->values()
         ];
     }
 
@@ -678,13 +710,13 @@ class InventoryController extends Controller
             $endDate = $request->get('end_date');
 
             $query->whereHas('rentals', function ($q) use ($startDate, $endDate) {
-                $q->whereBetween('rental_date', [$startDate, $endDate]);
+                $q->whereBetween('released_date', [$startDate, $endDate]);
             });
         }
 
         $inventories = $query->get()->map(function ($item) {
             $rentalCount = $item->rentals->count();
-            $totalRevenue = $item->invoiceItems->sum('subtotal');
+            $totalRevenue = $item->invoiceItems->sum('total_price');
 
             return [
                 'item' => $item,
@@ -713,11 +745,20 @@ class InventoryController extends Controller
             'status_id' => 'required|exists:inventory_statuses,status_id'
         ]);
 
+        $variantIds = Inventory::whereIn('item_id', $request->item_ids)
+            ->whereNotNull('variant_id')
+            ->pluck('variant_id')
+            ->unique();
+
         $updated = Inventory::whereIn('item_id', $request->item_ids)
             ->update([
                 'status_id' => $request->status_id,
                 'updated_by' => auth()->id()
             ]);
+
+        foreach ($variantIds as $variantId) {
+            $this->refreshVariantCounters($variantId);
+        }
 
         return response()->json([
             'message' => "Successfully updated {$updated} items",
@@ -740,23 +781,21 @@ class InventoryController extends Controller
 
         // Check for conflicting rentals
         $hasRentals = $inventory->rentals()
-            ->where(function ($q) use ($startDate, $endDate) {
-                $q->whereBetween('rental_date', [$startDate, $endDate])
-                    ->orWhereBetween('return_date', [$startDate, $endDate])
-                    ->orWhere(function ($dateQ) use ($startDate, $endDate) {
-                        $dateQ->where('rental_date', '<=', $startDate)
-                            ->where('return_date', '>=', $endDate);
-                    });
-            })
             ->whereNull('return_date')
+            ->whereDate('released_date', '<=', $endDate)
+            ->whereDate('due_date', '>=', $startDate)
             ->exists();
 
         // Check for conflicting reservations
         $hasReservations = $inventory->reservationItems()
             ->whereHas('reservation', function ($q) use ($startDate, $endDate) {
                 $q->where(function ($dateQ) use ($startDate, $endDate) {
-                    $dateQ->whereBetween('event_date', [$startDate, $endDate])
-                        ->orWhereBetween('expected_return_date', [$startDate, $endDate]);
+                    $dateQ->whereBetween('start_date', [$startDate, $endDate])
+                        ->orWhereBetween('end_date', [$startDate, $endDate])
+                        ->orWhere(function ($innerQ) use ($startDate, $endDate) {
+                            $innerQ->where('start_date', '<=', $startDate)
+                                ->where('end_date', '>=', $endDate);
+                        });
                 })->whereHas('status', function ($statusQ) {
                     $statusQ->where('status_name', '!=', 'cancelled');
                 });
@@ -795,6 +834,48 @@ class InventoryController extends Controller
         return response()->json([
             'data' => $items->values(),
             'total_items_missing_images' => $items->count()
+        ]);
+    }
+
+    private function resolveVariantId(array $data): int
+    {
+        $attributes = [
+            'item_type' => $data['item_type'],
+            'name' => $data['name'],
+            'size' => $data['size'],
+            'color' => $data['color'],
+            'design' => $data['design'],
+            'rental_price' => $data['rental_price'] ?? 0,
+            'deposit_amount' => $data['deposit_amount'] ?? 0,
+            'is_sellable' => $data['is_sellable'] ?? false,
+            'selling_price' => $data['selling_price'] ?? null,
+        ];
+
+        $variant = InventoryVariant::firstOrCreate($attributes, [
+            'total_units' => 0,
+            'available_units' => 0,
+        ]);
+
+        return $variant->variant_id;
+    }
+
+    private function refreshVariantCounters(?int $variantId): void
+    {
+        if (!$variantId) {
+            return;
+        }
+
+        $availableStatusId = InventoryStatus::where('status_name', 'available')->value('status_id');
+
+        $totalUnits = Inventory::where('variant_id', $variantId)->count();
+        $availableUnits = Inventory::where('variant_id', $variantId)
+            ->when($availableStatusId, fn ($query) => $query->where('status_id', $availableStatusId))
+            ->count();
+
+        InventoryVariant::where('variant_id', $variantId)->update([
+            'total_units' => $totalUnits,
+            'available_units' => $availableUnits,
+            'updated_at' => now(),
         ]);
     }
 

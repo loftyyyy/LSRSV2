@@ -15,6 +15,7 @@ class ReservationItem extends Model
     protected $fillable = [
         'reservation_id',
         'item_id',
+        'variant_id',
         'quantity',
         'rental_price',
         'fulfillment_status',
@@ -40,6 +41,11 @@ class ReservationItem extends Model
     public function item()
     {
         return $this->belongsTo(Inventory::class, 'item_id', 'item_id');
+    }
+
+    public function variant()
+    {
+        return $this->belongsTo(InventoryVariant::class, 'variant_id', 'variant_id');
     }
 
     /**
