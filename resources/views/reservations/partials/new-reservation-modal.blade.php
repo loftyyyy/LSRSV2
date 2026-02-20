@@ -447,13 +447,24 @@
 
     async function loadCustomers() {
         try {
-            var response = await axios.get('/api/customers');
-            var customers = response.data.data || response.data;
+            var response = await axios.get('/api/customers', {
+                params: {
+                    per_page: 100,
+                    sort_by: 'first_name',
+                    sort_order: 'asc'
+                }
+            });
+
+            var responseData = response.data.data || response.data;
+            var customers = Array.isArray(responseData) ? responseData : (responseData.data || []);
+            var activeCustomers = customers.filter(function(customer) {
+                return (customer.status?.status_name || '').toLowerCase() === 'active';
+            });
 
             var select = document.getElementById('customerSelect');
             select.innerHTML = '<option value="">Select a customer</option>';
 
-            customers.forEach(function(customer) {
+            activeCustomers.forEach(function(customer) {
                 var option = document.createElement('option');
                 option.value = customer.customer_id;
                 option.textContent = customer.first_name + ' ' + customer.last_name;
@@ -462,7 +473,7 @@
                 select.appendChild(option);
             });
 
-            reservationState.customers = customers;
+            reservationState.customers = activeCustomers;
         } catch (error) {
             console.error('Error loading customers:', error);
         }
