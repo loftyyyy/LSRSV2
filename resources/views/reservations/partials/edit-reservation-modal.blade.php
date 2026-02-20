@@ -45,9 +45,9 @@
                 <div class="flex items-center rounded-2xl bg-white px-3 py-2.5 border border-neutral-300 focus-within:border-neutral-500 dark:border-neutral-800 dark:bg-black/60 transition-colors duration-300 ease-in-out">
                     <x-icon name="lock" class="h-4 w-4 text-neutral-500 mr-2" />
                     <input type="password" id="editReservationPassword" autocomplete="current-password" placeholder="Enter your password to confirm changes" required class="w-full bg-transparent text-xs text-neutral-700 placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500 focus:outline-none" />
-                    <button type="button" id="toggleEditReservationPassword" onclick="toggleEditReservationPasswordVisibility()" class="ml-2 inline-flex items-center justify-center text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 transition-colors duration-200" aria-label="Show password">
-                        <x-icon name="eye" class="h-4 w-4" id="editReservationPasswordEye" />
-                        <x-icon name="eye-off" class="h-4 w-4 hidden" id="editReservationPasswordEyeOff" />
+                    <button type="button" id="toggleEditReservationPassword" class="ml-2 inline-flex items-center justify-center text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 transition-colors duration-200" aria-label="Show password">
+                        <span id="editReservationPasswordEye" class="inline-flex"><x-icon name="eye" class="h-4 w-4" /></span>
+                        <span id="editReservationPasswordEyeOff" class="hidden"><x-icon name="eye-off" class="h-4 w-4" /></span>
                     </button>
                 </div>
                 <p class="text-[11px] text-neutral-500 dark:text-neutral-400">For security, reservation updates require your account password.</p>

@@ -911,10 +911,6 @@
             return;
         }
 
-        if (!window.confirm('Cancel this reservation? This will update its status to cancelled.')) {
-            return;
-        }
-
         setEditReservationSubmitting(true, 'cancel');
 
         try {
@@ -967,13 +963,14 @@
         return activeCustomers;
     }
 
-    function populateEditReservationCustomerOptions(selectedCustomerId) {
+    function populateEditReservationCustomerOptions(selectedCustomerId, selectedCustomer) {
         var select = document.getElementById('editReservationCustomer');
         if (!select) {
             return;
         }
 
         select.innerHTML = '<option value="">Select customer</option>';
+        var hasSelectedCustomer = false;
 
         reservationEditState.customers.forEach(function(customer) {
             var option = document.createElement('option');
@@ -981,9 +978,20 @@
             option.textContent = [customer.first_name, customer.last_name].filter(Boolean).join(' ').trim() || customer.email || 'Unknown Customer';
             if (String(customer.customer_id) === String(selectedCustomerId)) {
                 option.selected = true;
+                hasSelectedCustomer = true;
             }
             select.appendChild(option);
         });
+
+        if (!hasSelectedCustomer && selectedCustomerId) {
+            var fallbackOption = document.createElement('option');
+            fallbackOption.value = String(selectedCustomerId);
+            fallbackOption.selected = true;
+            fallbackOption.textContent = selectedCustomer
+                ? ([selectedCustomer.first_name, selectedCustomer.last_name].filter(Boolean).join(' ').trim() || selectedCustomer.email || ('Customer #' + selectedCustomerId))
+                : ('Customer #' + selectedCustomerId);
+            select.appendChild(fallbackOption);
+        }
     }
 
     function populateEditReservationForm(reservation) {
@@ -992,7 +1000,7 @@
         document.getElementById('editReservationEndDate').value = reservation.end_date ? String(reservation.end_date).split('T')[0] : '';
         document.getElementById('editReservationPassword').value = '';
 
-        populateEditReservationCustomerOptions(reservation.customer_id);
+        populateEditReservationCustomerOptions(reservation.customer_id, reservation.customer || null);
     }
 
     async function verifyReservationEditPassword(password) {
@@ -1006,6 +1014,7 @@
         var startDateInput = document.getElementById('editReservationStartDate');
         var endDateInput = document.getElementById('editReservationEndDate');
         var cancelReservationBtn = document.getElementById('cancelEditReservationBtn');
+        var togglePasswordBtn = document.getElementById('toggleEditReservationPassword');
 
         if (startDateInput && endDateInput) {
             startDateInput.addEventListener('change', function() {
@@ -1076,6 +1085,13 @@
         if (cancelReservationBtn) {
             cancelReservationBtn.addEventListener('click', function() {
                 cancelReservationFromEditModal();
+            });
+        }
+
+        if (togglePasswordBtn) {
+            togglePasswordBtn.addEventListener('click', function(event) {
+                event.preventDefault();
+                toggleEditReservationPasswordVisibility();
             });
         }
 
