@@ -13,6 +13,10 @@ use App\Models\ReservationItemAllocation;
 use App\Models\ReservationStatus;
 use App\Models\Rental;
 use App\Models\RentalStatus;
+use App\Models\Payment;
+use App\Models\PaymentStatus;
+use App\Models\DepositReturn;
+use App\Services\DepositService;
 use App\Http\Requests\StoreRentalRequest;
 use App\Http\Requests\UpdateRentalRequest;
 use Illuminate\Http\JsonResponse;
@@ -25,6 +29,9 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class RentalController extends Controller
 {
+    public function __construct(private readonly DepositService $depositService)
+    {
+    }
 
     /**
      * Display Reports Page
@@ -492,6 +499,10 @@ class RentalController extends Controller
             'released_date' => 'required|date',
             'due_date' => 'required|date|after:released_date',
             'release_notes' => 'nullable|string',
+            'collect_deposit' => 'sometimes|boolean',
+            'deposit_amount' => 'nullable|numeric|min:0',
+            'deposit_payment_method' => 'required_if:collect_deposit,true|in:cash,card,bank_transfer,gcash,paymaya',
+            'deposit_payment_notes' => 'nullable|string',
         ]);
 
         if (!$request->item_id && !$request->reservation_item_id && !$request->variant_id) {
@@ -575,6 +586,9 @@ class RentalController extends Controller
             }
 
             $fromStatusId = $item->status_id;
+            $depositAmount = $request->filled('deposit_amount')
+                ? (float) $request->input('deposit_amount')
+                : (float) $item->deposit_amount;
 
             $rental = Rental::create([
                 'reservation_id' => $reservation?->reservation_id ?? $request->reservation_id,
@@ -586,7 +600,29 @@ class RentalController extends Controller
                 'original_due_date' => $request->due_date,
                 'status_id' => $rentedStatus->status_id,
                 'extension_count' => 0,
+                'deposit_amount' => $depositAmount,
             ]);
+
+            $shouldCollectDeposit = $request->boolean('collect_deposit', true);
+            if ($shouldCollectDeposit) {
+                if ($depositAmount <= 0) {
+                    return response()->json([
+                        'message' => 'Deposit amount must be greater than zero before releasing an item.'
+                    ], 422);
+                }
+
+                $this->depositService->collectDeposit(
+                    $rental,
+                    $depositAmount,
+                    auth()->id(),
+                    $request->input('deposit_payment_method'),
+                    $request->input('deposit_payment_notes')
+                );
+            } elseif ($rental->deposit_status !== 'held') {
+                return response()->json([
+                    'message' => 'Deposit must be collected before releasing the item.'
+                ], 422);
+            }
 
             $reservationItemId = null;
             if ($reservationItem) {
@@ -668,6 +704,18 @@ class RentalController extends Controller
             'return_date' => 'required|date',
             'return_notes' => 'nullable|string',
             'condition_notes' => 'nullable|string',
+            'collect_rental_payment' => 'sometimes|boolean',
+            'rental_payment_amount' => 'nullable|numeric|min:0',
+            'rental_payment_method' => 'required_if:collect_rental_payment,true|in:cash,card,bank_transfer,gcash,paymaya',
+            'rental_payment_notes' => 'nullable|string',
+            'deposit_return_action' => 'sometimes|in:full,partial,forfeit,hold',
+            'deposit_return_method' => 'required_if:deposit_return_action,full,partial|in:cash,bank_transfer,gcash,paymaya,check',
+            'deposit_return_reference' => 'nullable|string|max:100',
+            'deposit_return_notes' => 'nullable|string',
+            'deductions' => 'required_if:deposit_return_action,partial|array',
+            'deductions.*.type' => 'required_with:deductions|string',
+            'deductions.*.amount' => 'required_with:deductions|numeric|min:0',
+            'deductions.*.reason' => 'nullable|string',
         ]);
 
         // Check if rental was already returned
@@ -696,6 +744,49 @@ class RentalController extends Controller
 
             // Calculate and create final penalty if returned late
             $this->createOrUpdatePenaltyInvoice($rental);
+
+            $finalInvoice = $this->upsertFinalRentalInvoice($rental, auth()->id());
+
+            if ($request->boolean('collect_rental_payment', false)) {
+                $paymentAmount = $request->filled('rental_payment_amount')
+                    ? (float) $request->input('rental_payment_amount')
+                    : (float) $finalInvoice->balance_due;
+
+                if ($paymentAmount > 0) {
+                    $this->createInvoicePayment(
+                        $finalInvoice,
+                        $paymentAmount,
+                        $request->input('rental_payment_method'),
+                        auth()->id(),
+                        $request->input('rental_payment_notes')
+                    );
+                }
+            }
+
+            $depositReturnAction = $request->input('deposit_return_action', 'hold');
+            if ($depositReturnAction === 'full') {
+                $this->depositService->returnFullDeposit(
+                    $rental,
+                    $request->input('deposit_return_method'),
+                    auth()->id(),
+                    $request->input('deposit_return_reference')
+                );
+            } elseif ($depositReturnAction === 'partial') {
+                $this->depositService->returnPartialDeposit(
+                    $rental,
+                    $request->input('deductions', []),
+                    $request->input('deposit_return_method'),
+                    auth()->id(),
+                    null,
+                    $request->input('deposit_return_reference')
+                );
+            } elseif ($depositReturnAction === 'forfeit') {
+                $this->depositService->forfeitDeposit(
+                    $rental,
+                    $request->input('deposit_return_notes', 'Deposit forfeited on return processing.'),
+                    auth()->id()
+                );
+            }
 
             // Update rental status to returned
             $returnedStatus = $this->findRentalStatusByName('returned');
@@ -1158,6 +1249,71 @@ class RentalController extends Controller
         ]);
     }
 
+    public function getDepositSummary(Rental $rental): JsonResponse
+    {
+        $rental->load(['customer', 'item', 'depositReturns.processedBy']);
+
+        return response()->json([
+            'data' => [
+                'rental_id' => $rental->rental_id,
+                'customer' => $rental->customer,
+                'item' => $rental->item,
+                'deposit' => $this->depositService->getDepositSummary($rental),
+                'returns' => $rental->depositReturns,
+            ],
+        ]);
+    }
+
+    public function processDepositReturn(Rental $rental, Request $request): JsonResponse
+    {
+        $request->validate([
+            'action' => 'required|in:full,partial,forfeit',
+            'return_method' => 'required_if:action,full,partial|in:cash,bank_transfer,gcash,paymaya,check',
+            'reference' => 'nullable|string|max:100',
+            'notes' => 'nullable|string',
+            'deductions' => 'required_if:action,partial|array|min:1',
+            'deductions.*.type' => 'required_with:deductions|string',
+            'deductions.*.amount' => 'required_with:deductions|numeric|min:0',
+            'deductions.*.reason' => 'nullable|string',
+        ]);
+
+        try {
+            if ($request->action === 'full') {
+                $result = $this->depositService->returnFullDeposit(
+                    $rental,
+                    $request->return_method,
+                    auth()->id(),
+                    $request->reference
+                );
+            } elseif ($request->action === 'partial') {
+                $result = $this->depositService->returnPartialDeposit(
+                    $rental,
+                    $request->deductions,
+                    $request->return_method,
+                    auth()->id(),
+                    null,
+                    $request->reference
+                );
+            } else {
+                $result = $this->depositService->forfeitDeposit(
+                    $rental,
+                    $request->notes ?? 'Deposit forfeited by staff action',
+                    auth()->id()
+                );
+            }
+
+            return response()->json([
+                'message' => 'Deposit action processed successfully',
+                'data' => $result,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'message' => 'Failed to process deposit action',
+                'error' => $e->getMessage(),
+            ], 422);
+        }
+    }
+
     private function findRentalStatusByName(string $name): ?RentalStatus
     {
         return RentalStatus::whereRaw('LOWER(status_name) = ?', [strtolower($name)])->first();
@@ -1171,6 +1327,11 @@ class RentalController extends Controller
     private function findReservationStatusByName(string $name): ?ReservationStatus
     {
         return ReservationStatus::whereRaw('LOWER(status_name) = ?', [strtolower($name)])->first();
+    }
+
+    private function findPaymentStatusByName(string $name): ?PaymentStatus
+    {
+        return PaymentStatus::whereRaw('LOWER(status_name) = ?', [strtolower($name)])->first();
     }
 
     private function syncReservationItemFulfillment(ReservationItem $reservationItem): void
@@ -1208,6 +1369,142 @@ class RentalController extends Controller
             'performed_by' => auth()->id(),
             'notes' => $context['notes'] ?? null,
         ]);
+    }
+
+    private function upsertFinalRentalInvoice(Rental $rental, int $createdBy): Invoice
+    {
+        $pendingPaymentStatus = $this->findPaymentStatusByName('pending');
+        if (!$pendingPaymentStatus) {
+            throw new \RuntimeException('Pending payment status not found.');
+        }
+
+        $invoice = Invoice::firstOrCreate(
+            [
+                'rental_id' => $rental->rental_id,
+                'invoice_type' => 'final',
+            ],
+            [
+                'invoice_number' => $this->generateInvoiceNumber('INV-FINAL'),
+                'customer_id' => $rental->customer_id,
+                'reservation_id' => $rental->reservation_id,
+                'subtotal' => 0,
+                'discount' => 0,
+                'tax' => 0,
+                'total_amount' => 0,
+                'amount_paid' => 0,
+                'balance_due' => 0,
+                'invoice_date' => now(),
+                'due_date' => now(),
+                'created_by' => $createdBy,
+                'status_id' => $pendingPaymentStatus->status_id,
+            ]
+        );
+
+        $rentalDays = max(1, Carbon::parse($rental->released_date)->diffInDays(Carbon::parse($rental->return_date ?: now())) + 1);
+        $rentalFee = round((float) $rental->item?->rental_price * $rentalDays, 2);
+
+        $rentalFeeLine = $invoice->invoiceItems()->where('item_type', 'rental_fee')->first();
+        if ($rentalFeeLine) {
+            $rentalFeeLine->update([
+                'description' => "Rental fee ({$rentalDays} day/s)",
+                'item_id' => $rental->item_id,
+                'quantity' => $rentalDays,
+                'unit_price' => (float) $rental->item?->rental_price,
+                'total_price' => $rentalFee,
+            ]);
+        } else {
+            $invoice->invoiceItems()->create([
+                'description' => "Rental fee ({$rentalDays} day/s)",
+                'item_type' => 'rental_fee',
+                'item_id' => $rental->item_id,
+                'quantity' => $rentalDays,
+                'unit_price' => (float) $rental->item?->rental_price,
+                'total_price' => $rentalFee,
+            ]);
+        }
+
+        $penalty = $this->calculatePenalty($rental);
+        $lateFeeLine = $invoice->invoiceItems()->where('item_type', 'late_fee')->first();
+        if ($penalty > 0) {
+            if ($lateFeeLine) {
+                $lateFeeLine->update([
+                    'description' => 'Late return penalty',
+                    'item_id' => $rental->item_id,
+                    'quantity' => 1,
+                    'unit_price' => $penalty,
+                    'total_price' => $penalty,
+                ]);
+            } else {
+                $invoice->invoiceItems()->create([
+                    'description' => 'Late return penalty',
+                    'item_type' => 'late_fee',
+                    'item_id' => $rental->item_id,
+                    'quantity' => 1,
+                    'unit_price' => $penalty,
+                    'total_price' => $penalty,
+                ]);
+            }
+        } elseif ($lateFeeLine) {
+            $lateFeeLine->delete();
+        }
+
+        $this->recalculateInvoiceTotals($invoice);
+
+        return $invoice->fresh(['invoiceItems', 'payments']);
+    }
+
+    private function createInvoicePayment(
+        Invoice $invoice,
+        float $amount,
+        string $paymentMethod,
+        int $processedBy,
+        ?string $notes = null
+    ): Payment {
+        $paidStatus = $this->findPaymentStatusByName('paid');
+        if (!$paidStatus) {
+            throw new \RuntimeException('Paid payment status not found.');
+        }
+
+        $payment = Payment::create([
+            'invoice_id' => $invoice->invoice_id,
+            'payment_reference' => $this->generateInvoiceNumber('PAY'),
+            'amount' => $amount,
+            'payment_method' => $paymentMethod,
+            'payment_date' => now(),
+            'notes' => $notes,
+            'processed_by' => $processedBy,
+            'status_id' => $paidStatus->status_id,
+        ]);
+
+        $this->recalculateInvoiceTotals($invoice);
+
+        return $payment;
+    }
+
+    private function recalculateInvoiceTotals(Invoice $invoice): void
+    {
+        $subtotal = (float) $invoice->invoiceItems()->sum('total_price');
+        $discount = (float) $invoice->discount;
+        $tax = (float) $invoice->tax;
+        $total = max(($subtotal + $tax) - $discount, 0);
+
+        $paidStatus = $this->findPaymentStatusByName('paid');
+        $amountPaid = 0;
+        if ($paidStatus) {
+            $amountPaid = (float) $invoice->payments()->where('status_id', $paidStatus->status_id)->sum('amount');
+        }
+
+        $invoice->update([
+            'subtotal' => $subtotal,
+            'total_amount' => $total,
+            'amount_paid' => min($amountPaid, $total),
+            'balance_due' => max($total - $amountPaid, 0),
+        ]);
+    }
+
+    private function generateInvoiceNumber(string $prefix): string
+    {
+        return $prefix . '-' . now()->format('YmdHis') . '-' . strtoupper(substr(bin2hex(random_bytes(3)), 0, 6));
     }
 
 }

@@ -182,6 +182,8 @@ Route::middleware(['guest'])->group(function () {
 
         // Rental Actions
         Route::post('/rentals/{rental}/return', [RentalController::class, 'processReturn']);
+        Route::get('/rentals/{rental}/deposit', [RentalController::class, 'getDepositSummary']);
+        Route::post('/rentals/{rental}/deposit/return', [RentalController::class, 'processDepositReturn']);
         Route::post('/rentals/{rental}/extend', [RentalController::class, 'extendRental']);
         Route::post('/rentals/{rental}/cancel', [RentalController::class, 'cancel']);
         Route::post('/rentals/{rental}/check-overdue', [RentalController::class, 'checkOverdue']);
