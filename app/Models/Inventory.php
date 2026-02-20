@@ -69,6 +69,16 @@ class Inventory extends Model
         return $this->hasMany(InventoryImage::class, 'item_id', 'item_id');
     }
 
+    public function allocations()
+    {
+        return $this->hasMany(ReservationItemAllocation::class, 'item_id', 'item_id');
+    }
+
+    public function movements()
+    {
+        return $this->hasMany(InventoryMovement::class, 'item_id', 'item_id');
+    }
+
     /**
      * Boot the model and auto-generate SKU if not provided
      */

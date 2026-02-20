@@ -91,6 +91,11 @@ class Rental extends Model
         return $this->hasMany(Invoice::class, 'rental_id', 'rental_id');
     }
 
+    public function inventoryMovements()
+    {
+        return $this->hasMany(InventoryMovement::class, 'rental_id', 'rental_id');
+    }
+
     /**
      * Get the staff who collected the deposit
      */

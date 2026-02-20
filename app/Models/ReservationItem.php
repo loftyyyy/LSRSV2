@@ -48,6 +48,11 @@ class ReservationItem extends Model
         return $this->belongsTo(InventoryVariant::class, 'variant_id', 'variant_id');
     }
 
+    public function allocations()
+    {
+        return $this->hasMany(ReservationItemAllocation::class, 'reservation_item_id', 'reservation_item_id');
+    }
+
     /**
      * Calculate subtotal for this reservation item
      */
