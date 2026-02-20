@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\Reservation;
 use App\Models\Inventory;
+use App\Models\InventoryStatus;
 use App\Models\ReservationItem;
 use App\Models\ReservationStatus;
 use App\Http\Requests\StoreReservationRequest;
@@ -645,11 +646,15 @@ class ReservationController extends Controller
 
         // Update inventory status for all reserved items
         // Change reserved items back to available
+        $availableStatusId = InventoryStatus::whereRaw('LOWER(status_name) = ?', ['available'])
+            ->value('status_id');
+
         foreach ($reservation->items as $reservationItem) {
-            // Update the item's inventory status to available
-            $reservationItem->item()->update([
-                'status' => 'available'
-            ]);
+            if ($availableStatusId) {
+                $reservationItem->item()->update([
+                    'status_id' => $availableStatusId
+                ]);
+            }
         }
 
         $reservation->load(['customer', 'status', 'reservedBy', 'items.item']);

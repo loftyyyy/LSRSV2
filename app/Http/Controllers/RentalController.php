@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
+use App\Models\InventoryStatus;
+use App\Models\ReservationStatus;
 use App\Models\Rental;
 use App\Models\RentalStatus;
 use App\Http\Requests\StoreRentalRequest;
@@ -191,8 +193,16 @@ class RentalController extends Controller
              ->count();
 
          // Duration Analysis
-         $avgRentalDuration = Rental::selectRaw('AVG(DATEDIFF(DAY, rental_date, return_date)) as avg_days')
-             ->first()?->avg_days ?? 0;
+         $durationsInDays = Rental::get()->map(function ($rental) {
+             $start = Carbon::parse($rental->released_date);
+             $end = $rental->return_date ? Carbon::parse($rental->return_date) : Carbon::parse($rental->due_date);
+
+             return max(1, $start->diffInDays($end) + 1);
+         });
+
+         $avgRentalDuration = $durationsInDays->count() > 0
+             ? round($durationsInDays->avg(), 1)
+             : 0;
 
          // Revenue Analysis
          $totalRentalRevenue = Rental::whereHas('invoices')
@@ -278,11 +288,11 @@ class RentalController extends Controller
 
          // Rental Duration Distribution (for histogram approximation)
          $durationBuckets = [
-             '1-2 days' => Rental::whereBetween(Rental::selectRaw('DATEDIFF(DAY, rental_date, return_date)'), [1, 2])->count(),
-             '3-7 days' => Rental::whereBetween(Rental::selectRaw('DATEDIFF(DAY, rental_date, return_date)'), [3, 7])->count(),
-             '1-2 weeks' => Rental::whereBetween(Rental::selectRaw('DATEDIFF(DAY, rental_date, return_date)'), [8, 14])->count(),
-             '2-4 weeks' => Rental::whereBetween(Rental::selectRaw('DATEDIFF(DAY, rental_date, return_date)'), [15, 28])->count(),
-             '1+ months' => Rental::where(Rental::selectRaw('DATEDIFF(DAY, rental_date, return_date)'), '>=', 29)->count(),
+             '1-2 days' => $durationsInDays->filter(fn ($days) => $days >= 1 && $days <= 2)->count(),
+             '3-7 days' => $durationsInDays->filter(fn ($days) => $days >= 3 && $days <= 7)->count(),
+             '1-2 weeks' => $durationsInDays->filter(fn ($days) => $days >= 8 && $days <= 14)->count(),
+             '2-4 weeks' => $durationsInDays->filter(fn ($days) => $days >= 15 && $days <= 28)->count(),
+             '1+ months' => $durationsInDays->filter(fn ($days) => $days >= 29)->count(),
          ];
 
          return response()->json([
@@ -293,7 +303,7 @@ class RentalController extends Controller
                  'cancelled_rentals' => $cancelledRentals,
                  'overdue_rentals' => $overdueRentals,
                  'late_return_rentals' => $lateReturnRentals,
-                 'avg_rental_duration' => round($avgRentalDuration, 1),
+                 'avg_rental_duration' => $avgRentalDuration,
                  'total_rental_revenue' => round($totalRentalRevenue, 2),
                  'revenue_this_month' => round($revenueThisMonth, 2),
              ],
@@ -480,10 +490,10 @@ class RentalController extends Controller
         DB::beginTransaction();
         try {
             // Get the "Rented Out" status
-            $rentedStatus = RentalStatus::where('status_name', 'Rented Out')->first();
-            if (!$rentedStatus) {
-                return response()->json([
-                    'message' => 'Rented Out status not found in the system.'
+             $rentedStatus = $this->findRentalStatusByName('rented');
+             if (!$rentedStatus) {
+                 return response()->json([
+                     'message' => 'Rented Out status not found in the system.'
                 ], 500);
             }
 
@@ -501,18 +511,25 @@ class RentalController extends Controller
             ]);
 
             // Update reservation status if exists
-            if ($request->reservation_id) {
-                $reservation = \App\Models\Reservation::find($request->reservation_id);
-                if ($reservation) {
-                    $reservation->update(['reservation_status' => 'Completed']);
-                }
-            }
+             if ($request->reservation_id) {
+                 $reservation = \App\Models\Reservation::find($request->reservation_id);
+                 if ($reservation) {
+                     $completedStatus = $this->findReservationStatusByName('completed')
+                         ?? $this->findReservationStatusByName('confirmed');
+                     if ($completedStatus) {
+                         $reservation->update(['status_id' => $completedStatus->status_id]);
+                     }
+                 }
+             }
 
-            // Update item availability
-            $item = \App\Models\Inventory::find($request->item_id);
-            if ($item) {
-                $item->update(['availability_status' => 'Rented']);
-            }
+             // Update item availability
+             $item = \App\Models\Inventory::find($request->item_id);
+             if ($item) {
+                 $rentedInventoryStatus = $this->findInventoryStatusByName('rented');
+                 if ($rentedInventoryStatus) {
+                     $item->update(['status_id' => $rentedInventoryStatus->status_id]);
+                 }
+             }
 
             DB::commit();
 
@@ -564,15 +581,18 @@ class RentalController extends Controller
             $this->createOrUpdatePenaltyInvoice($rental);
 
             // Update rental status to returned
-            $returnedStatus = RentalStatus::where('status_name', 'Returned')->first();
-            if ($returnedStatus) {
-                $rental->update(['status_id' => $returnedStatus->status_id]);
-            }
+             $returnedStatus = $this->findRentalStatusByName('returned');
+             if ($returnedStatus) {
+                 $rental->update(['status_id' => $returnedStatus->status_id]);
+             }
 
-            // Update item availability back to available
-            if ($rental->item) {
-                $rental->item->update(['availability_status' => 'Available']);
-            }
+             // Update item availability back to available
+             if ($rental->item) {
+                 $availableInventoryStatus = $this->findInventoryStatusByName('available');
+                 if ($availableInventoryStatus) {
+                     $rental->item->update(['status_id' => $availableInventoryStatus->status_id]);
+                 }
+             }
 
             DB::commit();
 
@@ -669,10 +689,10 @@ class RentalController extends Controller
         DB::beginTransaction();
         try {
             // Update the rental status to cancelled
-            $cancelledStatus = RentalStatus::where('status_name', 'Cancelled')->first();
-            if (!$cancelledStatus) {
-                return response()->json([
-                    'message' => 'Cancelled status not found in the system.'
+             $cancelledStatus = $this->findRentalStatusByName('cancelled');
+             if (!$cancelledStatus) {
+                 return response()->json([
+                     'message' => 'Cancelled status not found in the system.'
                 ], 500);
             }
 
@@ -682,16 +702,20 @@ class RentalController extends Controller
             ]);
 
             // If there's a reservation, update its status too
-            if ($rental->reservation) {
-                $rental->reservation->update([
-                    'reservation_status' => 'Cancelled'
-                ]);
-            }
+             if ($rental->reservation) {
+                 $reservationCancelledStatus = $this->findReservationStatusByName('cancelled');
+                 $rental->reservation->update([
+                     'status_id' => $reservationCancelledStatus?->status_id ?? $rental->reservation->status_id
+                 ]);
+             }
 
-            // Update item availability back to available
-            if ($rental->item) {
-                $rental->item->update(['availability_status' => 'Available']);
-            }
+             // Update item availability back to available
+             if ($rental->item) {
+                 $availableInventoryStatus = $this->findInventoryStatusByName('available');
+                 if ($availableInventoryStatus) {
+                     $rental->item->update(['status_id' => $availableInventoryStatus->status_id]);
+                 }
+             }
 
             DB::commit();
 
@@ -976,6 +1000,21 @@ class RentalController extends Controller
             'overdue_rentals' => $overdueRentals,
             'total_pending_penalties' => $totalPendingPenalties
         ]);
+    }
+
+    private function findRentalStatusByName(string $name): ?RentalStatus
+    {
+        return RentalStatus::whereRaw('LOWER(status_name) = ?', [strtolower($name)])->first();
+    }
+
+    private function findInventoryStatusByName(string $name): ?InventoryStatus
+    {
+        return InventoryStatus::whereRaw('LOWER(status_name) = ?', [strtolower($name)])->first();
+    }
+
+    private function findReservationStatusByName(string $name): ?ReservationStatus
+    {
+        return ReservationStatus::whereRaw('LOWER(status_name) = ?', [strtolower($name)])->first();
     }
 
 }
