@@ -517,7 +517,9 @@
             ].filter(Boolean).join(' ') || (reservation.customer && reservation.customer.email) || 'N/A';
 
             var reservationItems = Array.isArray(reservation.items) ? reservation.items : [];
-            var firstItemName = reservationItems[0] && reservationItems[0].item ? reservationItems[0].item.name : 'N/A';
+            var firstItemName = reservationItems[0]
+                ? ((reservationItems[0].variant && reservationItems[0].variant.name) || (reservationItems[0].item && reservationItems[0].item.name) || 'N/A')
+                : 'N/A';
             var additionalItemsCount = Math.max(reservationItems.length - 1, 0);
             var itemLabel = additionalItemsCount > 0 ? (firstItemName + ' +' + additionalItemsCount) : firstItemName;
 
@@ -814,7 +816,7 @@
             var rentalPrice = Number(item.rental_price || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
             return '' +
-                '<button type="button" onclick="openBrowseItemDetailsModal(' + item.item_id + ')" class="w-full text-left rounded-2xl border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900/30 p-4 transition-colors duration-300 ease-in-out hover:border-violet-300 dark:hover:border-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-500/40">' +
+                '<button type="button" onclick="openBrowseItemDetailsModal(' + item.variant_id + ')" class="w-full text-left rounded-2xl border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900/30 p-4 transition-colors duration-300 ease-in-out hover:border-violet-300 dark:hover:border-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-500/40">' +
                     '<div class="flex items-start gap-4">' +
                         '<div class="h-16 w-16 flex-shrink-0 rounded-xl border border-neutral-200 bg-neutral-100 dark:border-neutral-800 dark:bg-neutral-900 overflow-hidden flex items-center justify-center">' +
                             (imageSource
@@ -826,8 +828,9 @@
                                 '<p class="text-sm font-semibold text-neutral-900 dark:text-white truncate">' + (item.name || 'Unnamed Item') + '</p>' +
                                 '<span class="inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium ' + statusClass + '">' + statusLabel + '</span>' +
                             '</div>' +
-                            '<p class="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400 truncate">' + (item.sku || 'No SKU') + '</p>' +
+                            '<p class="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400 truncate">' + (item.representative_sku || 'No SKU') + '</p>' +
                             '<p class="mt-1 text-xs text-neutral-600 dark:text-neutral-300">' + itemType + ' · Size ' + (item.size || '-') + ' · ' + (item.color || '-') + '</p>' +
+                            '<p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">Available: ' + (item.available_quantity ?? 0) + '</p>' +
                             '<p class="mt-2 text-sm font-semibold text-violet-600 dark:text-violet-400 font-geist-mono">₱' + rentalPrice + '<span class="text-xs font-normal text-neutral-500 dark:text-neutral-400"> / day</span></p>' +
                         '</div>' +
                     '</div>' +
@@ -858,7 +861,7 @@
         document.getElementById('browseItemDetailsSubtitle').textContent = 'Loading...';
 
         try {
-            var response = await axios.get('/api/inventories/' + itemId);
+            var response = await axios.get('/api/reservations/items/' + itemId + '/details');
             var item = response.data && response.data.data ? response.data.data : null;
 
             if (!item) {
@@ -903,7 +906,7 @@
         var subtitleEl = document.getElementById('browseItemDetailsSubtitle');
 
         titleEl.textContent = item.name || 'Item Details';
-        subtitleEl.textContent = [item.sku, item.item_type, item.color, item.size ? ('Size ' + item.size) : null].filter(Boolean).join(' • ') || 'Item Details';
+        subtitleEl.textContent = [item.representative_sku, item.item_type, item.color, item.size ? ('Size ' + item.size) : null].filter(Boolean).join(' • ') || 'Item Details';
 
         var statusName = item.status && item.status.status_name ? String(item.status.status_name).toLowerCase() : 'unknown';
         var statusMap = {
@@ -952,7 +955,7 @@
         statusTextEl.textContent = statusConfig.label;
         document.getElementById('browseItemDetailStatusSubtitle').textContent = statusConfig.subtitle;
 
-        document.getElementById('browseItemDetailSku').textContent = item.sku || '-';
+        document.getElementById('browseItemDetailSku').textContent = item.representative_sku || '-';
         document.getElementById('browseItemDetailType').textContent = item.item_type ? (item.item_type.charAt(0).toUpperCase() + item.item_type.slice(1)) : '-';
         document.getElementById('browseItemDetailSize').textContent = item.size || '-';
         document.getElementById('browseItemDetailColor').textContent = item.color || '-';

@@ -243,7 +243,7 @@
                 <input
                     type="text"
                     id="itemSearchInput"
-                    placeholder="Search items by name, SKU, or type..."
+                    placeholder="Search items by name, type, size, color, or SKU..."
                     class="w-full bg-transparent text-xs text-neutral-700 placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500 focus:outline-none transition-colors duration-300 ease-in-out"
                 />
             </div>
@@ -506,7 +506,7 @@
 
         gridEl.innerHTML = items.map(function(item) {
             var isSelected = reservationState.selectedItems.some(function(si) {
-                return si.item_id === item.item_id;
+                return si.variant_id === item.variant_id;
             });
 
             return `
@@ -520,13 +520,14 @@
                         </div>
                         <div>
                             <p class="text-sm font-medium text-neutral-900 dark:text-white">${item.name}</p>
-                            <p class="text-xs text-neutral-500 dark:text-neutral-400">${item.sku} &bull; ${item.size} &bull; ${item.color}</p>
+                            <p class="text-xs text-neutral-500 dark:text-neutral-400">${item.representative_sku || 'No SKU'} &bull; ${item.size} &bull; ${item.color}</p>
+                            <p class="text-xs text-neutral-500 dark:text-neutral-400">Available: ${item.available_quantity ?? 0}</p>
                             <p class="text-xs font-medium text-violet-600 dark:text-violet-400">₱${parseFloat(item.rental_price).toLocaleString('en-PH', {minimumFractionDigits: 2})}/day</p>
                         </div>
                     </div>
                     <button
                         type="button"
-                        onclick="${isSelected ? `removeItemFromReservation(${item.item_id})` : `addItemToReservation(${JSON.stringify(item).replace(/"/g, '&quot;')})`}"
+                        onclick="${isSelected ? `removeItemFromReservation(${item.variant_id})` : `addItemToReservation(${JSON.stringify(item).replace(/"/g, '&quot;')})`}"
                         class="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium ${isSelected ? 'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50' : 'border border-violet-300 bg-white text-violet-700 hover:bg-violet-100 hover:border-violet-400 dark:border-violet-700 dark:bg-violet-900/30 dark:text-violet-300 dark:hover:bg-violet-900/50'} transition-colors duration-200"
                     >
                         ${isSelected ? 'Remove' : 'Add'}
@@ -539,21 +540,21 @@
     // ===== Item Management Functions =====
 
     function addItemToReservation(item) {
-        // Check if item already exists
         var exists = reservationState.selectedItems.some(function(si) {
-            return si.item_id === item.item_id;
+            return si.variant_id === item.variant_id;
         });
 
         if (!exists) {
             reservationState.selectedItems.push({
-                item_id: item.item_id,
+                variant_id: item.variant_id,
                 name: item.name,
-                sku: item.sku,
+                sku: item.representative_sku || '',
                 size: item.size,
                 color: item.color,
                 rental_price: parseFloat(item.rental_price),
                 quantity: 1,
-                notes: ''
+                notes: '',
+                available_quantity: Number(item.available_quantity || 0)
             });
 
             renderSelectedItems();
@@ -561,22 +562,26 @@
         }
     }
 
-    function removeItemFromReservation(itemId) {
+    function removeItemFromReservation(variantId) {
         reservationState.selectedItems = reservationState.selectedItems.filter(function(item) {
-            return item.item_id !== itemId;
+            return item.variant_id !== variantId;
         });
 
         renderSelectedItems();
         renderAvailableItems(reservationState.availableItems);
     }
 
-    function updateItemQuantity(itemId, quantity) {
+    function updateItemQuantity(variantId, quantity) {
         var item = reservationState.selectedItems.find(function(si) {
-            return si.item_id === itemId;
+            return si.variant_id === variantId;
         });
 
         if (item) {
-            item.quantity = Math.max(1, parseInt(quantity) || 1);
+            var parsedQuantity = Math.max(1, parseInt(quantity) || 1);
+            if (item.available_quantity > 0) {
+                parsedQuantity = Math.min(parsedQuantity, item.available_quantity);
+            }
+            item.quantity = parsedQuantity;
             renderSelectedItems();
         }
     }
@@ -612,8 +617,9 @@
                         <input
                             type="number"
                             min="1"
+                            max="${item.available_quantity > 0 ? item.available_quantity : ''}"
                             value="${item.quantity}"
-                            onchange="updateItemQuantity(${item.item_id}, this.value)"
+                            onchange="updateItemQuantity(${item.variant_id}, this.value)"
                             class="w-14 text-center text-xs rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-black/60 text-neutral-700 dark:text-neutral-100 px-2 py-1 focus:outline-none focus:border-violet-500"
                         />
                     </td>
@@ -621,7 +627,7 @@
                     <td class="py-2.5 pl-2 text-right">
                         <button
                             type="button"
-                            onclick="removeItemFromReservation(${item.item_id})"
+                            onclick="removeItemFromReservation(${item.variant_id})"
                             class="text-red-500 hover:text-red-700 dark:hover:text-red-400 transition-colors duration-200"
                         >
                             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -764,6 +770,14 @@
             errors.push('Please add at least one item to the reservation');
         }
 
+        var hasUnavailableQuantity = reservationState.selectedItems.some(function(item) {
+            return item.available_quantity > 0 && item.quantity > item.available_quantity;
+        });
+
+        if (hasUnavailableQuantity) {
+            errors.push('One or more item quantities exceed available stock');
+        }
+
         return errors;
     }
 
@@ -801,8 +815,10 @@
                 var query = this.value.toLowerCase();
                 var filtered = reservationState.availableItems.filter(function(item) {
                     return item.name.toLowerCase().includes(query) ||
-                           item.sku.toLowerCase().includes(query) ||
-                           item.item_type.toLowerCase().includes(query);
+                           (item.representative_sku || '').toLowerCase().includes(query) ||
+                           item.item_type.toLowerCase().includes(query) ||
+                           (item.size || '').toLowerCase().includes(query) ||
+                           (item.color || '').toLowerCase().includes(query);
                 });
                 renderAvailableItems(filtered);
             });
@@ -835,7 +851,7 @@
                         notes: document.getElementById('reservationNotes').value,
                         items: reservationState.selectedItems.map(function(item) {
                             return {
-                                item_id: item.item_id,
+                                variant_id: item.variant_id,
                                 quantity: item.quantity,
                                 rental_price: item.rental_price,
                                 notes: item.notes || ''
