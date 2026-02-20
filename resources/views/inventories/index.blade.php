@@ -210,6 +210,8 @@
         abortController: null
     };
 
+    globalThis.inventoryState = inventoryState;
+
     // Debounce timer for search
     var searchDebounceTimer;
 

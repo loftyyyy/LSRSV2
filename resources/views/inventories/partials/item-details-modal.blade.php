@@ -106,6 +106,13 @@
                                         </div>
                                         <p id="detailItemType" class="text-sm font-medium text-neutral-900 dark:text-white">-</p>
                                     </div>
+                                    <div>
+                                        <div class="flex items-center gap-1.5 mb-1">
+                                            <x-icon name="list" class="h-3 w-3 text-neutral-400" />
+                                            <p class="text-xs text-neutral-500 dark:text-neutral-400">Variant</p>
+                                        </div>
+                                        <p id="detailItemVariant" class="text-sm font-medium text-neutral-900 dark:text-white">-</p>
+                                    </div>
                                 </div>
                             </div>
 
@@ -378,6 +385,20 @@
                 dotClass: 'bg-amber-500',
                 textClass: 'text-amber-700 dark:text-amber-400'
             },
+            'reserved': {
+                label: 'Reserved',
+                subtitle: 'Booked for schedule',
+                cardClass: 'bg-cyan-500/10 dark:bg-cyan-500/20 border-cyan-500/30 dark:border-cyan-500/30',
+                dotClass: 'bg-cyan-500',
+                textClass: 'text-cyan-700 dark:text-cyan-400'
+            },
+            'sold': {
+                label: 'Sold',
+                subtitle: 'No longer rentable',
+                cardClass: 'bg-rose-500/10 dark:bg-rose-500/20 border-rose-500/30 dark:border-rose-500/30',
+                dotClass: 'bg-rose-500',
+                textClass: 'text-rose-700 dark:text-rose-400'
+            },
             'retired': {
                 label: 'Retired',
                 subtitle: 'No longer available',
@@ -399,6 +420,9 @@
         document.getElementById('detailItemType').textContent = item.item_type
             ? item.item_type.charAt(0).toUpperCase() + item.item_type.slice(1)
             : '-';
+        document.getElementById('detailItemVariant').textContent = item.variant?.variant_id
+            ? `#${item.variant.variant_id}`
+            : 'Unassigned';
         document.getElementById('detailItemSize').textContent = item.size || '-';
         document.getElementById('detailItemColor').textContent = item.color || '-';
         document.getElementById('detailItemDesign').textContent = item.design || '-';

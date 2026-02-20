@@ -142,7 +142,7 @@
                         <option value="available">Available</option>
                         <option value="rented">Rented</option>
                         <option value="maintenance">Maintenance</option>
-                        <option value="damaged">Damaged</option>
+                        <option value="retired">Retired</option>
                     </select>
                 </div>
             </div>
@@ -216,9 +216,9 @@
 
              <div class="rounded-2xl p-6 border border-neutral-200 bg-white dark:border-neutral-900 dark:bg-neutral-950/60 shadow-sm dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
                  <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
-                     Damaged Items
+                     Retired Items
                  </div>
-                 <div id="statDamagedItems" class="text-3xl font-semibold text-red-600 dark:text-red-400 transition-colors duration-300 ease-in-out">
+                 <div id="statRetiredItems" class="text-3xl font-semibold text-red-600 dark:text-red-400 transition-colors duration-300 ease-in-out">
                      0
                  </div>
              </div>
@@ -370,7 +370,7 @@
          document.getElementById('statMaintenanceItems').textContent = kpis.maintenance_items || 0;
          document.getElementById('statTotalValue').textContent = '₱' + (kpis.total_value || 0).toLocaleString();
          document.getElementById('statOccupancyRate').textContent = (kpis.occupancy_rate || 0) + '%';
-         document.getElementById('statDamagedItems').textContent = kpis.damaged_items || 0;
+         document.getElementById('statRetiredItems').textContent = kpis.retired_items || 0;
      }
 
       function updateCharts(data) {
@@ -413,13 +413,13 @@
                         '#10b981', // Available - emerald
                         '#3b82f6', // Rented - blue
                         '#f59e0b', // Maintenance - amber
-                        '#ef4444'  // Damaged - red
+                        '#6b7280'  // Retired - neutral
                     ],
                     borderColor: [
                         '#059669',
                         '#2563eb',
                         '#d97706',
-                        '#dc2626'
+                        '#4b5563'
                     ],
                     borderWidth: 2,
                 }]

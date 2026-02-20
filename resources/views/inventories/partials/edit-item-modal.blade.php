@@ -332,9 +332,6 @@
                         class="w-full bg-transparent text-xs text-neutral-700 placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500 focus:outline-none transition-colors duration-300 ease-in-out"
                     >
                         <option value="">Select status</option>
-                        <option value="1">Available</option>
-                        <option value="3">Maintenance</option>
-                        <option value="4">Retired</option>
                     </select>
                 </div>
                 <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
@@ -1081,6 +1078,8 @@
 
     // Open change status modal from edit modal
     function openChangeItemStatusModalFromEdit() {
+        populateItemStatusOptions();
+
         var modal = document.getElementById('changeItemStatusModal');
         modal.classList.remove('hidden');
         modal.classList.add('flex');
@@ -1098,6 +1097,8 @@
             // Fetch item data to get current status
             var response = await axios.get(`/api/inventories/${itemId}`);
             var item = response.data.data;
+
+            populateItemStatusOptions();
 
             // Store item info for later use
             window.pendingItemStatusChange = {
@@ -1166,9 +1167,8 @@
                 status_id: newStatus
             });
 
-            // Map status ID to name for display
-            var statusNames = { '3': 'maintenance', '4': 'retired' };
-            var statusName = statusNames[newStatus] || newStatus;
+            var selectedOption = document.querySelector(`#newItemStatusSelect option[value="${newStatus}"]`);
+            var statusName = selectedOption ? selectedOption.textContent.trim().toLowerCase() : newStatus;
 
             // Update modal state if called from edit modal
             if (globalThis.editItemModalState.currentItemId) {
@@ -1219,6 +1219,44 @@
             closeChangeItemStatusModal();
         }
     });
+
+    function populateItemStatusOptions() {
+        var select = document.getElementById('newItemStatusSelect');
+        if (!select) {
+            return;
+        }
+
+        var selectableStatusNames = ['available', 'maintenance', 'retired'];
+        var options = [];
+
+        if (globalThis.inventoryState && globalThis.inventoryState.statuses) {
+            Object.keys(globalThis.inventoryState.statuses).forEach(function(statusId) {
+                var statusName = globalThis.inventoryState.statuses[statusId];
+                if (selectableStatusNames.includes(statusName)) {
+                    options.push({
+                        id: statusId,
+                        name: statusName
+                    });
+                }
+            });
+        }
+
+        if (options.length === 0) {
+            options = [
+                { id: '1', name: 'available' },
+                { id: '3', name: 'maintenance' },
+                { id: '4', name: 'retired' }
+            ];
+        }
+
+        options.sort(function(a, b) {
+            return selectableStatusNames.indexOf(a.name) - selectableStatusNames.indexOf(b.name);
+        });
+
+        select.innerHTML = '<option value="">Select status</option>' + options.map(function(option) {
+            return `<option value="${option.id}">${option.name.charAt(0).toUpperCase() + option.name.slice(1)}</option>`;
+        }).join('');
+    }
 
     document.getElementById('editItemIsSellable').addEventListener('change', syncEditSellableState);
     syncEditSellableState();
