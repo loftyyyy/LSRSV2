@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('inventory_variants', function (Blueprint $table) {
             $table->id('variant_id');
+            $table->string('variant_sku')->unique();
             $table->enum('item_type', ['gown', 'suit']);
             $table->string('name');
             $table->string('size');

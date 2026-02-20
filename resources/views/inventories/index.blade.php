@@ -103,7 +103,7 @@
                         <div>
                              <div class="flex items-center gap-3 rounded-2xl bg-white px-4 py-2.5 border border-neutral-300 focus-within:border-neutral-500 dark:border-neutral-800 dark:bg-black/60 transition-colors duration-300 ease-in-out">
                                  <x-icon name="search" class="h-4 w-4 text-neutral-500 transition-colors duration-300 ease-in-out" />
-                                 <input id="searchInput" type="text" placeholder="Search by item name, SKU, or ID..." class="w-full bg-transparent text-xs text-neutral-700 placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500 focus:outline-none transition-colors duration-300 ease-in-out">
+                                 <input id="searchInput" type="text" placeholder="Search by item name, SKU, variant SKU, or ID..." class="w-full bg-transparent text-xs text-neutral-700 placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500 focus:outline-none transition-colors duration-300 ease-in-out">
                              </div>
                             <div id="searchIndicators" class="mt-2 flex flex-wrap gap-1.5 px-0"></div>
                         </div>
@@ -547,7 +547,10 @@
                  row.innerHTML = `
                      <td class="py-3.5 pr-4 pl-4 text-neutral-500 font-geist-mono">${item.name || 'N/A'}</td>
                      <td class="py-3.5 pr-4 text-neutral-900 dark:text-neutral-100">${itemType}</td>
-                     <td class="py-3.5 pr-4 text-neutral-900 dark:text-neutral-100">${item.sku || 'N/A'}</td>
+                     <td class="py-3.5 pr-4 text-neutral-900 dark:text-neutral-100">
+                         <div>${item.sku || 'N/A'}</div>
+                         <div class="text-[11px] text-neutral-500 dark:text-neutral-400">Variant: ${item.variant?.variant_sku || 'N/A'}</div>
+                     </td>
                      <td class="py-3.5 pr-4 text-neutral-600 dark:text-neutral-300">${item.size || 'N/A'}</td>
                      <td class="py-3.5 pr-2 text-neutral-600 dark:text-neutral-300 font-geist-mono">₱${(item.rental_price || 0).toLocaleString()}</td>
                      <td class="py-3.5 pr-2">

@@ -478,7 +478,15 @@
         gridEl.classList.add('hidden');
 
         try {
-            var response = await axios.get('/api/reservations/items/browse');
+            var startDate = document.getElementById('startDate')?.value || null;
+            var endDate = document.getElementById('endDate')?.value || null;
+
+            var response = await axios.get('/api/reservations/items/browse', {
+                params: {
+                    start_date: startDate,
+                    end_date: endDate
+                }
+            });
             // Handle paginated response: response.data = { data: { data: [...items], current_page, ... }, message }
             var responseData = response.data.data || response.data;
             // If paginated, items are in responseData.data; otherwise responseData is the items array

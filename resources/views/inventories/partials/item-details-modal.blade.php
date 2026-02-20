@@ -421,7 +421,7 @@
             ? item.item_type.charAt(0).toUpperCase() + item.item_type.slice(1)
             : '-';
         document.getElementById('detailItemVariant').textContent = item.variant?.variant_id
-            ? `#${item.variant.variant_id}`
+            ? `#${item.variant.variant_id}${item.variant?.variant_sku ? ' (' + item.variant.variant_sku + ')' : ''}`
             : 'Unassigned';
         document.getElementById('detailItemSize').textContent = item.size || '-';
         document.getElementById('detailItemColor').textContent = item.color || '-';

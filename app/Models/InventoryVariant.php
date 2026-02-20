@@ -13,6 +13,7 @@ class InventoryVariant extends Model
     protected $primaryKey = 'variant_id';
 
     protected $fillable = [
+        'variant_sku',
         'item_type',
         'name',
         'size',

@@ -128,6 +128,7 @@ class InventorySeeder extends Seeder
                 unset($variantData['stock']);
 
                 $variant = InventoryVariant::create(array_merge($variantData, [
+                    'variant_sku' => sprintf('%s-%04d', strtoupper(substr($variantData['item_type'], 0, 3)), $index + 1),
                     'total_units' => count($stockStates),
                     'available_units' => collect($stockStates)->filter(fn ($state) => $state === 'available')->count(),
                 ]));

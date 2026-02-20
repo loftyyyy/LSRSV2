@@ -22,7 +22,9 @@ class StoreInventoryRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'quantity' => ['nullable', 'integer', 'min:1', 'max:500'],
             'variant_id' => ['nullable', 'exists:inventory_variants,variant_id'],
+            'variant_sku' => ['nullable', 'string', 'max:50', 'unique:inventory_variants,variant_sku'],
             'sku' => ['nullable', 'string', 'max:50', 'unique:inventories,sku'],
             'item_type' => ['required', 'in:gown,suit'],
             'name' => ['required', 'string', 'max:255'],

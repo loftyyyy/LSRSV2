@@ -56,6 +56,21 @@
                             </div>
                         </div>
 
+                        {{-- Variant SKU --}}
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Variant SKU</label>
+                            <div class="flex items-center rounded-2xl bg-white px-3 py-2.5 border border-neutral-300 focus-within:border-neutral-500 dark:border-neutral-800 dark:bg-black/60 transition-colors duration-300 ease-in-out">
+                                <x-icon name="tag" class="h-4 w-4 text-neutral-500 mr-2 transition-colors duration-300 ease-in-out" />
+                                <input
+                                    type="text"
+                                    id="editItemVariantSku"
+                                    name="variant_sku"
+                                    placeholder="Variant code"
+                                    class="w-full bg-transparent text-xs text-neutral-700 placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500 focus:outline-none transition-colors duration-300 ease-in-out"
+                                />
+                            </div>
+                        </div>
+
                         {{-- Item Type --}}
                         <div class="space-y-2">
                             <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Item Type *</label>
@@ -495,6 +510,7 @@
             document.getElementById('editItemId').value = item.item_id;
             document.getElementById('editItemName').value = item.name || '';
             document.getElementById('editItemSku').value = item.sku || '';
+            document.getElementById('editItemVariantSku').value = item.variant?.variant_sku || '';
             document.getElementById('editItemType').value = item.item_type || '';
             document.getElementById('editItemSize').value = item.size || '';
             document.getElementById('editItemColor').value = item.color || '';
@@ -899,6 +915,10 @@
         if (!formData.get('sku')?.trim()) {
             errors.push('SKU is required');
         }
+        var variantSku = formData.get('variant_sku');
+        if (variantSku && variantSku.length > 50) {
+            errors.push('Variant SKU must be 50 characters or fewer');
+        }
         if (!formData.get('item_type')?.trim()) {
             errors.push('Item type is required');
         }
@@ -962,6 +982,7 @@
             var payload = {
                 name: formData.get('name'),
                 sku: formData.get('sku'),
+                variant_sku: formData.get('variant_sku') ? formData.get('variant_sku').trim() : null,
                 item_type: formData.get('item_type'),
                 size: formData.get('size'),
                 color: formData.get('color'),

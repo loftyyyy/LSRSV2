@@ -211,7 +211,10 @@ class InventoryController extends Controller
                     ->orWhere('name', 'like', "%{$search}%")
                     ->orWhere('size', 'like', "%{$search}%")
                     ->orWhere('color', 'like', "%{$search}%")
-                    ->orWhere('design', 'like', "%{$search}%");
+                    ->orWhere('design', 'like', "%{$search}%")
+                    ->orWhereHas('variant', function ($variantQuery) use ($search) {
+                        $variantQuery->where('variant_sku', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -258,24 +261,38 @@ class InventoryController extends Controller
      */
      public function store(StoreInventoryRequest $request): JsonResponse
      {
-         $data = $request->validated();
+          $data = $request->validated();
+         $quantity = (int) ($data['quantity'] ?? 1);
+         unset($data['quantity']);
 
-         if (empty($data['status_id'])) {
-             $availableStatus = InventoryStatus::where('status_name', 'available')->first();
+         if ($quantity > 1 && !empty($data['sku'])) {
+             return response()->json([
+                 'success' => false,
+                 'message' => 'SKU must be empty when creating multiple items so unique SKUs can be auto-generated.'
+             ], 422);
+         }
+
+          if (empty($data['status_id'])) {
+              $availableStatus = InventoryStatus::where('status_name', 'available')->first();
              if ($availableStatus) {
                  $data['status_id'] = $availableStatus->status_id;
              }
          }
 
-         if (empty($data['variant_id'])) {
-             $data['variant_id'] = $this->resolveVariantId($data);
-         }
+          if (empty($data['variant_id'])) {
+              $data['variant_id'] = $this->resolveVariantId($data);
+          }
 
-         $inventory = Inventory::create($data);
+          $inventories = collect();
+          for ($i = 0; $i < $quantity; $i++) {
+              $inventories->push(Inventory::create($data));
+          }
+
+          $inventory = $inventories->first();
          
          // Handle image uploads if present
          $uploadedImages = [];
-         if ($request->has('images')) {
+          if ($request->has('images') && $inventory) {
              $images = $request->input('images');
              
              foreach ($images as $index => $imageData) {
@@ -325,17 +342,20 @@ class InventoryController extends Controller
              }
          }
          
-         $this->refreshVariantCounters($inventory->variant_id);
+          $this->refreshVariantCounters($inventory?->variant_id);
 
-         $inventory->load(['status', 'variant', 'images']);
+          $inventory->load(['status', 'variant', 'images']);
 
-         return response()->json([
-             'success' => true,
-             'message' => 'Inventory item created successfully',
-             'data' => $inventory,
-             'images_uploaded' => count($uploadedImages)
-         ], 201);
-     }
+          return response()->json([
+              'success' => true,
+              'message' => $quantity > 1
+                  ? "{$quantity} inventory items created successfully"
+                  : 'Inventory item created successfully',
+              'data' => $inventory,
+              'created_count' => $quantity,
+              'images_uploaded' => count($uploadedImages)
+          ], 201);
+      }
 
     /**
      * Display the specified resource.
@@ -839,6 +859,15 @@ class InventoryController extends Controller
 
     private function resolveVariantId(array $data): int
     {
+        $variantSku = isset($data['variant_sku']) ? trim((string) $data['variant_sku']) : null;
+
+        if ($variantSku) {
+            $existingVariant = InventoryVariant::where('variant_sku', $variantSku)->first();
+            if ($existingVariant) {
+                return $existingVariant->variant_id;
+            }
+        }
+
         $attributes = [
             'item_type' => $data['item_type'],
             'name' => $data['name'],
@@ -851,12 +880,42 @@ class InventoryController extends Controller
             'selling_price' => $data['selling_price'] ?? null,
         ];
 
-        $variant = InventoryVariant::firstOrCreate($attributes, [
+        if (!$variantSku) {
+            $matchedVariant = InventoryVariant::where($attributes)->first();
+            if ($matchedVariant) {
+                return $matchedVariant->variant_id;
+            }
+
+            $variantSku = $this->generateVariantSku($data['item_type'] ?? null);
+        }
+
+        $variant = InventoryVariant::create(array_merge($attributes, [
+            'variant_sku' => $variantSku,
             'total_units' => 0,
             'available_units' => 0,
-        ]);
+        ]));
 
         return $variant->variant_id;
+    }
+
+    private function generateVariantSku(?string $itemType): string
+    {
+        $prefix = match ($itemType) {
+            'gown' => 'GWN',
+            'suit' => 'SUT',
+            default => 'VAR',
+        };
+
+        $lastVariant = InventoryVariant::where('variant_sku', 'like', "{$prefix}-%")
+            ->orderByRaw('CAST(SUBSTRING(variant_sku, 5) AS UNSIGNED) DESC')
+            ->first();
+
+        $nextNumber = 1;
+        if ($lastVariant && preg_match('/-(\d+)$/', (string) $lastVariant->variant_sku, $matches)) {
+            $nextNumber = (int) $matches[1] + 1;
+        }
+
+        return sprintf('%s-%04d', $prefix, $nextNumber);
     }
 
     private function refreshVariantCounters(?int $variantId): void

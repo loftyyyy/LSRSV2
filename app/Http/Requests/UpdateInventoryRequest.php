@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateInventoryRequest extends FormRequest
 {
@@ -22,9 +23,11 @@ class UpdateInventoryRequest extends FormRequest
     public function rules(): array
     {
         $inventoryId = $this->route('inventory')->item_id ?? null;
+        $variantId = $this->route('inventory')->variant_id ?? null;
 
         return [
             'variant_id' => ['sometimes', 'nullable', 'exists:inventory_variants,variant_id'],
+            'variant_sku' => ['sometimes', 'nullable', 'string', 'max:50', Rule::unique('inventory_variants', 'variant_sku')->ignore($variantId, 'variant_id')],
             'sku' => ['nullable', 'string', 'max:50', 'unique:inventories,sku,' . $inventoryId . ',item_id'],
             'item_type' => ['sometimes', 'required', 'in:gown,suit'],
             'name' => ['sometimes', 'required', 'string', 'max:255'],

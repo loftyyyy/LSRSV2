@@ -40,14 +40,27 @@
 
                         {{-- SKU --}}
                         <div class="space-y-2">
-                            <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300">SKU *</label>
+                            <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300">SKU <span class="text-neutral-400 text-xs">(Optional)</span></label>
                             <div class="flex items-center rounded-2xl bg-white px-3 py-2.5 border border-neutral-300 focus-within:border-neutral-500 dark:border-neutral-800 dark:bg-black/60 transition-colors duration-300 ease-in-out">
                                 <x-icon name="barcode" class="h-4 w-4 text-neutral-500 mr-2 transition-colors duration-300 ease-in-out" />
                                 <input
                                     type="text"
                                     name="sku"
-                                    required
-                                    placeholder="WG-001"
+                                    placeholder="Leave blank to auto-generate"
+                                    class="w-full bg-transparent text-xs text-neutral-700 placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500 focus:outline-none transition-colors duration-300 ease-in-out"
+                                />
+                            </div>
+                        </div>
+
+                        {{-- Variant SKU --}}
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Variant SKU <span class="text-neutral-400 text-xs">(Optional)</span></label>
+                            <div class="flex items-center rounded-2xl bg-white px-3 py-2.5 border border-neutral-300 focus-within:border-neutral-500 dark:border-neutral-800 dark:bg-black/60 transition-colors duration-300 ease-in-out">
+                                <x-icon name="tag" class="h-4 w-4 text-neutral-500 mr-2 transition-colors duration-300 ease-in-out" />
+                                <input
+                                    type="text"
+                                    name="variant_sku"
+                                    placeholder="Leave blank to auto-generate"
                                     class="w-full bg-transparent text-xs text-neutral-700 placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500 focus:outline-none transition-colors duration-300 ease-in-out"
                                 />
                             </div>
@@ -135,7 +148,25 @@
                     <span>Pricing</span>
                 </div>
 
-                <div class="grid grid-cols-3 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+                    {{-- Quantity --}}
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Quantity *</label>
+                        <div class="flex items-center rounded-2xl bg-white px-3 py-2.5 border border-neutral-300 focus-within:border-neutral-500 dark:border-neutral-800 dark:bg-black/60 transition-colors duration-300 ease-in-out">
+                            <x-icon name="package" class="h-4 w-4 text-neutral-500 mr-2 transition-colors duration-300 ease-in-out" />
+                            <input
+                                type="number"
+                                name="quantity"
+                                required
+                                min="1"
+                                step="1"
+                                value="1"
+                                placeholder="1"
+                                class="w-full bg-transparent text-xs text-neutral-700 placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500 focus:outline-none transition-colors duration-300 ease-in-out"
+                            />
+                        </div>
+                    </div>
+
                     {{-- Rental Price --}}
                     <div class="space-y-2">
                         <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Rental Price (PHP) *</label>
@@ -617,6 +648,20 @@
             }
         }
 
+        if (!formData.get('quantity')?.trim()) {
+            errors.push('Quantity is required');
+        } else {
+            var quantity = parseInt(formData.get('quantity'), 10);
+            if (isNaN(quantity) || quantity < 1) {
+                errors.push('Quantity must be at least 1');
+            }
+        }
+
+        var variantSku = formData.get('variant_sku');
+        if (variantSku && variantSku.length > 50) {
+            errors.push('Variant SKU must be 50 characters or fewer');
+        }
+
         var isSellable = formData.get('is_sellable') === '1';
         var sellingPrice = formData.get('selling_price');
         if (isSellable) {
@@ -658,12 +703,20 @@
             // Prepare API payload
             var payload = new FormData();
             payload.append('name', formData.get('name'));
-            payload.append('sku', formData.get('sku'));
+            var sku = formData.get('sku');
+            if (sku && sku.trim() !== '') {
+                payload.append('sku', sku.trim());
+            }
             payload.append('item_type', formData.get('item_type'));
+            var variantSku = formData.get('variant_sku');
+            if (variantSku && variantSku.trim() !== '') {
+                payload.append('variant_sku', variantSku.trim());
+            }
             payload.append('size', formData.get('size'));
             payload.append('color', formData.get('color'));
             payload.append('design', formData.get('design'));
             payload.append('rental_price', parseFloat(formData.get('rental_price')));
+            payload.append('quantity', parseInt(formData.get('quantity'), 10));
 
             // Optional pricing fields
             var isSellable = formData.get('is_sellable') === '1';
