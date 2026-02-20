@@ -17,7 +17,7 @@
                 <label for="editReservationCustomer" class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Customer *</label>
                 <div class="flex items-center rounded-2xl bg-white px-3 py-2.5 border border-neutral-300 focus-within:border-neutral-500 dark:border-neutral-800 dark:bg-black/60 transition-colors duration-300 ease-in-out">
                     <x-icon name="user" class="h-4 w-4 text-neutral-500 mr-2" />
-                    <select id="editReservationCustomer" name="customer_id" required class="w-full bg-transparent text-xs text-neutral-700 dark:text-neutral-100 focus:outline-none">
+                    <select id="editReservationCustomer" name="customer_id" required class="edit-reservation-select w-full bg-transparent text-xs text-neutral-700 dark:text-neutral-100 focus:outline-none">
                         <option value="">Select customer</option>
                     </select>
                 </div>
@@ -45,6 +45,10 @@
                 <div class="flex items-center rounded-2xl bg-white px-3 py-2.5 border border-neutral-300 focus-within:border-neutral-500 dark:border-neutral-800 dark:bg-black/60 transition-colors duration-300 ease-in-out">
                     <x-icon name="lock" class="h-4 w-4 text-neutral-500 mr-2" />
                     <input type="password" id="editReservationPassword" autocomplete="current-password" placeholder="Enter your password to confirm changes" required class="w-full bg-transparent text-xs text-neutral-700 placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500 focus:outline-none" />
+                    <button type="button" id="toggleEditReservationPassword" onclick="toggleEditReservationPasswordVisibility()" class="ml-2 inline-flex items-center justify-center text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 transition-colors duration-200" aria-label="Show password">
+                        <x-icon name="eye" class="h-4 w-4" id="editReservationPasswordEye" />
+                        <x-icon name="eye-off" class="h-4 w-4 hidden" id="editReservationPasswordEyeOff" />
+                    </button>
                 </div>
                 <p class="text-[11px] text-neutral-500 dark:text-neutral-400">For security, reservation updates require your account password.</p>
             </div>
@@ -59,13 +63,50 @@
                 <p class="text-xs text-emerald-600 dark:text-emerald-400"></p>
             </div>
 
-            <div class="flex items-center justify-end gap-3 pt-1">
+            <div class="flex items-center justify-between gap-3 pt-1">
+                <button type="button" id="cancelEditReservationBtn" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-[14px] font-medium bg-red-600 text-white hover:bg-red-500 transition-colors duration-100 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed">
+                    <span id="cancelEditReservationBtnText">Cancel Reservation</span>
+                    <span id="cancelEditReservationBtnLoading" class="hidden">Cancelling...</span>
+                </button>
+
+                <div class="flex items-center gap-3">
                 <button type="submit" id="submitEditReservationBtn" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-[14px] font-medium bg-violet-600 text-white dark:text-black hover:text-black dark:hover:text-white hover:bg-violet-500 transition-colors duration-100 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed">
                     <span id="submitEditReservationBtnText">Save Changes</span>
                     <span id="submitEditReservationBtnLoading" class="hidden">Saving...</span>
                 </button>
                 <button type="button" onclick="closeEditReservationModal()" class="inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-[14px] font-medium border border-neutral-300 bg-white text-neutral-700 dark:border-neutral-800 dark:bg-neutral-950/80 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-900 transition-colors duration-100 ease-in-out">Cancel</button>
+                </div>
             </div>
         </form>
     </div>
 </div>
+
+<style>
+    #editReservationModal .edit-reservation-select {
+        background-color: transparent;
+        color: #374151;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+        background-position: right 0.25rem center;
+        background-repeat: no-repeat;
+        background-size: 1.25em 1.25em;
+        padding-right: 1.75rem;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+    }
+
+    .dark #editReservationModal .edit-reservation-select {
+        color: #f5f5f5;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    }
+
+    #editReservationModal .edit-reservation-select option {
+        color: #374151;
+        background-color: #ffffff;
+    }
+
+    .dark #editReservationModal .edit-reservation-select option {
+        color: #f5f5f5;
+        background-color: rgb(17, 24, 39);
+    }
+</style>

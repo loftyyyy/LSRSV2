@@ -769,7 +769,47 @@
 
         modal.classList.add('hidden');
         modal.classList.remove('flex');
+        resetEditReservationPasswordVisibility();
         hideEditReservationMessages();
+    }
+
+    function toggleEditReservationPasswordVisibility() {
+        var passwordInput = document.getElementById('editReservationPassword');
+        var eyeIcon = document.getElementById('editReservationPasswordEye');
+        var eyeOffIcon = document.getElementById('editReservationPasswordEyeOff');
+        var toggleBtn = document.getElementById('toggleEditReservationPassword');
+
+        if (!passwordInput || !eyeIcon || !eyeOffIcon || !toggleBtn) {
+            return;
+        }
+
+        var isPassword = passwordInput.type === 'password';
+        passwordInput.type = isPassword ? 'text' : 'password';
+        eyeIcon.classList.toggle('hidden', isPassword);
+        eyeOffIcon.classList.toggle('hidden', !isPassword);
+        toggleBtn.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
+    }
+
+    function resetEditReservationPasswordVisibility() {
+        var passwordInput = document.getElementById('editReservationPassword');
+        var eyeIcon = document.getElementById('editReservationPasswordEye');
+        var eyeOffIcon = document.getElementById('editReservationPasswordEyeOff');
+        var toggleBtn = document.getElementById('toggleEditReservationPassword');
+
+        if (!passwordInput) {
+            return;
+        }
+
+        passwordInput.type = 'password';
+        if (eyeIcon) {
+            eyeIcon.classList.remove('hidden');
+        }
+        if (eyeOffIcon) {
+            eyeOffIcon.classList.add('hidden');
+        }
+        if (toggleBtn) {
+            toggleBtn.setAttribute('aria-label', 'Show password');
+        }
     }
 
     function hideEditReservationMessages() {
@@ -817,21 +857,89 @@
         }
     }
 
-    function setEditReservationSubmitting(isSubmitting) {
+    function setEditReservationSubmitting(isSubmitting, actionType) {
+        var mode = actionType || 'save';
+
         reservationEditState.isSubmitting = isSubmitting;
 
-        var button = document.getElementById('submitEditReservationBtn');
-        var buttonText = document.getElementById('submitEditReservationBtnText');
-        var buttonLoading = document.getElementById('submitEditReservationBtnLoading');
+        var saveButton = document.getElementById('submitEditReservationBtn');
+        var saveButtonText = document.getElementById('submitEditReservationBtnText');
+        var saveButtonLoading = document.getElementById('submitEditReservationBtnLoading');
+        var cancelReservationButton = document.getElementById('cancelEditReservationBtn');
+        var cancelReservationButtonText = document.getElementById('cancelEditReservationBtnText');
+        var cancelReservationButtonLoading = document.getElementById('cancelEditReservationBtnLoading');
 
-        if (button) {
-            button.disabled = isSubmitting;
+        if (saveButton) {
+            saveButton.disabled = isSubmitting;
         }
-        if (buttonText) {
-            buttonText.classList.toggle('hidden', isSubmitting);
+        if (cancelReservationButton) {
+            cancelReservationButton.disabled = isSubmitting;
         }
-        if (buttonLoading) {
-            buttonLoading.classList.toggle('hidden', !isSubmitting);
+
+        if (saveButtonText) {
+            saveButtonText.classList.toggle('hidden', isSubmitting && mode === 'save');
+        }
+        if (saveButtonLoading) {
+            saveButtonLoading.classList.toggle('hidden', !(isSubmitting && mode === 'save'));
+        }
+
+        if (cancelReservationButtonText) {
+            cancelReservationButtonText.classList.toggle('hidden', isSubmitting && mode === 'cancel');
+        }
+        if (cancelReservationButtonLoading) {
+            cancelReservationButtonLoading.classList.toggle('hidden', !(isSubmitting && mode === 'cancel'));
+        }
+    }
+
+    async function cancelReservationFromEditModal() {
+        if (reservationEditState.isSubmitting) {
+            return;
+        }
+
+        hideEditReservationMessages();
+
+        var reservationId = document.getElementById('editReservationId').value;
+        var password = document.getElementById('editReservationPassword').value;
+
+        if (!reservationId) {
+            showEditReservationError('Missing reservation reference. Please reopen the modal.');
+            return;
+        }
+
+        if (!password || !password.trim()) {
+            showEditReservationError('Please enter your password to cancel this reservation.');
+            return;
+        }
+
+        if (!window.confirm('Cancel this reservation? This will update its status to cancelled.')) {
+            return;
+        }
+
+        setEditReservationSubmitting(true, 'cancel');
+
+        try {
+            var passwordValid = await verifyReservationEditPassword(password.trim());
+            if (!passwordValid) {
+                showEditReservationError('Invalid password. Please try again.');
+                return;
+            }
+
+            await axios.post('/api/reservations/' + reservationId + '/cancel');
+            showEditReservationSuccess('Reservation cancelled successfully.');
+
+            setTimeout(function() {
+                closeEditReservationModal();
+                fetchReservations();
+                fetchReservationStats();
+            }, 900);
+        } catch (error) {
+            console.error('Error cancelling reservation:', error);
+            var message = error.response && error.response.data && error.response.data.message
+                ? error.response.data.message
+                : (error.message || 'Failed to cancel reservation.');
+            showEditReservationError(message);
+        } finally {
+            setEditReservationSubmitting(false);
         }
     }
 
@@ -897,6 +1005,7 @@
         var modal = document.getElementById('editReservationModal');
         var startDateInput = document.getElementById('editReservationStartDate');
         var endDateInput = document.getElementById('editReservationEndDate');
+        var cancelReservationBtn = document.getElementById('cancelEditReservationBtn');
 
         if (startDateInput && endDateInput) {
             startDateInput.addEventListener('change', function() {
@@ -930,7 +1039,7 @@
                     return;
                 }
 
-                setEditReservationSubmitting(true);
+                setEditReservationSubmitting(true, 'save');
 
                 try {
                     var passwordValid = await verifyReservationEditPassword(password.trim());
@@ -961,6 +1070,12 @@
                 } finally {
                     setEditReservationSubmitting(false);
                 }
+            });
+        }
+
+        if (cancelReservationBtn) {
+            cancelReservationBtn.addEventListener('click', function() {
+                cancelReservationFromEditModal();
             });
         }
 
