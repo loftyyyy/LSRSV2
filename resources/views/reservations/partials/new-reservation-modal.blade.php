@@ -152,7 +152,7 @@
                                     <th class="py-2 pr-3 font-medium text-right">Deposit Amount</th>
                                     <th class="py-2 pr-3 font-medium text-center">Qty</th>
                                     <th class="py-2 font-medium text-right">Subtotal</th>
-                                    <th class="py-2 pl-2 font-medium"></th>
+                                    <th class="py-2 pl-2 font-medium text-right">Action</th>
                                 </tr>
                             </thead>
                             <tbody id="selectedItemsBody" class="divide-y divide-neutral-200 dark:divide-neutral-700">
@@ -651,7 +651,7 @@
                             onclick="removeItemFromReservation(${item.variant_id})"
                             class="text-red-500 hover:text-red-700 dark:hover:text-red-400 transition-colors duration-200"
                         >
-                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            <x-icon name="trash" class="h-4 w-4" />
                         </button>
                     </td>
                 </tr>
