@@ -2,11 +2,12 @@
 
 namespace App\Services;
 
+use App\Models\Payment;
+use App\Models\PaymentStatus;
 use App\Models\Rental;
 use App\Models\DepositReturn;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class DepositService
@@ -19,7 +20,13 @@ class DepositService
      * @param int $collectedBy User ID
      * @return Rental
      */
-    public function collectDeposit(Rental $rental, float $amount, int $collectedBy): Rental
+    public function collectDeposit(
+        Rental $rental,
+        float $amount,
+        int $collectedBy,
+        string $paymentMethod,
+        ?string $notes = null
+    ): Rental
     {
         if ($amount <= 0) {
             throw new \InvalidArgumentException('Deposit amount must be greater than zero');
@@ -29,14 +36,60 @@ class DepositService
             throw new \RuntimeException('Deposit has already been collected or processed for this rental');
         }
 
-        $rental->update([
-            'deposit_amount' => $amount,
-            'deposit_status' => 'held',
-            'deposit_collected_by' => $collectedBy,
-            'deposit_collected_at' => now(),
-        ]);
+        return DB::transaction(function () use ($rental, $amount, $collectedBy, $paymentMethod, $notes) {
+            $paidStatusId = $this->getPaymentStatusId('paid');
+            if (!$paidStatusId) {
+                throw new \RuntimeException('Paid payment status is not configured.');
+            }
 
-        return $rental->fresh();
+            $invoiceType = $rental->reservation_id ? 'reservation' : 'rental';
+            $invoice = $this->findOrCreateInvoice($rental, $invoiceType, $collectedBy);
+
+            $depositLine = $invoice->invoiceItems()
+                ->where('item_type', 'deposit')
+                ->first();
+
+            if ($depositLine) {
+                $depositLine->update([
+                    'description' => 'Security deposit collected',
+                    'item_id' => $rental->item_id,
+                    'quantity' => 1,
+                    'unit_price' => $amount,
+                    'total_price' => $amount,
+                ]);
+            } else {
+                $invoice->invoiceItems()->create([
+                    'description' => 'Security deposit collected',
+                    'item_type' => 'deposit',
+                    'item_id' => $rental->item_id,
+                    'quantity' => 1,
+                    'unit_price' => $amount,
+                    'total_price' => $amount,
+                ]);
+            }
+
+            $payment = Payment::create([
+                'invoice_id' => $invoice->invoice_id,
+                'payment_reference' => $this->generateReference('DEP-PAY'),
+                'amount' => $amount,
+                'payment_method' => $paymentMethod,
+                'payment_date' => now(),
+                'notes' => $notes ?: 'Deposit collected during release',
+                'processed_by' => $collectedBy,
+                'status_id' => $paidStatusId,
+            ]);
+
+            $rental->update([
+                'deposit_amount' => $amount,
+                'deposit_status' => 'held',
+                'deposit_collected_by' => $collectedBy,
+                'deposit_collected_at' => $payment->payment_date,
+            ]);
+
+            $this->recalculateInvoiceTotals($invoice);
+
+            return $rental->fresh();
+        });
     }
 
     /**
@@ -138,7 +191,7 @@ class DepositService
                 'deposit_deducted_amount' => $totalDeductions,
             ]);
 
-            // Create penalty invoice for deductions (optional - for accounting)
+            // Create deduction invoice for accounting visibility
             $this->createDeductionInvoice($rental, $deductions, $processedBy);
 
             return $depositReturn;
@@ -244,21 +297,27 @@ class DepositService
             return;
         }
 
+        $pendingStatusId = $this->getPaymentStatusId('pending');
+        if (!$pendingStatusId) {
+            throw new \RuntimeException('Pending payment status is not configured.');
+        }
+
         $invoice = Invoice::create([
-            'invoice_number' => 'DEP-DEDUCT-' . $rental->rental_id . '-' . now()->format('YmdHis'),
+            'invoice_number' => $this->generateReference('INV-DEDUCT'),
             'customer_id' => $rental->customer_id,
+            'reservation_id' => $rental->reservation_id,
             'rental_id' => $rental->rental_id,
             'subtotal' => $totalDeductions,
             'discount' => 0,
             'tax' => 0,
             'total_amount' => $totalDeductions,
-            'amount_paid' => $totalDeductions, // Paid via deposit deduction
+            'amount_paid' => $totalDeductions,
             'balance_due' => 0,
             'invoice_date' => now(),
             'due_date' => now(),
-            'invoice_type' => 'deposit_deduction',
-            'payment_status' => 'paid', // Paid via deposit
+            'invoice_type' => 'final',
             'created_by' => $createdBy,
+            'status_id' => $pendingStatusId,
         ]);
 
         foreach ($deductions as $deduction) {
@@ -288,5 +347,64 @@ class DepositService
         ];
 
         return $mapping[$type] ?? 'other';
+    }
+
+    private function findOrCreateInvoice(Rental $rental, string $invoiceType, int $createdBy): Invoice
+    {
+        $pendingStatusId = $this->getPaymentStatusId('pending');
+        if (!$pendingStatusId) {
+            throw new \RuntimeException('Pending payment status is not configured.');
+        }
+
+        return Invoice::firstOrCreate(
+            [
+                'customer_id' => $rental->customer_id,
+                'reservation_id' => $rental->reservation_id,
+                'rental_id' => $rental->rental_id,
+                'invoice_type' => $invoiceType,
+            ],
+            [
+                'invoice_number' => $this->generateReference('INV'),
+                'subtotal' => 0,
+                'discount' => 0,
+                'tax' => 0,
+                'total_amount' => 0,
+                'amount_paid' => 0,
+                'balance_due' => 0,
+                'invoice_date' => now(),
+                'due_date' => now()->addDays(7),
+                'created_by' => $createdBy,
+                'status_id' => $pendingStatusId,
+            ]
+        );
+    }
+
+    private function recalculateInvoiceTotals(Invoice $invoice): void
+    {
+        $subtotal = (float) $invoice->invoiceItems()->sum('total_price');
+        $tax = (float) $invoice->tax;
+        $discount = (float) $invoice->discount;
+        $total = max(($subtotal + $tax) - $discount, 0);
+
+        $amountPaid = (float) Payment::where('invoice_id', $invoice->invoice_id)
+            ->whereHas('status', fn ($query) => $query->whereRaw('LOWER(status_name) = ?', ['paid']))
+            ->sum('amount');
+
+        $invoice->update([
+            'subtotal' => $subtotal,
+            'total_amount' => $total,
+            'amount_paid' => min($amountPaid, $total),
+            'balance_due' => max($total - $amountPaid, 0),
+        ]);
+    }
+
+    private function getPaymentStatusId(string $name): ?int
+    {
+        return PaymentStatus::whereRaw('LOWER(status_name) = ?', [strtolower($name)])->value('status_id');
+    }
+
+    private function generateReference(string $prefix): string
+    {
+        return $prefix . '-' . now()->format('YmdHis') . '-' . strtoupper(substr(bin2hex(random_bytes(3)), 0, 6));
     }
 }

@@ -25,7 +25,7 @@ class Invoice extends Model
         'invoice_date',
         'due_date',
         'invoice_type',
-        'payment_status',
+        'status_id',
         'created_by',
     ];
 
@@ -70,12 +70,17 @@ class Invoice extends Model
         return $this->hasMany(Payment::class, 'invoice_id', 'invoice_id');
     }
 
+    public function status()
+    {
+        return $this->belongsTo(PaymentStatus::class, 'status_id', 'status_id');
+    }
+
     /**
      * Get total penalties from this invoice @return float
      */
     public function getTotalPenalties(): float
     {
-        return $this->items()->whereIn('item_type', ['penalty, late_fee'])->sum('total_price');
+        return (float) $this->invoiceItems()->whereIn('item_type', ['penalty', 'late_fee'])->sum('total_price');
     }
      /**
      * Get rental fee items
