@@ -785,8 +785,19 @@
 
         var isPassword = passwordInput.type === 'password';
         passwordInput.type = isPassword ? 'text' : 'password';
-        eyeIcon.classList.toggle('hidden', isPassword);
-        eyeOffIcon.classList.toggle('hidden', !isPassword);
+
+        if (isPassword) {
+            eyeIcon.classList.add('hidden');
+            eyeIcon.classList.remove('inline-flex');
+            eyeOffIcon.classList.remove('hidden');
+            eyeOffIcon.classList.add('inline-flex');
+        } else {
+            eyeOffIcon.classList.add('hidden');
+            eyeOffIcon.classList.remove('inline-flex');
+            eyeIcon.classList.remove('hidden');
+            eyeIcon.classList.add('inline-flex');
+        }
+
         toggleBtn.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
     }
 
@@ -802,10 +813,12 @@
 
         passwordInput.type = 'password';
         if (eyeIcon) {
+            eyeIcon.classList.add('inline-flex');
             eyeIcon.classList.remove('hidden');
         }
         if (eyeOffIcon) {
             eyeOffIcon.classList.add('hidden');
+            eyeOffIcon.classList.remove('inline-flex');
         }
         if (toggleBtn) {
             toggleBtn.setAttribute('aria-label', 'Show password');
