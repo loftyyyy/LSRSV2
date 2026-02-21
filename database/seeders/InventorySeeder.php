@@ -34,7 +34,7 @@ class InventorySeeder extends Seeder
                 'deposit_amount' => 6000,
                 'is_sellable' => false,
                 'selling_price' => null,
-                'stock' => ['available', 'available', 'rented', 'maintenance'],
+                'stock' => ['available', 'available', 'available', 'reserved', 'rented', 'maintenance'],
             ],
             [
                 'item_type' => 'gown',
@@ -46,7 +46,7 @@ class InventorySeeder extends Seeder
                 'deposit_amount' => 7000,
                 'is_sellable' => true,
                 'selling_price' => 38000,
-                'stock' => ['available', 'available', 'available', 'reserved'],
+                'stock' => ['available', 'available', 'available', 'available', 'reserved', 'rented'],
             ],
             [
                 'item_type' => 'gown',
@@ -82,7 +82,7 @@ class InventorySeeder extends Seeder
                 'deposit_amount' => 3000,
                 'is_sellable' => true,
                 'selling_price' => 14500,
-                'stock' => ['available', 'available', 'available', 'rented', 'reserved'],
+                'stock' => ['available', 'available', 'available', 'available', 'reserved', 'rented', 'maintenance'],
             ],
             [
                 'item_type' => 'suit',
@@ -106,7 +106,7 @@ class InventorySeeder extends Seeder
                 'deposit_amount' => 2800,
                 'is_sellable' => true,
                 'selling_price' => 12000,
-                'stock' => ['available', 'available', 'available', 'maintenance'],
+                'stock' => ['available', 'available', 'available', 'available', 'reserved', 'maintenance'],
             ],
             [
                 'item_type' => 'suit',
