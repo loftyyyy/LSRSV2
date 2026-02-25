@@ -8,9 +8,3 @@
 - Laravel
 - Tailwind
 - mysql
-
-
-
-
-
-
