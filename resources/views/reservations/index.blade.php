@@ -217,6 +217,9 @@
 {{-- Include Edit Reservation Modal --}}
 @include('reservations.partials.edit-reservation-modal')
 
+{{-- Include Reservation Details Modal --}}
+@include('reservations.partials.reservation-details-modal')
+
 {{-- Axios for API calls --}}
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
