@@ -2,36 +2,32 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Invoice;
-use App\Models\InvoiceItem;
+use App\Http\Requests\StoreRentalRequest;
+use App\Http\Requests\UpdateRentalRequest;
 use App\Models\Inventory;
 use App\Models\InventoryMovement;
 use App\Models\InventoryStatus;
+use App\Models\Invoice;
+use App\Models\InvoiceItem;
+use App\Models\Payment;
+use App\Models\PaymentStatus;
+use App\Models\Rental;
+use App\Models\RentalStatus;
 use App\Models\Reservation;
 use App\Models\ReservationItem;
 use App\Models\ReservationItemAllocation;
 use App\Models\ReservationStatus;
-use App\Models\Rental;
-use App\Models\RentalStatus;
-use App\Models\Payment;
-use App\Models\PaymentStatus;
-use App\Models\DepositReturn;
 use App\Services\DepositService;
-use App\Http\Requests\StoreRentalRequest;
-use App\Http\Requests\UpdateRentalRequest;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
-use Carbon\Carbon;
-use Barryvdh\DomPDF\Facade\Pdf;
-
 
 class RentalController extends Controller
 {
-    public function __construct(private readonly DepositService $depositService)
-    {
-    }
+    public function __construct(private readonly DepositService $depositService) {}
 
     /**
      * Display Reports Page
@@ -162,182 +158,182 @@ class RentalController extends Controller
         $pdf = Pdf::loadView('rentals.report-pdf', [
             'rentals' => $rentals,
             'summary' => $summary,
-            'generated_at' => now()->format('Y-m-d H:i:s')
+            'generated_at' => now()->format('Y-m-d H:i:s'),
         ]);
 
-        return $pdf->download('rental-report-' . now()->format('Y-m-d') . '.pdf');
+        return $pdf->download('rental-report-'.now()->format('Y-m-d').'.pdf');
     }
 
     /**
      * Display Rental Page
      */
     public function showRentalPage(): View
-     {
-         return view('rentals.index');
-     }
+    {
+        return view('rentals.index');
+    }
 
-     /**
-      * Display Rental Reports Page
-      */
-     public function showReportsPage(): View
-     {
-         return view('rentals.reports');
-     }
+    /**
+     * Display Rental Reports Page
+     */
+    public function showReportsPage(): View
+    {
+        return view('rentals.reports');
+    }
 
-     /**
-      * Get comprehensive rental metrics and analytics
-      */
-     public function getMetrics(): JsonResponse
-     {
-         // Basic Rental Stats
-         $totalRentals = Rental::count();
-         $activeRentals = Rental::whereHas('status', fn($q) => $q->where('status_name', 'active'))->count();
-         $completedRentals = Rental::whereHas('status', fn($q) => $q->where('status_name', 'returned'))->count();
-         $cancelledRentals = Rental::whereHas('status', fn($q) => $q->where('status_name', 'cancelled'))->count();
-         
-         // Overdue & Late Returns
-         $overdueRentals = Rental::where('return_date', '<', now())
-             ->whereHas('status', fn($q) => $q->where('status_name', 'active'))
-             ->count();
-         
-         $lateReturnRentals = Rental::where('return_date', '<', 'actual_return_date')
-             ->whereHas('status', fn($q) => $q->where('status_name', 'returned'))
-             ->count();
+    /**
+     * Get comprehensive rental metrics and analytics
+     */
+    public function getMetrics(): JsonResponse
+    {
+        // Basic Rental Stats
+        $totalRentals = Rental::count();
+        $activeRentals = Rental::whereHas('status', fn ($q) => $q->where('status_name', 'active'))->count();
+        $completedRentals = Rental::whereHas('status', fn ($q) => $q->where('status_name', 'returned'))->count();
+        $cancelledRentals = Rental::whereHas('status', fn ($q) => $q->where('status_name', 'cancelled'))->count();
 
-         // Duration Analysis
-         $durationsInDays = Rental::get()->map(function ($rental) {
-             $start = Carbon::parse($rental->released_date);
-             $end = $rental->return_date ? Carbon::parse($rental->return_date) : Carbon::parse($rental->due_date);
+        // Overdue & Late Returns
+        $overdueRentals = Rental::where('return_date', '<', now())
+            ->whereHas('status', fn ($q) => $q->where('status_name', 'active'))
+            ->count();
 
-             return max(1, $start->diffInDays($end) + 1);
-         });
+        $lateReturnRentals = Rental::where('return_date', '<', 'actual_return_date')
+            ->whereHas('status', fn ($q) => $q->where('status_name', 'returned'))
+            ->count();
 
-         $avgRentalDuration = $durationsInDays->count() > 0
-             ? round($durationsInDays->avg(), 1)
-             : 0;
+        // Duration Analysis
+        $durationsInDays = Rental::get()->map(function ($rental) {
+            $start = Carbon::parse($rental->released_date);
+            $end = $rental->return_date ? Carbon::parse($rental->return_date) : Carbon::parse($rental->due_date);
 
-         // Revenue Analysis
-         $totalRentalRevenue = Rental::whereHas('invoices')
-             ->with('invoices')
-             ->get()
-             ->sum(fn($rental) => $rental->invoices->sum('total_amount')) ?? 0;
+            return max(1, $start->diffInDays($end) + 1);
+        });
 
-         $revenueThisMonth = Rental::where('created_at', '>=', now()->startOfMonth())
-             ->whereHas('invoices')
-             ->with('invoices')
-             ->get()
-             ->sum(fn($rental) => $rental->invoices->sum('total_amount')) ?? 0;
+        $avgRentalDuration = $durationsInDays->count() > 0
+            ? round($durationsInDays->avg(), 1)
+            : 0;
 
-         // Rental Status Distribution
-         $rentalStatusDistribution = Rental::with('status')
-             ->get()
-             ->groupBy('status.status_name')
-             ->map(fn($rentals, $status) => [
-                 'status' => ucfirst($status),
-                 'count' => $rentals->count(),
-             ])
-             ->values();
+        // Revenue Analysis
+        $totalRentalRevenue = Rental::whereHas('invoices')
+            ->with('invoices')
+            ->get()
+            ->sum(fn ($rental) => $rental->invoices->sum('total_amount')) ?? 0;
 
-         // Monthly Rental Trend (Last 12 months)
-         $monthlyRentals = collect();
-         for ($i = 11; $i >= 0; $i--) {
-             $month = now()->subMonths($i);
-             $count = Rental::whereMonth('created_at', $month->month)
-                 ->whereYear('created_at', $month->year)
-                 ->count();
-             
-             $monthlyRentals->push([
-                 'month' => $month->format('M'),
-                 'count' => $count,
-             ]);
-         }
+        $revenueThisMonth = Rental::where('created_at', '>=', now()->startOfMonth())
+            ->whereHas('invoices')
+            ->with('invoices')
+            ->get()
+            ->sum(fn ($rental) => $rental->invoices->sum('total_amount')) ?? 0;
 
-         // Weekly Rental Revenue (Last 8 weeks)
-         $weeklyRevenue = collect();
-         for ($i = 7; $i >= 0; $i--) {
-             $startOfWeek = now()->subWeeks($i)->startOfWeek();
-             $endOfWeek = now()->subWeeks($i)->endOfWeek();
-             
-             $revenue = Rental::whereBetween('created_at', [$startOfWeek, $endOfWeek])
-                 ->whereHas('invoices')
-                 ->with('invoices')
-                 ->get()
-                 ->sum(fn($rental) => $rental->invoices->sum('total_amount')) ?? 0;
-             
-             $weeklyRevenue->push([
-                 'week' => 'W' . $startOfWeek->weekOfYear,
-                 'revenue' => round($revenue, 2),
-             ]);
-         }
+        // Rental Status Distribution
+        $rentalStatusDistribution = Rental::with('status')
+            ->get()
+            ->groupBy('status.status_name')
+            ->map(fn ($rentals, $status) => [
+                'status' => ucfirst($status),
+                'count' => $rentals->count(),
+            ])
+            ->values();
 
-         // Top Customers by Rentals
-         $topCustomers = Rental::with('customer')
-             ->get()
-             ->groupBy('customer_id')
-             ->map(fn($rentals, $customerId) => [
-                 'customer_id' => $customerId,
-                 'customer_name' => $rentals->first()->customer->first_name . ' ' . $rentals->first()->customer->last_name,
-                 'rental_count' => $rentals->count(),
-                 'total_spent' => $rentals->sum(fn($rental) => $rental->invoices->sum('total_amount') ?? 0),
-             ])
-             ->sortByDesc('rental_count')
-             ->take(8)
-             ->values();
+        // Monthly Rental Trend (Last 12 months)
+        $monthlyRentals = collect();
+        for ($i = 11; $i >= 0; $i--) {
+            $month = now()->subMonths($i);
+            $count = Rental::whereMonth('created_at', $month->month)
+                ->whereYear('created_at', $month->year)
+                ->count();
 
-         // Top Items by Revenue
-         $topItemsByRevenue = Rental::with('item', 'invoices')
-             ->get()
-             ->groupBy('item_id')
-             ->map(fn($rentals, $itemId) => [
-                 'item_id' => $itemId,
-                 'item_name' => $rentals->first()->item->name,
-                 'rental_count' => $rentals->count(),
-                 'total_revenue' => round($rentals->sum(fn($rental) => $rental->invoices->sum('total_amount') ?? 0), 2),
-             ])
-             ->sortByDesc('total_revenue')
-             ->take(8)
-             ->values();
+            $monthlyRentals->push([
+                'month' => $month->format('M'),
+                'count' => $count,
+            ]);
+        }
 
-         // Rental Duration Distribution (for histogram approximation)
-         $durationBuckets = [
-             '1-2 days' => $durationsInDays->filter(fn ($days) => $days >= 1 && $days <= 2)->count(),
-             '3-7 days' => $durationsInDays->filter(fn ($days) => $days >= 3 && $days <= 7)->count(),
-             '1-2 weeks' => $durationsInDays->filter(fn ($days) => $days >= 8 && $days <= 14)->count(),
-             '2-4 weeks' => $durationsInDays->filter(fn ($days) => $days >= 15 && $days <= 28)->count(),
-             '1+ months' => $durationsInDays->filter(fn ($days) => $days >= 29)->count(),
-         ];
+        // Weekly Rental Revenue (Last 8 weeks)
+        $weeklyRevenue = collect();
+        for ($i = 7; $i >= 0; $i--) {
+            $startOfWeek = now()->subWeeks($i)->startOfWeek();
+            $endOfWeek = now()->subWeeks($i)->endOfWeek();
 
-         return response()->json([
-             'kpis' => [
-                 'total_rentals' => $totalRentals,
-                 'active_rentals' => $activeRentals,
-                 'completed_rentals' => $completedRentals,
-                 'cancelled_rentals' => $cancelledRentals,
-                 'overdue_rentals' => $overdueRentals,
-                 'late_return_rentals' => $lateReturnRentals,
-                 'avg_rental_duration' => $avgRentalDuration,
-                 'total_rental_revenue' => round($totalRentalRevenue, 2),
-                 'revenue_this_month' => round($revenueThisMonth, 2),
-             ],
-             'rental_status_distribution' => $rentalStatusDistribution,
-             'monthly_rentals' => $monthlyRentals,
-             'weekly_revenue' => $weeklyRevenue,
-             'top_customers' => $topCustomers,
-             'top_items_by_revenue' => $topItemsByRevenue,
-             'duration_distribution' => [
-                 ['duration' => '1-2 days', 'count' => $durationBuckets['1-2 days']],
-                 ['duration' => '3-7 days', 'count' => $durationBuckets['3-7 days']],
-                 ['duration' => '1-2 weeks', 'count' => $durationBuckets['1-2 weeks']],
-                 ['duration' => '2-4 weeks', 'count' => $durationBuckets['2-4 weeks']],
-                 ['duration' => '1+ months', 'count' => $durationBuckets['1+ months']],
-             ],
-             'generated_at' => now()->format('Y-m-d H:i:s'),
-         ]);
-     }
+            $revenue = Rental::whereBetween('created_at', [$startOfWeek, $endOfWeek])
+                ->whereHas('invoices')
+                ->with('invoices')
+                ->get()
+                ->sum(fn ($rental) => $rental->invoices->sum('total_amount')) ?? 0;
 
-     /**
-      * Display a listing of the resource.
-      */
+            $weeklyRevenue->push([
+                'week' => 'W'.$startOfWeek->weekOfYear,
+                'revenue' => round($revenue, 2),
+            ]);
+        }
+
+        // Top Customers by Rentals
+        $topCustomers = Rental::with('customer')
+            ->get()
+            ->groupBy('customer_id')
+            ->map(fn ($rentals, $customerId) => [
+                'customer_id' => $customerId,
+                'customer_name' => $rentals->first()->customer->first_name.' '.$rentals->first()->customer->last_name,
+                'rental_count' => $rentals->count(),
+                'total_spent' => $rentals->sum(fn ($rental) => $rental->invoices->sum('total_amount') ?? 0),
+            ])
+            ->sortByDesc('rental_count')
+            ->take(8)
+            ->values();
+
+        // Top Items by Revenue
+        $topItemsByRevenue = Rental::with('item', 'invoices')
+            ->get()
+            ->groupBy('item_id')
+            ->map(fn ($rentals, $itemId) => [
+                'item_id' => $itemId,
+                'item_name' => $rentals->first()->item->name,
+                'rental_count' => $rentals->count(),
+                'total_revenue' => round($rentals->sum(fn ($rental) => $rental->invoices->sum('total_amount') ?? 0), 2),
+            ])
+            ->sortByDesc('total_revenue')
+            ->take(8)
+            ->values();
+
+        // Rental Duration Distribution (for histogram approximation)
+        $durationBuckets = [
+            '1-2 days' => $durationsInDays->filter(fn ($days) => $days >= 1 && $days <= 2)->count(),
+            '3-7 days' => $durationsInDays->filter(fn ($days) => $days >= 3 && $days <= 7)->count(),
+            '1-2 weeks' => $durationsInDays->filter(fn ($days) => $days >= 8 && $days <= 14)->count(),
+            '2-4 weeks' => $durationsInDays->filter(fn ($days) => $days >= 15 && $days <= 28)->count(),
+            '1+ months' => $durationsInDays->filter(fn ($days) => $days >= 29)->count(),
+        ];
+
+        return response()->json([
+            'kpis' => [
+                'total_rentals' => $totalRentals,
+                'active_rentals' => $activeRentals,
+                'completed_rentals' => $completedRentals,
+                'cancelled_rentals' => $cancelledRentals,
+                'overdue_rentals' => $overdueRentals,
+                'late_return_rentals' => $lateReturnRentals,
+                'avg_rental_duration' => $avgRentalDuration,
+                'total_rental_revenue' => round($totalRentalRevenue, 2),
+                'revenue_this_month' => round($revenueThisMonth, 2),
+            ],
+            'rental_status_distribution' => $rentalStatusDistribution,
+            'monthly_rentals' => $monthlyRentals,
+            'weekly_revenue' => $weeklyRevenue,
+            'top_customers' => $topCustomers,
+            'top_items_by_revenue' => $topItemsByRevenue,
+            'duration_distribution' => [
+                ['duration' => '1-2 days', 'count' => $durationBuckets['1-2 days']],
+                ['duration' => '3-7 days', 'count' => $durationBuckets['3-7 days']],
+                ['duration' => '1-2 weeks', 'count' => $durationBuckets['1-2 weeks']],
+                ['duration' => '2-4 weeks', 'count' => $durationBuckets['2-4 weeks']],
+                ['duration' => '1+ months', 'count' => $durationBuckets['1+ months']],
+            ],
+            'generated_at' => now()->format('Y-m-d H:i:s'),
+        ]);
+    }
+
+    /**
+     * Display a listing of the resource.
+     */
     public function index(Request $request): JsonResponse
     {
         $query = Rental::with(['customer', 'item', 'status', 'reservation', 'releasedBy']);
@@ -400,9 +396,38 @@ class RentalController extends Controller
             $query->where('due_date', '<=', $request->get('due_date_to'));
         }
 
+        // Sorting
+        $allowedSortFields = ['created_at', 'released_date', 'due_date', 'customer_name', 'item_name', 'status_name'];
+        $sortBy = $request->get('sort_by', 'created_at');
+        $sortOrder = $request->get('sort_order', 'desc');
+
+        if (! in_array($sortBy, $allowedSortFields)) {
+            $sortBy = 'created_at';
+        }
+        if (! in_array($sortOrder, ['asc', 'desc'])) {
+            $sortOrder = 'desc';
+        }
+
+        // Handle special sort fields that require joins
+        if ($sortBy === 'customer_name') {
+            $query->leftJoin('customers', 'rentals.customer_id', '=', 'customers.customer_id')
+                ->orderByRaw("CONCAT(customers.first_name, ' ', customers.last_name) {$sortOrder}")
+                ->select('rentals.*');
+        } elseif ($sortBy === 'item_name') {
+            $query->leftJoin('inventory', 'rentals.item_id', '=', 'inventory.item_id')
+                ->orderBy('inventory.name', $sortOrder)
+                ->select('rentals.*');
+        } elseif ($sortBy === 'status_name') {
+            $query->leftJoin('rental_statuses', 'rentals.status_id', '=', 'rental_statuses.status_id')
+                ->orderBy('rental_statuses.status_name', $sortOrder)
+                ->select('rentals.*');
+        } else {
+            $query->orderBy($sortBy, $sortOrder);
+        }
+
         // Pagination
         $perPage = $request->get('per_page', 15);
-        $rentals = $query->orderBy('created_at', 'desc')->paginate($perPage);
+        $rentals = $query->paginate($perPage);
 
         return response()->json($rentals);
     }
@@ -418,7 +443,7 @@ class RentalController extends Controller
 
         return response()->json([
             'message' => 'Rental created successfully',
-            'data' => $rental
+            'data' => $rental,
         ], 201);
     }
 
@@ -435,7 +460,7 @@ class RentalController extends Controller
             'releasedBy',
             'returnedTo',
             'extendedBy',
-            'invoices.invoiceItems'
+            'invoices.invoiceItems',
         ]);
 
         // Add calculated penalty if overdue
@@ -444,7 +469,7 @@ class RentalController extends Controller
         return response()->json([
             'data' => $rental,
             'calculated_penalty' => $penalty,
-            'is_overdue' => $rental->return_date === null && Carbon::parse($rental->due_date)->lessThan(Carbon::now())
+            'is_overdue' => $rental->return_date === null && Carbon::parse($rental->due_date)->lessThan(Carbon::now()),
         ]);
     }
 
@@ -459,7 +484,7 @@ class RentalController extends Controller
 
         return response()->json([
             'message' => 'Rental updated successfully',
-            'data' => $rental
+            'data' => $rental,
         ]);
     }
 
@@ -473,14 +498,14 @@ class RentalController extends Controller
 
         if ($hasInvoices) {
             return response()->json([
-                'message' => 'Cannot delete rental. It has invoices associated with it.'
+                'message' => 'Cannot delete rental. It has invoices associated with it.',
             ], 422);
         }
 
         $rental->delete();
 
         return response()->json([
-            'message' => 'Rental deleted successfully'
+            'message' => 'Rental deleted successfully',
         ]);
     }
 
@@ -505,26 +530,26 @@ class RentalController extends Controller
             'deposit_payment_notes' => 'nullable|string',
         ]);
 
-        if (!$request->item_id && !$request->reservation_item_id && !$request->variant_id) {
+        if (! $request->item_id && ! $request->reservation_item_id && ! $request->variant_id) {
             return response()->json([
-                'message' => 'Provide item_id, reservation_item_id, or variant_id when releasing an item.'
+                'message' => 'Provide item_id, reservation_item_id, or variant_id when releasing an item.',
             ], 422);
         }
 
         DB::beginTransaction();
         try {
             $rentedStatus = $this->findRentalStatusByName('rented');
-            if (!$rentedStatus) {
+            if (! $rentedStatus) {
                 return response()->json([
-                    'message' => 'Rented Out status not found in the system.'
+                    'message' => 'Rented Out status not found in the system.',
                 ], 500);
             }
 
             $availableInventoryStatus = $this->findInventoryStatusByName('available');
             $rentedInventoryStatus = $this->findInventoryStatusByName('rented');
-            if (!$availableInventoryStatus || !$rentedInventoryStatus) {
+            if (! $availableInventoryStatus || ! $rentedInventoryStatus) {
                 return response()->json([
-                    'message' => 'Required inventory statuses (available/rented) are missing.'
+                    'message' => 'Required inventory statuses (available/rented) are missing.',
                 ], 500);
             }
 
@@ -543,7 +568,7 @@ class RentalController extends Controller
                 ? Inventory::findOrFail($request->item_id)
                 : null;
 
-            if (!$reservationItem && $reservation) {
+            if (! $reservationItem && $reservation) {
                 $variantIdForLookup = $request->variant_id ?: $item?->variant_id;
                 if ($variantIdForLookup) {
                     $reservationItem = $reservation->items()
@@ -553,7 +578,7 @@ class RentalController extends Controller
                 }
             }
 
-            if (!$item) {
+            if (! $item) {
                 $variantIdForLookup = $request->variant_id ?: $reservationItem?->variant_id;
                 if ($variantIdForLookup) {
                     $item = Inventory::where('variant_id', $variantIdForLookup)
@@ -564,15 +589,15 @@ class RentalController extends Controller
                 }
             }
 
-            if (!$item) {
+            if (! $item) {
                 return response()->json([
-                    'message' => 'No available physical item could be allocated for this release.'
+                    'message' => 'No available physical item could be allocated for this release.',
                 ], 422);
             }
 
             if ($reservationItem && $reservationItem->variant_id && $item->variant_id !== $reservationItem->variant_id) {
                 return response()->json([
-                    'message' => 'Selected item does not belong to the reservation variant.'
+                    'message' => 'Selected item does not belong to the reservation variant.',
                 ], 422);
             }
 
@@ -581,7 +606,7 @@ class RentalController extends Controller
                 ->exists();
             if ($alreadyRented || $item->status_id !== $availableInventoryStatus->status_id) {
                 return response()->json([
-                    'message' => 'Selected item is not currently available for release.'
+                    'message' => 'Selected item is not currently available for release.',
                 ], 422);
             }
 
@@ -607,7 +632,7 @@ class RentalController extends Controller
             if ($shouldCollectDeposit) {
                 if ($depositAmount <= 0) {
                     return response()->json([
-                        'message' => 'Deposit amount must be greater than zero before releasing an item.'
+                        'message' => 'Deposit amount must be greater than zero before releasing an item.',
                     ], 422);
                 }
 
@@ -620,7 +645,7 @@ class RentalController extends Controller
                 );
             } elseif ($rental->deposit_status !== 'held') {
                 return response()->json([
-                    'message' => 'Deposit must be collected before releasing the item.'
+                    'message' => 'Deposit must be collected before releasing the item.',
                 ], 422);
             }
 
@@ -633,7 +658,7 @@ class RentalController extends Controller
 
                 if ($allocation->exists && $allocation->allocation_status === 'released' && $allocation->returned_at === null) {
                     return response()->json([
-                        'message' => 'This item is already released for the reservation and has not been returned yet.'
+                        'message' => 'This item is already released for the reservation and has not been returned yet.',
                     ], 422);
                 }
 
@@ -682,14 +707,15 @@ class RentalController extends Controller
 
             return response()->json([
                 'message' => 'Item released successfully to customer',
-                'data' => $rental
+                'data' => $rental,
             ], 201);
 
         } catch (\Exception $e) {
             DB::rollBack();
+
             return response()->json([
                 'message' => 'Failed to release item',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -721,7 +747,7 @@ class RentalController extends Controller
         // Check if rental was already returned
         if ($rental->return_date !== null) {
             return response()->json([
-                'message' => 'This rental has already been returned.'
+                'message' => 'This rental has already been returned.',
             ], 422);
         }
 
@@ -729,9 +755,9 @@ class RentalController extends Controller
         try {
             $availableInventoryStatus = $this->findInventoryStatusByName('available');
             $rentedInventoryStatus = $this->findInventoryStatusByName('rented');
-            if (!$availableInventoryStatus || !$rentedInventoryStatus) {
+            if (! $availableInventoryStatus || ! $rentedInventoryStatus) {
                 return response()->json([
-                    'message' => 'Required inventory statuses (available/rented) are missing.'
+                    'message' => 'Required inventory statuses (available/rented) are missing.',
                 ], 500);
             }
 
@@ -791,7 +817,7 @@ class RentalController extends Controller
             // Update rental status to returned
             $returnedStatus = $this->findRentalStatusByName('returned');
             if ($returnedStatus) {
-                 $rental->update(['status_id' => $returnedStatus->status_id]);
+                $rental->update(['status_id' => $returnedStatus->status_id]);
             }
 
             $reservationItemId = null;
@@ -824,7 +850,7 @@ class RentalController extends Controller
 
                 $returnNotes = $request->input('return_notes');
                 if ($request->filled('condition_notes')) {
-                    $returnNotes = trim(($returnNotes ? $returnNotes . ' | ' : '') . 'Condition: ' . $request->input('condition_notes'));
+                    $returnNotes = trim(($returnNotes ? $returnNotes.' | ' : '').'Condition: '.$request->input('condition_notes'));
                 }
 
                 $this->createInventoryMovement(
@@ -848,14 +874,15 @@ class RentalController extends Controller
             return response()->json([
                 'message' => 'Rental return processed successfully',
                 'data' => $rental,
-                'penalty_charged' => $this->calculatePenalty($rental)
+                'penalty_charged' => $this->calculatePenalty($rental),
             ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
+
             return response()->json([
                 'message' => 'Failed to process return',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -874,14 +901,14 @@ class RentalController extends Controller
         // Check if rental was already returned
         if ($rental->return_date !== null) {
             return response()->json([
-                'message' => 'Cannot extend a rental that has already been returned.'
+                'message' => 'Cannot extend a rental that has already been returned.',
             ], 422);
         }
 
         // Check if rental is overdue
         if (Carbon::parse($rental->due_date)->lessThan(Carbon::now())) {
             return response()->json([
-                'message' => 'Cannot extend an overdue rental. Please settle penalties first.'
+                'message' => 'Cannot extend an overdue rental. Please settle penalties first.',
             ], 422);
         }
 
@@ -901,14 +928,15 @@ class RentalController extends Controller
 
             return response()->json([
                 'message' => 'Rental extended successfully',
-                'data' => $rental
+                'data' => $rental,
             ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
+
             return response()->json([
                 'message' => 'Failed to extend rental',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -921,7 +949,7 @@ class RentalController extends Controller
         // Check if rental was already returned
         if ($rental->return_date !== null) {
             return response()->json([
-                'message' => 'Cannot cancel a rental that has already been returned.'
+                'message' => 'Cannot cancel a rental that has already been returned.',
             ], 422);
         }
 
@@ -929,40 +957,40 @@ class RentalController extends Controller
         $paidInvoices = $rental->invoices()->where('payment_status', 'paid')->count();
         if ($paidInvoices > 0) {
             return response()->json([
-                'message' => 'Cannot cancel rental. It has paid invoices associated with it.'
+                'message' => 'Cannot cancel rental. It has paid invoices associated with it.',
             ], 422);
         }
 
         DB::beginTransaction();
         try {
             // Update the rental status to cancelled
-             $cancelledStatus = $this->findRentalStatusByName('cancelled');
-             if (!$cancelledStatus) {
-                 return response()->json([
-                     'message' => 'Cancelled status not found in the system.'
+            $cancelledStatus = $this->findRentalStatusByName('cancelled');
+            if (! $cancelledStatus) {
+                return response()->json([
+                    'message' => 'Cancelled status not found in the system.',
                 ], 500);
             }
 
             $rental->update([
                 'status_id' => $cancelledStatus->status_id,
-                'return_notes' => 'Rental cancelled on ' . now()->format('Y-m-d H:i:s')
+                'return_notes' => 'Rental cancelled on '.now()->format('Y-m-d H:i:s'),
             ]);
 
             // If there's a reservation, update its status too
-             if ($rental->reservation) {
-                 $reservationCancelledStatus = $this->findReservationStatusByName('cancelled');
-                 $rental->reservation->update([
-                     'status_id' => $reservationCancelledStatus?->status_id ?? $rental->reservation->status_id
-                 ]);
-             }
+            if ($rental->reservation) {
+                $reservationCancelledStatus = $this->findReservationStatusByName('cancelled');
+                $rental->reservation->update([
+                    'status_id' => $reservationCancelledStatus?->status_id ?? $rental->reservation->status_id,
+                ]);
+            }
 
-             // Update item availability back to available
-             if ($rental->item) {
-                 $availableInventoryStatus = $this->findInventoryStatusByName('available');
-                 if ($availableInventoryStatus) {
-                     $rental->item->update(['status_id' => $availableInventoryStatus->status_id]);
-                 }
-             }
+            // Update item availability back to available
+            if ($rental->item) {
+                $availableInventoryStatus = $this->findInventoryStatusByName('available');
+                if ($availableInventoryStatus) {
+                    $rental->item->update(['status_id' => $availableInventoryStatus->status_id]);
+                }
+            }
 
             DB::commit();
 
@@ -970,14 +998,15 @@ class RentalController extends Controller
 
             return response()->json([
                 'message' => 'Rental cancelled successfully',
-                'data' => $rental
+                'data' => $rental,
             ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
+
             return response()->json([
                 'message' => 'Failed to cancel rental',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -1061,7 +1090,7 @@ class RentalController extends Controller
             $invoice = Invoice::firstOrCreate(
                 [
                     'rental_id' => $rental->rental_id,
-                    'invoice_type' => 'penalty'
+                    'invoice_type' => 'penalty',
                 ],
                 [
                     'customer_id' => $rental->customer_id,
@@ -1071,7 +1100,7 @@ class RentalController extends Controller
                     'tax_amount' => 0,
                     'total_amount' => 0,
                     'payment_status' => 'unpaid',
-                    'notes' => 'Late return penalty invoice'
+                    'notes' => 'Late return penalty invoice',
                 ]
             );
 
@@ -1091,7 +1120,7 @@ class RentalController extends Controller
                     'description' => "Late return penalty ({$daysLate} days @ ₱50/day)",
                     'quantity' => $daysLate,
                     'unit_price' => 50.00,
-                    'total_price' => $penaltyAmount
+                    'total_price' => $penaltyAmount,
                 ]);
             } else {
                 // Create new penalty item
@@ -1102,7 +1131,7 @@ class RentalController extends Controller
                     'item_id' => $rental->item_id,
                     'quantity' => $daysLate,
                     'unit_price' => 50.00,
-                    'total_price' => $penaltyAmount
+                    'total_price' => $penaltyAmount,
                 ]);
             }
 
@@ -1111,7 +1140,7 @@ class RentalController extends Controller
             $totalAmount = $invoice->invoiceItems()->sum('total_price');
             $invoice->update([
                 'subtotal' => $totalAmount,
-                'total_amount' => $totalAmount
+                'total_amount' => $totalAmount,
             ]);
         });
     }
@@ -1141,7 +1170,7 @@ class RentalController extends Controller
             'message' => 'Overdue check completed',
             'checked' => $activeRentals->count(),
             'overdue' => $overDueCount,
-            'penalties_created_or_updated' => $penaltiesCreated
+            'penalties_created_or_updated' => $penaltiesCreated,
         ]);
     }
 
@@ -1183,7 +1212,7 @@ class RentalController extends Controller
         return response()->json([
             'customer_id' => $customerId,
             'statistics' => $statistics,
-            'rentals' => $rentals
+            'rentals' => $rentals,
         ]);
     }
 
@@ -1221,7 +1250,7 @@ class RentalController extends Controller
         return response()->json([
             'item_id' => $itemId,
             'statistics' => $statistics,
-            'rentals' => $rentals
+            'rentals' => $rentals,
         ]);
     }
 
@@ -1245,7 +1274,7 @@ class RentalController extends Controller
 
         return response()->json([
             'overdue_rentals' => $overdueRentals,
-            'total_pending_penalties' => $totalPendingPenalties
+            'total_pending_penalties' => $totalPendingPenalties,
         ]);
     }
 
@@ -1374,7 +1403,7 @@ class RentalController extends Controller
     private function upsertFinalRentalInvoice(Rental $rental, int $createdBy): Invoice
     {
         $pendingPaymentStatus = $this->findPaymentStatusByName('pending');
-        if (!$pendingPaymentStatus) {
+        if (! $pendingPaymentStatus) {
             throw new \RuntimeException('Pending payment status not found.');
         }
 
@@ -1461,7 +1490,7 @@ class RentalController extends Controller
         ?string $notes = null
     ): Payment {
         $paidStatus = $this->findPaymentStatusByName('paid');
-        if (!$paidStatus) {
+        if (! $paidStatus) {
             throw new \RuntimeException('Paid payment status not found.');
         }
 
@@ -1504,7 +1533,6 @@ class RentalController extends Controller
 
     private function generateInvoiceNumber(string $prefix): string
     {
-        return $prefix . '-' . now()->format('YmdHis') . '-' . strtoupper(substr(bin2hex(random_bytes(3)), 0, 6));
+        return $prefix.'-'.now()->format('YmdHis').'-'.strtoupper(substr(bin2hex(random_bytes(3)), 0, 6));
     }
-
 }

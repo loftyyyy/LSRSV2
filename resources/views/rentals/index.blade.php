@@ -156,11 +156,36 @@
                         <thead class="text-[11px] uppercase tracking-[0.18em] text-neutral-500">
                         <tr class="border-b border-neutral-200 dark:border-neutral-900/80">
                             <th class="py-2.5 pr-4 pl-4 font-medium">ID</th>
-                            <th class="py-2.5 pr-4 font-medium">Customer</th>
-                            <th class="py-2.5 pr-4 font-medium">Item</th>
-                            <th class="py-2.5 pr-4 font-medium">Released</th>
-                            <th class="py-2.5 pr-4 font-medium">Due Date</th>
-                            <th class="py-2.5 pr-4 font-medium">Status</th>
+                            <th class="py-2.5 pr-4 font-medium cursor-pointer hover:text-violet-600 dark:hover:text-violet-400 transition-colors duration-200 select-none" onclick="toggleSort('customer_name')">
+                                <span class="inline-flex items-center gap-1">
+                                    Customer
+                                    <span id="sort-icon-customer_name" class="text-neutral-400 dark:text-neutral-600"></span>
+                                </span>
+                            </th>
+                            <th class="py-2.5 pr-4 font-medium cursor-pointer hover:text-violet-600 dark:hover:text-violet-400 transition-colors duration-200 select-none" onclick="toggleSort('item_name')">
+                                <span class="inline-flex items-center gap-1">
+                                    Item
+                                    <span id="sort-icon-item_name" class="text-neutral-400 dark:text-neutral-600"></span>
+                                </span>
+                            </th>
+                            <th class="py-2.5 pr-4 font-medium cursor-pointer hover:text-violet-600 dark:hover:text-violet-400 transition-colors duration-200 select-none" onclick="toggleSort('released_date')">
+                                <span class="inline-flex items-center gap-1">
+                                    Released
+                                    <span id="sort-icon-released_date" class="text-neutral-400 dark:text-neutral-600"></span>
+                                </span>
+                            </th>
+                            <th class="py-2.5 pr-4 font-medium cursor-pointer hover:text-violet-600 dark:hover:text-violet-400 transition-colors duration-200 select-none" onclick="toggleSort('due_date')">
+                                <span class="inline-flex items-center gap-1">
+                                    Due Date
+                                    <span id="sort-icon-due_date" class="text-neutral-400 dark:text-neutral-600"></span>
+                                </span>
+                            </th>
+                            <th class="py-2.5 pr-4 font-medium cursor-pointer hover:text-violet-600 dark:hover:text-violet-400 transition-colors duration-200 select-none" onclick="toggleSort('status_name')">
+                                <span class="inline-flex items-center gap-1">
+                                    Status
+                                    <span id="sort-icon-status_name" class="text-neutral-400 dark:text-neutral-600"></span>
+                                </span>
+                            </th>
                         </tr>
                         </thead>
 
@@ -371,7 +396,9 @@
         try {
             var params = new URLSearchParams({
                 page: rentalState.currentPage,
-                per_page: rentalState.perPage
+                per_page: rentalState.perPage,
+                sort_by: rentalState.sortBy,
+                sort_order: rentalState.sortOrder
             });
 
             var normalizedSearchQuery = rentalState.searchQuery.trim();
@@ -668,8 +695,45 @@
         }
     }
 
+    function toggleSort(field) {
+        if (rentalState.sortBy === field) {
+            // Toggle order if same field
+            rentalState.sortOrder = rentalState.sortOrder === 'asc' ? 'desc' : 'asc';
+        } else {
+            // New field, default to ascending
+            rentalState.sortBy = field;
+            rentalState.sortOrder = 'asc';
+        }
+
+        rentalState.currentPage = 1;
+        updateSortIcons();
+        fetchRentals();
+    }
+
+    function updateSortIcons() {
+        var sortableFields = ['customer_name', 'item_name', 'released_date', 'due_date', 'status_name'];
+        var upArrow = '↑';
+        var downArrow = '↓';
+
+        sortableFields.forEach(function(field) {
+            var iconSpan = document.getElementById('sort-icon-' + field);
+            if (iconSpan) {
+                if (rentalState.sortBy === field) {
+                    iconSpan.textContent = rentalState.sortOrder === 'asc' ? upArrow : downArrow;
+                    iconSpan.classList.remove('text-neutral-400', 'dark:text-neutral-600');
+                    iconSpan.classList.add('text-violet-600', 'dark:text-violet-400');
+                } else {
+                    iconSpan.textContent = '';
+                    iconSpan.classList.remove('text-violet-600', 'dark:text-violet-400');
+                    iconSpan.classList.add('text-neutral-400', 'dark:text-neutral-600');
+                }
+            }
+        });
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         initializeRentalPage();
+        updateSortIcons();
     });
 </script>
 </body>
