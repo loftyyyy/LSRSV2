@@ -2,7 +2,7 @@
 <div id="addCustomerModal" class="hidden fixed inset-0 z-50 flex items-center justify-center px-2 py-6 bg-black/60 backdrop-blur-sm">
     <div class="w-full max-w-6xl bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-3xl shadow-2xl">
         {{-- Header --}}
-        <div class="flex items-center justify-between px-6 py-4 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/80 dark:bg-neutral-900/50">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/80 dark:bg-neutral-900/50 rounded-t-3xl">
             <div>
                 <p class="text-xs uppercase tracking-[0.2em] text-neutral-500 dark:text-neutral-500">New Customer</p>
                 <h3 class="text-lg font-semibold text-neutral-900 dark:text-white">Add Customer Details</h3>
