@@ -559,8 +559,16 @@
                 ? '<button type="button" onclick="openEditReservationModal(' + reservation.reservation_id + ')" class="rounded-lg p-1.5 hover:bg-violet-600 hover:text-white transition-colors duration-300 ease-in-out" aria-label="Edit pending reservation" title="Edit reservation"><x-icon name="edit" class="h-3.5 w-3.5" /></button>'
                 : '<button type="button" aria-disabled="true" tabindex="-1" class="group relative rounded-lg p-1.5 text-neutral-400 dark:text-neutral-600 cursor-not-allowed" aria-label="Edit disabled" title="' + disabledEditTitle + '"><span class="relative inline-flex items-center justify-center"><x-icon name="edit" class="h-3.5 w-3.5" /><span class="absolute inset-0 flex items-center justify-center pointer-events-none"><span class="block w-5 border-t-2 border-current rotate-[-35deg] opacity-90"></span></span></span></button>';
 
-            var row = document.createElement('tr');
-            row.className = 'border-b border-neutral-200 hover:bg-neutral-100 dark:border-neutral-900/60 dark:hover:bg-white/5 transition-colors duration-300 ease-in-out';
+var row = document.createElement('tr');
+            row.className = 'border-b border-neutral-200 hover:bg-neutral-100 dark:border-neutral-900/60 dark:hover:bg-white/5 transition-colors duration-300 ease-in-out cursor-pointer';
+            row.setAttribute('data-reservation-id', reservation.reservation_id);
+            row.addEventListener('click', function(e) {
+                // Don't open details if clicking on action buttons
+                if (e.target.closest('button')) {
+                    return;
+                }
+                openReservationDetailsModal(reservation.reservation_id);
+            });
             row.innerHTML = '' +
                 '<td class="py-3.5 pr-4 pl-4 text-neutral-500 font-geist-mono">#' + (reservation.reservation_id || 'N/A') + '</td>' +
                 '<td class="py-3.5 pr-4 text-neutral-900 dark:text-neutral-100">' + customerName + '</td>' +
