@@ -560,7 +560,7 @@
          modal.className = 'fixed inset-0 z-[51] flex items-center justify-center px-2 py-6 bg-black/60 backdrop-blur-sm';
         modal.innerHTML = `
             <div class="w-full max-w-md bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-3xl shadow-2xl">
-                <div class="flex items-center justify-between px-6 py-4 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/80 dark:bg-neutral-900/50">
+                <div class="flex items-center justify-between px-6 py-4 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/80 dark:bg-neutral-900/50 rounded-t-3xl">
                     <div>
                         <p class="text-xs uppercase tracking-[0.2em] text-neutral-500 dark:text-neutral-500">Security Verification</p>
                         <h3 class="text-lg font-semibold text-neutral-900 dark:text-white">Confirm Status Change</h3>
