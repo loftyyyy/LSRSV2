@@ -199,6 +199,9 @@
 {{-- Rental Details Modal --}}
 @include('rentals.partials.rental-details-modal')
 
+{{-- Process Return Modal --}}
+@include('rentals.partials.process-return-modal')
+
 {{-- Axios for API calls --}}
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
@@ -672,12 +675,6 @@
             fetchRentals();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
-    }
-
-    // Placeholder function for process return modal (to be implemented)
-    function openProcessReturnModal() {
-        console.log('Opening process return modal');
-        // TODO: Implement process return modal
     }
 
     document.addEventListener('DOMContentLoaded', function() {
