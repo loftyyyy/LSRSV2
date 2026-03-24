@@ -5,7 +5,7 @@
         <div class="flex-shrink-0 flex items-center justify-between px-6 py-4 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/80 dark:bg-neutral-900/50 rounded-t-3xl">
             <div class="flex items-center gap-4">
                 {{-- Reservation Icon --}}
-                <div id="reservationDetailsIcon" class="h-12 w-12 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white shadow-lg">
+                <div id="reservationDetailsIcon" class="h-12 w-12 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white shadow-lg">
                     <x-icon name="calendar" class="h-6 w-6" />
                 </div>
                 <div>
@@ -21,7 +21,7 @@
             {{-- Loading State --}}
             <div id="reservationDetailsLoading" class="flex items-center justify-center py-16">
                 <div class="flex flex-col items-center gap-3">
-                    <div class="h-8 w-8 animate-spin rounded-full border-2 border-cyan-600 border-t-transparent"></div>
+                    <div class="h-8 w-8 animate-spin rounded-full border-2 border-violet-600 border-t-transparent"></div>
                     <p class="text-sm text-neutral-500 dark:text-neutral-400">Loading reservation details...</p>
                 </div>
             </div>
@@ -115,21 +115,21 @@
                                 </div>
 
                                 {{-- Start Date --}}
-                                <div class="bg-gradient-to-br from-emerald-500/10 to-green-500/10 dark:from-emerald-500/20 dark:to-green-500/20 rounded-xl p-3 border border-emerald-200 dark:border-emerald-800/50">
+                                <div class="bg-neutral-50 dark:bg-neutral-900/50 rounded-xl p-3 border border-neutral-200 dark:border-neutral-800">
                                     <div class="flex items-center gap-1.5 mb-1">
-                                        <x-icon name="calendar-check" class="h-3 w-3 text-emerald-500" />
-                                        <p class="text-xs text-emerald-600 dark:text-emerald-400">Pickup Date</p>
+                                        <x-icon name="calendar-check" class="h-3 w-3 text-neutral-400" />
+                                        <p class="text-xs text-neutral-500 dark:text-neutral-400">Pickup Date</p>
                                     </div>
-                                    <p id="detailReservationStartDate" class="text-sm font-semibold text-emerald-700 dark:text-emerald-300">-</p>
+                                    <p id="detailReservationStartDate" class="text-sm font-medium text-neutral-900 dark:text-white">-</p>
                                 </div>
 
                                 {{-- End Date --}}
-                                <div class="bg-gradient-to-br from-rose-500/10 to-red-500/10 dark:from-rose-500/20 dark:to-red-500/20 rounded-xl p-3 border border-rose-200 dark:border-rose-800/50">
+                                <div class="bg-neutral-50 dark:bg-neutral-900/50 rounded-xl p-3 border border-neutral-200 dark:border-neutral-800">
                                     <div class="flex items-center gap-1.5 mb-1">
-                                        <x-icon name="calendar-x" class="h-3 w-3 text-rose-500" />
-                                        <p class="text-xs text-rose-600 dark:text-rose-400">Return Date</p>
+                                        <x-icon name="calendar-x" class="h-3 w-3 text-neutral-400" />
+                                        <p class="text-xs text-neutral-500 dark:text-neutral-400">Return Date</p>
                                     </div>
-                                    <p id="detailReservationEndDate" class="text-sm font-semibold text-rose-700 dark:text-rose-300">-</p>
+                                    <p id="detailReservationEndDate" class="text-sm font-medium text-neutral-900 dark:text-white">-</p>
                                 </div>
                             </div>
                         </div>
@@ -162,12 +162,12 @@
                             </div>
                             <div class="grid grid-cols-2 gap-3">
                                 <div class="flex items-center gap-2 text-xs">
-                                    <div class="h-1.5 w-1.5 rounded-full bg-emerald-500"></div>
+                                    <div class="h-1.5 w-1.5 rounded-full bg-violet-500"></div>
                                     <span class="text-neutral-500 dark:text-neutral-400">Created:</span>
                                     <span id="detailReservationCreated" class="text-neutral-700 dark:text-neutral-300 font-medium">-</span>
                                 </div>
                                 <div class="flex items-center gap-2 text-xs">
-                                    <div class="h-1.5 w-1.5 rounded-full bg-blue-500"></div>
+                                    <div class="h-1.5 w-1.5 rounded-full bg-violet-400"></div>
                                     <span class="text-neutral-500 dark:text-neutral-400">Updated:</span>
                                     <span id="detailReservationUpdated" class="text-neutral-700 dark:text-neutral-300 font-medium">-</span>
                                 </div>
@@ -180,21 +180,21 @@
                         {{-- Stats Row --}}
                         <div class="grid grid-cols-3 gap-3">
                             {{-- Total Items --}}
-                            <div class="bg-gradient-to-br from-cyan-500/10 to-blue-500/10 dark:from-cyan-500/20 dark:to-blue-500/20 rounded-xl p-4 border border-cyan-200 dark:border-cyan-800/50 text-center">
-                                <p id="detailTotalItems" class="text-2xl font-bold text-cyan-600 dark:text-cyan-400 font-geist-mono">0</p>
-                                <p class="text-xs text-cyan-600/70 dark:text-cyan-400/70 mt-1">Total Items</p>
+                            <div class="bg-neutral-50 dark:bg-neutral-900/50 rounded-xl p-4 border border-neutral-200 dark:border-neutral-800 text-center">
+                                <p id="detailTotalItems" class="text-2xl font-bold text-neutral-900 dark:text-white font-geist-mono">0</p>
+                                <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">Total Items</p>
                             </div>
 
                             {{-- Total Quantity --}}
-                            <div class="bg-gradient-to-br from-violet-500/10 to-purple-500/10 dark:from-violet-500/20 dark:to-purple-500/20 rounded-xl p-4 border border-violet-200 dark:border-violet-800/50 text-center">
-                                <p id="detailTotalQuantity" class="text-2xl font-bold text-violet-600 dark:text-violet-400 font-geist-mono">0</p>
-                                <p class="text-xs text-violet-600/70 dark:text-violet-400/70 mt-1">Total Qty</p>
+                            <div class="bg-neutral-50 dark:bg-neutral-900/50 rounded-xl p-4 border border-neutral-200 dark:border-neutral-800 text-center">
+                                <p id="detailTotalQuantity" class="text-2xl font-bold text-neutral-900 dark:text-white font-geist-mono">0</p>
+                                <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">Total Qty</p>
                             </div>
 
                             {{-- Total Amount --}}
-                            <div class="bg-gradient-to-br from-emerald-500/10 to-green-500/10 dark:from-emerald-500/20 dark:to-green-500/20 rounded-xl p-4 border border-emerald-200 dark:border-emerald-800/50 text-center">
-                                <p id="detailTotalAmount" class="text-2xl font-bold text-emerald-600 dark:text-emerald-400 font-geist-mono">₱0</p>
-                                <p class="text-xs text-emerald-600/70 dark:text-emerald-400/70 mt-1">Est. Total</p>
+                            <div class="bg-gradient-to-br from-violet-500/10 to-purple-500/10 dark:from-violet-500/20 dark:to-purple-500/20 rounded-xl p-4 border border-violet-200 dark:border-violet-800/50 text-center">
+                                <p id="detailTotalAmount" class="text-2xl font-bold text-violet-600 dark:text-violet-400 font-geist-mono">₱0</p>
+                                <p class="text-xs text-violet-600/70 dark:text-violet-400/70 mt-1">Est. Total</p>
                             </div>
                         </div>
 
@@ -270,7 +270,7 @@
                 type="button"
                 id="reservationDetailsEditBtn"
                 onclick="openEditFromReservationDetails()"
-                class="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-[14px] font-medium bg-cyan-600 text-white hover:bg-cyan-500 transition-colors duration-100 ease-in-out"
+                class="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-[14px] font-medium bg-violet-600 text-white hover:bg-violet-500 transition-colors duration-100 ease-in-out"
             >
                 <x-icon name="edit" class="h-4 w-4" />
                 <span>Edit Reservation</span>
@@ -407,7 +407,7 @@
         // Title
         document.getElementById('reservationDetailsTitle').textContent = `Reservation #${String(reservation.reservation_id).padStart(3, '0')}`;
 
-        // Status with dynamic styling
+        // Status with dynamic styling - using neutral palette with subtle color hints
         var statusName = reservation.status?.status_name?.toLowerCase() || 'unknown';
         var statusCard = document.getElementById('detailReservationStatusCard');
         var statusDot = document.getElementById('detailReservationStatusDot');
@@ -426,8 +426,8 @@
             },
             'completed': {
                 label: 'Completed',
-                cardClass: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800/50 text-blue-700 dark:text-blue-300',
-                dotClass: 'bg-blue-500'
+                cardClass: 'bg-neutral-100 dark:bg-neutral-800/50 border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300',
+                dotClass: 'bg-neutral-500'
             },
             'cancelled': {
                 label: 'Cancelled',
@@ -546,8 +546,8 @@
                     return `
                         <div class="px-4 py-3 flex items-center justify-between hover:bg-neutral-100 dark:hover:bg-neutral-800/50 transition-colors">
                             <div class="flex items-center gap-3 flex-1 min-w-0">
-                                <div class="h-10 w-10 rounded-lg bg-cyan-100 dark:bg-cyan-900/30 flex items-center justify-center flex-shrink-0">
-                                    <svg class="h-5 w-5 text-cyan-600 dark:text-cyan-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                                <div class="h-10 w-10 rounded-lg bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center flex-shrink-0">
+                                    <svg class="h-5 w-5 text-neutral-500 dark:text-neutral-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
                                 </div>
                                 <div class="min-w-0 flex-1">
                                     <p class="text-sm font-medium text-neutral-900 dark:text-white truncate">${itemName}</p>
@@ -559,8 +559,8 @@
                                     <p class="text-sm font-semibold text-neutral-900 dark:text-white font-geist-mono">₱${rentalPrice.toLocaleString()}</p>
                                     <p class="text-xs text-neutral-500 dark:text-neutral-400">× ${quantity}</p>
                                 </div>
-                                <div class="bg-emerald-100 dark:bg-emerald-900/30 rounded-lg px-2 py-1">
-                                    <p class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 font-geist-mono">₱${subtotal.toLocaleString()}</p>
+                                <div class="bg-violet-100 dark:bg-violet-900/30 rounded-lg px-2 py-1">
+                                    <p class="text-xs font-semibold text-violet-600 dark:text-violet-400 font-geist-mono">₱${subtotal.toLocaleString()}</p>
                                 </div>
                             </div>
                         </div>
@@ -593,7 +593,7 @@
                     var statusName = rental.status?.status_name?.toLowerCase() || 'unknown';
                     var statusColors = {
                         'active': 'bg-emerald-500/15 text-emerald-600 border-emerald-500/40 dark:text-emerald-300',
-                        'completed': 'bg-blue-500/15 text-blue-600 border-blue-500/40 dark:text-blue-300',
+                        'completed': 'bg-neutral-500/15 text-neutral-600 border-neutral-500/40 dark:text-neutral-300',
                         'cancelled': 'bg-red-500/15 text-red-600 border-red-500/40 dark:text-red-300',
                         'overdue': 'bg-amber-500/15 text-amber-600 border-amber-500/40 dark:text-amber-300'
                     };
@@ -604,8 +604,8 @@
                     return `
                         <div class="px-4 py-3 flex items-center justify-between hover:bg-neutral-100 dark:hover:bg-neutral-800/50 transition-colors">
                             <div class="flex items-center gap-3">
-                                <div class="h-8 w-8 rounded-lg bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center flex-shrink-0">
-                                    <span class="text-[10px] font-bold text-violet-600 dark:text-violet-400 font-geist-mono">#${rental.rental_id}</span>
+                                <div class="h-8 w-8 rounded-lg bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center flex-shrink-0">
+                                    <span class="text-[10px] font-bold text-neutral-600 dark:text-neutral-400 font-geist-mono">#${rental.rental_id}</span>
                                 </div>
                                 <div class="min-w-0">
                                     <p class="text-sm font-medium text-neutral-900 dark:text-white truncate">${rentalDate}</p>
@@ -650,7 +650,7 @@
                     var statusColors = {
                         'paid': 'bg-emerald-500/15 text-emerald-600 border-emerald-500/40 dark:text-emerald-300',
                         'unpaid': 'bg-amber-500/15 text-amber-600 border-amber-500/40 dark:text-amber-300',
-                        'partial': 'bg-blue-500/15 text-blue-600 border-blue-500/40 dark:text-blue-300',
+                        'partial': 'bg-neutral-500/15 text-neutral-600 border-neutral-500/40 dark:text-neutral-300',
                         'cancelled': 'bg-red-500/15 text-red-600 border-red-500/40 dark:text-red-300'
                     };
                     var statusColor = statusColors[statusName] || 'bg-neutral-500/15 text-neutral-600 border-neutral-500/40 dark:text-neutral-300';
@@ -661,8 +661,8 @@
                     return `
                         <div class="px-4 py-3 flex items-center justify-between hover:bg-neutral-100 dark:hover:bg-neutral-800/50 transition-colors">
                             <div class="flex items-center gap-3">
-                                <div class="h-8 w-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center flex-shrink-0">
-                                    <span class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 font-geist-mono">#${invoice.invoice_id}</span>
+                                <div class="h-8 w-8 rounded-lg bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center flex-shrink-0">
+                                    <span class="text-[10px] font-bold text-neutral-600 dark:text-neutral-400 font-geist-mono">#${invoice.invoice_id}</span>
                                 </div>
                                 <div class="min-w-0">
                                     <p class="text-sm font-medium text-neutral-900 dark:text-white truncate">${invoiceDate}</p>
