@@ -428,7 +428,7 @@
             renderTable(data.data);
             updatePagination(data);
             updateStats();
-            updateSortIndicators();
+            updateSortIcons();
             hideLoadingState();
 
         } catch (error) {
