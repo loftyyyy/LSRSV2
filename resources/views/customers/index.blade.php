@@ -141,37 +141,22 @@
                         <thead class="text-[11px] uppercase tracking-[0.18em] text-neutral-500">
                         <tr class="border-b border-neutral-200 dark:border-neutral-900/80">
                             <th class="py-2.5 pr-4 pl-4 font-medium">ID</th>
-                            <th class="py-2.5 pr-4 font-medium cursor-pointer hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors" onclick="toggleSort('first_name')">
-                                <div class="flex items-center gap-1.5">
-                                    <span>Name</span>
-                                    <span class="sort-indicator text-[10px]"></span>
-                                </div>
+                            <th class="py-2.5 pr-4 font-medium cursor-pointer hover:text-violet-600 dark:hover:text-violet-400 transition-colors duration-200 select-none" onclick="toggleSort('first_name')">
+                                <span class="inline-flex items-center gap-1">
+                                    Name
+                                    <span id="sort-icon-first_name" class="text-neutral-400 dark:text-neutral-600"></span>
+                                </span>
                             </th>
-                            <th class="py-2.5 pr-4 font-medium cursor-pointer hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors" onclick="toggleSort('email')">
-                                <div class="flex items-center gap-1.5">
-                                    <span>Email</span>
-                                    <span class="sort-indicator text-[10px]"></span>
-                                </div>
-                            </th>
-                            <th class="py-2.5 pr-4 font-medium cursor-pointer hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors" onclick="toggleSort('contact_number')">
-                                <div class="flex items-center gap-1.5">
-                                    <span>Phone</span>
-                                    <span class="sort-indicator text-[10px]"></span>
-                                </div>
-                            </th>
+                            <th class="py-2.5 pr-4 font-medium">Email</th>
+                            <th class="py-2.5 pr-4 font-medium">Phone</th>
                             <th class="py-2.5 pr-4 font-medium">Address</th>
-                            <th class="py-2.5 pr-4 font-medium cursor-pointer hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors" onclick="toggleSort('created_at')">
-                                <div class="flex items-center gap-1.5">
-                                    <span>Created Date</span>
-                                    <span class="sort-indicator text-[10px]"></span>
-                                </div>
+                            <th class="py-2.5 pr-4 font-medium cursor-pointer hover:text-violet-600 dark:hover:text-violet-400 transition-colors duration-200 select-none" onclick="toggleSort('created_at')">
+                                <span class="inline-flex items-center gap-1">
+                                    Created Date
+                                    <span id="sort-icon-created_at" class="text-neutral-400 dark:text-neutral-600"></span>
+                                </span>
                             </th>
-                            <th class="py-2.5 pr-4 font-medium cursor-pointer hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors" onclick="toggleSort('rentals_count')">
-                                <div class="flex items-center gap-1.5">
-                                    <span>Total Rentals</span>
-                                    <span class="sort-indicator text-[10px]"></span>
-                                </div>
-                            </th>
+                            <th class="py-2.5 pr-4 font-medium">Total Rentals</th>
                             <th class="py-2.5 pr-4 font-medium text-left">Status</th>
                             <th class="py-2.5 pl-2 font-medium text-left">Actions</th>
                         </tr>
@@ -332,7 +317,10 @@
     }
 
     // Initialize on page load
-    document.addEventListener('DOMContentLoaded', initializeCustomerPage);
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeCustomerPage();
+        updateSortIcons();
+    });
 
     // Fetch customer statuses (dynamically populate status ID mappings)
     async function fetchStatuses() {
@@ -828,8 +816,6 @@
 
     // Toggle sort on column header click
     function toggleSort(column) {
-        customerState.currentPage = 1;
-
         if (customerState.sortBy === column) {
             // Toggle sort order if same column clicked
             customerState.sortOrder = customerState.sortOrder === 'asc' ? 'desc' : 'asc';
@@ -839,34 +825,28 @@
             customerState.sortOrder = 'asc';
         }
 
+        customerState.currentPage = 1;
+        updateSortIcons();
         fetchCustomers();
     }
 
     // Update sort indicators on headers
-    function updateSortIndicators() {
-        // Clear all indicators
-        document.querySelectorAll('.sort-indicator').forEach(indicator => {
-            indicator.textContent = '';
-        });
+    function updateSortIcons() {
+        var sortableFields = ['first_name', 'created_at'];
+        var upArrow = '↑';
+        var downArrow = '↓';
 
-        // Find the column header that matches current sort
-        var headers = document.querySelectorAll('thead th');
-        headers.forEach(header => {
-            var btn = header.querySelector('[onclick]');
-            if (!btn) return;
-
-            var onclickAttr = btn.getAttribute('onclick');
-            if (!onclickAttr) return;
-
-            var columnMatch = onclickAttr.match(/toggleSort\('(\w+)'\)/);
-            if (!columnMatch) return;
-
-            var column = columnMatch[1];
-            if (column === customerState.sortBy) {
-                var indicator = header.querySelector('.sort-indicator');
-                if (indicator) {
-                    indicator.textContent = customerState.sortOrder === 'asc' ? '↑' : '↓';
-                    indicator.style.fontWeight = '600';
+        sortableFields.forEach(function(field) {
+            var iconSpan = document.getElementById('sort-icon-' + field);
+            if (iconSpan) {
+                if (customerState.sortBy === field) {
+                    iconSpan.textContent = customerState.sortOrder === 'asc' ? upArrow : downArrow;
+                    iconSpan.classList.remove('text-neutral-400', 'dark:text-neutral-600');
+                    iconSpan.classList.add('text-violet-600', 'dark:text-violet-400');
+                } else {
+                    iconSpan.textContent = '';
+                    iconSpan.classList.remove('text-violet-600', 'dark:text-violet-400');
+                    iconSpan.classList.add('text-neutral-400', 'dark:text-neutral-600');
                 }
             }
         });
