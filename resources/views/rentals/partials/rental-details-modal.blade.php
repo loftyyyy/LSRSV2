@@ -718,8 +718,16 @@
     // Extend rental from details modal
     function extendRentalFromDetails() {
         var rentalId = globalThis.rentalDetailsModalState.currentRentalId;
-        console.log('Extend rental functionality for rental:', rentalId);
-        // TODO: Implement extend rental modal
+        closeRentalDetailsModal();
+
+        // Small delay to allow close animation
+        setTimeout(function() {
+            if (typeof openExtendRentalModal === 'function') {
+                openExtendRentalModal(rentalId);
+            } else {
+                console.log('Extend rental modal not implemented yet for rental:', rentalId);
+            }
+        }, 100);
     }
 
     // Handle keyboard navigation
@@ -728,8 +736,9 @@
 
         // Check if other modals are open
         var processReturnModalOpen = document.getElementById('processReturnModal') && !document.getElementById('processReturnModal').classList.contains('hidden');
+        var extendRentalModalOpen = document.getElementById('extendRentalModal') && !document.getElementById('extendRentalModal').classList.contains('hidden');
 
-        if (e.key === 'Escape' && !processReturnModalOpen) {
+        if (e.key === 'Escape' && !processReturnModalOpen && !extendRentalModalOpen) {
             closeRentalDetailsModal();
         }
     });

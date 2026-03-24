@@ -202,6 +202,9 @@
 {{-- Process Return Modal --}}
 @include('rentals.partials.process-return-modal')
 
+{{-- Extend Rental Modal --}}
+@include('rentals.partials.extend-rental-modal')
+
 {{-- Axios for API calls --}}
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
