@@ -396,8 +396,8 @@ class RentalController extends Controller
             $query->where('due_date', '<=', $request->get('due_date_to'));
         }
 
-        // Sorting
-        $allowedSortFields = ['created_at', 'released_date', 'due_date', 'customer_name', 'item_name', 'status_name'];
+        // Sorting - only allow date fields for simplicity
+        $allowedSortFields = ['created_at', 'released_date', 'due_date'];
         $sortBy = $request->get('sort_by', 'created_at');
         $sortOrder = $request->get('sort_order', 'desc');
 
@@ -408,22 +408,7 @@ class RentalController extends Controller
             $sortOrder = 'desc';
         }
 
-        // Handle special sort fields that require joins
-        if ($sortBy === 'customer_name') {
-            $query->leftJoin('customers', 'rentals.customer_id', '=', 'customers.customer_id')
-                ->orderByRaw("CONCAT(customers.first_name, ' ', customers.last_name) {$sortOrder}")
-                ->select('rentals.*');
-        } elseif ($sortBy === 'item_name') {
-            $query->leftJoin('inventory', 'rentals.item_id', '=', 'inventory.item_id')
-                ->orderBy('inventory.name', $sortOrder)
-                ->select('rentals.*');
-        } elseif ($sortBy === 'status_name') {
-            $query->leftJoin('rental_statuses', 'rentals.status_id', '=', 'rental_statuses.status_id')
-                ->orderBy('rental_statuses.status_name', $sortOrder)
-                ->select('rentals.*');
-        } else {
-            $query->orderBy($sortBy, $sortOrder);
-        }
+        $query->orderBy($sortBy, $sortOrder);
 
         // Pagination
         $perPage = $request->get('per_page', 15);

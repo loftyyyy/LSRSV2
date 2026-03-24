@@ -156,18 +156,8 @@
                         <thead class="text-[11px] uppercase tracking-[0.18em] text-neutral-500">
                         <tr class="border-b border-neutral-200 dark:border-neutral-900/80">
                             <th class="py-2.5 pr-4 pl-4 font-medium">ID</th>
-                            <th class="py-2.5 pr-4 font-medium cursor-pointer hover:text-violet-600 dark:hover:text-violet-400 transition-colors duration-200 select-none" onclick="toggleSort('customer_name')">
-                                <span class="inline-flex items-center gap-1">
-                                    Customer
-                                    <span id="sort-icon-customer_name" class="text-neutral-400 dark:text-neutral-600"></span>
-                                </span>
-                            </th>
-                            <th class="py-2.5 pr-4 font-medium cursor-pointer hover:text-violet-600 dark:hover:text-violet-400 transition-colors duration-200 select-none" onclick="toggleSort('item_name')">
-                                <span class="inline-flex items-center gap-1">
-                                    Item
-                                    <span id="sort-icon-item_name" class="text-neutral-400 dark:text-neutral-600"></span>
-                                </span>
-                            </th>
+                            <th class="py-2.5 pr-4 font-medium">Customer</th>
+                            <th class="py-2.5 pr-4 font-medium">Item</th>
                             <th class="py-2.5 pr-4 font-medium cursor-pointer hover:text-violet-600 dark:hover:text-violet-400 transition-colors duration-200 select-none" onclick="toggleSort('released_date')">
                                 <span class="inline-flex items-center gap-1">
                                     Released
@@ -180,12 +170,7 @@
                                     <span id="sort-icon-due_date" class="text-neutral-400 dark:text-neutral-600"></span>
                                 </span>
                             </th>
-                            <th class="py-2.5 pr-4 font-medium cursor-pointer hover:text-violet-600 dark:hover:text-violet-400 transition-colors duration-200 select-none" onclick="toggleSort('status_name')">
-                                <span class="inline-flex items-center gap-1">
-                                    Status
-                                    <span id="sort-icon-status_name" class="text-neutral-400 dark:text-neutral-600"></span>
-                                </span>
-                            </th>
+                            <th class="py-2.5 pr-4 font-medium">Status</th>
                         </tr>
                         </thead>
 
@@ -711,7 +696,7 @@
     }
 
     function updateSortIcons() {
-        var sortableFields = ['customer_name', 'item_name', 'released_date', 'due_date', 'status_name'];
+        var sortableFields = ['released_date', 'due_date'];
         var upArrow = '↑';
         var downArrow = '↓';
 
