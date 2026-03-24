@@ -196,6 +196,9 @@
     </section>
 </main>
 
+{{-- Rental Details Modal --}}
+@include('rentals.partials.rental-details-modal')
+
 {{-- Axios for API calls --}}
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
@@ -671,12 +674,7 @@
         }
     }
 
-    // Placeholder functions for future modals
-    function openRentalDetailsModal(rentalId) {
-        console.log('Opening rental details modal for rental:', rentalId);
-        // TODO: Implement rental details modal
-    }
-
+    // Placeholder function for process return modal (to be implemented)
     function openProcessReturnModal() {
         console.log('Opening process return modal');
         // TODO: Implement process return modal
