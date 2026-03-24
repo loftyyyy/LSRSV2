@@ -161,7 +161,6 @@
                             <th class="py-2.5 pr-4 font-medium">Released</th>
                             <th class="py-2.5 pr-4 font-medium">Due Date</th>
                             <th class="py-2.5 pr-4 font-medium">Status</th>
-                            <th class="py-2.5 pl-2 font-medium text-left">Actions</th>
                         </tr>
                         </thead>
 
@@ -515,11 +514,7 @@
             var row = document.createElement('tr');
             row.className = 'border-b border-neutral-200 hover:bg-neutral-100 dark:border-neutral-900/60 dark:hover:bg-white/5 transition-colors duration-300 ease-in-out cursor-pointer';
             row.setAttribute('data-rental-id', rental.rental_id);
-            row.addEventListener('click', function(e) {
-                // Don't open details if clicking on action buttons
-                if (e.target.closest('button')) {
-                    return;
-                }
+            row.addEventListener('click', function() {
                 openRentalDetailsModal(rental.rental_id);
             });
 
@@ -532,14 +527,7 @@
                 '</td>' +
                 '<td class="py-3.5 pr-4 text-neutral-600 dark:text-neutral-300 font-geist-mono">' + formatDate(rental.released_date) + '</td>' +
                 '<td class="py-3.5 pr-4 text-neutral-600 dark:text-neutral-300 font-geist-mono">' + formatDate(rental.due_date) + '</td>' +
-                '<td class="py-3.5 pr-4"><span class="inline-flex items-center rounded-full ' + statusColor + ' px-2 py-1 text-[11px] font-medium border transition-colors duration-300 ease-in-out"><span class="mr-1.5 h-1.5 w-1.5 rounded-full ' + statusBgColor + '"></span>' + statusLabel + '</span></td>' +
-                '<td class="py-3.5 pl-2 text-left text-neutral-500 dark:text-neutral-400">' +
-                    '<div class="inline-flex items-center gap-2">' +
-                        '<button type="button" onclick="openRentalDetailsModal(' + rental.rental_id + ')" class="rounded-lg p-1.5 hover:bg-violet-600 hover:text-white transition-colors duration-300 ease-in-out" aria-label="View rental details" title="View details">' +
-                            '<x-icon name="eye" class="h-3.5 w-3.5" />' +
-                        '</button>' +
-                    '</div>' +
-                '</td>';
+                '<td class="py-3.5 pr-4"><span class="inline-flex items-center rounded-full ' + statusColor + ' px-2 py-1 text-[11px] font-medium border transition-colors duration-300 ease-in-out"><span class="mr-1.5 h-1.5 w-1.5 rounded-full ' + statusBgColor + '"></span>' + statusLabel + '</span></td>';
 
             tbody.appendChild(row);
         });
