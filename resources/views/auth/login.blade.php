@@ -26,152 +26,145 @@
     @endif
 </head>
 
-<body class="min-h-screen font-geist bg-gradient-to-br from-neutral-50 via-white to-neutral-100 dark:from-black dark:via-[#0a0a0a] dark:to-[#0f0f12] text-neutral-900 dark:text-neutral-50 px-4 py-10">
-<div class="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(124,58,237,0.12),transparent_30%),radial-gradient(circle_at_80%_0%,rgba(14,165,233,0.12),transparent_25%),radial-gradient(circle_at_50%_90%,rgba(59,130,246,0.12),transparent_22%)] pointer-events-none"></div>
+<body class="min-h-screen font-geist text-neutral-900 dark:text-neutral-50 flex overflow-hidden">
 
-{{-- Theme Toggle --}}
-<div class="fixed top-6 right-6 z-20">
-    <button
-        type="button"
-        onclick="toggleDarkMode()"
-        class="flex items-center gap-2 rounded-full px-3 py-2 text-xs font-medium text-neutral-700 dark:text-neutral-200 bg-white/70 dark:bg-white/10 border border-neutral-200/70 dark:border-white/10 shadow-sm hover:shadow transition-all duration-200 backdrop-blur"
-    >
-        <span class="inline-flex h-5 w-9 items-center rounded-full bg-amber-500/20 dark:bg-violet-600/25 px-0.5 relative transition-all duration-300">
-            <span
-                id="toggleKnob"
-                class="flex h-4 w-4 items-center justify-center rounded-full bg-amber-400 dark:bg-violet-500 shadow-sm text-black dark:text-white transition-all duration-300 ease-in-out"
-            >
-                <span id="iconMoon">
-                    <x-icon name="moon" class="h-2.5 w-2.5" />
-                </span>
-                <span id="iconSun" class="hidden">
-                    <x-icon name="sun" class="h-2.5 w-2.5" />
-                </span>
-                <span id="iconSystem" class="hidden">
-                    <x-icon name="monitor" class="h-2.5 w-2.5" />
-                </span>
-            </span>
-        </span>
-        <span id="modeLabel" class="text-[11px]">Dark</span>
-    </button>
-</div>
-
-<main class="relative z-10 max-w-6xl mx-auto">
-    <div class="grid lg:grid-cols-2 gap-8 items-center">
-        <div class="hidden lg:block">
-            <div class="relative overflow-hidden rounded-3xl border border-white/50 dark:border-white/10 bg-gradient-to-br from-violet-600 via-indigo-600 to-blue-600 text-white shadow-2xl">
-                <div class="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.7),transparent_40%),radial-gradient(circle_at_80%_0%,rgba(255,255,255,0.6),transparent_38%)]"></div>
-                <div class="relative p-10 space-y-8">
-                    <div class="inline-flex items-center gap-3 px-3 py-2 rounded-full bg-white/10 border border-white/20 text-xs uppercase tracking-wide">
-                        <span class="h-2 w-2 rounded-full bg-emerald-300 animate-pulse"></span>
-                        Secure Access Portal
-                    </div>
-                    <h1 class="text-3xl font-semibold leading-tight">
-                        Manage rentals with a clean, consistent interface.
-                    </h1>
-                    <p class="text-white/80 text-sm leading-relaxed max-w-xl">
-                        Stay on-brand across all screens. Use your dashboard to track rentals, customers, invoices, and more with a cohesive look and feel.
-                    </p>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="rounded-2xl bg-white/10 border border-white/15 p-4">
-                            <p class="text-xs text-white/70 mb-2">Reliability</p>
-                            <p class="text-lg font-semibold">Uptime-first</p>
-                            <p class="text-xs text-white/60">Resilient OTP, fast access, audited logs.</p>
-                        </div>
-                        <div class="rounded-2xl bg-white/10 border border-white/15 p-4">
-                            <p class="text-xs text-white/70 mb-2">Security</p>
-                            <p class="text-lg font-semibold">Strong auth</p>
-                            <p class="text-xs text-white/60">Time-boxed codes, lockouts, encrypted data.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    {{-- LEFT PANEL --}}
+    <div class="hidden lg:flex lg:w-[58%] min-h-screen flex-col bg-gradient-to-br from-violet-700 via-indigo-600 to-blue-500 text-white relative overflow-hidden">
+        {{-- Decorative radial overlays --}}
+        <div class="absolute inset-0 pointer-events-none">
+            <div class="absolute top-0 left-0 w-[500px] h-[500px] rounded-full bg-purple-500/30 blur-3xl -translate-x-1/3 -translate-y-1/3"></div>
+            <div class="absolute bottom-0 right-0 w-[400px] h-[400px] rounded-full bg-blue-400/20 blur-3xl translate-x-1/4 translate-y-1/4"></div>
         </div>
 
-        <div class="relative">
-            <div class="absolute -inset-4 blur-3xl bg-gradient-to-r from-violet-500/20 via-blue-500/15 to-emerald-400/10 dark:from-violet-500/15 dark:via-blue-500/10 dark:to-emerald-400/10"></div>
-            <div class="relative w-full bg-white/80 dark:bg-neutral-950/80 backdrop-blur border border-neutral-200/80 dark:border-neutral-800 rounded-3xl shadow-xl">
-                <div class="p-6 sm:p-8">
-                    <div class="flex items-start justify-between mb-6">
-                        <div>
-                            <p class="text-xs uppercase tracking-[0.2em] text-neutral-500 dark:text-neutral-500">Welcome back</p>
-                            <h2 class="text-2xl font-semibold mt-1">Sign in to dashboard</h2>
-                            <p class="text-sm text-neutral-600 dark:text-neutral-400 mt-2">Access rentals, customers, invoices, and analytics.</p>
-                        </div>
-                        <div class="h-11 w-11 rounded-2xl bg-gradient-to-br from-violet-500 to-blue-500 text-white grid place-items-center shadow-md">
-                            <x-icon name="lock" class="h-5 w-5" />
-                        </div>
-                    </div>
-
-                    <form method="POST" action="{{ route('login') }}" class="space-y-4">
-                        @csrf
-
-                        <div class="space-y-2">
-                            <label class="text-sm font-medium">Email address</label>
-                            <div class="flex items-center bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded-xl px-3 shadow-sm focus-within:border-violet-500 focus-within:ring-2 focus-within:ring-violet-100 dark:focus-within:ring-violet-500/30 transition">
-                                <x-icon name="mail" class="text-neutral-400 mr-2" />
-                                <input
-                                    type="email"
-                                    name="email"
-                                    required
-                                    autocomplete="email"
-                                    placeholder="you@business.com"
-                                    class="w-full bg-transparent py-3 text-sm text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none"
-                                />
-                            </div>
-                        </div>
-
-                        <div class="space-y-2">
-                            <div class="flex items-center justify-between">
-                                <label class="text-sm font-medium">Password</label>
-                                <button type="button" onclick="openForgotModal()" class="text-xs font-medium text-violet-600 hover:text-violet-700 dark:text-violet-400">Forgot password?</button>
-                            </div>
-                            <div class="flex items-center bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded-xl px-3 shadow-sm focus-within:border-violet-500 focus-within:ring-2 focus-within:ring-violet-100 dark:focus-within:ring-violet-500/30 transition">
-                                <x-icon name="lock" class="text-neutral-400 mr-2" />
-                                <input
-                                    id="passwordInput"
-                                    type="password"
-                                    name="password"
-                                    required
-                                    autocomplete="current-password"
-                                    placeholder="••••••••"
-                                    class="w-full bg-transparent py-3 text-sm text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none"
-                                />
-                                <button type="button" onclick="togglePassword()" class="ml-2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200">
-                                    <span id="eyeOpen">
-                                        <x-icon name="eye" class="h-4 w-4" />
-                                    </span>
-                                    <span id="eyeClosed" class="hidden">
-                                        <x-icon name="eye-off" class="h-4 w-4" />
-                                    </span>
-                                </button>
-                            </div>
-                        </div>
-
-                        <button type="submit" class="w-full bg-gradient-to-r from-violet-600 via-indigo-600 to-blue-600 hover:from-violet-700 hover:via-indigo-700 hover:to-blue-700 rounded-xl py-3 text-white font-semibold shadow-lg shadow-violet-600/20 transition-transform hover:translate-y-[-1px]">
-                            Sign in
-                        </button>
-                        @error('email')
-                        <p class="text-xs text-red-600 dark:text-red-400 mt-1">
-                            {{ $message }}
-                        </p>
-                        @enderror
-                    </form>
-
-                    <div class="mt-8 flex items-center gap-3 text-xs text-neutral-500 dark:text-neutral-500">
-                        <span class="h-px flex-1 bg-neutral-200 dark:bg-neutral-800"></span>
-                        <span class="uppercase tracking-[0.2em]">Access</span>
-                        <span class="h-px flex-1 bg-neutral-200 dark:bg-neutral-800"></span>
-                    </div>
-
-                    <p class="mt-4 text-center text-sm text-neutral-600 dark:text-neutral-400">
-                        Need access? <span class="text-neutral-900 dark:text-neutral-100 font-medium">Contact your system administrator</span>
-                    </p>
+        {{-- Content --}}
+        <div class="relative z-10 flex flex-col h-full p-10 xl:p-14">
+            {{-- Logo / Brand --}}
+            <div class="flex items-center gap-3 mb-auto">
+                <div class="h-10 w-10 rounded-xl bg-white/15 border border-white/20 grid place-items-center">
+                    <x-icon name="lock" class="h-5 w-5 text-white" />
+                </div>
+                <div>
+                    <p class="text-base font-semibold leading-none">Love &amp; Styles</p>
+                    <p class="text-xs text-white/60 mt-0.5">Admin Portal</p>
                 </div>
             </div>
+
+            {{-- Hero copy --}}
+            <div class="py-12 xl:py-16">
+                <h1 class="text-3xl xl:text-4xl font-semibold leading-tight max-w-lg">
+                    Manage rentals with a clean, consistent interface.
+                </h1>
+                <p class="mt-4 text-white/70 text-sm leading-relaxed max-w-md">
+                    Access and organize customers, invoices, rentals, and analytics all in one secure location.
+                </p>
+
+                {{-- Feature cards --}}
+                <div class="mt-8 space-y-3">
+                    <div class="flex items-start gap-4 rounded-2xl border border-white/15 bg-white/10 px-5 py-4">
+                        <div class="mt-0.5 h-8 w-8 rounded-lg bg-white/15 grid place-items-center shrink-0">
+                            <x-icon name="shield" class="h-4 w-4 text-white" />
+                        </div>
+                        <div>
+                            <p class="text-sm font-semibold">Enterprise Security</p>
+                            <p class="text-xs text-white/60 mt-0.5">Time-boxed codes, encrypted data, and comprehensive audit logs</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-4 rounded-2xl border border-white/15 bg-white/10 px-5 py-4">
+                        <div class="mt-0.5 h-8 w-8 rounded-lg bg-white/15 grid place-items-center shrink-0">
+                            <x-icon name="check-circle" class="h-4 w-4 text-white" />
+                        </div>
+                        <div>
+                            <p class="text-sm font-semibold">Uptime-First Reliability</p>
+                            <p class="text-xs text-white/60 mt-0.5">Resilient infrastructure with 99.9% SLA guarantee</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Footer --}}
+            <p class="text-xs text-white/40 mt-auto">Enterprise-grade rental management system</p>
         </div>
     </div>
-</main>
+
+    {{-- RIGHT PANEL --}}
+    <div class="flex-1 min-h-screen flex items-center justify-center bg-neutral-50 dark:bg-neutral-950 px-6 py-12">
+        <div class="w-full max-w-sm">
+            {{-- Header --}}
+            <div class="mb-8">
+                <p class="text-[10px] uppercase tracking-[0.25em] text-neutral-400 dark:text-neutral-500 font-medium mb-1">Welcome back</p>
+                <h2 class="text-2xl font-bold text-neutral-900 dark:text-neutral-50">Sign in to dashboard</h2>
+                <p class="text-sm text-neutral-500 dark:text-neutral-400 mt-1.5">Access rentals, customers, invoices, and analytics.</p>
+            </div>
+
+            {{-- Form --}}
+            <form method="POST" action="{{ route('login') }}" class="space-y-5">
+                @csrf
+
+                {{-- Email --}}
+                <div class="space-y-1.5">
+                    <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Email address</label>
+                    <div class="flex items-center bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-3.5 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100 dark:focus-within:ring-indigo-500/20 transition">
+                        <x-icon name="mail" class="h-4 w-4 text-neutral-400 mr-2.5 shrink-0" />
+                        <input
+                            type="email"
+                            name="email"
+                            required
+                            autocomplete="email"
+                            placeholder="admin@example.com"
+                            value="{{ old('email') }}"
+                            class="w-full bg-transparent py-3 text-sm text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 dark:placeholder-neutral-600 focus:outline-none"
+                        />
+                    </div>
+                </div>
+
+                {{-- Password --}}
+                <div class="space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Password</label>
+                        <button type="button" onclick="openForgotModal()" class="text-xs font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300">Forgot password?</button>
+                    </div>
+                    <div class="flex items-center bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-3.5 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100 dark:focus-within:ring-indigo-500/20 transition">
+                        <x-icon name="lock" class="h-4 w-4 text-neutral-400 mr-2.5 shrink-0" />
+                        <input
+                            id="passwordInput"
+                            type="password"
+                            name="password"
+                            required
+                            autocomplete="current-password"
+                            placeholder="••••••••"
+                            class="w-full bg-transparent py-3 text-sm text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 dark:placeholder-neutral-600 focus:outline-none"
+                        />
+                        <button type="button" onclick="togglePassword()" class="ml-2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition">
+                            <span id="eyeOpen"><x-icon name="eye" class="h-4 w-4" /></span>
+                            <span id="eyeClosed" class="hidden"><x-icon name="eye-off" class="h-4 w-4" /></span>
+                        </button>
+                    </div>
+                </div>
+
+                @error('email')
+                <p class="text-xs text-red-600 dark:text-red-400 -mt-2">{{ $message }}</p>
+                @enderror
+
+                {{-- Submit --}}
+                <button type="submit" class="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 rounded-xl py-3.5 text-white text-sm font-semibold shadow-md shadow-indigo-600/25 transition-all duration-150">
+                    Sign in
+                    <x-icon name="arrow-right" class="h-4 w-4" />
+                </button>
+            </form>
+
+            {{-- Divider --}}
+            <div class="mt-8 flex items-center gap-3 text-xs text-neutral-400 dark:text-neutral-600">
+                <span class="h-px flex-1 bg-neutral-200 dark:bg-neutral-800"></span>
+            </div>
+
+            <p class="mt-5 text-center text-sm text-neutral-500 dark:text-neutral-400">
+                Need access? <a href="mailto:admin@yourdomain.com" class="font-semibold text-neutral-800 dark:text-neutral-100 hover:underline">Contact your administrator</a>
+            </p>
+        </div>
+    </div>
+
+</body>
 
 {{-- OTP / Forgot password modal --}}
 <div id="otpModal" class="hidden fixed inset-0 z-50 flex items-center justify-center px-4 py-6 bg-black/60 backdrop-blur-sm">
@@ -205,7 +198,7 @@
                 </div>
                 <div class="space-y-2">
                     <label class="text-sm font-medium">Email address</label>
-                    <div class="flex items-center bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded-xl px-3 focus-within:border-violet-500 focus-within:ring-2 focus-within:ring-violet-100 dark:focus-within:ring-violet-500/30 transition">
+                    <div class="flex items-center bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded-xl px-3 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100 dark:focus-within:ring-indigo-500/30 transition">
                         <x-icon name="mail" class="text-neutral-400 mr-2" />
                         <input
                             id="fpEmail"
@@ -217,7 +210,7 @@
                     <p id="otpStep1Msg" class="text-xs min-h-[18px] text-red-500"></p>
                 </div>
                 <div class="flex items-center gap-3">
-                    <button id="otpSendBtn" onclick="handleSendOtp()" class="flex-1 bg-violet-600 hover:bg-violet-700 text-white font-semibold rounded-xl py-3 shadow-lg shadow-violet-600/20 transition">
+                    <button id="otpSendBtn" onclick="handleSendOtp()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl py-3 shadow-lg shadow-indigo-600/20 transition">
                         Send code
                     </button>
                     <button onclick="closeOtpModal()" class="px-4 py-3 rounded-xl border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-50 dark:hover:bg-neutral-900 transition">
@@ -233,12 +226,12 @@
                         <p class="text-sm font-medium text-neutral-800 dark:text-neutral-100">Enter verification code</p>
                         <p class="text-xs text-neutral-500">Sent to <span id="otpDisplayEmail" class="font-semibold text-neutral-800 dark:text-neutral-100"></span></p>
                     </div>
-                    <div class="text-xs font-mono text-violet-600 dark:text-violet-400">
+                    <div class="text-xs font-mono text-indigo-600 dark:text-indigo-400">
                         Expires in <span id="otpCountdown">05:00</span>
                     </div>
                 </div>
 
-                <div class="flex items-center bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded-xl px-3 focus-within:border-violet-500 focus-within:ring-2 focus-within:ring-violet-100 dark:focus-within:ring-violet-500/30 transition">
+                <div class="flex items-center bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded-xl px-3 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100 dark:focus-within:ring-indigo-500/30 transition">
                     <x-icon name="key" class="text-neutral-400 mr-2" />
                     <input
                         id="otpCodeInput"
@@ -254,7 +247,7 @@
                 <p id="otpStep2Msg" class="text-xs min-h-[18px] text-red-500"></p>
 
                 <div class="flex items-center gap-3">
-                    <button id="otpVerifyBtn" onclick="handleVerifyOtp()" class="flex-1 bg-violet-600 hover:bg-violet-700 text-white font-semibold rounded-xl py-3 shadow-lg shadow-violet-600/20 transition">
+                    <button id="otpVerifyBtn" onclick="handleVerifyOtp()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl py-3 shadow-lg shadow-indigo-600/20 transition">
                         Verify code
                     </button>
                     <button onclick="setOtpStep(1)" class="px-4 py-3 rounded-xl border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-50 dark:hover:bg-neutral-900 transition">
@@ -262,7 +255,7 @@
                     </button>
                 </div>
 
-                <button id="otpResendBtn" onclick="handleResendOtp()" class="w-full text-sm text-violet-600 dark:text-violet-400 font-medium hover:underline disabled:text-neutral-400 disabled:no-underline disabled:cursor-not-allowed" disabled>
+                <button id="otpResendBtn" onclick="handleResendOtp()" class="w-full text-sm text-indigo-600 dark:text-indigo-400 font-medium hover:underline disabled:text-neutral-400 disabled:no-underline disabled:cursor-not-allowed" disabled>
                     Resend code in <span id="otpResendCountdown">60</span>s
                 </button>
             </div>
@@ -281,7 +274,7 @@
 
                 <div class="space-y-2">
                     <label class="text-sm font-medium">New password</label>
-                    <div class="flex items-center bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded-xl px-3 focus-within:border-violet-500 focus-within:ring-2 focus-within:ring-violet-100 dark:focus-within:ring-violet-500/30 transition">
+                    <div class="flex items-center bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded-xl px-3 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100 dark:focus-within:ring-indigo-500/30 transition">
                         <x-icon name="lock" class="text-neutral-400 mr-2" />
                         <input
                             id="otpNewPassword"
@@ -298,7 +291,7 @@
 
                 <div class="space-y-2">
                     <label class="text-sm font-medium">Confirm password</label>
-                    <div class="flex items-center bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded-xl px-3 focus-within:border-violet-500 focus-within:ring-2 focus-within:ring-violet-100 dark:focus-within:ring-violet-500/30 transition">
+                    <div class="flex items-center bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 rounded-xl px-3 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100 dark:focus-within:ring-indigo-500/30 transition">
                         <x-icon name="lock" class="text-neutral-400 mr-2" />
                         <input
                             id="otpConfirmPassword"
@@ -328,58 +321,6 @@
 </div>
 
 <script>
-    // Theme toggle
-    function getThemeState() {
-        if (globalThis.themeController && typeof globalThis.themeController.getState === 'function') {
-            return globalThis.themeController.getState();
-        }
-
-        return {
-            isDark: document.documentElement.classList.contains('dark'),
-            preference: null
-        };
-    }
-
-    let themeState = getThemeState();
-
-    function updateToggleUI() {
-        var isDarkMode = !!themeState.isDark;
-        var preference = themeState.preference;
-        var label = preference === null ? 'System' : (isDarkMode ? 'Dark' : 'Light');
-        var knobPosition = preference === null ? 'translateX(7px)' : (isDarkMode ? 'translateX(14px)' : 'translateX(0)');
-
-        document.getElementById('modeLabel').textContent = label;
-        document.getElementById('iconMoon').classList.toggle('hidden', !isDarkMode || preference === null);
-        document.getElementById('iconSun').classList.toggle('hidden', isDarkMode || preference === null);
-        document.getElementById('iconSystem').classList.toggle('hidden', preference !== null);
-        document.getElementById('toggleKnob').style.transform = knobPosition;
-    }
-
-    function toggleDarkMode() {
-        if (globalThis.themeController && typeof globalThis.themeController.togglePreference === 'function') {
-            globalThis.themeController.togglePreference();
-        } else {
-            themeState = { isDark: !themeState.isDark, preference: themeState.isDark ? 'light' : 'dark' };
-            document.documentElement.classList.toggle('dark', themeState.isDark);
-            document.documentElement.style.colorScheme = themeState.isDark ? 'dark' : 'light';
-        }
-
-        themeState = getThemeState();
-        updateToggleUI();
-    }
-
-    window.addEventListener('theme:changed', function (event) {
-        themeState = event && event.detail
-            ? {
-                isDark: event.detail.isDark,
-                preference: event.detail.preference
-            }
-            : getThemeState();
-        updateToggleUI();
-    });
-
-    updateToggleUI();
-
     // Password field toggles
     function togglePassword() {
         const input = document.getElementById('passwordInput');
@@ -454,7 +395,7 @@
         [1,2,3].forEach((n) => {
             const badge = el(`stepBadge${n}`);
             badge.classList.toggle('opacity-60', n !== step);
-            badge.classList.toggle('bg-violet-600', n === step);
+            badge.classList.toggle('bg-indigo-600', n === step);
             badge.classList.toggle('text-white', n === step);
             badge.classList.toggle('bg-neutral-200', n !== step);
             badge.classList.toggle('text-neutral-700', n !== step);
@@ -661,5 +602,4 @@
         }
     }
 </script>
-</body>
 </html>
