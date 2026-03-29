@@ -5,6 +5,7 @@
     @include('components.theme-init')
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Payments · Love &amp; Styles</title>
 
     {{-- Favicon --}}
@@ -46,7 +47,7 @@
                     <span>Reports</span>
                 </button>
 
-                <button class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-[14px] font-medium bg-violet-600 text-white dark:hover:text-white hover:text-black dark:text-black hover:bg-violet-500 shadow-violet-600/40 transition-colors duration-300 ease-in-out">
+                <button onclick="openRecordPaymentModal()" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-[14px] font-medium bg-violet-600 text-white hover:bg-violet-500 transition-colors duration-100 ease-in-out">
                     <x-icon name="plus" class="h-4 w-4" />
                     <span>Record Payment</span>
                 </button>
@@ -213,5 +214,8 @@
         }
     });
 </script>
+
+{{-- Include Record Payment Modal --}}
+@include('payments.partials.record-payment-modal')
 </body>
 </html>
