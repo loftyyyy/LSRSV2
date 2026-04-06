@@ -20,6 +20,7 @@ class InvoiceController extends Controller
      */
     public function report(Request $request):JsonResponse
     {
+
         $startDate = $request->get('start_date', Carbon::now()->startOfMonth());
         $endDate = $request->get('end_date', Carbon::now()->endOfMonth());
         $reportType = $request->get('report_type', 'daily'); // daily, weekly, monthly
