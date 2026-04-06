@@ -165,6 +165,127 @@ class RentalController extends Controller
     }
 
     /**
+     * Generate CSV for reports
+     */
+    public function generateCSV(Request $request)
+    {
+        $query = Rental::with(['customer', 'item', 'status', 'reservation', 'releasedBy', 'invoices.invoiceItems']);
+
+        // Apply date range filters
+        if ($request->has('date_from')) {
+            $query->where('released_date', '>=', Carbon::parse($request->get('date_from')));
+        }
+        if ($request->has('date_to')) {
+            $query->where('released_date', '<=', Carbon::parse($request->get('date_to')));
+        }
+
+        // Filter by status
+        if ($request->has('status_id')) {
+            $query->where('status_id', $request->get('status_id'));
+        }
+
+        $rentals = $query->get();
+
+        // Calculate statistics
+        $statistics = [
+            'total_rentals' => $rentals->count(),
+            'active_rentals' => $rentals->whereNull('return_date')->where('due_date', '>=', Carbon::now())->count(),
+            'returned_rentals' => $rentals->whereNotNull('return_date')->count(),
+            'overdue_rentals' => $rentals->whereNull('return_date')->where('due_date', '<', Carbon::now())->count(),
+            'total_revenue' => $this->getTotalRevenueFromInvoices($rentals),
+            'total_penalties' => $this->getTotalPenaltiesFromInvoices($rentals),
+        ];
+
+        $dateFrom = $request->get('date_from');
+        $dateTo = $request->get('date_to');
+
+        // Set headers for CSV download
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="rental-report-'.now()->format('Y-m-d').'.csv"',
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
+        ];
+
+        $callback = function () use ($rentals, $statistics, $dateFrom, $dateTo) {
+            $output = fopen('php://output', 'w');
+
+            // Add report header
+            fputcsv($output, ['Rental Report']);
+            fputcsv($output, ['Generated at', now()->format('Y-m-d H:i:s')]);
+            fputcsv($output, ['Date Range', ($dateFrom ?? 'All').' to '.($dateTo ?? 'All')]);
+            fputcsv($output, []); // Empty row
+
+            // Add statistics
+            fputcsv($output, ['Report Statistics']);
+            fputcsv($output, ['Total Rentals', $statistics['total_rentals']]);
+            fputcsv($output, ['Active Rentals', $statistics['active_rentals']]);
+            fputcsv($output, ['Returned Rentals', $statistics['returned_rentals']]);
+            fputcsv($output, ['Overdue Rentals', $statistics['overdue_rentals']]);
+            fputcsv($output, ['Total Revenue', number_format($statistics['total_revenue'], 2)]);
+            fputcsv($output, ['Total Penalties', number_format($statistics['total_penalties'], 2)]);
+            fputcsv($output, []); // Empty row
+
+            // Add rental data header
+            fputcsv($output, ['Rental Details']);
+            fputcsv($output, [
+                'Rental ID',
+                'Customer Name',
+                'Customer Email',
+                'Contact Number',
+                'Item Name',
+                'Item SKU',
+                'Released Date',
+                'Due Date',
+                'Return Date',
+                'Status',
+                'Deposit Amount',
+                'Total Amount',
+                'Penalties',
+                'Released By',
+            ]);
+
+            // Add rental data rows
+            foreach ($rentals as $rental) {
+                $customerName = $rental->customer
+                    ? $rental->customer->first_name.' '.$rental->customer->last_name
+                    : 'N/A';
+                $customerEmail = $rental->customer->email ?? 'N/A';
+                $contactNumber = $rental->customer->contact_number ?? 'N/A';
+                $itemName = $rental->item->name ?? 'N/A';
+                $itemSku = $rental->item->sku ?? 'N/A';
+                $releasedBy = $rental->releasedBy->name ?? 'N/A';
+                $totalAmount = $rental->invoices->sum('total_amount');
+                $penalties = $rental->invoices->sum(function ($invoice) {
+                    return $invoice->invoiceItems->whereIn('item_type', ['penalty', 'late_fee'])->sum('total_price');
+                });
+
+                fputcsv($output, [
+                    $rental->rental_id,
+                    $customerName,
+                    $customerEmail,
+                    $contactNumber,
+                    $itemName,
+                    $itemSku,
+                    $rental->released_date ? Carbon::parse($rental->released_date)->format('Y-m-d') : '',
+                    $rental->due_date ? Carbon::parse($rental->due_date)->format('Y-m-d') : '',
+                    $rental->return_date ? Carbon::parse($rental->return_date)->format('Y-m-d') : 'Not Returned',
+                    $rental->status->status_name ?? 'N/A',
+                    number_format($rental->deposit_amount ?? 0, 2),
+                    number_format($totalAmount, 2),
+                    number_format($penalties, 2),
+                    $releasedBy,
+                ]);
+            }
+
+            fclose($output);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    /**
      * Display Rental Page
      */
     public function showRentalPage(): View
