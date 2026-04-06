@@ -68,6 +68,7 @@ Route::middleware('auth')->group(function () {
         // Customer Reports
         Route::get('/customers/reports/generate', [CustomerController::class, 'report']);
         Route::get('/customers/reports/pdf', [CustomerController::class, 'generatePDF']);
+        Route::get('/customers/reports/csv', [CustomerController::class, 'generateCSV']);
         Route::get('/customers/reports/registration-trend', [CustomerController::class, 'getRegistrationTrend']);
 
         // Customer Stats

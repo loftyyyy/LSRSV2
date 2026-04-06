@@ -107,17 +107,22 @@
                     </p>
                 </div>
 
-                <div class="flex items-center gap-3 text-xs">
-                    <a href="/customers" class="inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-[14px] font-medium border dark:hover:text-black hover:text-white border-neutral-300 bg-white text-neutral-700 dark:hover:bg-violet-600 hover:bg-violet-600  dark:border-neutral-800 dark:bg-neutral-950/80 dark:text-neutral-200 dark:hover:bg-neutral-900  transition-colors duration-300 ease-in-out">
-                        <x-icon name="arrow-left" class="h-4 w-4" />
-                        <span>Back to Customers</span>
-                    </a>
+                 <div class="flex items-center gap-3 text-xs">
+                     <a href="/customers" class="inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-[14px] font-medium border dark:hover:text-black hover:text-white border-neutral-300 bg-white text-neutral-700 dark:hover:bg-violet-600 hover:bg-violet-600  dark:border-neutral-800 dark:bg-neutral-950/80 dark:text-neutral-200 dark:hover:bg-neutral-900  transition-colors duration-300 ease-in-out">
+                         <x-icon name="arrow-left" class="h-4 w-4" />
+                         <span>Back to Customers</span>
+                     </a>
 
-                    <button onclick="generatePDF()" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-[14px] font-medium bg-violet-600 text-white dark:hover:text-white hover:text-black dark:text-black hover:bg-violet-500 shadow-violet-600/40 transition-colors duration-300 ease-in-out">
-                        <x-icon name="download" class="h-4 w-4" />
-                        <span>Download PDF</span>
-                    </button>
-                </div>
+                     <button onclick="generatePDF()" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-[14px] font-medium bg-violet-600 text-white dark:hover:text-white hover:text-black dark:text-black hover:bg-violet-500 shadow-violet-600/40 transition-colors duration-300 ease-in-out">
+                         <x-icon name="download" class="h-4 w-4" />
+                         <span>Download PDF</span>
+                     </button>
+
+                     <button onclick="generateCSV()" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-[14px] font-medium bg-green-600 text-white dark:hover:text-white hover:text-black dark:text-black hover:bg-green-500 shadow-green-600/40 transition-colors duration-300 ease-in-out">
+                         <x-icon name="download" class="h-4 w-4" />
+                         <span>Download CSV</span>
+                     </button>
+                 </div>
             </div>
         </header>
 
@@ -830,24 +835,43 @@
         generateReport();
     }
 
-    async function generatePDF() {
-        try {
-            const startDate = document.getElementById('startDate')?.value || '';
-            const endDate = document.getElementById('endDate')?.value || '';
-            const statusId = document.getElementById('statusFilter')?.value || '';
+     async function generatePDF() {
+         try {
+             const startDate = document.getElementById('startDate')?.value || '';
+             const endDate = document.getElementById('endDate')?.value || '';
+             const statusId = document.getElementById('statusFilter')?.value || '';
 
-            const params = new URLSearchParams();
-            if (startDate) params.append('start_date', startDate);
-            if (endDate) params.append('end_date', endDate);
-            if (statusId) params.append('status_id', statusId);
+             const params = new URLSearchParams();
+             if (startDate) params.append('start_date', startDate);
+             if (endDate) params.append('end_date', endDate);
+             if (statusId) params.append('status_id', statusId);
 
-            const url = `/api/customers/reports/pdf${params.toString() ? '?' + params.toString() : ''}`;
-            window.open(url, '_blank');
-        } catch (error) {
-            console.error('Error generating PDF:', error);
-            showErrorNotification('Failed to generate PDF. Please try again.');
-        }
-    }
+             const url = `/api/customers/reports/pdf${params.toString() ? '?' + params.toString() : ''}`;
+             window.open(url, '_blank');
+         } catch (error) {
+             console.error('Error generating PDF:', error);
+             showErrorNotification('Failed to generate PDF. Please try again.');
+         }
+     }
+
+     async function generateCSV() {
+         try {
+             const startDate = document.getElementById('startDate')?.value || '';
+             const endDate = document.getElementById('endDate')?.value || '';
+             const statusId = document.getElementById('statusFilter')?.value || '';
+
+             const params = new URLSearchParams();
+             if (startDate) params.append('start_date', startDate);
+             if (endDate) params.append('end_date', endDate);
+             if (statusId) params.append('status_id', statusId);
+
+             const url = `/api/customers/reports/csv${params.toString() ? '?' + params.toString() : ''}`;
+             window.open(url, '_blank');
+         } catch (error) {
+             console.error('Error generating CSV:', error);
+             showErrorNotification('Failed to generate CSV. Please try again.');
+         }
+     }
 
      function showErrorNotification(message) {
          const notification = document.createElement('div');
