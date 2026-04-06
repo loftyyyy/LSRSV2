@@ -117,6 +117,11 @@
                         <x-icon name="download" class="h-4 w-4" />
                         <span>Download PDF</span>
                     </button>
+
+                    <button onclick="generateCSV()" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-[14px] font-medium bg-emerald-600 text-white dark:hover:text-white hover:text-black hover:bg-emerald-500 transition-colors duration-300 ease-in-out">
+                        <x-icon name="download" class="h-4 w-4" />
+                        <span>Download CSV</span>
+                    </button>
                 </div>
             </div>
         </header>
@@ -708,6 +713,23 @@
         } catch (error) {
             console.error('Error generating PDF:', error);
             showErrorNotification('Failed to generate PDF. Please try again.');
+        }
+    }
+
+    async function generateCSV() {
+        try {
+            const itemType = document.getElementById('itemTypeFilter')?.value || '';
+            const status = document.getElementById('statusFilter')?.value || '';
+
+            const params = new URLSearchParams();
+            if (itemType) params.append('item_type', itemType);
+            if (status) params.append('status', status);
+
+            const url = `/api/inventories/reports/csv${params.toString() ? '?' + params.toString() : ''}`;
+            window.open(url, '_blank');
+        } catch (error) {
+            console.error('Error generating CSV:', error);
+            showErrorNotification('Failed to generate CSV. Please try again.');
         }
     }
 
