@@ -2,23 +2,22 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Payment;
 use App\Http\Requests\StorePaymentRequest;
 use App\Http\Requests\UpdatePaymentRequest;
+use App\Models\Payment;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
-use Barryvdh\DomPDF\Facade\Pdf;
 
 class PaymentController extends Controller
 {
-
     /**
      * Display Reports Page
      */
-    public function report(Request $request):JsonResponse
+    public function report(Request $request): JsonResponse
     {
         $startDate = $request->get('start_date', Carbon::now()->startOfMonth());
         $endDate = $request->get('end_date', Carbon::now()->endOfMonth());
@@ -82,11 +81,10 @@ class PaymentController extends Controller
                 'start_date' => $startDate,
                 'end_date' => $endDate,
                 'report_type' => $reportType,
-            ]
+            ],
         ]);
 
     }
-
 
     /**
      * Helper function to group payments by period
@@ -153,8 +151,112 @@ class PaymentController extends Controller
             'generated_at' => Carbon::now(),
         ]);
 
-        return $pdf->download('payment-report-' . Carbon::now()->format('Y-m-d') . '.pdf');
+        return $pdf->download('payment-report-'.Carbon::now()->format('Y-m-d').'.pdf');
 
+    }
+
+    /**
+     * Generate CSV for reports
+     */
+    public function generateCSV(Request $request)
+    {
+        $startDate = $request->get('start_date', Carbon::now()->startOfMonth());
+        $endDate = $request->get('end_date', Carbon::now()->endOfMonth());
+
+        $payments = Payment::with(['invoice', 'invoice.customer', 'processedBy', 'status'])
+            ->whereBetween('payment_date', [$startDate, $endDate])
+            ->get();
+
+        // Calculate statistics
+        $statistics = [
+            'total_payments' => $payments->count(),
+            'total_amount_collected' => $payments->sum('amount'),
+            'completed_payments' => $payments->filter(fn ($p) => strtolower($p->status->status_name ?? '') === 'completed')->count(),
+            'pending_payments' => $payments->filter(fn ($p) => strtolower($p->status->status_name ?? '') === 'pending')->count(),
+            'cash_payments' => $payments->where('payment_method', 'cash')->sum('amount'),
+            'card_payments' => $payments->where('payment_method', 'card')->sum('amount'),
+            'gcash_payments' => $payments->where('payment_method', 'gcash')->sum('amount'),
+            'bank_transfer_payments' => $payments->where('payment_method', 'bank_transfer')->sum('amount'),
+        ];
+
+        // Set headers for CSV download
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="payment-report-'.Carbon::now()->format('Y-m-d').'.csv"',
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
+        ];
+
+        $callback = function () use ($payments, $statistics, $startDate, $endDate) {
+            $output = fopen('php://output', 'w');
+
+            // Add report header
+            fputcsv($output, ['Payment Report']);
+            fputcsv($output, ['Generated at', Carbon::now()->format('Y-m-d H:i:s')]);
+            fputcsv($output, ['Date Range', Carbon::parse($startDate)->format('Y-m-d').' to '.Carbon::parse($endDate)->format('Y-m-d')]);
+            fputcsv($output, []); // Empty row
+
+            // Add statistics
+            fputcsv($output, ['Report Statistics']);
+            fputcsv($output, ['Total Payments', $statistics['total_payments']]);
+            fputcsv($output, ['Total Amount Collected', number_format($statistics['total_amount_collected'], 2)]);
+            fputcsv($output, ['Completed Payments', $statistics['completed_payments']]);
+            fputcsv($output, ['Pending Payments', $statistics['pending_payments']]);
+            fputcsv($output, []); // Empty row
+
+            // Payment method breakdown
+            fputcsv($output, ['Payment Method Breakdown']);
+            fputcsv($output, ['Cash', number_format($statistics['cash_payments'], 2)]);
+            fputcsv($output, ['Card', number_format($statistics['card_payments'], 2)]);
+            fputcsv($output, ['GCash', number_format($statistics['gcash_payments'], 2)]);
+            fputcsv($output, ['Bank Transfer', number_format($statistics['bank_transfer_payments'], 2)]);
+            fputcsv($output, []); // Empty row
+
+            // Add payment data header
+            fputcsv($output, ['Payment Details']);
+            fputcsv($output, [
+                'Payment ID',
+                'Payment Reference',
+                'Invoice Number',
+                'Customer Name',
+                'Customer Email',
+                'Amount',
+                'Payment Method',
+                'Payment Date',
+                'Status',
+                'Processed By',
+                'Notes',
+            ]);
+
+            // Add payment data rows
+            foreach ($payments as $payment) {
+                $customerName = $payment->invoice && $payment->invoice->customer
+                    ? $payment->invoice->customer->first_name.' '.$payment->invoice->customer->last_name
+                    : 'N/A';
+                $customerEmail = $payment->invoice->customer->email ?? 'N/A';
+                $invoiceNumber = $payment->invoice->invoice_number ?? 'N/A';
+                $processedBy = $payment->processedBy->name ?? 'N/A';
+
+                fputcsv($output, [
+                    $payment->payment_id,
+                    $payment->payment_reference ?? 'N/A',
+                    $invoiceNumber,
+                    $customerName,
+                    $customerEmail,
+                    number_format($payment->amount, 2),
+                    ucfirst($payment->payment_method ?? 'N/A'),
+                    $payment->payment_date ? Carbon::parse($payment->payment_date)->format('Y-m-d H:i:s') : '',
+                    $payment->status->status_name ?? 'N/A',
+                    $processedBy,
+                    $payment->notes ?? '',
+                ]);
+            }
+
+            fclose($output);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 
     /**
@@ -171,10 +273,10 @@ class PaymentController extends Controller
                 'address' => 'Your Company Address',
                 'phone' => 'Your Phone Number',
                 'email' => 'Your Email',
-            ]
+            ],
         ]);
 
-        return $pdf->download('receipt-' . $payment->payment_reference . '.pdf');
+        return $pdf->download('receipt-'.$payment->payment_reference.'.pdf');
     }
 
     /**
@@ -237,7 +339,7 @@ class PaymentController extends Controller
         ]);
     }
 
-     /**
+    /**
      * Process and log payment in the system
      */
     public function processPayment(StorePaymentRequest $request): JsonResponse
@@ -246,7 +348,7 @@ class PaymentController extends Controller
 
         try {
             // Generate unique payment reference
-            $paymentReference = 'PAY-' . strtoupper(Str::random(10));
+            $paymentReference = 'PAY-'.strtoupper(Str::random(10));
 
             // Create payment record
             $paymentData = $request->validated();
@@ -276,13 +378,14 @@ class PaymentController extends Controller
             return response()->json([
                 'message' => 'Payment processed successfully',
                 'data' => $payment,
-                'invoice' => $invoice
+                'invoice' => $invoice,
             ], 201);
         } catch (\Exception $e) {
             DB::rollBack();
+
             return response()->json([
                 'message' => 'Failed to process payment',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -294,6 +397,7 @@ class PaymentController extends Controller
     {
         return view('payments.index');
     }
+
     /**
      * Display a listing of the resource.
      */
@@ -359,7 +463,7 @@ class PaymentController extends Controller
         $payment->load(['invoice', 'invoice.customer', 'invoice.invoiceItems', 'status', 'processedBy']);
 
         return response()->json([
-            'data' => $payment
+            'data' => $payment,
         ]);
     }
 
@@ -398,13 +502,14 @@ class PaymentController extends Controller
 
             return response()->json([
                 'message' => 'Payment updated successfully',
-                'data' => $payment
+                'data' => $payment,
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
+
             return response()->json([
                 'message' => 'Failed to update payment',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -438,13 +543,14 @@ class PaymentController extends Controller
             DB::commit();
 
             return response()->json([
-                'message' => 'Payment deleted successfully'
+                'message' => 'Payment deleted successfully',
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
+
             return response()->json([
                 'message' => 'Failed to delete payment',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }

@@ -85,6 +85,11 @@
                         <x-icon name="download" class="h-4 w-4" />
                         <span>Download PDF</span>
                     </button>
+
+                    <button onclick="generateCSV()" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-[14px] font-medium bg-emerald-600 text-white dark:hover:text-white hover:text-black hover:bg-emerald-500 transition-colors duration-300 ease-in-out">
+                        <x-icon name="download" class="h-4 w-4" />
+                        <span>Download CSV</span>
+                    </button>
                 </div>
             </div>
         </header>
@@ -613,6 +618,25 @@
                 attributeFilter: ['class'],
                 subtree: false
             });
+        }
+
+        async function generateCSV() {
+            try {
+                const startDate = document.getElementById('startDate')?.value || '';
+                const endDate = document.getElementById('endDate')?.value || '';
+                const reportType = document.getElementById('reportType')?.value || 'daily';
+
+                const params = new URLSearchParams();
+                if (startDate) params.append('start_date', startDate);
+                if (endDate) params.append('end_date', endDate);
+                params.append('report_type', reportType);
+
+                const url = `/api/payments/reports/csv?${params.toString()}`;
+                window.open(url, '_blank');
+            } catch (error) {
+                console.error('Error generating CSV:', error);
+                showErrorNotification('Failed to generate CSV. Please try again.');
+            }
         }
     </script>
 
