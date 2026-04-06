@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use Barryvdh\DomPDF\Facade\Pdf;
-use App\Models\Reservation;
+use App\Http\Requests\StoreReservationRequest;
+use App\Http\Requests\UpdateReservationRequest;
 use App\Models\Inventory;
 use App\Models\InventoryStatus;
 use App\Models\InventoryVariant;
+use App\Models\Reservation;
 use App\Models\ReservationItem;
 use App\Models\ReservationStatus;
-use App\Http\Requests\StoreReservationRequest;
-use App\Http\Requests\UpdateReservationRequest;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -21,11 +21,10 @@ use Illuminate\View\View;
 
 class ReservationController extends Controller
 {
-
     /**
      * Returns a comprehensive report data
      */
-    public function report(Request $request):JsonResponse
+    public function report(Request $request): JsonResponse
     {
         $query = Reservation::with(['customer', 'status', 'reservedBy', 'items.item', 'items.variant']);
 
@@ -86,15 +85,140 @@ class ReservationController extends Controller
                 return $group->count();
             }),
             'average_items_per_reservation' => $reservations->count() > 0
-                ? round($reservations->sum(function ($r) { return $r->items->count(); }) / $reservations->count(), 2)
+                ? round($reservations->sum(function ($r) {
+                    return $r->items->count();
+                }) / $reservations->count(), 2)
                 : 0,
         ];
 
         return response()->json([
             'summary' => $summary,
             'reservations' => $reservations,
-            'filters' => $request->only(['start_date', 'end_date', 'status_id', 'status', 'customer_id', 'reserved_by'])
+            'filters' => $request->only(['start_date', 'end_date', 'status_id', 'status', 'customer_id', 'reserved_by']),
         ]);
+    }
+
+    /**
+     * Generate CSV for reports
+     */
+    public function generateCSV(Request $request)
+    {
+        $query = Reservation::with(['customer', 'status', 'reservedBy', 'items.item', 'items.variant']);
+
+        // Apply same filters as report method
+        if ($request->has('start_date')) {
+            $query->where('reservation_date', '>=', $request->get('start_date'));
+        }
+        if ($request->has('end_date')) {
+            $query->where('reservation_date', '<=', $request->get('end_date'));
+        }
+        if ($request->has('status_id')) {
+            $query->where('status_id', $request->get('status_id'));
+        }
+        if ($request->has('status')) {
+            $statusName = $request->get('status');
+            $query->whereHas('status', function ($statusQuery) use ($statusName) {
+                $statusQuery->whereRaw('LOWER(status_name) = ?', [strtolower($statusName)]);
+            });
+        }
+        if ($request->has('customer_id')) {
+            $query->where('customer_id', $request->get('customer_id'));
+        }
+
+        $query->orderBy('reservation_date', 'desc');
+        $reservations = $query->get();
+
+        // Calculate summary statistics
+        $statistics = [
+            'total_reservations' => $reservations->count(),
+            'confirmed_reservations' => $reservations->filter(fn ($r) => strtolower($r->status->status_name ?? '') === 'confirmed')->count(),
+            'pending_reservations' => $reservations->filter(fn ($r) => strtolower($r->status->status_name ?? '') === 'pending')->count(),
+            'cancelled_reservations' => $reservations->filter(fn ($r) => strtolower($r->status->status_name ?? '') === 'cancelled')->count(),
+            'completed_reservations' => $reservations->filter(fn ($r) => strtolower($r->status->status_name ?? '') === 'completed')->count(),
+            'total_items_reserved' => $reservations->sum(fn ($r) => $r->items->sum('quantity')),
+            'total_revenue' => $reservations->sum(fn ($r) => $r->items->sum(fn ($item) => ($item->rental_price ?? 0) * ($item->quantity ?? 1))),
+        ];
+
+        $startDate = $request->get('start_date');
+        $endDate = $request->get('end_date');
+
+        // Set headers for CSV download
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="reservation-report-'.now()->format('Y-m-d').'.csv"',
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
+        ];
+
+        $callback = function () use ($reservations, $statistics, $startDate, $endDate) {
+            $output = fopen('php://output', 'w');
+
+            // Add report header
+            fputcsv($output, ['Reservation Report']);
+            fputcsv($output, ['Generated at', now()->format('Y-m-d H:i:s')]);
+            fputcsv($output, ['Date Range', ($startDate ?? 'All').' to '.($endDate ?? 'All')]);
+            fputcsv($output, []); // Empty row
+
+            // Add statistics
+            fputcsv($output, ['Report Statistics']);
+            fputcsv($output, ['Total Reservations', $statistics['total_reservations']]);
+            fputcsv($output, ['Confirmed Reservations', $statistics['confirmed_reservations']]);
+            fputcsv($output, ['Pending Reservations', $statistics['pending_reservations']]);
+            fputcsv($output, ['Completed Reservations', $statistics['completed_reservations']]);
+            fputcsv($output, ['Cancelled Reservations', $statistics['cancelled_reservations']]);
+            fputcsv($output, ['Total Items Reserved', $statistics['total_items_reserved']]);
+            fputcsv($output, ['Total Revenue', number_format($statistics['total_revenue'], 2)]);
+            fputcsv($output, []); // Empty row
+
+            // Add reservation data header
+            fputcsv($output, ['Reservation Details']);
+            fputcsv($output, [
+                'Reservation ID',
+                'Customer Name',
+                'Customer Email',
+                'Contact Number',
+                'Reservation Date',
+                'Start Date',
+                'End Date',
+                'Status',
+                'Items Count',
+                'Total Quantity',
+                'Total Amount',
+                'Reserved By',
+            ]);
+
+            // Add reservation data rows
+            foreach ($reservations as $reservation) {
+                $customerName = $reservation->customer
+                    ? $reservation->customer->first_name.' '.$reservation->customer->last_name
+                    : 'N/A';
+                $customerEmail = $reservation->customer->email ?? 'N/A';
+                $contactNumber = $reservation->customer->contact_number ?? 'N/A';
+                $reservedBy = $reservation->reservedBy->name ?? 'N/A';
+                $totalQuantity = $reservation->items->sum('quantity');
+                $totalAmount = $reservation->items->sum(fn ($item) => ($item->rental_price ?? 0) * ($item->quantity ?? 1));
+
+                fputcsv($output, [
+                    $reservation->reservation_id,
+                    $customerName,
+                    $customerEmail,
+                    $contactNumber,
+                    $reservation->reservation_date ? $reservation->reservation_date->format('Y-m-d') : '',
+                    $reservation->start_date ? Carbon::parse($reservation->start_date)->format('Y-m-d') : '',
+                    $reservation->end_date ? Carbon::parse($reservation->end_date)->format('Y-m-d') : '',
+                    $reservation->status->status_name ?? 'N/A',
+                    $reservation->items->count(),
+                    $totalQuantity,
+                    number_format($totalAmount, 2),
+                    $reservedBy,
+                ]);
+            }
+
+            fclose($output);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 
     /**
@@ -102,7 +226,7 @@ class ReservationController extends Controller
      */
     public function generatePDF(Request $request)
     {
-         $query = Reservation::with(['customer', 'status', 'reservedBy', 'items.item', 'items.variant']);
+        $query = Reservation::with(['customer', 'status', 'reservedBy', 'items.item', 'items.variant']);
 
         // Apply same filters as report method
         if ($request->has('start_date')) {
@@ -158,8 +282,9 @@ class ReservationController extends Controller
 
         $pdf->setPaper('a4', 'landscape');
 
-        return $pdf->download('reservations_report_' . now()->format('Y-m-d_His') . '.pdf');
+        return $pdf->download('reservations_report_'.now()->format('Y-m-d_His').'.pdf');
     }
+
     /**
      * Display Reservation Page
      */
@@ -175,6 +300,7 @@ class ReservationController extends Controller
     {
         return view('reservations.reports');
     }
+
     /**
      * Display a listing of the resource.
      */
@@ -259,7 +385,7 @@ class ReservationController extends Controller
             $validatedData['reservation_date'] = now();
 
             // Set default status to 'pending' if not provided
-            if (!isset($validatedData['status_id'])) {
+            if (! isset($validatedData['status_id'])) {
                 $pendingStatus = ReservationStatus::where('status_name', 'pending')->first();
                 $validatedData['status_id'] = $pendingStatus?->status_id ?? 1;
             }
@@ -268,13 +394,14 @@ class ReservationController extends Controller
             $reservation = Reservation::create($validatedData);
 
             // Add items to reservation if provided
-            if ($request->has('items') && !empty($request->items)) {
+            if ($request->has('items') && ! empty($request->items)) {
                 foreach ($request->items as $itemData) {
                     $variant = InventoryVariant::findOrFail($itemData['variant_id']);
                     $requestedQuantity = (int) ($itemData['quantity'] ?? 1);
 
                     if ($requestedQuantity < 1) {
                         DB::rollBack();
+
                         return response()->json([
                             'message' => 'Quantity must be at least 1',
                             'error' => 'INVALID_QUANTITY',
@@ -289,6 +416,7 @@ class ReservationController extends Controller
 
                     if ($availableCount < $requestedQuantity) {
                         DB::rollBack();
+
                         return response()->json([
                             'message' => "Variant '{$variant->name}' has only {$availableCount} available unit(s) for the selected dates",
                             'error' => 'VARIANT_NOT_AVAILABLE',
@@ -302,7 +430,7 @@ class ReservationController extends Controller
                         'variant_id' => $variant->variant_id,
                         'quantity' => $requestedQuantity,
                         'rental_price' => $itemData['rental_price'] ?? $variant->rental_price,
-                        'notes' => $itemData['notes'] ?? null
+                        'notes' => $itemData['notes'] ?? null,
                     ]);
                 }
             }
@@ -313,7 +441,7 @@ class ReservationController extends Controller
 
             return response()->json([
                 'message' => 'Reservation created successfully',
-                'data' => $reservation
+                'data' => $reservation,
             ], 201);
 
         } catch (\Exception $e) {
@@ -323,9 +451,10 @@ class ReservationController extends Controller
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
             ]);
+
             return response()->json([
                 'message' => 'Failed to create reservation',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -342,11 +471,11 @@ class ReservationController extends Controller
             'items.item',
             'items.variant',
             'rentals',
-            'invoices'
+            'invoices',
         ]);
 
         return response()->json([
-            'data' => $reservation
+            'data' => $reservation,
         ]);
     }
 
@@ -361,7 +490,7 @@ class ReservationController extends Controller
             // Only pending reservations can be updated
             if (strtolower($reservation->status->status_name) !== 'pending') {
                 return response()->json([
-                    'message' => 'Only pending reservations can be updated'
+                    'message' => 'Only pending reservations can be updated',
                 ], 422);
             }
 
@@ -383,6 +512,7 @@ class ReservationController extends Controller
 
                     if ($requestedQuantity < 1) {
                         DB::rollBack();
+
                         return response()->json([
                             'message' => 'Quantity must be at least 1',
                             'error' => 'INVALID_QUANTITY',
@@ -398,6 +528,7 @@ class ReservationController extends Controller
 
                     if ($availableCount < $requestedQuantity) {
                         DB::rollBack();
+
                         return response()->json([
                             'message' => "Variant '{$variant->name}' has only {$availableCount} available unit(s) for the selected dates",
                             'error' => 'VARIANT_NOT_AVAILABLE',
@@ -412,7 +543,7 @@ class ReservationController extends Controller
                                 'variant_id' => $variant->variant_id,
                                 'quantity' => $requestedQuantity,
                                 'rental_price' => $itemData['rental_price'] ?? $variant->rental_price,
-                                'notes' => $itemData['notes'] ?? null
+                                'notes' => $itemData['notes'] ?? null,
                             ]);
                     } else {
                         ReservationItem::create([
@@ -421,7 +552,7 @@ class ReservationController extends Controller
                             'variant_id' => $variant->variant_id,
                             'quantity' => $requestedQuantity,
                             'rental_price' => $itemData['rental_price'] ?? $variant->rental_price,
-                            'notes' => $itemData['notes'] ?? null
+                            'notes' => $itemData['notes'] ?? null,
                         ]);
                     }
                 }
@@ -433,14 +564,15 @@ class ReservationController extends Controller
 
             return response()->json([
                 'message' => 'Reservation updated successfully',
-                'data' => $reservation
+                'data' => $reservation,
             ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
+
             return response()->json([
                 'message' => 'Failed to update reservation',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -466,22 +598,22 @@ class ReservationController extends Controller
             if ($hasInvoices) {
                 $reasons[] = 'invoices';
             }
+
             return response()->json([
-                'message' => 'Cannot delete reservation. It has ' . implode(' and ', $reasons) . ' associated with it.'
+                'message' => 'Cannot delete reservation. It has '.implode(' and ', $reasons).' associated with it.',
             ], 422);
         }
 
         $reservation->delete();
 
         return response()->json([
-            'message' => 'Reservation deleted successfully'
+            'message' => 'Reservation deleted successfully',
         ]);
     }
 
     /**
-     * @param Request $request
      * @return JsonResponse
-     * Returns available items filtered by type, size, color, and etc.
+     *                      Returns available items filtered by type, size, color, and etc.
      */
     public function browseAvailableItems(Request $request): JsonResponse
     {
@@ -565,15 +697,13 @@ class ReservationController extends Controller
 
         return response()->json([
             'data' => $variants,
-            'message' => 'Available items retrieved successfully'
+            'message' => 'Available items retrieved successfully',
         ]);
     }
 
     /**
-     * @param Request $request
-     * @param $itemId
      * @return JsonResponse
-     * Returns detailed information about a specific item
+     *                      Returns detailed information about a specific item
      */
     public function checkItemDetails(Request $request, $itemId): JsonResponse
     {
@@ -629,28 +759,26 @@ class ReservationController extends Controller
                 'upcoming_reservations' => ReservationItem::where('variant_id', $variant->variant_id)->count(),
                 'available_quantity' => $availableCount,
             ],
-            'message' => 'Item details retrieved successfully'
+            'message' => 'Item details retrieved successfully',
         ]);
     }
 
     /**
-     * @param Request $request
-     * @param Reservation $reservation
      * @return JsonResponse
-     * Cancels a reservation by updating its status
+     *                      Cancels a reservation by updating its status
      */
     public function cancelReservation(Request $request, Reservation $reservation): JsonResponse
     {
         // Check if reservation can be cancelled
         if (strtolower($reservation->status->status_name) === 'completed') {
             return response()->json([
-                'message' => 'Cannot cancel a completed reservation'
+                'message' => 'Cannot cancel a completed reservation',
             ], 422);
         }
 
         if (strtolower($reservation->status->status_name) === 'cancelled') {
             return response()->json([
-                'message' => 'Reservation is already cancelled'
+                'message' => 'Reservation is already cancelled',
             ], 422);
         }
 
@@ -661,16 +789,16 @@ class ReservationController extends Controller
 
         if ($hasActiveRentals) {
             return response()->json([
-                'message' => 'Cannot cancel reservation with active rentals. Please return all items first.'
+                'message' => 'Cannot cancel reservation with active rentals. Please return all items first.',
             ], 422);
         }
 
         // Find cancelled status
         $cancelledStatus = \App\Models\ReservationStatus::whereRaw('LOWER(status_name) = ?', ['cancelled'])->first();
 
-        if (!$cancelledStatus) {
+        if (! $cancelledStatus) {
             return response()->json([
-                'message' => 'Cancelled status not found in system'
+                'message' => 'Cancelled status not found in system',
             ], 500);
         }
 
@@ -679,7 +807,7 @@ class ReservationController extends Controller
             'status_id' => $cancelledStatus->status_id,
             'cancellation_reason' => $request->get('cancellation_reason'),
             'cancelled_at' => now(),
-            'cancelled_by' => Auth::id()
+            'cancelled_by' => Auth::id(),
         ]);
 
         // Update inventory status for all reserved items
@@ -690,7 +818,7 @@ class ReservationController extends Controller
         foreach ($reservation->items as $reservationItem) {
             if ($availableStatusId && $reservationItem->item_id) {
                 $reservationItem->item()->update([
-                    'status_id' => $availableStatusId
+                    'status_id' => $availableStatusId,
                 ]);
             }
         }
@@ -699,7 +827,7 @@ class ReservationController extends Controller
 
         return response()->json([
             'message' => 'Reservation cancelled successfully',
-            'data' => $reservation
+            'data' => $reservation,
         ]);
     }
 
@@ -714,9 +842,9 @@ class ReservationController extends Controller
             })
             ->count();
 
-        if (!$startDate || !$endDate) {
+        if (! $startDate || ! $endDate) {
             $availableStatusId = InventoryStatus::whereRaw('LOWER(status_name) = ?', ['available'])->value('status_id');
-            if (!$availableStatusId) {
+            if (! $availableStatusId) {
                 return 0;
             }
 
@@ -761,7 +889,7 @@ class ReservationController extends Controller
     {
         if (strtolower($reservation->status->status_name) !== 'pending') {
             return response()->json([
-                'message' => 'Only pending reservations can be confirmed'
+                'message' => 'Only pending reservations can be confirmed',
             ], 422);
         }
 
@@ -770,15 +898,14 @@ class ReservationController extends Controller
         $reservation->update([
             'status_id' => $confirmedStatus->status_id,
             'confirmed_at' => now(),
-            'confirmed_by' => Auth::id()
+            'confirmed_by' => Auth::id(),
         ]);
 
         $reservation->load(['customer', 'status', 'reservedBy', 'items.item', 'items.variant']);
 
         return response()->json([
             'message' => 'Reservation confirmed successfully',
-            'data' => $reservation
+            'data' => $reservation,
         ]);
     }
-
 }
