@@ -41,14 +41,14 @@
                     <span>Back to Reservations</span>
                 </a>
 
-                <button onclick="generateCSV()" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-[14px] font-medium bg-emerald-600 text-white dark:hover:text-white hover:text-black hover:bg-emerald-500 transition-colors duration-300 ease-in-out">
-                    <x-icon name="download" class="h-4 w-4" />
-                    <span>Download CSV</span>
-                </button>
-
                 <button onclick="generatePDF()" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-[14px] font-medium bg-violet-600 text-white hover:text-black hover:bg-violet-500 dark:text-black dark:hover:text-white transition-colors duration-300 ease-in-out">
                     <x-icon name="download" class="h-4 w-4" />
                     <span>Download PDF</span>
+                </button>
+
+                <button onclick="generateCSV()" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-[14px] font-medium bg-emerald-600 text-white dark:hover:text-white hover:text-black hover:bg-emerald-500 transition-colors duration-300 ease-in-out">
+                    <x-icon name="download" class="h-4 w-4" />
+                    <span>Download CSV</span>
                 </button>
             </div>
         </div>
