@@ -94,6 +94,7 @@ Route::middleware('auth')->group(function () {
         // Inventory Reports
         Route::get('/inventories/reports/generate', [InventoryController::class, 'report']);
         Route::get('/inventories/reports/pdf', [InventoryController::class, 'generatePDF']);
+        Route::get('/inventories/reports/csv', [InventoryController::class, 'generateCSV']);
         Route::get('/inventories/reports/statistics', [InventoryController::class, 'getStatistics']);
         Route::get('/inventories/reports/metrics', [InventoryController::class, 'getMetrics']);
 
@@ -133,6 +134,7 @@ Route::middleware('auth')->group(function () {
         // Reservation Reports
         Route::get('/reservations/reports/generate', [ReservationController::class, 'report']);
         Route::get('/reservations/reports/pdf', [ReservationController::class, 'generatePDF']);
+        Route::get('/reservations/reports/csv', [ReservationController::class, 'generateCSV']);
 
         // Browse & Check Available Items
         Route::get('/reservations/items/browse', [ReservationController::class, 'browseAvailableItems']);
@@ -156,6 +158,7 @@ Route::middleware('auth')->group(function () {
         // Rental Reports
         Route::get('/rentals/reports/generate', [RentalController::class, 'report']);
         Route::get('/rentals/reports/pdf', [RentalController::class, 'generatePDF']);
+        Route::get('/rentals/reports/csv', [RentalController::class, 'generateCSV']);
         Route::get('/rentals/reports/metrics', [RentalController::class, 'getMetrics']);
 
         // Rental Batch Operations
@@ -193,6 +196,7 @@ Route::middleware('auth')->group(function () {
         // Invoice Reports
         Route::get('/invoices/reports/generate', [InvoiceController::class, 'report']);
         Route::get('/invoices/reports/pdf', [InvoiceController::class, 'generatePDF']);
+        Route::get('/invoices/reports/csv', [InvoiceController::class, 'generateCSV']);
         Route::get('/invoices/reports/invoice/{invoice}', [InvoiceController::class, 'generateInvoicePDF']);
 
         // Invoice Details & Monitoring (before CRUD)
@@ -213,6 +217,7 @@ Route::middleware('auth')->group(function () {
         // Payment Reports API
         Route::get('/payments/reports/generate', [PaymentController::class, 'report']);
         Route::get('/payments/reports/pdf', [PaymentController::class, 'generatePDF']);
+        Route::get('/payments/reports/csv', [PaymentController::class, 'generateCSV']);
 
         // Payment Monitoring (before CRUD)
         Route::get('/payments/monitor', [PaymentController::class, 'monitorPayments']);
