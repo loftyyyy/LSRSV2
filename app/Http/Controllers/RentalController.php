@@ -43,6 +43,13 @@ class RentalController extends Controller
     {
         $query = Rental::with(['customer', 'item', 'status', 'reservation', 'releasedBy', 'invoices.invoiceItems']);
 
+        // Filter by confirmed reservations only (auto-confirmation requirement)
+        $query->whereHas('reservation', function ($reservationQuery) {
+            $reservationQuery->whereHas('status', function ($statusQuery) {
+                $statusQuery->where('status_name', 'confirmed');
+            });
+        });
+
         // Apply date range filters
         if ($request->has('date_from')) {
             $query->where('released_date', '>=', Carbon::parse($request->get('date_from')));
