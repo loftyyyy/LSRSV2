@@ -657,21 +657,44 @@
 
                     var invoiceDate = invoice.invoice_date ? formatReservationDate(invoice.invoice_date) : '-';
                     var totalAmount = invoice.total_amount || 0;
+                    var isPaid = statusName === 'paid';
+                    var paymentButtonClass = isPaid 
+                        ? 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 cursor-not-allowed' 
+                        : 'bg-violet-600 text-white hover:bg-violet-500 dark:hover:bg-violet-700 cursor-pointer';
 
                     return `
                         <div class="px-4 py-3 flex items-center justify-between hover:bg-neutral-100 dark:hover:bg-neutral-800/50 transition-colors">
-                            <div class="flex items-center gap-3">
+                            <div class="flex items-center gap-3 flex-1 min-w-0">
                                 <div class="h-8 w-8 rounded-lg bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center flex-shrink-0">
                                     <span class="text-[10px] font-bold text-neutral-600 dark:text-neutral-400 font-geist-mono">#${invoice.invoice_id}</span>
                                 </div>
-                                <div class="min-w-0">
+                                <div class="min-w-0 flex-1">
                                     <p class="text-sm font-medium text-neutral-900 dark:text-white truncate">${invoiceDate}</p>
                                     <p class="text-xs text-neutral-500 dark:text-neutral-400 font-geist-mono">₱${totalAmount.toLocaleString()}</p>
                                 </div>
                             </div>
-                            <span class="inline-flex items-center rounded-full ${statusColor} px-2 py-1 text-[10px] font-medium border flex-shrink-0 ml-2">
-                                ${invoice.status?.status_name || invoice.payment_status || 'Unknown'}
-                            </span>
+                            <div class="flex items-center gap-2 flex-shrink-0 ml-2">
+                                <span class="inline-flex items-center rounded-full ${statusColor} px-2 py-1 text-[10px] font-medium border">
+                                    ${invoice.status?.status_name || invoice.payment_status || 'Unknown'}
+                                </span>
+                                ${!isPaid ? `
+                                    <a 
+                                        href="/payments?invoice_id=${invoice.invoice_id}" 
+                                        class="inline-flex items-center rounded-lg px-2.5 py-1 text-[10px] font-medium ${paymentButtonClass} transition-colors duration-100 ease-in-out"
+                                        title="Pay this invoice"
+                                    >
+                                        Pay
+                                    </a>
+                                ` : `
+                                    <button 
+                                        disabled 
+                                        class="inline-flex items-center rounded-lg px-2.5 py-1 text-[10px] font-medium ${paymentButtonClass}"
+                                        title="Already paid"
+                                    >
+                                        Paid
+                                    </button>
+                                `}
+                            </div>
                         </div>
                     `;
                 }).join('')}
