@@ -266,7 +266,7 @@ class InvoiceController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $query = Invoice::with(['customer', 'reservation', 'rental', 'createdBy']);
+        $query = Invoice::with(['customer', 'reservation', 'rental', 'status', 'createdBy']);
 
         // Search functionality
         if ($request->has('search')) {
@@ -354,6 +354,7 @@ class InvoiceController extends Controller
             'rental',
             'items',
             'payments',
+            'status',
             'createdBy',
         ]);
 
