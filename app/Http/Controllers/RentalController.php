@@ -561,6 +561,13 @@ class RentalController extends Controller
     {
         $query = Rental::with(['customer', 'item', 'status', 'reservation', 'releasedBy']);
 
+        // Filter by confirmed reservations only (auto-confirmation requirement)
+        $query->whereHas('reservation', function ($reservationQuery) {
+            $reservationQuery->whereHas('status', function ($statusQuery) {
+                $statusQuery->where('status_name', 'confirmed');
+            });
+        });
+
         // Search functionality
         if ($request->has('search')) {
             $search = $request->get('search');
