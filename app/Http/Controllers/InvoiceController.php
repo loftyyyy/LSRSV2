@@ -461,7 +461,7 @@ class InvoiceController extends Controller
     {
         $status = $request->get('status', 'all'); // all, completed, pending
 
-        $query = Invoice::with(['customer', 'payments', 'reservation', 'rental']);
+        $query = Invoice::with(['customer', 'payments', 'reservation', 'rental', 'status']);
 
         if ($status === 'completed') {
             $query->where('balance_due', '<=', 0);
