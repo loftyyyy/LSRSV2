@@ -354,6 +354,24 @@
                 </p>
             </div>
 
+            {{-- Status Note Field --}}
+            <div id="statusNoteContainer" class="space-y-2 hidden">
+                <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                    Note
+                    <span id="statusNoteRequired" class="text-red-500 hidden">*</span>
+                </label>
+                <div class="flex items-start rounded-2xl bg-white px-3 py-2.5 border border-neutral-300 focus-within:border-neutral-500 dark:border-neutral-800 dark:bg-black/60 transition-colors duration-300 ease-in-out">
+                    <x-icon name="file-text" class="h-4 w-4 text-neutral-500 mr-2 mt-0.5 transition-colors duration-300 ease-in-out" />
+                    <textarea
+                        id="statusNoteInput"
+                        rows="3"
+                        placeholder="Enter a note explaining the status change..."
+                        class="w-full bg-transparent text-xs text-neutral-700 placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500 focus:outline-none resize-none transition-colors duration-300 ease-in-out"
+                    ></textarea>
+                </div>
+                <p id="statusNoteHint" class="text-xs text-neutral-500 dark:text-neutral-400 mt-1"></p>
+            </div>
+
             <div id="changeItemStatusError" class="hidden bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-3 flex items-center gap-2">
                 <x-icon name="alert-circle" class="h-4 w-4 text-red-500" />
                 <p class="text-xs text-red-600 dark:text-red-400"></p>
@@ -1109,6 +1127,9 @@
         var select = document.getElementById('newItemStatusSelect');
         select.value = '';
 
+        // Reset note field
+        resetStatusNoteField();
+
         hideChangeItemStatusError();
     }
 
@@ -1136,6 +1157,9 @@
             var select = document.getElementById('newItemStatusSelect');
             select.value = '';
 
+            // Reset note field
+            resetStatusNoteField();
+
             hideChangeItemStatusError();
         } catch (error) {
             console.error('Error fetching item for status change:', error);
@@ -1149,6 +1173,9 @@
         modal.classList.add('hidden');
         modal.classList.remove('flex');
         window.pendingItemStatusChange = null;
+        
+        // Reset note field
+        resetStatusNoteField();
     }
 
     // Hide change status error
@@ -1166,9 +1193,20 @@
     // Handle confirm status change button
     document.getElementById('confirmItemStatusBtn').addEventListener('click', async function() {
         var newStatus = document.getElementById('newItemStatusSelect').value;
+        var statusNote = document.getElementById('statusNoteInput').value.trim();
 
         if (!newStatus) {
             showChangeItemStatusError('Please select a status');
+            return;
+        }
+
+        // Get the selected status name
+        var selectedOption = document.querySelector(`#newItemStatusSelect option[value="${newStatus}"]`);
+        var statusName = selectedOption ? selectedOption.textContent.trim().toLowerCase() : '';
+
+        // Validate note is required for maintenance and retired
+        if ((statusName === 'maintenance' || statusName === 'retired') && !statusNote) {
+            showChangeItemStatusError('A note is required when setting status to ' + statusName.charAt(0).toUpperCase() + statusName.slice(1) + '.');
             return;
         }
 
@@ -1185,11 +1223,9 @@
             }
 
             var response = await axios.patch(`/api/inventories/${itemId}/status`, {
-                status_id: newStatus
+                status_id: newStatus,
+                status_note: statusNote || null
             });
-
-            var selectedOption = document.querySelector(`#newItemStatusSelect option[value="${newStatus}"]`);
-            var statusName = selectedOption ? selectedOption.textContent.trim().toLowerCase() : newStatus;
 
             // Update modal state if called from edit modal
             if (globalThis.editItemModalState.currentItemId) {
@@ -1278,6 +1314,54 @@
             return `<option value="${option.id}">${option.name.charAt(0).toUpperCase() + option.name.slice(1)}</option>`;
         }).join('');
     }
+
+    // Handle status note visibility based on selected status
+    function updateStatusNoteVisibility() {
+        var select = document.getElementById('newItemStatusSelect');
+        var selectedOption = select.options[select.selectedIndex];
+        var statusName = selectedOption ? selectedOption.textContent.trim().toLowerCase() : '';
+        
+        var noteContainer = document.getElementById('statusNoteContainer');
+        var noteRequired = document.getElementById('statusNoteRequired');
+        var noteHint = document.getElementById('statusNoteHint');
+        var noteInput = document.getElementById('statusNoteInput');
+        
+        if (!statusName || statusName === 'select status') {
+            // No status selected, hide note field
+            noteContainer.classList.add('hidden');
+            noteInput.value = '';
+            return;
+        }
+        
+        // Show note field for all statuses
+        noteContainer.classList.remove('hidden');
+        
+        if (statusName === 'maintenance' || statusName === 'retired') {
+            // Required for maintenance and retired
+            noteRequired.classList.remove('hidden');
+            noteHint.textContent = 'Required: Please explain why this item is being set to ' + statusName + '.';
+        } else {
+            // Optional for available
+            noteRequired.classList.add('hidden');
+            noteHint.textContent = 'Optional: Add a note if needed.';
+        }
+    }
+
+    // Reset status note field
+    function resetStatusNoteField() {
+        var noteContainer = document.getElementById('statusNoteContainer');
+        var noteRequired = document.getElementById('statusNoteRequired');
+        var noteInput = document.getElementById('statusNoteInput');
+        var noteHint = document.getElementById('statusNoteHint');
+        
+        noteContainer.classList.add('hidden');
+        noteRequired.classList.add('hidden');
+        noteInput.value = '';
+        noteHint.textContent = '';
+    }
+
+    // Add event listener for status select change
+    document.getElementById('newItemStatusSelect').addEventListener('change', updateStatusNoteVisibility);
 
     document.getElementById('editItemIsSellable').addEventListener('change', syncEditSellableState);
     syncEditSellableState();
