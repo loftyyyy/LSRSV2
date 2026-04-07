@@ -149,7 +149,7 @@
             text-transform: uppercase;
         }
         
-        .status-completed {
+        .status-completed, .status-paid {
             background-color: #d4edda;
             color: #155724;
         }
@@ -162,6 +162,16 @@
         .status-failed {
             background-color: #f8d7da;
             color: #721c24;
+        }
+        
+        .status-voided {
+            background-color: #e2e3e5;
+            color: #383d41;
+        }
+        
+        .status-refunded {
+            background-color: #cce5ff;
+            color: #004085;
         }
         
         .method-badge {
@@ -277,9 +287,9 @@
         <div class="breakdown-section">
             <div class="breakdown-card">
                 <div class="breakdown-title">Payment Method Breakdown</div>
-                @foreach($payment_method_breakdown as $method => $data)
+                @foreach($payment_method_breakdown as $data)
                     <div class="breakdown-item">
-                        <span>{{ ucfirst($method) }}:</span>
+                        <span>{{ $data['label'] ?? ucfirst($data['method'] ?? 'Unknown') }}:</span>
                         <strong>₱{{ number_format($data['total'] ?? 0, 2) }} ({{ $data['count'] ?? 0 }} payments)</strong>
                     </div>
                 @endforeach
