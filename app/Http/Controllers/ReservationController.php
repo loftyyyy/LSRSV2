@@ -7,6 +7,8 @@ use App\Http\Requests\UpdateReservationRequest;
 use App\Models\Inventory;
 use App\Models\InventoryStatus;
 use App\Models\InventoryVariant;
+use App\Models\Invoice;
+use App\Models\PaymentStatus;
 use App\Models\Reservation;
 use App\Models\ReservationItem;
 use App\Models\ReservationStatus;
