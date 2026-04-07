@@ -447,14 +447,16 @@ class ReservationController extends Controller
 
             // Create invoice with unpaid status
             Invoice::create([
+                'invoice_number' => $this->generateInvoiceNumber(),
                 'customer_id' => $reservation->customer_id,
                 'reservation_id' => $reservation->reservation_id,
                 'rental_id' => null,
                 'invoice_date' => now(),
                 'total_amount' => $invoiceTotal,
+                'amount_paid' => 0,
+                'balance_due' => $invoiceTotal,
                 'status_id' => $unpaidStatus?->status_id ?? 1,
                 'created_by' => Auth::id(),
-                'notes' => 'Auto-generated invoice for reservation #'.$reservation->reservation_id,
             ]);
 
             DB::commit();
@@ -929,5 +931,24 @@ class ReservationController extends Controller
             'message' => 'Reservation confirmed successfully',
             'data' => $reservation,
         ]);
+    }
+
+    /**
+     * Generate a unique invoice number
+     */
+    private function generateInvoiceNumber(): string
+    {
+        $prefix = 'INV-'.Carbon::now()->format('Y');
+        $lastInvoice = Invoice::where('invoice_number', 'like', "{$prefix}%")
+            ->orderByRaw('CAST(SUBSTRING(invoice_number, -6) AS UNSIGNED) DESC')
+            ->first();
+
+        if ($lastInvoice && preg_match('/-(\d{6})$/', $lastInvoice->invoice_number, $matches)) {
+            $nextNumber = (int) $matches[1] + 1;
+        } else {
+            $nextNumber = 1;
+        }
+
+        return "{$prefix}-".str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
     }
 }
