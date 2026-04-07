@@ -729,12 +729,29 @@ class InventoryController extends Controller
     {
         $request->validate([
             'status_id' => 'required|exists:inventory_statuses,status_id',
+            'status_note' => 'nullable|string|max:1000',
         ]);
+
+        // Get the status name to check if note is required
+        $status = \App\Models\InventoryStatus::find($request->status_id);
+        $statusName = $status ? strtolower($status->status_name) : '';
+
+        // Note is required for maintenance and retired statuses
+        if (in_array($statusName, ['maintenance', 'retired']) && empty($request->status_note)) {
+            return response()->json([
+                'message' => 'A note is required when setting status to '.ucfirst($statusName).'.',
+                'errors' => ['status_note' => ['A note is required when setting status to '.ucfirst($statusName).'.']],
+            ], 422);
+        }
 
         $oldVariantId = $inventory->variant_id;
 
+        // Clear note if status is available, otherwise save the note
+        $noteValue = $statusName === 'available' ? null : $request->status_note;
+
         $inventory->update([
             'status_id' => $request->status_id,
+            'status_note' => $noteValue,
             'updated_by' => auth()->id(),
         ]);
         $this->refreshVariantCounters($oldVariantId);
