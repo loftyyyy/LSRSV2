@@ -39,6 +39,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/reservations', [ReservationController::class, 'showReservationPage'])->name('reservations');
     Route::get('/reservations/reports', [ReservationController::class, 'showReportsPage'])->name('reservations.reports');
     Route::get('/rentals', [RentalController::class, 'showRentalPage'])->name('rentals');
+    Route::get('/rentals/calendar', [RentalController::class, 'showCalendarPage'])->name('rentals.calendar');
     Route::get('/rentals/reports', [RentalController::class, 'showReportsPage'])->name('rentals.reports');
     Route::get('/invoices', [InvoiceController::class, 'showInvoicePage'])->name('invoices');
     Route::get('/payments', [PaymentController::class, 'showPaymentPage'])->name('payments');
@@ -161,8 +162,15 @@ Route::middleware('auth')->group(function () {
         Route::get('/rentals/reports/csv', [RentalController::class, 'generateCSV']);
         Route::get('/rentals/reports/metrics', [RentalController::class, 'getMetrics']);
 
+        // Rental Calendar
+        Route::get('/rentals/calendar', [RentalController::class, 'getCalendarEvents']);
+
         // Rental Batch Operations
         Route::post('/rentals/batch/check-overdue', [RentalController::class, 'batchCheckOverdue']);
+
+        // Rental Bulk Operations
+        Route::post('/rentals/bulk/extend', [RentalController::class, 'bulkExtend']);
+        Route::post('/rentals/bulk/return', [RentalController::class, 'bulkReturn']);
 
         // Rental Overdue List
         Route::get('/rentals/overdue/list', [RentalController::class, 'getOverdueRentals']);
@@ -188,6 +196,19 @@ Route::middleware('auth')->group(function () {
         Route::post('/rentals/{rental}/extend', [RentalController::class, 'extendRental']);
         Route::post('/rentals/{rental}/cancel', [RentalController::class, 'cancel']);
         Route::post('/rentals/{rental}/check-overdue', [RentalController::class, 'checkOverdue']);
+
+        // Rental Settings
+        Route::get('/rentals/settings', [RentalController::class, 'getSettings']);
+        Route::put('/rentals/settings', [RentalController::class, 'updateSettings']);
+
+        // Rental Notifications
+        Route::get('/rentals/notifications', [RentalController::class, 'getNotifications']);
+        Route::get('/rentals/notifications/count', [RentalController::class, 'getNotificationCount']);
+        Route::post('/rentals/notifications/check', [RentalController::class, 'checkNotifications']);
+        Route::post('/rentals/notifications/{notification}/read', [RentalController::class, 'markNotificationRead']);
+        Route::post('/rentals/notifications/{notification}/dismiss', [RentalController::class, 'dismissNotification']);
+        Route::post('/rentals/notifications/read-all', [RentalController::class, 'markAllNotificationsRead']);
+        Route::post('/rentals/notifications/dismiss-all', [RentalController::class, 'dismissAllNotifications']);
 
         // ============================================
         // INVOICE ROUTES
@@ -219,8 +240,18 @@ Route::middleware('auth')->group(function () {
         Route::get('/payments/reports/pdf', [PaymentController::class, 'generatePDF']);
         Route::get('/payments/reports/csv', [PaymentController::class, 'generateCSV']);
 
-        // Payment Monitoring (before CRUD)
+        // Payment Monitoring & Analytics (before CRUD)
         Route::get('/payments/monitor', [PaymentController::class, 'monitorPayments']);
+        Route::get('/payments/summary', [PaymentController::class, 'getSummary']);
+        Route::get('/payments/daily-collection', [PaymentController::class, 'getDailyCollection']);
+        Route::get('/payments/overdue', [PaymentController::class, 'getOverduePayments']);
+
+        // Payment Methods & Statuses
+        Route::get('/payments/methods', [PaymentController::class, 'getPaymentMethods']);
+        Route::get('/payments/statuses', [PaymentController::class, 'getPaymentStatuses']);
+
+        // Payment Fee Details
+        Route::get('/payments/rental-fee-details', [PaymentController::class, 'getRentalFeeDetails']);
 
         // Payment CRUD
         Route::get('/payments', [PaymentController::class, 'index']);
@@ -231,6 +262,8 @@ Route::middleware('auth')->group(function () {
 
         // Payment Actions
         Route::get('/payments/{payment}/receipt', [PaymentController::class, 'generateReceiptPDF']);
+        Route::post('/payments/{payment}/void', [PaymentController::class, 'voidPayment']);
+        Route::post('/payments/{payment}/refund', [PaymentController::class, 'processRefund']);
 
     });
 });
