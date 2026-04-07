@@ -9,8 +9,11 @@ class Inventory extends Model
 {
     /** @use HasFactory<\Database\Factories\InventoryFactory> */
     use HasFactory;
+
     protected $table = 'inventories';
+
     protected $primaryKey = 'item_id';
+
     protected $fillable = [
         'variant_id',
         'sku',
@@ -24,7 +27,8 @@ class Inventory extends Model
         'selling_price',
         'deposit_amount',
         'status_id',
-        'updated_by'
+        'status_note',
+        'updated_by',
     ];
 
     protected $casts = [
@@ -108,7 +112,7 @@ class Inventory extends Model
             ->first();
 
         if ($lastItem && preg_match('/-(\d+)$/', $lastItem->sku, $matches)) {
-            $nextNumber = (int)$matches[1] + 1;
+            $nextNumber = (int) $matches[1] + 1;
         } else {
             $nextNumber = 1;
         }
@@ -121,8 +125,8 @@ class Inventory extends Model
      */
     public function isAvailableForSale(): bool
     {
-        return $this->selling_price !== null 
-            && $this->selling_price > 0 
+        return $this->selling_price !== null
+            && $this->selling_price > 0
             && $this->status?->status_name === 'available';
     }
 
