@@ -82,6 +82,16 @@
                                 <span id="detailItemStatus" class="text-sm font-semibold">-</span>
                             </div>
                             <p id="detailStatusSubtitle" class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">-</p>
+                            {{-- Status Note --}}
+                            <div id="detailStatusNoteContainer" class="hidden mt-3 pt-3 border-t border-neutral-200/50 dark:border-neutral-700/50">
+                                <div class="flex items-start gap-2">
+                                    <x-icon name="file-text" class="h-3.5 w-3.5 text-neutral-400 dark:text-neutral-500 mt-0.5 flex-shrink-0" />
+                                    <div>
+                                        <p class="text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1">Note</p>
+                                        <p id="detailStatusNote" class="text-xs text-neutral-700 dark:text-neutral-300 whitespace-pre-wrap">-</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         {{-- Overview & Pricing Row --}}
@@ -414,6 +424,17 @@
         statusText.className = `text-sm font-semibold ${config.textClass}`;
         statusText.textContent = config.label;
         statusSubtitle.textContent = config.subtitle;
+
+        // Status Note (show only if present)
+        var statusNoteContainer = document.getElementById('detailStatusNoteContainer');
+        var statusNoteElement = document.getElementById('detailStatusNote');
+        if (item.status_note && item.status_note.trim()) {
+            statusNoteContainer.classList.remove('hidden');
+            statusNoteElement.textContent = item.status_note;
+        } else {
+            statusNoteContainer.classList.add('hidden');
+            statusNoteElement.textContent = '';
+        }
 
         // Info fields
         document.getElementById('detailItemSku').textContent = item.sku || '-';
