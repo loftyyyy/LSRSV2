@@ -5,6 +5,8 @@ namespace App\Services;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\PaymentStatus;
+use App\Models\Reservation;
+use App\Models\ReservationStatus;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
