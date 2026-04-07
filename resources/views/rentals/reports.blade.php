@@ -179,6 +179,77 @@
             </div>
         </section>
 
+        <!-- Performance Metrics Section -->
+        <section class="mb-8">
+            <h2 class="text-lg font-semibold text-neutral-900 dark:text-white mb-4">Performance Metrics</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- On-Time Return Rate -->
+                <div class="stat-card bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800 p-6 shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-neutral-500 dark:text-neutral-400">On-Time Return Rate</p>
+                            <p class="text-2xl font-semibold text-teal-600 dark:text-teal-400 mt-1" id="kpi-ontime-rate">0%</p>
+                            <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-2" id="kpi-ontime-count">0 on-time returns</p>
+                        </div>
+                        <div class="w-12 h-12 bg-teal-100 dark:bg-teal-900/30 rounded-full flex items-center justify-center">
+                            <svg class="w-6 h-6 text-teal-600 dark:text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Extension Rate -->
+                <div class="stat-card bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800 p-6 shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-neutral-500 dark:text-neutral-400">Extension Rate</p>
+                            <p class="text-2xl font-semibold text-amber-600 dark:text-amber-400 mt-1" id="kpi-extension-rate">0%</p>
+                            <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-2" id="kpi-total-extensions">0 total extensions</p>
+                        </div>
+                        <div class="w-12 h-12 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center">
+                            <svg class="w-6 h-6 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Deposits Held -->
+                <div class="stat-card bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800 p-6 shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-neutral-500 dark:text-neutral-400">Deposits Held</p>
+                            <p class="text-2xl font-semibold text-violet-600 dark:text-violet-400 mt-1" id="kpi-deposits-held">$0.00</p>
+                            <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-2" id="kpi-deposits-returned">$0 returned</p>
+                        </div>
+                        <div class="w-12 h-12 bg-violet-100 dark:bg-violet-900/30 rounded-full flex items-center justify-center">
+                            <svg class="w-6 h-6 text-violet-600 dark:text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Penalty Collection -->
+                <div class="stat-card bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800 p-6 shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-neutral-500 dark:text-neutral-400">Penalty Collection</p>
+                            <p class="text-2xl font-semibold text-rose-600 dark:text-rose-400 mt-1" id="kpi-penalty-rate">0%</p>
+                            <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-2" id="kpi-penalties-total">$0 total penalties</p>
+                        </div>
+                        <div class="w-12 h-12 bg-rose-100 dark:bg-rose-900/30 rounded-full flex items-center justify-center">
+                            <svg class="w-6 h-6 text-rose-600 dark:text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- Charts Section -->
         <section class="mb-8">
             <h2 class="text-lg font-semibold text-neutral-900 dark:text-white mb-4">Analytics & Performance</h2>
@@ -235,6 +306,25 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Additional Charts Row -->
+            <div class="chart-grid grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                <!-- Return Performance -->
+                <div class="bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800 p-6 shadow-sm">
+                    <h3 class="text-sm font-semibold text-neutral-900 dark:text-white mb-4">Return Performance (Last 6 Months)</h3>
+                    <div class="chart-container">
+                        <canvas id="returnPerformanceChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Extension Trend -->
+                <div class="bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800 p-6 shadow-sm">
+                    <h3 class="text-sm font-semibold text-neutral-900 dark:text-white mb-4">Extension Trend (Last 6 Months)</h3>
+                    <div class="chart-container">
+                        <canvas id="extensionTrendChart"></canvas>
+                    </div>
+                </div>
+            </div>
         </section>
 
     </main>
@@ -250,6 +340,8 @@
                     duration: null,
                     topCustomers: null,
                     topItems: null,
+                    returnPerformance: null,
+                    extensionTrend: null,
                 },
                 observer: null
             };
@@ -272,6 +364,8 @@
             rentalCharts.duration = null;
             rentalCharts.topCustomers = null;
             rentalCharts.topItems = null;
+            rentalCharts.returnPerformance = null;
+            rentalCharts.extensionTrend = null;
             
             // Cleanup the observer
             if (window.rentalState.observer) {
@@ -304,6 +398,16 @@
             document.getElementById('secondary-late').textContent = kpis.late_return_rentals;
             document.getElementById('secondary-cancelled').textContent = kpis.cancelled_rentals;
             document.getElementById('secondary-completed').textContent = kpis.completed_rentals;
+
+            // New Performance Metrics
+            document.getElementById('kpi-ontime-rate').textContent = kpis.on_time_return_rate + '%';
+            document.getElementById('kpi-ontime-count').textContent = kpis.on_time_returns + ' on-time returns';
+            document.getElementById('kpi-extension-rate').textContent = kpis.extension_rate + '%';
+            document.getElementById('kpi-total-extensions').textContent = kpis.total_extensions + ' total extensions';
+            document.getElementById('kpi-deposits-held').textContent = '$' + kpis.deposits_held.toFixed(2);
+            document.getElementById('kpi-deposits-returned').textContent = '$' + kpis.deposits_returned.toFixed(2) + ' returned';
+            document.getElementById('kpi-penalty-rate').textContent = kpis.penalty_collection_rate + '%';
+            document.getElementById('kpi-penalties-total').textContent = '$' + kpis.total_penalties.toFixed(2) + ' total penalties';
         }
 
         function updateCharts(data) {
@@ -598,6 +702,111 @@
                     }
                 }
             });
+
+            // Return Performance Chart (stacked bar)
+            const returnPerfCtx = document.getElementById('returnPerformanceChart').getContext('2d');
+            rentalCharts.returnPerformance = new Chart(returnPerfCtx, {
+                type: 'bar',
+                data: {
+                    labels: data.return_performance.map(m => m.month),
+                    datasets: [
+                        {
+                            label: 'On-Time',
+                            data: data.return_performance.map(m => m.on_time),
+                            backgroundColor: '#10b981',
+                            borderColor: '#059669',
+                            borderWidth: 1,
+                            borderRadius: 4,
+                        },
+                        {
+                            label: 'Late',
+                            data: data.return_performance.map(m => m.late),
+                            backgroundColor: '#f59e0b',
+                            borderColor: '#d97706',
+                            borderWidth: 1,
+                            borderRadius: 4,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: textColor, font: { size: 12, weight: 500 }, padding: 15 }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            borderColor: textColor,
+                            borderWidth: 1,
+                            padding: 10,
+                        }
+                    },
+                    scales: {
+                        y: {
+                            stacked: true,
+                            ticks: { color: textColor, font: { size: 11 } },
+                            grid: { color: gridColor, drawBorder: false },
+                            beginAtZero: true,
+                        },
+                        x: {
+                            stacked: true,
+                            ticks: { color: textColor, font: { size: 11 } },
+                            grid: { color: gridColor, drawBorder: false }
+                        }
+                    }
+                }
+            });
+
+            // Extension Trend Chart
+            const extensionCtx = document.getElementById('extensionTrendChart').getContext('2d');
+            rentalCharts.extensionTrend = new Chart(extensionCtx, {
+                type: 'line',
+                data: {
+                    labels: data.extension_trend.map(m => m.month),
+                    datasets: [{
+                        label: 'Extensions',
+                        data: data.extension_trend.map(m => m.count),
+                        borderColor: '#f59e0b',
+                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#f59e0b',
+                        pointRadius: 4,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: textColor, font: { size: 12, weight: 500 }, padding: 15 }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            borderColor: textColor,
+                            borderWidth: 1,
+                            padding: 10,
+                        }
+                    },
+                    scales: {
+                        y: {
+                            ticks: { color: textColor, font: { size: 11 } },
+                            grid: { color: gridColor, drawBorder: false },
+                            beginAtZero: true,
+                        },
+                        x: {
+                            ticks: { color: textColor, font: { size: 11 } },
+                            grid: { color: gridColor, drawBorder: false }
+                        }
+                    }
+                }
+            });
         }
 
          // Set up dark mode observer for theme switching
@@ -656,6 +865,8 @@
                              if (rentalCharts.duration) updateChartColors(rentalCharts.duration);
                              if (rentalCharts.topCustomers) updateChartColors(rentalCharts.topCustomers);
                              if (rentalCharts.topItems) updateChartColors(rentalCharts.topItems);
+                             if (rentalCharts.returnPerformance) updateChartColors(rentalCharts.returnPerformance);
+                             if (rentalCharts.extensionTrend) updateChartColors(rentalCharts.extensionTrend);
                              
                              // Update all charts with animation
                              Object.values(rentalCharts).forEach(chart => {
