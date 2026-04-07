@@ -68,6 +68,21 @@ class PaymentService
             // Update invoice totals
             $this->updateInvoiceAfterPayment($invoice, $payment->amount);
 
+            // Auto-confirm reservation if deposit is paid and invoice is fully paid
+            if ($invoice->reservation_id && $invoice->balance_due - $payment->amount <= 0) {
+                $reservation = Reservation::find($invoice->reservation_id);
+                if ($reservation && strtolower($reservation->status->status_name ?? '') === 'pending') {
+                    $confirmedStatus = ReservationStatus::where('status_name', 'confirmed')->first();
+                    if ($confirmedStatus) {
+                        $reservation->update([
+                            'status_id' => $confirmedStatus->status_id,
+                            'confirmed_at' => now(),
+                            'confirmed_by' => $processedBy,
+                        ]);
+                    }
+                }
+            }
+
             return $payment->fresh(['invoice', 'invoice.customer', 'status', 'processedBy']);
         });
     }

@@ -247,96 +247,6 @@
         customers: []
     };
 
-    var confirmationState = {
-        isOpen: false,
-        reservationId: null,
-        isSubmitting: false
-    };
-
-    function openReservationConfirmationModal() {
-        var reservationId = document.getElementById('editReservationId').value;
-        if (!reservationId) {
-            return;
-        }
-
-        confirmationState.reservationId = reservationId;
-        confirmationState.isOpen = true;
-
-        // Load reservation data for display
-        axios.get('/api/reservations/' + reservationId)
-            .then(function(response) {
-                var reservation = response.data.data;
-                var detailsHtml = '<div class="space-y-2">';
-                detailsHtml += '<p><span class="text-neutral-500 dark:text-neutral-400">Reservation ID:</span> <strong class="text-neutral-900 dark:text-white">#' + reservation.reservation_id + '</strong></p>';
-                
-                if (reservation.customer) {
-                    detailsHtml += '<p><span class="text-neutral-500 dark:text-neutral-400">Customer:</span> <strong class="text-neutral-900 dark:text-white">' + reservation.customer.first_name + ' ' + reservation.customer.last_name + '</strong></p>';
-                }
-                
-                var itemCount = (reservation.items || []).length;
-                detailsHtml += '<p><span class="text-neutral-500 dark:text-neutral-400">Items:</span> <strong class="text-neutral-900 dark:text-white">' + itemCount + ' item' + (itemCount !== 1 ? 's' : '') + '</strong></p>';
-                detailsHtml += '</div>';
-
-                document.getElementById('confirmationDetails').innerHTML = detailsHtml;
-                document.getElementById('reservationConfirmationModal').classList.remove('hidden');
-                document.getElementById('reservationConfirmationModal').classList.add('flex');
-            })
-            .catch(function(error) {
-                console.error('Error loading reservation for confirmation:', error);
-                showErrorNotification('Failed to load reservation details');
-            });
-    }
-
-    function closeReservationConfirmationModal() {
-        confirmationState.isOpen = false;
-        confirmationState.reservationId = null;
-        document.getElementById('reservationConfirmationModal').classList.add('hidden');
-        document.getElementById('reservationConfirmationModal').classList.remove('flex');
-        document.getElementById('confirmationError').classList.add('hidden');
-    }
-
-    async function submitReservationConfirmation() {
-        if (confirmationState.isSubmitting) {
-            return;
-        }
-
-        confirmationState.isSubmitting = true;
-        var confirmBtn = document.getElementById('confirmationConfirmBtn');
-        var confirmBtnText = document.getElementById('confirmationConfirmBtnText');
-        var confirmBtnLoading = document.getElementById('confirmationConfirmBtnLoading');
-
-        if (confirmBtn) confirmBtn.disabled = true;
-        if (confirmBtnText) confirmBtnText.classList.add('hidden');
-        if (confirmBtnLoading) confirmBtnLoading.classList.remove('hidden');
-
-        try {
-            var response = await axios.post('/api/reservations/' + confirmationState.reservationId + '/confirm');
-            
-            closeReservationConfirmationModal();
-            closeEditReservationModal();
-            
-            showEditReservationSuccess('Reservation confirmed successfully!');
-            
-            setTimeout(function() {
-                fetchReservations();
-                fetchReservationStats();
-            }, 500);
-        } catch (error) {
-            console.error('Error confirming reservation:', error);
-            var errorMessage = error.response && error.response.data && error.response.data.message
-                ? error.response.data.message
-                : (error.message || 'Failed to confirm reservation');
-            
-            document.getElementById('confirmationErrorMessage').textContent = errorMessage;
-            document.getElementById('confirmationError').classList.remove('hidden');
-        } finally {
-            confirmationState.isSubmitting = false;
-            if (confirmBtn) confirmBtn.disabled = false;
-            if (confirmBtnText) confirmBtnText.classList.remove('hidden');
-            if (confirmBtnLoading) confirmBtnLoading.classList.add('hidden');
-        }
-    }
-
     function initializeReservationPage() {
         var searchInput = document.getElementById('searchInput');
         var clearSearchBtn = document.getElementById('clearSearchBtn');
@@ -1115,17 +1025,6 @@ var row = document.createElement('tr');
         document.getElementById('editReservationPassword').value = '';
 
         populateEditReservationCustomerOptions(reservation.customer_id, reservation.customer || null);
-
-        // Show/hide Confirm button based on reservation status
-        var confirmBtn = document.getElementById('confirmEditReservationBtn');
-        var statusName = ((reservation.status && reservation.status.status_name) || '').toLowerCase();
-        if (confirmBtn) {
-            if (statusName === 'pending') {
-                confirmBtn.classList.remove('hidden');
-            } else {
-                confirmBtn.classList.add('hidden');
-            }
-        }
     }
 
     async function verifyReservationEditPassword(password) {
@@ -1213,14 +1112,6 @@ var row = document.createElement('tr');
             });
         }
 
-        var confirmBtn = document.getElementById('confirmEditReservationBtn');
-        if (confirmBtn) {
-            confirmBtn.addEventListener('click', function(event) {
-                event.preventDefault();
-                openReservationConfirmationModal();
-            });
-        }
-
         if (togglePasswordBtn) {
             togglePasswordBtn.addEventListener('click', function(event) {
                 event.preventDefault();
@@ -1237,12 +1128,8 @@ var row = document.createElement('tr');
         }
 
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                if (confirmationState.isOpen) {
-                    closeReservationConfirmationModal();
-                } else if (reservationEditState.isOpen) {
-                    closeEditReservationModal();
-                }
+            if (e.key === 'Escape' && reservationEditState.isOpen) {
+                closeEditReservationModal();
             }
         });
     }

@@ -393,6 +393,10 @@ class ReservationController extends Controller
             // Create the reservation
             $reservation = Reservation::create($validatedData);
 
+            // Auto-create invoice for the reservation
+            $unpaidStatus = PaymentStatus::where('status_name', 'unpaid')->first();
+            $invoiceTotal = 0;
+
             // Add items to reservation if provided
             if ($request->has('items') && ! empty($request->items)) {
                 foreach ($request->items as $itemData) {
@@ -424,16 +428,32 @@ class ReservationController extends Controller
                         ], 422);
                     }
 
+                    $rentalPrice = $itemData['rental_price'] ?? $variant->rental_price;
+                    $itemTotal = $rentalPrice * $requestedQuantity;
+                    $invoiceTotal += $itemTotal;
+
                     ReservationItem::create([
                         'reservation_id' => $reservation->reservation_id,
                         'item_id' => null,
                         'variant_id' => $variant->variant_id,
                         'quantity' => $requestedQuantity,
-                        'rental_price' => $itemData['rental_price'] ?? $variant->rental_price,
+                        'rental_price' => $rentalPrice,
                         'notes' => $itemData['notes'] ?? null,
                     ]);
                 }
             }
+
+            // Create invoice with unpaid status
+            Invoice::create([
+                'customer_id' => $reservation->customer_id,
+                'reservation_id' => $reservation->reservation_id,
+                'rental_id' => null,
+                'invoice_date' => now(),
+                'total_amount' => $invoiceTotal,
+                'status_id' => $unpaidStatus?->status_id ?? 1,
+                'created_by' => Auth::id(),
+                'notes' => 'Auto-generated invoice for reservation #'.$reservation->reservation_id,
+            ]);
 
             DB::commit();
 

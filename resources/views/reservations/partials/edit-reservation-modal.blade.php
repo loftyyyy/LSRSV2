@@ -64,16 +64,10 @@
             </div>
 
             <div class="flex items-center justify-between gap-3 pt-1">
-                <div class="flex items-center gap-2">
-                    <button type="button" id="confirmEditReservationBtn" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-[14px] font-medium bg-emerald-600 text-white hover:bg-emerald-500 transition-colors duration-100 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed hidden">
-                        <span id="confirmEditReservationBtnText">Confirm</span>
-                        <span id="confirmEditReservationBtnLoading" class="hidden">Confirming...</span>
-                    </button>
-                    <button type="button" id="cancelEditReservationBtn" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-[14px] font-medium bg-red-600 text-white hover:bg-red-500 transition-colors duration-100 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed">
-                        <span id="cancelEditReservationBtnText">Cancel Reservation</span>
-                        <span id="cancelEditReservationBtnLoading" class="hidden">Cancelling...</span>
-                    </button>
-                </div>
+                <button type="button" id="cancelEditReservationBtn" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-[14px] font-medium bg-red-600 text-white hover:bg-red-500 transition-colors duration-100 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed">
+                    <span id="cancelEditReservationBtnText">Cancel Reservation</span>
+                    <span id="cancelEditReservationBtnLoading" class="hidden">Cancelling...</span>
+                </button>
 
                 <div class="flex items-center gap-3">
                 <button type="submit" id="submitEditReservationBtn" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-[14px] font-medium bg-violet-600 text-white dark:text-black hover:text-black dark:hover:text-white hover:bg-violet-500 transition-colors duration-100 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed">
@@ -116,57 +110,3 @@
         background-color: rgb(17, 24, 39);
     }
 </style>
-
-{{-- Reservation Confirmation Modal --}}
-<div id="reservationConfirmationModal" class="hidden fixed inset-0 z-[80] flex items-center justify-center px-4 py-6 bg-black/60 backdrop-blur-sm">
-    <div class="w-full max-w-sm bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-3xl shadow-2xl overflow-hidden">
-        {{-- Header --}}
-        <div class="flex-shrink-0 p-6 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/80 dark:bg-neutral-900/50">
-            <div class="flex items-center gap-3">
-                <div class="h-10 w-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-                    <x-icon name="check-circle" class="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
-                </div>
-                <div>
-                    <h3 id="confirmationTitle" class="text-lg font-semibold text-neutral-900 dark:text-white">Confirm Reservation</h3>
-                </div>
-            </div>
-        </div>
-
-        {{-- Content --}}
-        <div class="p-6 space-y-4">
-            <p id="confirmationMessage" class="text-sm text-neutral-600 dark:text-neutral-400">
-                Are you sure you want to confirm this reservation?
-            </p>
-            
-            <div id="confirmationDetails" class="bg-neutral-50 dark:bg-neutral-900/50 rounded-xl p-4 space-y-2 text-sm">
-                <!-- Details will be populated here -->
-            </div>
-
-            <div id="confirmationError" class="hidden bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-3 flex items-center gap-2">
-                <x-icon name="alert-circle" class="h-4 w-4 text-red-500 flex-shrink-0" />
-                <p id="confirmationErrorMessage" class="text-xs text-red-600 dark:text-red-400"></p>
-            </div>
-        </div>
-
-        {{-- Footer --}}
-        <div class="flex-shrink-0 flex items-center gap-3 p-6 border-t border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/30">
-            <button
-                type="button"
-                id="confirmationCancelBtn"
-                onclick="closeReservationConfirmationModal()"
-                class="flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-[14px] font-medium border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:bg-neutral-800 transition-colors duration-100 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-                <span id="confirmationCancelBtnText">No, Keep Pending</span>
-            </button>
-            <button
-                type="button"
-                id="confirmationConfirmBtn"
-                onclick="submitReservationConfirmation()"
-                class="flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-[14px] font-medium bg-emerald-600 text-white hover:bg-emerald-500 transition-colors duration-100 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-                <span id="confirmationConfirmBtnText">Yes, Confirm</span>
-                <span id="confirmationConfirmBtnLoading" class="hidden">Confirming...</span>
-            </button>
-        </div>
-    </div>
-</div>
