@@ -124,38 +124,22 @@
                             <th class="py-2.5 pr-4 pl-4 font-medium">Invoice</th>
                             <th class="py-2.5 pr-4 font-medium">Customer</th>
                             <th class="py-2.5 pr-4 font-medium">Amount</th>
+                            <th class="py-2.5 pr-4 font-medium">Paid</th>
+                            <th class="py-2.5 pr-4 font-medium">Balance Due</th>
                             <th class="py-2.5 pr-4 font-medium">Date</th>
-                            <th class="py-2.5 pr-4 font-medium">Due Date</th>
-                            <th class="py-2.5 pr-4 font-medium">Method</th>
+                            <th class="py-2.5 pr-4 font-medium">Type</th>
                             <th class="py-2.5 pr-4 font-medium text-left">Status</th>
                             <th class="py-2.5 pl-2 font-medium text-left">Action</th>
                         </tr>
                         </thead>
 
-                        <tbody class="text-[13px]">
-                        <tr class="border-b border-neutral-200 hover:bg-neutral-100 dark:border-neutral-900/60 dark:hover:bg-white/5 transition-colors duration-300 ease-in-out">
-                            <td class="py-3.5 pr-4 pl-4 text-neutral-500 font-geist-mono">INV-001</td>
-                            <td class="py-3.5 pr-4 text-neutral-900 dark:text-neutral-100">Sarah Johnson</td>
-                            <td class="py-3.5 pr-4 text-neutral-600 dark:text-neutral-300">₱540</td>
-                            <td class="py-3.5 pr-4 text-neutral-600 dark:text-neutral-300 font-geist-mono">2025-11-10</td>
-                            <td class="py-3.5 pr-2 text-neutral-600 dark:text-neutral-300 font-geist-mono">2025-11-11</td>
-                            <td class="py-3.5 pr-4 text-left text-neutral-900 dark:text-neutral-100 font-geist-mono">Card</td>
-                            <td class="py-3.5 pr-2">
-                                <span class="inline-flex items-center rounded-full bg-emerald-500/15 px-2 py-1 text-[11px] font-medium text-emerald-600 border border-emerald-500/40 dark:text-emerald-300 transition-colors duration-300 ease-in-out">
-                                    <span class="mr-1.5 h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
-                                    Paid
-                                </span>
-                            </td>
-                            <td class="py-3.5 pl-2 text-left text-neutral-500 dark:text-neutral-400">
-                                <div class="inline-flex items-center gap-2">
-                                    <button class="rounded-lg p-1.5 hover:bg-violet-600 hover:text-white transition-colors duration-300 ease-in-out" aria-label="Edit">
-                                        <x-icon name="download" class="h-3.5 w-3.5" />
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
+                        <tbody id="invoicesTableBody" class="text-[13px]">
+                        <!-- Invoices will be loaded here -->
                         </tbody>
                     </table>
+                </div>
+                <div id="noInvoices" class="text-center py-8 text-neutral-500 dark:text-neutral-400">
+                    <p>No invoices found</p>
                 </div>
             </div>
     </section>
@@ -168,8 +152,11 @@
     const filterMenu = document.getElementById('filter-menu');
     const iconDown = document.getElementById('icon-down');
     const iconUp = document.getElementById('icon-up');
+    const invoicesTableBody = document.getElementById('invoicesTableBody');
+    const noInvoices = document.getElementById('noInvoices');
 
     let isOpen = false;
+    let currentFilter = 'all';
 
     // Toggle dropdown
     filterButton.addEventListener('click', (e) => {
@@ -199,6 +186,17 @@
 
             iconDown.classList.remove('hidden');
             iconUp.classList.add('hidden');
+
+            // Map filter text to status value
+            const filterMap = {
+                'All Status': 'all',
+                'Paid': 'completed',
+                'Pending': 'pending',
+                'Overdue': 'overdue',
+                'Cancelled': 'cancelled'
+            };
+            currentFilter = filterMap[item.textContent] || 'all';
+            loadInvoices();
         });
     });
 
@@ -213,6 +211,95 @@
             iconUp.classList.add('hidden');
         }
     });
+
+    // Load invoices from API
+    function loadInvoices() {
+        if (!window.axios) return;
+
+        const url = currentFilter === 'all' 
+            ? '/api/invoices/monitor?status=all'
+            : `/api/invoices/monitor?status=${currentFilter}`;
+
+        window.axios.get(url)
+            .then(function(resp) {
+                const invoices = resp.data?.invoices?.data || [];
+                renderInvoices(invoices);
+            })
+            .catch(function(err) {
+                console.error('Error loading invoices:', err);
+                invoicesTableBody.innerHTML = '';
+                noInvoices.classList.remove('hidden');
+            });
+    }
+
+    // Render invoices in table
+    function renderInvoices(invoices) {
+        invoicesTableBody.innerHTML = '';
+
+        if (!invoices || invoices.length === 0) {
+            noInvoices.classList.remove('hidden');
+            return;
+        }
+
+        noInvoices.classList.add('hidden');
+
+        invoices.forEach(function(inv) {
+            const row = document.createElement('tr');
+            row.className = 'border-b border-neutral-200 hover:bg-neutral-100 dark:border-neutral-900/60 dark:hover:bg-white/5 transition-colors duration-300 ease-in-out';
+
+            const customer = inv.customer 
+                ? `${inv.customer.first_name} ${inv.customer.last_name}` 
+                : 'Unknown Customer';
+
+            const invoiceDate = inv.invoice_date 
+                ? new Date(inv.invoice_date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+                : '-';
+
+            const statusName = inv.status?.status_name?.toLowerCase() || 'unknown';
+            let statusClass = 'bg-neutral-500/15 text-neutral-600 border-neutral-500/40 dark:text-neutral-300';
+            
+            if (statusName === 'paid') {
+                statusClass = 'bg-emerald-500/15 text-emerald-600 border-emerald-500/40 dark:text-emerald-300';
+            } else if (statusName === 'unpaid') {
+                statusClass = 'bg-amber-500/15 text-amber-600 border-amber-500/40 dark:text-amber-300';
+            }
+
+            const invoiceType = inv.invoice_type ? `<span class="capitalize">${inv.invoice_type}</span>` : '-';
+
+            row.innerHTML = `
+                <td class="py-3.5 pr-4 pl-4 text-neutral-500 font-geist-mono">${inv.invoice_number || 'N/A'}</td>
+                <td class="py-3.5 pr-4 text-neutral-900 dark:text-neutral-100">${customer}</td>
+                <td class="py-3.5 pr-4 text-neutral-600 dark:text-neutral-300 font-geist-mono">₱${parseFloat(inv.total_amount || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                <td class="py-3.5 pr-4 text-neutral-600 dark:text-neutral-300 font-geist-mono">₱${parseFloat(inv.amount_paid || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                <td class="py-3.5 pr-4 text-neutral-600 dark:text-neutral-300 font-geist-mono">₱${parseFloat(inv.balance_due || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                <td class="py-3.5 pr-4 text-neutral-600 dark:text-neutral-300 font-geist-mono">${invoiceDate}</td>
+                <td class="py-3.5 pr-4 text-neutral-600 dark:text-neutral-300 capitalize">${invoiceType}</td>
+                <td class="py-3.5 pr-2">
+                    <span class="inline-flex items-center rounded-full ${statusClass} px-2 py-1 text-[11px] font-medium border transition-colors duration-300 ease-in-out">
+                        <span class="mr-1.5 h-1.5 w-1.5 rounded-full ${statusName === 'paid' ? 'bg-emerald-500' : statusName === 'unpaid' ? 'bg-amber-500' : 'bg-neutral-500'}"></span>
+                        ${inv.status?.status_name || 'Unknown'}
+                    </span>
+                </td>
+                <td class="py-3.5 pl-2 text-left text-neutral-500 dark:text-neutral-400">
+                    <div class="inline-flex items-center gap-2">
+                        <button class="rounded-lg p-1.5 hover:bg-violet-600 hover:text-white transition-colors duration-300 ease-in-out" aria-label="Download" onclick="downloadInvoice(${inv.invoice_id})">
+                            <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                        </button>
+                    </div>
+                </td>
+            `;
+            invoicesTableBody.appendChild(row);
+        });
+    }
+
+    // Download invoice (placeholder)
+    function downloadInvoice(invoiceId) {
+        console.log('Download invoice:', invoiceId);
+        // Implement download functionality
+    }
+
+    // Load invoices on page load
+    loadInvoices();
 </script>
 
 {{-- Include Record Payment Modal --}}
