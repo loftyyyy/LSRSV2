@@ -451,6 +451,7 @@ class ReservationController extends Controller
                 'customer_id' => $reservation->customer_id,
                 'reservation_id' => $reservation->reservation_id,
                 'rental_id' => null,
+                'invoice_type' => 'deposit',
                 'invoice_date' => now(),
                 'total_amount' => $invoiceTotal,
                 'amount_paid' => 0,
