@@ -264,7 +264,9 @@
                 statusClass = 'bg-amber-500/15 text-amber-600 border-amber-500/40 dark:text-amber-300';
             }
 
-            const invoiceType = inv.invoice_type ? `<span class="capitalize">${inv.invoice_type}</span>` : '-';
+            const invoiceType = inv.invoice_type 
+                ? `<span class="capitalize">${inv.invoice_type === 'reservation' ? 'Deposit' : inv.invoice_type}</span>` 
+                : '-';
 
             row.innerHTML = `
                 <td class="py-3.5 pr-4 pl-4 text-neutral-500 font-geist-mono">${inv.invoice_number || 'N/A'}</td>
