@@ -265,22 +265,77 @@
                             </div>
                         </div>
 
-                        {{-- Timestamps --}}
-                        <div class="pt-4 border-t border-neutral-200 dark:border-neutral-800">
-                            <div class="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-3">
+                        {{-- Rental History Timeline --}}
+                        <div class="space-y-3">
+                            <div class="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
                                 <x-icon name="clock" class="h-4 w-4" />
-                                <span>Timeline</span>
+                                <span>Rental Timeline</span>
                             </div>
-                            <div class="grid grid-cols-2 gap-3">
-                                <div class="flex items-center gap-2 text-xs">
-                                    <div class="h-1.5 w-1.5 rounded-full bg-violet-500"></div>
-                                    <span class="text-neutral-500 dark:text-neutral-400">Created:</span>
-                                    <span id="detailRentalCreated" class="text-neutral-700 dark:text-neutral-300 font-medium">-</span>
+
+                            <div id="detailRentalTimeline" class="relative pl-6 space-y-4 max-h-64 overflow-y-auto">
+                                {{-- Timeline line --}}
+                                <div class="absolute left-[9px] top-2 bottom-2 w-0.5 bg-neutral-200 dark:bg-neutral-700"></div>
+
+                                {{-- Created Event --}}
+                                <div class="relative flex items-start gap-3">
+                                    <div class="absolute left-[-15px] top-1 h-4 w-4 rounded-full bg-violet-500 border-2 border-white dark:border-neutral-900 z-10 flex items-center justify-center">
+                                        <div class="h-1.5 w-1.5 rounded-full bg-white"></div>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-xs font-medium text-neutral-900 dark:text-white">Rental Created</p>
+                                        <p id="timelineCreatedAt" class="text-xs text-neutral-500 dark:text-neutral-400">-</p>
+                                    </div>
                                 </div>
-                                <div class="flex items-center gap-2 text-xs">
-                                    <div class="h-1.5 w-1.5 rounded-full bg-violet-400"></div>
-                                    <span class="text-neutral-500 dark:text-neutral-400">Updated:</span>
-                                    <span id="detailRentalUpdated" class="text-neutral-700 dark:text-neutral-300 font-medium">-</span>
+
+                                {{-- Released Event --}}
+                                <div id="timelineReleasedEvent" class="relative flex items-start gap-3">
+                                    <div class="absolute left-[-15px] top-1 h-4 w-4 rounded-full bg-emerald-500 border-2 border-white dark:border-neutral-900 z-10 flex items-center justify-center">
+                                        <div class="h-1.5 w-1.5 rounded-full bg-white"></div>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-xs font-medium text-neutral-900 dark:text-white">Item Released</p>
+                                        <p id="timelineReleasedAt" class="text-xs text-neutral-500 dark:text-neutral-400">-</p>
+                                        <p id="timelineReleasedBy" class="text-xs text-neutral-400 dark:text-neutral-500 mt-0.5">-</p>
+                                    </div>
+                                </div>
+
+                                {{-- Extension Events (dynamic) --}}
+                                <div id="timelineExtensionEvents">
+                                    {{-- Extensions will be inserted here dynamically --}}
+                                </div>
+
+                                {{-- Due Date Event --}}
+                                <div id="timelineDueEvent" class="relative flex items-start gap-3">
+                                    <div id="timelineDueIcon" class="absolute left-[-15px] top-1 h-4 w-4 rounded-full bg-amber-500 border-2 border-white dark:border-neutral-900 z-10 flex items-center justify-center">
+                                        <div class="h-1.5 w-1.5 rounded-full bg-white"></div>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p id="timelineDueLabel" class="text-xs font-medium text-neutral-900 dark:text-white">Due Date</p>
+                                        <p id="timelineDueAt" class="text-xs text-neutral-500 dark:text-neutral-400">-</p>
+                                    </div>
+                                </div>
+
+                                {{-- Overdue Event (conditional) --}}
+                                <div id="timelineOverdueEvent" class="hidden relative flex items-start gap-3">
+                                    <div class="absolute left-[-15px] top-1 h-4 w-4 rounded-full bg-rose-500 border-2 border-white dark:border-neutral-900 z-10 flex items-center justify-center">
+                                        <div class="h-1.5 w-1.5 rounded-full bg-white"></div>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-xs font-medium text-rose-600 dark:text-rose-400">Overdue</p>
+                                        <p id="timelineOverdueDays" class="text-xs text-rose-500 dark:text-rose-400">-</p>
+                                    </div>
+                                </div>
+
+                                {{-- Returned Event (conditional) --}}
+                                <div id="timelineReturnedEvent" class="hidden relative flex items-start gap-3">
+                                    <div class="absolute left-[-15px] top-1 h-4 w-4 rounded-full bg-sky-500 border-2 border-white dark:border-neutral-900 z-10 flex items-center justify-center">
+                                        <div class="h-1.5 w-1.5 rounded-full bg-white"></div>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-xs font-medium text-neutral-900 dark:text-white">Item Returned</p>
+                                        <p id="timelineReturnedAt" class="text-xs text-neutral-500 dark:text-neutral-400">-</p>
+                                        <p id="timelineReturnedBy" class="text-xs text-neutral-400 dark:text-neutral-500 mt-0.5">-</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -603,13 +658,8 @@
         // Invoices
         renderRentalInvoices(rental.invoices || []);
 
-        // Timestamps
-        document.getElementById('detailRentalCreated').textContent = rental.created_at
-            ? formatRentalDate(rental.created_at)
-            : '-';
-        document.getElementById('detailRentalUpdated').textContent = rental.updated_at
-            ? formatRentalDate(rental.updated_at)
-            : '-';
+        // Populate Timeline
+        populateRentalTimeline(rental, responseData);
 
         // Update action buttons visibility based on status
         var processReturnBtn = document.getElementById('rentalDetailsProcessReturnBtn');
@@ -698,6 +748,156 @@
         var modal = document.getElementById('rentalDetailsModal');
         modal.classList.add('hidden');
         modal.classList.remove('flex');
+    }
+
+    // Populate the rental timeline
+    function populateRentalTimeline(rental, responseData) {
+        var isOverdue = responseData.is_overdue;
+
+        // Created at
+        var createdEl = document.getElementById('timelineCreatedAt');
+        if (createdEl) {
+            createdEl.textContent = rental.created_at ? formatRentalDateTime(rental.created_at) : '-';
+        }
+
+        // Released at
+        var releasedAtEl = document.getElementById('timelineReleasedAt');
+        var releasedByEl = document.getElementById('timelineReleasedBy');
+        if (releasedAtEl) {
+            releasedAtEl.textContent = rental.released_date ? formatRentalDateTime(rental.released_date) : '-';
+        }
+        if (releasedByEl) {
+            var releasedBy = rental.released_by_user || rental.releasedBy;
+            if (releasedBy) {
+                releasedByEl.textContent = 'by ' + (releasedBy.name || ((releasedBy.first_name || '') + ' ' + (releasedBy.last_name || '')).trim());
+            } else {
+                releasedByEl.textContent = '';
+            }
+        }
+
+        // Extension events
+        var extensionContainer = document.getElementById('timelineExtensionEvents');
+        if (extensionContainer) {
+            extensionContainer.innerHTML = '';
+
+            // Check for extensions
+            if (rental.extension_count > 0) {
+                var extensionHtml = '';
+
+                // Show extension info if available
+                if (rental.last_extended_at) {
+                    var extendedBy = rental.extended_by_user || rental.extendedBy;
+                    var extenderName = extendedBy ? (extendedBy.name || ((extendedBy.first_name || '') + ' ' + (extendedBy.last_name || '')).trim()) : '';
+
+                    for (var i = 0; i < rental.extension_count; i++) {
+                        var isLast = (i === rental.extension_count - 1);
+                        extensionHtml += '<div class="relative flex items-start gap-3">';
+                        extensionHtml += '<div class="absolute left-[-15px] top-1 h-4 w-4 rounded-full bg-violet-500 border-2 border-white dark:border-neutral-900 z-10 flex items-center justify-center">';
+                        extensionHtml += '<div class="h-1.5 w-1.5 rounded-full bg-white"></div>';
+                        extensionHtml += '</div>';
+                        extensionHtml += '<div class="flex-1 min-w-0">';
+                        extensionHtml += '<p class="text-xs font-medium text-neutral-900 dark:text-white">Extension #' + (i + 1) + '</p>';
+
+                        if (isLast) {
+                            extensionHtml += '<p class="text-xs text-neutral-500 dark:text-neutral-400">' + formatRentalDateTime(rental.last_extended_at) + '</p>';
+                            if (extenderName) {
+                                extensionHtml += '<p class="text-xs text-neutral-400 dark:text-neutral-500 mt-0.5">by ' + extenderName + '</p>';
+                            }
+                            if (rental.extension_reason) {
+                                extensionHtml += '<p class="text-xs text-neutral-400 dark:text-neutral-500 mt-0.5 italic">"' + rental.extension_reason + '"</p>';
+                            }
+                        } else {
+                            extensionHtml += '<p class="text-xs text-neutral-500 dark:text-neutral-400">Extended</p>';
+                        }
+
+                        extensionHtml += '</div></div>';
+                    }
+                }
+
+                extensionContainer.innerHTML = extensionHtml;
+            }
+        }
+
+        // Due date
+        var dueLabelEl = document.getElementById('timelineDueLabel');
+        var dueAtEl = document.getElementById('timelineDueAt');
+        var dueIconEl = document.getElementById('timelineDueIcon');
+
+        if (dueAtEl) {
+            var originalDue = rental.original_due_date || rental.due_date;
+            var currentDue = rental.due_date;
+
+            if (originalDue !== currentDue && rental.extension_count > 0) {
+                dueAtEl.innerHTML = formatRentalDate(currentDue) + '<br><span class="line-through text-neutral-400">' + formatRentalDate(originalDue) + '</span>';
+            } else {
+                dueAtEl.textContent = currentDue ? formatRentalDate(currentDue) : '-';
+            }
+        }
+
+        if (dueLabelEl && dueIconEl) {
+            if (isOverdue && !rental.return_date) {
+                dueLabelEl.textContent = 'Due Date (Passed)';
+                dueIconEl.className = 'absolute left-[-15px] top-1 h-4 w-4 rounded-full bg-rose-500 border-2 border-white dark:border-neutral-900 z-10 flex items-center justify-center';
+            } else {
+                dueLabelEl.textContent = 'Due Date';
+                dueIconEl.className = 'absolute left-[-15px] top-1 h-4 w-4 rounded-full bg-amber-500 border-2 border-white dark:border-neutral-900 z-10 flex items-center justify-center';
+            }
+        }
+
+        // Overdue event
+        var overdueEvent = document.getElementById('timelineOverdueEvent');
+        var overdueDaysEl = document.getElementById('timelineOverdueDays');
+
+        if (overdueEvent && overdueDaysEl) {
+            if (isOverdue && !rental.return_date) {
+                overdueEvent.classList.remove('hidden');
+                var dueDate = new Date(rental.due_date);
+                var today = new Date();
+                var diffTime = Math.abs(today - dueDate);
+                var diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                overdueDaysEl.textContent = diffDays + ' day' + (diffDays !== 1 ? 's' : '') + ' overdue • ₱' + Number(responseData.calculated_penalty || 0).toLocaleString() + ' penalty';
+            } else {
+                overdueEvent.classList.add('hidden');
+            }
+        }
+
+        // Returned event
+        var returnedEvent = document.getElementById('timelineReturnedEvent');
+        var returnedAtEl = document.getElementById('timelineReturnedAt');
+        var returnedByEl = document.getElementById('timelineReturnedBy');
+
+        if (returnedEvent) {
+            if (rental.return_date) {
+                returnedEvent.classList.remove('hidden');
+
+                if (returnedAtEl) {
+                    returnedAtEl.textContent = formatRentalDateTime(rental.return_date);
+                }
+
+                if (returnedByEl) {
+                    var returnedTo = rental.returned_to_user || rental.returnedTo;
+                    if (returnedTo) {
+                        returnedByEl.textContent = 'received by ' + (returnedTo.name || ((returnedTo.first_name || '') + ' ' + (returnedTo.last_name || '')).trim());
+                    } else {
+                        returnedByEl.textContent = '';
+                    }
+                }
+            } else {
+                returnedEvent.classList.add('hidden');
+            }
+        }
+    }
+
+    // Format date with time helper
+    function formatRentalDateTime(dateString) {
+        var date = new Date(dateString);
+        return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit'
+        });
     }
 
     // Process return from details modal
