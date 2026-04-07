@@ -265,23 +265,45 @@
         </div>
 
         {{-- Footer --}}
-        <div class="flex-shrink-0 flex items-center justify-between px-6 py-4 border-t border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/30 rounded-b-3xl">
-            <button
-                type="button"
-                id="reservationDetailsEditBtn"
-                onclick="openEditFromReservationDetails()"
-                class="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-[14px] font-medium bg-violet-600 text-white hover:bg-violet-500 transition-colors duration-100 ease-in-out"
-            >
-                <x-icon name="edit" class="h-4 w-4" />
-                <span>Edit Reservation</span>
-            </button>
-            <button
-                type="button"
-                onclick="closeReservationDetailsModal()"
-                class="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-[14px] font-medium border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:bg-neutral-800 transition-colors duration-100 ease-in-out"
-            >
-                Close
-            </button>
+        <div class="flex-shrink-0 flex items-center justify-between px-6 py-4 border-t border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/30 rounded-b-3xl gap-3">
+            <div class="flex items-center gap-2">
+                <button
+                    type="button"
+                    id="reservationDetailsConfirmBtn"
+                    onclick="confirmReservationFromDetails()"
+                    class="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-[14px] font-medium bg-emerald-600 text-white hover:bg-emerald-500 transition-colors duration-100 ease-in-out"
+                >
+                    <x-icon name="check" class="h-4 w-4" />
+                    <span>Confirm</span>
+                </button>
+                <button
+                    type="button"
+                    id="reservationDetailsCancelBtn"
+                    onclick="cancelReservationFromDetails()"
+                    class="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-[14px] font-medium bg-red-600 text-white hover:bg-red-500 transition-colors duration-100 ease-in-out"
+                >
+                    <x-icon name="x" class="h-4 w-4" />
+                    <span>Cancel</span>
+                </button>
+            </div>
+            <div class="flex items-center gap-2">
+                <button
+                    type="button"
+                    id="reservationDetailsEditBtn"
+                    onclick="openEditFromReservationDetails()"
+                    class="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-[14px] font-medium bg-violet-600 text-white hover:bg-violet-500 transition-colors duration-100 ease-in-out"
+                >
+                    <x-icon name="edit" class="h-4 w-4" />
+                    <span>Edit</span>
+                </button>
+                <button
+                    type="button"
+                    onclick="closeReservationDetailsModal()"
+                    class="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-[14px] font-medium border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:bg-neutral-800 transition-colors duration-100 ease-in-out"
+                >
+                    Close
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -509,10 +531,25 @@
 
         // Update edit button visibility based on status
         var editBtn = document.getElementById('reservationDetailsEditBtn');
+        var confirmBtn = document.getElementById('reservationDetailsConfirmBtn');
+        var cancelBtn = document.getElementById('reservationDetailsCancelBtn');
+        
         if (statusName === 'cancelled' || statusName === 'completed') {
             editBtn.classList.add('hidden');
+            confirmBtn.classList.add('hidden');
+            cancelBtn.classList.add('hidden');
+        } else if (statusName === 'pending') {
+            editBtn.classList.remove('hidden');
+            confirmBtn.classList.remove('hidden');
+            cancelBtn.classList.remove('hidden');
+        } else if (statusName === 'confirmed') {
+            editBtn.classList.add('hidden');
+            confirmBtn.classList.add('hidden');
+            cancelBtn.classList.add('hidden');
         } else {
             editBtn.classList.remove('hidden');
+            confirmBtn.classList.add('hidden');
+            cancelBtn.classList.add('hidden');
         }
     }
 
@@ -730,6 +767,64 @@
             closeReservationDetailsModal();
         }
     });
+
+    // Confirm reservation
+    async function confirmReservationFromDetails() {
+        var reservationId = globalThis.reservationDetailsModalState.currentReservationId;
+        if (!reservationId) {
+            alert('Invalid reservation ID');
+            return;
+        }
+
+        if (!confirm('Are you sure you want to confirm this reservation?')) {
+            return;
+        }
+
+        try {
+            var response = await axios.post(`/api/reservations/${reservationId}/confirm`);
+            if (response.data && response.data.message) {
+                alert(response.data.message);
+            }
+            closeReservationDetailsModal();
+            if (typeof fetchReservations === 'function') {
+                fetchReservations();
+                fetchReservationStats();
+            }
+        } catch (error) {
+            var message = error.response?.data?.message || error.message || 'Failed to confirm reservation';
+            alert(message);
+            console.error('Error confirming reservation:', error);
+        }
+    }
+
+    // Cancel reservation
+    async function cancelReservationFromDetails() {
+        var reservationId = globalThis.reservationDetailsModalState.currentReservationId;
+        if (!reservationId) {
+            alert('Invalid reservation ID');
+            return;
+        }
+
+        if (!confirm('Are you sure you want to cancel this reservation?')) {
+            return;
+        }
+
+        try {
+            var response = await axios.post(`/api/reservations/${reservationId}/cancel`);
+            if (response.data && response.data.message) {
+                alert(response.data.message);
+            }
+            closeReservationDetailsModal();
+            if (typeof fetchReservations === 'function') {
+                fetchReservations();
+                fetchReservationStats();
+            }
+        } catch (error) {
+            var message = error.response?.data?.message || error.message || 'Failed to cancel reservation';
+            alert(message);
+            console.error('Error cancelling reservation:', error);
+        }
+    }
 
     // Close modal on backdrop click
     document.getElementById('reservationDetailsModal')?.addEventListener('click', function(e) {
