@@ -51,6 +51,23 @@
             </div>
 
             <div class="flex items-center gap-3 text-xs">
+                {{-- Notification Bell --}}
+                <x-notification-dropdown />
+
+                <button type="button" onclick="openRentalSettingsModal()" class="inline-flex items-center gap-2 rounded-xl border border-neutral-300 bg-white px-3.5 py-2 text-neutral-700 hover:bg-violet-600 dark:hover:text-black hover:text-white dark:border-neutral-800 dark:bg-neutral-950/80 dark:text-neutral-200 transition-colors duration-300 ease-in-out">
+                    <span class="inline-flex h-5 w-5 items-center justify-center rounded-md">
+                        <x-icon name="settings" class="h-4 w-4" />
+                    </span>
+                    <span class="text-[14px] font-medium tracking-wide">Settings</span>
+                </button>
+
+                <a href="/rentals/calendar" class="inline-flex items-center gap-2 rounded-xl border border-neutral-300 bg-white px-3.5 py-2 text-neutral-700 hover:bg-violet-600 dark:hover:text-black hover:text-white dark:border-neutral-800 dark:bg-neutral-950/80 dark:text-neutral-200 transition-colors duration-300 ease-in-out">
+                    <span class="inline-flex h-5 w-5 items-center justify-center rounded-md">
+                        <x-icon name="calendar" class="h-4 w-4" />
+                    </span>
+                    <span class="text-[14px] font-medium tracking-wide">Calendar</span>
+                </a>
+
                 <a href="/rentals/reports" class="inline-flex items-center gap-2 rounded-xl border border-neutral-300 bg-white px-3.5 py-2 text-neutral-700 hover:bg-violet-600 dark:hover:text-black hover:text-white dark:border-neutral-800 dark:bg-neutral-950/80 dark:text-neutral-200 transition-colors duration-300 ease-in-out">
                     <span class="inline-flex h-5 w-5 items-center justify-center rounded-md">
                         <x-icon name="chart-column" class="h-4 w-4" />
@@ -63,6 +80,13 @@
                         <x-icon name="arrow-left-circle" class="h-4 w-4" />
                     </span>
                     <span>Process Return</span>
+                </button>
+
+                <button type="button" onclick="openReleaseItemModal()" class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-[14px] font-medium tracking-wide text-white dark:text-black shadow-lg hover:text-black dark:hover:text-white hover:bg-emerald-500 transition-colors duration-300 ease-in-out">
+                    <span class="inline-flex h-5 w-5 items-center justify-center rounded-md">
+                        <x-icon name="package-check" class="h-4 w-4" />
+                    </span>
+                    <span>Release Item</span>
                 </button>
             </div>
         </div>
@@ -124,6 +148,13 @@
                     </div>
 
                     <div class="flex items-center gap-3">
+                        <!-- Advanced Filters Button -->
+                        <button id="advancedFiltersBtn" type="button" onclick="toggleAdvancedFilters()" class="flex items-center gap-2 rounded-2xl px-3 py-2 text-xs border border-neutral-300 bg-white text-neutral-700 dark:border-neutral-800 dark:bg-black/60 dark:text-neutral-100 focus:outline-none transition-colors duration-300 ease-in-out">
+                            <x-icon name="sliders-horizontal" class="h-3.5 w-3.5" />
+                            <span>Filters</span>
+                            <span id="activeFiltersCount" class="hidden px-1.5 py-0.5 text-[10px] rounded-full bg-violet-600 text-white">0</span>
+                        </button>
+
                         <!-- Custom Filter Dropdown -->
                         <div class="relative" id="filter-dropdown">
                             <button id="filter-button" class="flex items-center gap-2 rounded-2xl px-3 py-2 text-xs border border-neutral-300 bg-white text-neutral-700 dark:border-neutral-800 dark:bg-black/60 dark:text-neutral-100 focus:outline-none transition-colors duration-300 ease-in-out">
@@ -142,9 +173,87 @@
                                     <li data-status="active" class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">Rented</li>
                                     <li data-status="overdue" class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">Overdue</li>
                                     <li data-status="returned" class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">Returned</li>
+                                    <li data-status="cancelled" class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">Cancelled</li>
                                 </ul>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                {{-- Advanced Filters Panel --}}
+                <div id="advancedFiltersPanel" class="hidden mt-4 pt-4 border-t border-neutral-200 dark:border-neutral-800">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        {{-- Date Range: Released --}}
+                        <div>
+                            <label class="block text-xs font-medium text-neutral-600 dark:text-neutral-400 mb-1.5">Released Date Range</label>
+                            <div class="flex items-center gap-2">
+                                <input type="date" id="filterReleasedFrom" placeholder="From" class="flex-1 rounded-lg border border-neutral-300 bg-white px-3 py-2 text-xs text-neutral-900 focus:border-violet-500 focus:outline-none dark:border-neutral-700 dark:bg-neutral-900 dark:text-white transition-colors duration-200" />
+                                <span class="text-neutral-400 text-xs">to</span>
+                                <input type="date" id="filterReleasedTo" placeholder="To" class="flex-1 rounded-lg border border-neutral-300 bg-white px-3 py-2 text-xs text-neutral-900 focus:border-violet-500 focus:outline-none dark:border-neutral-700 dark:bg-neutral-900 dark:text-white transition-colors duration-200" />
+                            </div>
+                        </div>
+
+                        {{-- Date Range: Due --}}
+                        <div>
+                            <label class="block text-xs font-medium text-neutral-600 dark:text-neutral-400 mb-1.5">Due Date Range</label>
+                            <div class="flex items-center gap-2">
+                                <input type="date" id="filterDueFrom" placeholder="From" class="flex-1 rounded-lg border border-neutral-300 bg-white px-3 py-2 text-xs text-neutral-900 focus:border-violet-500 focus:outline-none dark:border-neutral-700 dark:bg-neutral-900 dark:text-white transition-colors duration-200" />
+                                <span class="text-neutral-400 text-xs">to</span>
+                                <input type="date" id="filterDueTo" placeholder="To" class="flex-1 rounded-lg border border-neutral-300 bg-white px-3 py-2 text-xs text-neutral-900 focus:border-violet-500 focus:outline-none dark:border-neutral-700 dark:bg-neutral-900 dark:text-white transition-colors duration-200" />
+                            </div>
+                        </div>
+
+                        {{-- Customer Filter --}}
+                        <div>
+                            <label class="block text-xs font-medium text-neutral-600 dark:text-neutral-400 mb-1.5">Customer</label>
+                            <select id="filterCustomer" class="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-xs text-neutral-900 focus:border-violet-500 focus:outline-none dark:border-neutral-700 dark:bg-neutral-900 dark:text-white transition-colors duration-200">
+                                <option value="">All Customers</option>
+                            </select>
+                        </div>
+
+                        {{-- Item Type Filter --}}
+                        <div>
+                            <label class="block text-xs font-medium text-neutral-600 dark:text-neutral-400 mb-1.5">Item Type</label>
+                            <select id="filterItemType" class="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-xs text-neutral-900 focus:border-violet-500 focus:outline-none dark:border-neutral-700 dark:bg-neutral-900 dark:text-white transition-colors duration-200">
+                                <option value="">All Types</option>
+                                <option value="gown">Gown</option>
+                                <option value="suit">Suit</option>
+                                <option value="accessory">Accessory</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-end gap-3 mt-4">
+                        <button type="button" onclick="clearAdvancedFilters()" class="text-xs text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200 transition-colors duration-200">
+                            Clear Filters
+                        </button>
+                        <button type="button" onclick="applyAdvancedFilters()" class="px-4 py-2 text-xs font-medium text-white bg-violet-600 hover:bg-violet-700 rounded-lg transition-colors duration-200">
+                            Apply Filters
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Bulk Action Bar --}}
+            <div id="bulkActionBar" class="hidden px-6 py-3 bg-violet-50 dark:bg-violet-900/20 border-b border-violet-200 dark:border-violet-800/50">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <span class="text-sm text-violet-700 dark:text-violet-300">
+                            <span id="selectedCount" class="font-semibold">0</span> rental(s) selected
+                        </span>
+                        <button type="button" onclick="clearSelection()" class="text-xs text-violet-600 hover:text-violet-800 dark:text-violet-400 dark:hover:text-violet-200 underline">
+                            Clear selection
+                        </button>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="openBulkExtendModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-amber-700 bg-amber-100 hover:bg-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:hover:bg-amber-900/50 rounded-lg transition-colors duration-200">
+                            <x-icon name="calendar-plus" class="h-3.5 w-3.5" />
+                            Extend Selected
+                        </button>
+                        <button type="button" onclick="openBulkReturnModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:hover:bg-emerald-900/50 rounded-lg transition-colors duration-200">
+                            <x-icon name="arrow-left-circle" class="h-3.5 w-3.5" />
+                            Return Selected
+                        </button>
                     </div>
                 </div>
             </div>
@@ -155,7 +264,10 @@
                     <table class="min-w-full text-left text-xs text-neutral-600 dark:text-neutral-300 transition-colors duration-300 ease-in-out">
                         <thead class="text-[11px] uppercase tracking-[0.18em] text-neutral-500">
                         <tr class="border-b border-neutral-200 dark:border-neutral-900/80">
-                            <th class="py-2.5 pr-4 pl-4 font-medium">ID</th>
+                            <th class="py-2.5 pr-2 pl-4 font-medium w-10">
+                                <input type="checkbox" id="selectAllCheckbox" onclick="toggleSelectAll()" class="h-4 w-4 rounded border-neutral-300 text-violet-600 focus:ring-violet-500 dark:border-neutral-700 dark:bg-neutral-900 cursor-pointer" />
+                            </th>
+                            <th class="py-2.5 pr-4 font-medium">ID</th>
                             <th class="py-2.5 pr-4 font-medium">Customer</th>
                             <th class="py-2.5 pr-4 font-medium">Item</th>
                             <th class="py-2.5 pr-4 font-medium cursor-pointer hover:text-violet-600 dark:hover:text-violet-400 transition-colors duration-200 select-none" onclick="toggleSort('released_date')">
@@ -214,6 +326,15 @@
 {{-- Extend Rental Modal --}}
 @include('rentals.partials.extend-rental-modal')
 
+{{-- Rental Settings Modal --}}
+@include('rentals.partials.rental-settings-modal')
+
+{{-- Release Item Modal --}}
+@include('rentals.partials.release-item-modal')
+
+{{-- Bulk Operations Modals --}}
+@include('rentals.partials.bulk-operations-modal')
+
 {{-- Axios for API calls --}}
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
@@ -229,7 +350,17 @@
         totalCount: 0,
         isLoading: false,
         listAbortController: null,
-        statsAbortController: null
+        statsAbortController: null,
+        // Advanced filters
+        releasedDateFrom: '',
+        releasedDateTo: '',
+        dueDateFrom: '',
+        dueDateTo: '',
+        customerId: '',
+        itemType: '',
+        // Bulk selection
+        selectedRentals: [],
+        currentRentals: []
     };
 
     var searchDebounceTimer;
@@ -395,6 +526,26 @@
                 params.append('rental_status', rentalState.statusFilter);
             }
 
+            // Advanced filters
+            if (rentalState.releasedDateFrom) {
+                params.append('released_date_from', rentalState.releasedDateFrom);
+            }
+            if (rentalState.releasedDateTo) {
+                params.append('released_date_to', rentalState.releasedDateTo);
+            }
+            if (rentalState.dueDateFrom) {
+                params.append('due_date_from', rentalState.dueDateFrom);
+            }
+            if (rentalState.dueDateTo) {
+                params.append('due_date_to', rentalState.dueDateTo);
+            }
+            if (rentalState.customerId) {
+                params.append('customer_id', rentalState.customerId);
+            }
+            if (rentalState.itemType) {
+                params.append('item_type', rentalState.itemType);
+            }
+
             var response = await axios.get('/api/rentals?' + params.toString(), {
                 signal: rentalState.listAbortController.signal
             });
@@ -470,6 +621,17 @@
 
         tbody.innerHTML = '';
 
+        // Reset select all checkbox state
+        var selectAllCheckbox = document.getElementById('selectAllCheckbox');
+        if (selectAllCheckbox) {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = false;
+        }
+
+        // Clear selection when table re-renders
+        rentalState.selectedRentals = [];
+        updateBulkActionBar();
+
         if (!rentals.length) {
             var message = 'No rentals found';
 
@@ -482,6 +644,9 @@
             showEmptyState(message);
             return;
         }
+
+        // Store current rentals for selection management
+        rentalState.currentRentals = rentals;
 
         rentals.forEach(function(rental) {
             var statusName = ((rental.status && rental.status.status_name) || 'unknown').toLowerCase();
@@ -523,15 +688,22 @@
             var itemName = (rental.item && rental.item.name) || 'N/A';
             var itemSku = (rental.item && rental.item.sku) || '';
 
+            // Determine if this rental can be selected for bulk operations (only active/overdue)
+            var canSelect = statusName === 'rented' || statusName === 'active' || statusName === 'overdue';
+
             var row = document.createElement('tr');
             row.className = 'border-b border-neutral-200 hover:bg-neutral-100 dark:border-neutral-900/60 dark:hover:bg-white/5 transition-colors duration-300 ease-in-out cursor-pointer';
             row.setAttribute('data-rental-id', rental.rental_id);
-            row.addEventListener('click', function() {
-                openRentalDetailsModal(rental.rental_id);
-            });
+            row.setAttribute('data-rental-status', statusName);
 
             row.innerHTML = '' +
-                '<td class="py-3.5 pr-4 pl-4 text-neutral-500 font-geist-mono">#' + (rental.rental_id || 'N/A') + '</td>' +
+                '<td class="py-3.5 pr-2 pl-4">' +
+                    (canSelect
+                        ? '<input type="checkbox" data-rental-checkbox="' + rental.rental_id + '" onclick="toggleRentalSelection(event, ' + rental.rental_id + ')" class="h-4 w-4 rounded border-neutral-300 text-violet-600 focus:ring-violet-500 dark:border-neutral-700 dark:bg-neutral-900 cursor-pointer" />'
+                        : '<span class="h-4 w-4 inline-block"></span>'
+                    ) +
+                '</td>' +
+                '<td class="py-3.5 pr-4 text-neutral-500 font-geist-mono">#' + (rental.rental_id || 'N/A') + '</td>' +
                 '<td class="py-3.5 pr-4 text-neutral-900 dark:text-neutral-100">' + customerName + '</td>' +
                 '<td class="py-3.5 pr-4">' +
                     '<div class="text-neutral-900 dark:text-neutral-100">' + itemName + '</div>' +
@@ -540,6 +712,13 @@
                 '<td class="py-3.5 pr-4 text-neutral-600 dark:text-neutral-300 font-geist-mono">' + formatDate(rental.released_date) + '</td>' +
                 '<td class="py-3.5 pr-4 text-neutral-600 dark:text-neutral-300 font-geist-mono">' + formatDate(rental.due_date) + '</td>' +
                 '<td class="py-3.5 pr-4"><span class="inline-flex items-center rounded-full ' + statusColor + ' px-2 py-1 text-[11px] font-medium border transition-colors duration-300 ease-in-out"><span class="mr-1.5 h-1.5 w-1.5 rounded-full ' + statusBgColor + '"></span>' + statusLabel + '</span></td>';
+
+            // Add click handler for row (excluding checkbox clicks)
+            row.addEventListener('click', function(e) {
+                if (e.target.type !== 'checkbox') {
+                    openRentalDetailsModal(rental.rental_id);
+                }
+            });
 
             tbody.appendChild(row);
         });
@@ -714,6 +893,367 @@
                 }
             }
         });
+    }
+
+    // ============================================
+    // ADVANCED FILTERS FUNCTIONS
+    // ============================================
+
+    function toggleAdvancedFilters() {
+        var panel = document.getElementById('advancedFiltersPanel');
+        var btn = document.getElementById('advancedFiltersBtn');
+
+        if (panel.classList.contains('hidden')) {
+            panel.classList.remove('hidden');
+            btn.classList.add('bg-violet-100', 'dark:bg-violet-900/30', 'border-violet-300', 'dark:border-violet-700');
+            loadCustomersForFilter();
+        } else {
+            panel.classList.add('hidden');
+            btn.classList.remove('bg-violet-100', 'dark:bg-violet-900/30', 'border-violet-300', 'dark:border-violet-700');
+        }
+    }
+
+    function loadCustomersForFilter() {
+        var customerSelect = document.getElementById('filterCustomer');
+        if (customerSelect.options.length > 1) return; // Already loaded
+
+        axios.get('/api/customers?status=active&per_page=100')
+            .then(function(response) {
+                var customers = response.data.data || [];
+                customers.forEach(function(customer) {
+                    var option = document.createElement('option');
+                    option.value = customer.customer_id;
+                    option.textContent = customer.first_name + ' ' + customer.last_name;
+                    customerSelect.appendChild(option);
+                });
+            })
+            .catch(function(error) {
+                console.error('Error loading customers for filter:', error);
+            });
+    }
+
+    function applyAdvancedFilters() {
+        // Get filter values
+        rentalState.releasedDateFrom = document.getElementById('filterReleasedFrom').value;
+        rentalState.releasedDateTo = document.getElementById('filterReleasedTo').value;
+        rentalState.dueDateFrom = document.getElementById('filterDueFrom').value;
+        rentalState.dueDateTo = document.getElementById('filterDueTo').value;
+        rentalState.customerId = document.getElementById('filterCustomer').value;
+        rentalState.itemType = document.getElementById('filterItemType').value;
+
+        // Reset to page 1 and fetch
+        rentalState.currentPage = 1;
+        fetchRentals();
+
+        // Update active filters count badge
+        updateActiveFiltersCount();
+    }
+
+    function clearAdvancedFilters() {
+        // Clear form inputs
+        document.getElementById('filterReleasedFrom').value = '';
+        document.getElementById('filterReleasedTo').value = '';
+        document.getElementById('filterDueFrom').value = '';
+        document.getElementById('filterDueTo').value = '';
+        document.getElementById('filterCustomer').value = '';
+        document.getElementById('filterItemType').value = '';
+
+        // Clear state
+        rentalState.releasedDateFrom = '';
+        rentalState.releasedDateTo = '';
+        rentalState.dueDateFrom = '';
+        rentalState.dueDateTo = '';
+        rentalState.customerId = '';
+        rentalState.itemType = '';
+
+        // Reset to page 1 and fetch
+        rentalState.currentPage = 1;
+        fetchRentals();
+
+        // Update active filters count badge
+        updateActiveFiltersCount();
+    }
+
+    function updateActiveFiltersCount() {
+        var count = 0;
+        if (rentalState.releasedDateFrom || rentalState.releasedDateTo) count++;
+        if (rentalState.dueDateFrom || rentalState.dueDateTo) count++;
+        if (rentalState.customerId) count++;
+        if (rentalState.itemType) count++;
+
+        var badge = document.getElementById('activeFiltersCount');
+        if (count > 0) {
+            badge.textContent = count;
+            badge.classList.remove('hidden');
+        } else {
+            badge.classList.add('hidden');
+        }
+    }
+
+    // ============================================
+    // BULK OPERATIONS FUNCTIONS
+    // ============================================
+
+    function toggleSelectAll() {
+        var selectAllCheckbox = document.getElementById('selectAllCheckbox');
+        var checkboxes = document.querySelectorAll('[data-rental-checkbox]');
+
+        checkboxes.forEach(function(checkbox) {
+            checkbox.checked = selectAllCheckbox.checked;
+            var rentalId = parseInt(checkbox.getAttribute('data-rental-checkbox'));
+
+            if (selectAllCheckbox.checked) {
+                if (!rentalState.selectedRentals.includes(rentalId)) {
+                    rentalState.selectedRentals.push(rentalId);
+                }
+            } else {
+                rentalState.selectedRentals = rentalState.selectedRentals.filter(function(id) {
+                    return id !== rentalId;
+                });
+            }
+        });
+
+        updateBulkActionBar();
+    }
+
+    function toggleRentalSelection(event, rentalId) {
+        event.stopPropagation();
+
+        var checkbox = event.target;
+        if (checkbox.checked) {
+            if (!rentalState.selectedRentals.includes(rentalId)) {
+                rentalState.selectedRentals.push(rentalId);
+            }
+        } else {
+            rentalState.selectedRentals = rentalState.selectedRentals.filter(function(id) {
+                return id !== rentalId;
+            });
+        }
+
+        updateSelectAllCheckbox();
+        updateBulkActionBar();
+    }
+
+    function updateSelectAllCheckbox() {
+        var selectAllCheckbox = document.getElementById('selectAllCheckbox');
+        var checkboxes = document.querySelectorAll('[data-rental-checkbox]');
+        var checkedCount = document.querySelectorAll('[data-rental-checkbox]:checked').length;
+
+        if (checkedCount === 0) {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = false;
+        } else if (checkedCount === checkboxes.length) {
+            selectAllCheckbox.checked = true;
+            selectAllCheckbox.indeterminate = false;
+        } else {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = true;
+        }
+    }
+
+    function updateBulkActionBar() {
+        var bulkActionBar = document.getElementById('bulkActionBar');
+        var selectedCount = document.getElementById('selectedCount');
+
+        if (rentalState.selectedRentals.length > 0) {
+            bulkActionBar.classList.remove('hidden');
+            selectedCount.textContent = rentalState.selectedRentals.length;
+        } else {
+            bulkActionBar.classList.add('hidden');
+        }
+    }
+
+    function clearSelection() {
+        rentalState.selectedRentals = [];
+
+        var checkboxes = document.querySelectorAll('[data-rental-checkbox]');
+        checkboxes.forEach(function(checkbox) {
+            checkbox.checked = false;
+        });
+
+        var selectAllCheckbox = document.getElementById('selectAllCheckbox');
+        if (selectAllCheckbox) {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = false;
+        }
+
+        updateBulkActionBar();
+    }
+
+    function openBulkExtendModal() {
+        if (rentalState.selectedRentals.length === 0) {
+            showErrorNotification('Please select at least one rental to extend.');
+            return;
+        }
+
+        var modal = document.getElementById('bulkExtendModal');
+        if (modal) {
+            // Update the count display
+            var countDisplay = document.getElementById('bulkExtendCount');
+            if (countDisplay) {
+                countDisplay.textContent = rentalState.selectedRentals.length;
+            }
+
+            // Set default extension days
+            var daysInput = document.getElementById('bulkExtendDays');
+            if (daysInput) {
+                daysInput.value = 3;
+            }
+
+            // Clear previous reason
+            var reasonInput = document.getElementById('bulkExtendReason');
+            if (reasonInput) {
+                reasonInput.value = '';
+            }
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+    }
+
+    function closeBulkExtendModal() {
+        var modal = document.getElementById('bulkExtendModal');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+    }
+
+    function openBulkReturnModal() {
+        if (rentalState.selectedRentals.length === 0) {
+            showErrorNotification('Please select at least one rental to return.');
+            return;
+        }
+
+        var modal = document.getElementById('bulkReturnModal');
+        if (modal) {
+            // Update the count display
+            var countDisplay = document.getElementById('bulkReturnCount');
+            if (countDisplay) {
+                countDisplay.textContent = rentalState.selectedRentals.length;
+            }
+
+            // Set default return date to today
+            var dateInput = document.getElementById('bulkReturnDate');
+            if (dateInput) {
+                dateInput.value = new Date().toISOString().split('T')[0];
+            }
+
+            // Clear previous notes
+            var notesInput = document.getElementById('bulkReturnNotes');
+            if (notesInput) {
+                notesInput.value = '';
+            }
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+    }
+
+    function closeBulkReturnModal() {
+        var modal = document.getElementById('bulkReturnModal');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+    }
+
+    async function processBulkExtend() {
+        var daysInput = document.getElementById('bulkExtendDays');
+        var reasonInput = document.getElementById('bulkExtendReason');
+        var submitBtn = document.getElementById('bulkExtendSubmitBtn');
+
+        var days = parseInt(daysInput.value);
+        var reason = reasonInput.value.trim();
+
+        if (!days || days < 1) {
+            showErrorNotification('Please enter a valid number of days.');
+            return;
+        }
+
+        if (!reason) {
+            showErrorNotification('Please provide a reason for the extension.');
+            return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="inline-flex items-center gap-2"><svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Processing...</span>';
+
+        try {
+            var response = await axios.post('/api/rentals/bulk/extend', {
+                rental_ids: rentalState.selectedRentals,
+                days: days,
+                reason: reason
+            });
+
+            showSuccessNotification(response.data.message || 'Rentals extended successfully.');
+            closeBulkExtendModal();
+            clearSelection();
+            fetchRentals();
+            fetchRentalStats();
+        } catch (error) {
+            var message = error.response && error.response.data && error.response.data.message
+                ? error.response.data.message
+                : 'Failed to extend rentals. Please try again.';
+            showErrorNotification(message);
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = 'Extend Rentals';
+        }
+    }
+
+    async function processBulkReturn() {
+        var dateInput = document.getElementById('bulkReturnDate');
+        var notesInput = document.getElementById('bulkReturnNotes');
+        var submitBtn = document.getElementById('bulkReturnSubmitBtn');
+
+        var returnDate = dateInput.value;
+        var notes = notesInput.value.trim();
+
+        if (!returnDate) {
+            showErrorNotification('Please select a return date.');
+            return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="inline-flex items-center gap-2"><svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Processing...</span>';
+
+        try {
+            var response = await axios.post('/api/rentals/bulk/return', {
+                rental_ids: rentalState.selectedRentals,
+                return_date: returnDate,
+                return_notes: notes
+            });
+
+            showSuccessNotification(response.data.message || 'Rentals returned successfully.');
+            closeBulkReturnModal();
+            clearSelection();
+            fetchRentals();
+            fetchRentalStats();
+        } catch (error) {
+            var message = error.response && error.response.data && error.response.data.message
+                ? error.response.data.message
+                : 'Failed to process returns. Please try again.';
+            showErrorNotification(message);
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = 'Process Returns';
+        }
+    }
+
+    function showSuccessNotification(message) {
+        var notification = document.createElement('div');
+        notification.className = 'fixed top-4 right-4 max-w-sm bg-emerald-100 border border-emerald-300 dark:bg-emerald-900 dark:border-emerald-700 rounded-lg px-5 py-4 shadow-xl z-[999] flex items-start gap-3';
+        notification.innerHTML = '<svg class="h-5 w-5 text-emerald-700 dark:text-emerald-200 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg><div class="flex-1"><p class="text-sm font-semibold text-emerald-900 dark:text-emerald-50">' + message + '</p></div><button onclick="this.parentElement.remove()" class="text-emerald-700 dark:text-emerald-200 hover:text-emerald-900 dark:hover:text-emerald-50 flex-shrink-0 transition-colors"><svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg></button>';
+        document.body.appendChild(notification);
+
+        setTimeout(function() {
+            notification.style.opacity = '0';
+            notification.style.transition = 'opacity 0.3s ease-out';
+            setTimeout(function() {
+                notification.remove();
+            }, 300);
+        }, 5000);
     }
 
     document.addEventListener('DOMContentLoaded', function() {
