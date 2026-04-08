@@ -327,7 +327,9 @@ class RentalController extends Controller
         $cancelledRentals = Rental::whereHas('status', fn ($q) => $q->where('status_name', 'overdue'))->count();
 
         // Overdue & Late Returns
-        $overdueRentals = Rental::whereNull('return_date')
+        // Overdue = rental still active (not returned) AND due_date has passed
+        $overdueRentals = Rental::whereHas('status', fn ($q) => $q->where('status_name', 'rented'))
+            ->whereNull('return_date')
             ->where('due_date', '<', now())
             ->count();
 

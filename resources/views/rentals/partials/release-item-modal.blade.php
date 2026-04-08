@@ -135,16 +135,18 @@
                 </div>
 
                 {{-- Collect Rental Payment Section --}}
-                <div class="rounded-xl border border-neutral-200 dark:border-neutral-800 p-4 space-y-4">
+                <div class="rounded-xl border border-emerald-200 dark:border-emerald-800/50 bg-emerald-50/50 dark:bg-emerald-900/20 p-4 space-y-4">
                     <div class="flex items-center justify-between">
-                        <span class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Collect Rental Payment</span>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" name="collect_rental_payment" id="releaseCollectRentalPayment" checked class="sr-only peer">
-                            <div class="w-11 h-6 bg-neutral-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-500/20 rounded-full peer dark:bg-neutral-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-neutral-600 peer-checked:bg-emerald-600"></div>
-                        </label>
+                        <div>
+                            <span class="text-sm font-medium text-emerald-900 dark:text-emerald-100">Collect Rental Payment</span>
+                            <p class="text-xs text-emerald-700 dark:text-emerald-300 mt-1">Payment is mandatory before releasing the item</p>
+                        </div>
+                        <div class="px-3 py-1 rounded-full bg-emerald-600 text-white text-xs font-medium">Required</div>
                     </div>
 
-                    <div id="releaseRentalPaymentFields" class="space-y-4">
+                    <input type="hidden" name="collect_rental_payment" value="true">
+
+                    <div class="space-y-4">
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block">
@@ -500,25 +502,15 @@
             });
     }
 
-    // Toggle rental payment fields visibility
-    document.getElementById('releaseCollectRentalPayment').addEventListener('change', function() {
-        var paymentFields = document.getElementById('releaseRentalPaymentFields');
-        if (this.checked) {
-            paymentFields.classList.remove('hidden');
-        } else {
-            paymentFields.classList.add('hidden');
-        }
-    });
-
-    // Search reservations with debounce
-    var releaseSearchTimer;
-    document.getElementById('releaseSearchReservation').addEventListener('input', function() {
-        clearTimeout(releaseSearchTimer);
-        var query = this.value;
-        releaseSearchTimer = setTimeout(function() {
-            loadConfirmedReservations(query);
-        }, 300);
-    });
+     // Search reservations with debounce
+     var releaseSearchTimer;
+     document.getElementById('releaseSearchReservation').addEventListener('input', function() {
+         clearTimeout(releaseSearchTimer);
+         var query = this.value;
+         releaseSearchTimer = setTimeout(function() {
+             loadConfirmedReservations(query);
+         }, 300);
+     });
 
     // Submit release item
     function submitReleaseItem() {
