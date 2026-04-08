@@ -9,11 +9,15 @@ class RentalStatus extends Model
 {
     /** @use HasFactory<\Database\Factories\RentalStatusFactory> */
     use HasFactory;
+
     protected $table = 'rental_statuses';
+
     protected $primaryKey = 'status_id';
 
+    public $timestamps = false;
+
     protected $fillable = [
-        "status_name"
+        'status_name',
     ];
 
     public function rentals()

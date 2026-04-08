@@ -134,33 +134,33 @@
                     </div>
                 </div>
 
-                {{-- Deposit Section --}}
+                {{-- Collect Rental Payment Section --}}
                 <div class="rounded-xl border border-neutral-200 dark:border-neutral-800 p-4 space-y-4">
                     <div class="flex items-center justify-between">
-                        <span class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Collect Deposit</span>
+                        <span class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Collect Rental Payment</span>
                         <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" name="collect_deposit" id="releaseCollectDeposit" checked class="sr-only peer">
+                            <input type="checkbox" name="collect_rental_payment" id="releaseCollectRentalPayment" checked class="sr-only peer">
                             <div class="w-11 h-6 bg-neutral-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-500/20 rounded-full peer dark:bg-neutral-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-neutral-600 peer-checked:bg-emerald-600"></div>
                         </label>
                     </div>
 
-                    <div id="releaseDepositFields" class="space-y-4">
+                    <div id="releaseRentalPaymentFields" class="space-y-4">
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block">
-                                    <span class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Configured Deposit Amount</span>
+                                    <span class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Rental Payment Amount</span>
                                     <div class="relative mt-2">
                                         <span class="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500 dark:text-neutral-400 text-sm">₱</span>
-                                        <input type="number" id="releaseDepositAmount" step="0.01" min="0" readonly
+                                        <input type="number" id="releaseRentalPaymentAmount" step="0.01" min="0" readonly
                                             class="w-full rounded-xl border border-neutral-300 bg-neutral-100 pl-8 pr-4 py-3 text-sm text-neutral-900 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white cursor-not-allowed" />
                                     </div>
-                                    <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">Automatically set based on item variant configuration</p>
+                                    <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">Rental fee + Security deposit automatically calculated from item configuration</p>
                                 </label>
                             </div>
                             <div>
                                 <label class="block">
                                     <span class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Payment Method</span>
-                                    <select name="deposit_payment_method" id="releaseDepositMethod"
+                                    <select name="rental_payment_method" id="releaseRentalPaymentMethod"
                                         class="mt-2 w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white transition-colors duration-200">
                                         <option value="cash">Cash</option>
                                         <option value="card">Card</option>
@@ -399,24 +399,48 @@
         var itemSelect = document.getElementById('releaseItemId');
         itemSelect.innerHTML = '<option value="">Loading items...</option>';
 
+        console.log('Reservation data:', reservation);
+        console.log('Items:', reservation.items);
+
         // Items should be available from reservation
         if (reservation.items && reservation.items.length > 0) {
             var html = '<option value="">Select an item to release...</option>';
             reservation.items.forEach(function(item) {
+                console.log('Processing item:', item);
+                console.log('Fulfillment status:', item.fulfillment_status);
+                
+                // Only show items that haven't been fulfilled yet
                 if (item.fulfillment_status !== 'fulfilled') {
-                    var itemName = item.variant ? item.variant.variant_name : 'Unknown Item';
-                    html += '<option value="" data-reservation-item-id="' + item.reservation_item_id + '" data-variant-id="' + (item.variant_id || '') + '">' + itemName + '</option>';
+                    var itemName = item.variant ? item.variant.name : 'Unknown Item';
+                    var rentalPrice = item.variant && item.variant.rental_price ? parseFloat(item.variant.rental_price) : 0;
+                    var depositAmount = item.variant && item.variant.deposit_amount ? parseFloat(item.variant.deposit_amount) : 0;
+                    var totalPayment = rentalPrice + depositAmount;
+                    var paymentDisplay = totalPayment > 0 ? ' (Total: ₱' + totalPayment.toFixed(2) + ')' : '';
+                    
+                    // Don't set a value attribute - we'll use the reservation_item_id instead
+                    // The backend will find the available physical item based on the reservation_item_id
+                    html += '<option value="0" data-reservation-item-id="' + item.reservation_item_id + '" data-variant-id="' + (item.variant_id || '') + '" data-rental-price="' + rentalPrice + '" data-deposit="' + depositAmount + '" data-total="' + totalPayment + '">' + itemName + paymentDisplay + '</option>';
+                    console.log('Added option:', itemName);
                 }
             });
             itemSelect.innerHTML = html;
+            
+            console.log('Final HTML:', html);
+            
+            // If no items, show message
+            if (html === '<option value="">Select an item to release...</option>') {
+                itemSelect.innerHTML = '<option value="">No unreleased items available</option>';
+            }
         } else {
             itemSelect.innerHTML = '<option value="">No items available</option>';
         }
 
-        // Handle item selection to set reservation_item_id
+        // Handle item selection to set reservation_item_id and calculate payment
         itemSelect.onchange = function() {
             var selected = itemSelect.options[itemSelect.selectedIndex];
             document.getElementById('releaseReservationItemId').value = selected.dataset.reservationItemId || '';
+            var totalPayment = selected.dataset.total || 0;
+            document.getElementById('releaseRentalPaymentAmount').value = totalPayment;
         };
     }
 
@@ -453,18 +477,21 @@
                 if (Array.isArray(items)) {
                     items.forEach(function(item) {
                         var itemName = item.name || item.sku || 'Item #' + item.item_id;
-                        var deposit = item.deposit_amount ? ' (Deposit: ₱' + parseFloat(item.deposit_amount).toFixed(2) + ')' : '';
-                        html += '<option value="' + item.item_id + '" data-deposit="' + (item.deposit_amount || 0) + '">' + itemName + deposit + '</option>';
+                        var rentalPrice = item.rental_price ? parseFloat(item.rental_price) : 0;
+                        var depositAmount = item.deposit_amount ? parseFloat(item.deposit_amount) : 0;
+                        var totalPayment = rentalPrice + depositAmount;
+                        var paymentDisplay = totalPayment > 0 ? ' (Total: ₱' + totalPayment.toFixed(2) + ')' : '';
+                        html += '<option value="' + item.item_id + '" data-rental-price="' + rentalPrice + '" data-deposit="' + depositAmount + '" data-total="' + totalPayment + '">' + itemName + paymentDisplay + '</option>';
                     });
                 }
 
                 itemSelect.innerHTML = html;
 
-                // Update deposit amount display when item is selected
+                // Update payment amount display when item is selected
                 itemSelect.onchange = function() {
                     var selected = itemSelect.options[itemSelect.selectedIndex];
-                    var depositAmount = selected.dataset.deposit || 0;
-                    document.getElementById('releaseDepositAmount').value = depositAmount;
+                    var totalPayment = selected.dataset.total || 0;
+                    document.getElementById('releaseRentalPaymentAmount').value = totalPayment;
                 };
             })
             .catch(function(error) {
@@ -473,13 +500,13 @@
             });
     }
 
-    // Toggle deposit fields visibility
-    document.getElementById('releaseCollectDeposit').addEventListener('change', function() {
-        var depositFields = document.getElementById('releaseDepositFields');
+    // Toggle rental payment fields visibility
+    document.getElementById('releaseCollectRentalPayment').addEventListener('change', function() {
+        var paymentFields = document.getElementById('releaseRentalPaymentFields');
         if (this.checked) {
-            depositFields.classList.remove('hidden');
+            paymentFields.classList.remove('hidden');
         } else {
-            depositFields.classList.add('hidden');
+            paymentFields.classList.add('hidden');
         }
     });
 
@@ -527,14 +554,14 @@
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<span class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span><span>Releasing...</span>';
 
-        var collectDeposit = document.getElementById('releaseCollectDeposit').checked;
+        var collectRentalPayment = document.getElementById('releaseCollectRentalPayment').checked;
 
         var payload = {
             customer_id: customerId,
             released_date: releasedDate,
             due_date: dueDate,
             release_notes: document.getElementById('releaseNotes').value,
-            collect_deposit: collectDeposit
+            collect_rental_payment: collectRentalPayment
         };
 
         if (document.getElementById('releaseReservationId').value) {
@@ -542,13 +569,14 @@
         }
         if (reservationItemId) {
             payload.reservation_item_id = reservationItemId;
+            // When releasing from a reservation, don't send item_id - let backend find available item
+        } else if (itemId && itemId !== '0') {
+            // Only send item_id for walk-in releases (not from reservation)
+            payload.item_id = parseInt(itemId);
         }
-        if (itemId) {
-            payload.item_id = itemId;
-        }
-        if (collectDeposit) {
-            payload.deposit_payment_method = document.getElementById('releaseDepositMethod').value;
-            // NOTE: deposit_amount is NOT sent - it's determined server-side from the item/variant configuration
+        if (collectRentalPayment) {
+            payload.rental_payment_method = document.getElementById('releaseRentalPaymentMethod').value;
+            // NOTE: rental_payment_amount is NOT sent - it's determined server-side from the item/variant configuration
         }
 
         axios.post('/api/rentals/release', payload)

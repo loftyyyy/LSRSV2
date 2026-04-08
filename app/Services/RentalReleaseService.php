@@ -8,6 +8,7 @@ use App\Models\InventoryStatus;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Payment;
+use App\Models\PaymentStatus;
 use App\Models\Rental;
 use App\Models\RentalStatus;
 use App\Models\Reservation;
@@ -26,25 +27,51 @@ class RentalReleaseService
     /**
      * Release an item to customer
      *
-     * @param  array  $data  Release data with item_id, customer_id, dates, etc.
+     * @param  array  $data  Release data with item_id or reservation_item_id, customer_id, dates, etc.
      * @param  int  $releasedBy  User ID
      * @return array|Rental
      */
     public function releaseItem(array $data, int $releasedBy)
     {
         return DB::transaction(function () use ($data, $releasedBy) {
+            // Step 0.5: Handle reservation item case - find physical item if not provided
+            if (! isset($data['item_id']) && isset($data['reservation_item_id'])) {
+                $reservationItem = ReservationItem::find($data['reservation_item_id']);
+                if (! $reservationItem) {
+                    return [
+                        'error' => "Reservation item #{$data['reservation_item_id']} not found.",
+                        'code' => 404,
+                    ];
+                }
+                // Find an available physical item for this variant
+                $availableItem = Inventory::where('variant_id', $reservationItem->variant_id)
+                    ->whereHas('status', function ($q) {
+                        $q->whereRaw('LOWER(status_name) = ?', ['available']);
+                    })
+                    ->whereDoesntHave('rentals', function ($q) {
+                        $q->whereNull('return_date');
+                    })
+                    ->first();
+
+                if (! $availableItem) {
+                    return [
+                        'error' => 'No available physical items found for this variant. All items may be rented or unavailable.',
+                        'code' => 422,
+                    ];
+                }
+                $data['item_id'] = $availableItem->item_id;
+            }
+
             // Step 1: Load and validate the physical item
             $item = $this->getAndValidateItem($data['item_id']);
 
             if (isset($item['error'])) {
                 return $item;
             }
-
             // Step 2: Load reservation if provided
             $reservation = $data['reservation_id']
                 ? Reservation::find($data['reservation_id'])
                 : null;
-
             // Step 2.5: Validate reservation status if provided
             if ($reservation) {
                 $reservationValidation = $this->validateReservationForRelease($reservation, $data);
@@ -52,44 +79,40 @@ class RentalReleaseService
                     return $reservationValidation;
                 }
             }
-
             // Step 3: Determine deposit amount from item
             $depositAmount = $this->getDepositAmount($item);
 
             if (isset($depositAmount['error'])) {
                 return $depositAmount;
             }
-
+            // Step 3.5: Get rental fee from item
+            $rentalFee = (float) $item->rental_price ?? 0;
             // Step 4: Create Rental record
             $rental = $this->createRentalRecord($data, $item, $releasedBy, $depositAmount);
-
             // Step 5: Create Invoice with line items
-            $invoice = $this->createInvoiceWithItems($rental, $item, $depositAmount);
-
-            // Step 6: Collect deposit if requested
-            if ($data['collect_deposit'] ?? true) {
-                $depositPayment = $this->collectDeposit(
+            $invoice = $this->createInvoiceWithItems($rental, $item, $rentalFee, $depositAmount);
+            // Step 6: Collect rental payment if requested
+            if ($data['collect_rental_payment'] ?? true) {
+                $paymentResult = $this->collectRentalPayment(
                     $rental,
                     $invoice,
+                    $rentalFee,
                     $depositAmount,
-                    $data['deposit_payment_method'] ?? 'cash',
-                    $data['deposit_payment_notes'] ?? null,
+                    $data['rental_payment_method'] ?? 'cash',
+                    $data['rental_payment_notes'] ?? null,
                     $releasedBy
                 );
 
-                if (isset($depositPayment['error'])) {
-                    throw new \RuntimeException($depositPayment['error']);
+                if (isset($paymentResult['error'])) {
+                    throw new \RuntimeException($paymentResult['error']);
                 }
             }
-
             // Step 7: Update item inventory status
             $this->updateItemStatus($item, 'rented');
-
             // Step 8: Handle reservation item allocation if applicable
             if ($reservation) {
                 $this->handleReservationAllocation($rental, $reservation, $item, $releasedBy);
             }
-
             // Step 9: Log inventory movement
             $this->logInventoryMovement($item, 'release', $rental, $reservation, $data['release_notes'] ?? null);
 
@@ -214,22 +237,32 @@ class RentalReleaseService
      */
     private function createRentalRecord(array $data, Inventory $item, int $releasedBy, float $depositAmount): Rental
     {
-        $rentalStatus = RentalStatus::whereRaw('LOWER(status_name) = ?', ['rented'])
-            ->firstOrFail();
+        // Set status to 'pending' initially - will be updated to 'rented' after payment is collected
+        $rentalStatus = RentalStatus::whereRaw('LOWER(status_name) = ?', ['pending'])
+            ->first();
 
-        return Rental::create([
-            'reservation_id' => $data['reservation_id'] ?? null,
-            'item_id' => $item->item_id,
-            'customer_id' => $data['customer_id'],
-            'released_by' => $releasedBy,
-            'released_date' => $data['released_date'],
-            'due_date' => $data['due_date'],
-            'original_due_date' => $data['due_date'],
-            'status_id' => $rentalStatus->status_id,
-            'extension_count' => 0,
-            'deposit_amount' => $depositAmount,
-            'deposit_status' => 'pending_collection',
-        ]);
+        if (! $rentalStatus) {
+            throw new \Exception('Pending rental status not found in database');
+        }
+        try {
+            $rental = Rental::create([
+                'reservation_id' => $data['reservation_id'] ?? null,
+                'item_id' => $item->item_id,
+                'customer_id' => $data['customer_id'],
+                'released_by' => $releasedBy,
+                'released_date' => $data['released_date'],
+                'due_date' => $data['due_date'],
+                'original_due_date' => $data['due_date'],
+                'status_id' => $rentalStatus->status_id,
+                'extension_count' => 0,
+                'deposit_amount' => $depositAmount,
+                'deposit_status' => 'not_collected',  // Will be updated to 'held' when payment is collected
+            ]);
+
+            return $rental;
+        } catch (\Exception $e) {
+            throw $e;
+        }
     }
 
     /**
@@ -238,50 +271,96 @@ class RentalReleaseService
     private function createInvoiceWithItems(
         Rental $rental,
         Inventory $item,
+        float $rentalFee,
         float $depositAmount
     ): Invoice {
-        $rentalFee = (float) $item->rental_price ?? 0;
+        try {
+            // Get pending payment status
+            $pendingStatus = PaymentStatus::whereRaw('LOWER(status_name) = ?', ['pending'])->firstOrFail();
+            $invoice = Invoice::create([
+                'invoice_number' => $this->generateInvoiceNumber(),
+                'customer_id' => $rental->customer_id,
+                'reservation_id' => $rental->reservation_id,
+                'rental_id' => $rental->rental_id,
+                'invoice_type' => 'rental',
+                'invoice_date' => Carbon::now(),
+                'due_date' => Carbon::parse($rental->due_date)->addDays(7),
+                'subtotal' => $rentalFee + $depositAmount,
+                'discount' => 0,
+                'tax' => 0,
+                'total_amount' => $rentalFee + $depositAmount,
+                'amount_paid' => 0,
+                'balance_due' => $rentalFee + $depositAmount,
+                'created_by' => auth()->id() ?: $rental->released_by,
+                'status_id' => $pendingStatus->status_id,
+            ]);
+            // Create rental fee line item
+            InvoiceItem::create([
+                'invoice_id' => $invoice->invoice_id,
+                'description' => "Rental: {$item->name} ({$item->sku})",
+                'item_type' => 'rental_fee',
+                'item_id' => $item->item_id,
+                'quantity' => 1,
+                'unit_price' => $rentalFee,
+                'total_price' => $rentalFee,
+            ]);
+            // Create deposit line item
+            InvoiceItem::create([
+                'invoice_id' => $invoice->invoice_id,
+                'description' => "Security Deposit: {$item->name}",
+                'item_type' => 'deposit',
+                'item_id' => $item->item_id,
+                'quantity' => 1,
+                'unit_price' => $depositAmount,
+                'total_price' => $depositAmount,
+            ]);
 
-        $invoice = Invoice::create([
-            'invoice_number' => $this->generateInvoiceNumber(),
-            'customer_id' => $rental->customer_id,
-            'reservation_id' => $rental->reservation_id,
-            'rental_id' => $rental->rental_id,
-            'invoice_type' => 'rental',
-            'invoice_date' => Carbon::now(),
-            'due_date' => Carbon::parse($rental->due_date)->addDays(7),
-            'subtotal' => $rentalFee + $depositAmount,
-            'discount' => 0,
-            'tax' => 0,
-            'total_amount' => $rentalFee + $depositAmount,
-            'amount_paid' => 0,
-            'balance_due' => $rentalFee + $depositAmount,
-            'created_by' => auth()->id() ?? $rental->released_by,
-        ]);
+            return $invoice;
+        } catch (\Exception $e) {
+            throw $e;
+        }
+    }
 
-        // Create rental fee line item
-        InvoiceItem::create([
-            'invoice_id' => $invoice->invoice_id,
-            'description' => "Rental: {$item->name} ({$item->sku})",
-            'item_type' => 'rental_fee',
-            'item_id' => $item->item_id,
-            'quantity' => 1,
-            'unit_price' => $rentalFee,
-            'total_price' => $rentalFee,
-        ]);
+    /**
+     * Collect rental payment (rental fee + deposit) using PaymentService
+     */
+    private function collectRentalPayment(
+        Rental $rental,
+        Invoice $invoice,
+        float $rentalFee,
+        float $depositAmount,
+        string $paymentMethod,
+        ?string $notes,
+        int $releasedBy
+    ): array|Payment {
+        try {
+            $totalPayment = $rentalFee + $depositAmount;
 
-        // Create deposit line item
-        InvoiceItem::create([
-            'invoice_id' => $invoice->invoice_id,
-            'description' => "Security Deposit: {$item->name}",
-            'item_type' => 'deposit',
-            'item_id' => $item->item_id,
-            'quantity' => 1,
-            'unit_price' => $depositAmount,
-            'total_price' => $depositAmount,
-        ]);
+            $payment = $this->paymentService->processPayment([
+                'invoice_id' => $invoice->invoice_id,
+                'amount' => $totalPayment,
+                'payment_method' => $paymentMethod,
+                'notes' => $notes ?? 'Rental payment (fee + deposit) collected during item release',
+            ], $releasedBy);
 
-        return $invoice;
+            // Update rental status to 'rented' after payment is collected
+            $rentalStatus = RentalStatus::whereRaw('LOWER(status_name) = ?', ['rented'])
+                ->firstOrFail();
+
+            $rental->update([
+                'status_id' => $rentalStatus->status_id,
+                'deposit_status' => 'held',
+                'deposit_collected_by' => $releasedBy,
+                'deposit_collected_at' => $payment->payment_date,
+            ]);
+
+            return $payment;
+        } catch (\Exception $e) {
+            return [
+                'error' => "Failed to collect rental payment: {$e->getMessage()}",
+                'code' => 500,
+            ];
+        }
     }
 
     /**
@@ -423,7 +502,7 @@ class RentalReleaseService
             'reference_type' => 'rental',
             'reference_id' => $rental->rental_id,
             'notes' => $notes ?? "Item released to customer: {$rental->customer->first_name} {$rental->customer->last_name}",
-            'created_by' => auth()->id() ?? $rental->released_by,
+            'created_by' => auth()->id() ?: $rental->released_by,
         ]);
     }
 

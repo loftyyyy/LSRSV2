@@ -9,10 +9,15 @@ class InventoryStatus extends Model
 {
     /** @use HasFactory<\Database\Factories\InventoryStatusFactory> */
     use HasFactory;
+
     protected $table = 'inventory_statuses';
+
     protected $primaryKey = 'status_id';
+
+    public $timestamps = false;
+
     protected $fillable = [
-        'status_name'
+        'status_name',
     ];
 
     public function inventories()

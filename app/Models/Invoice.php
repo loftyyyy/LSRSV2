@@ -8,7 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 class Invoice extends Model
 {
     use HasFactory;
+
     protected $table = 'invoices';
+
     protected $primaryKey = 'invoice_id';
 
     protected $fillable = [
@@ -38,6 +40,10 @@ class Invoice extends Model
         'balance_due' => 'decimal:2',
         'invoice_date' => 'datetime',
         'due_date' => 'datetime',
+    ];
+
+    protected $appends = [
+        'payment_status',
     ];
 
     public function customer()
@@ -82,7 +88,16 @@ class Invoice extends Model
     {
         return (float) $this->invoiceItems()->whereIn('item_type', ['penalty', 'late_fee'])->sum('total_price');
     }
-     /**
+
+    /**
+     * Get payment status name
+     */
+    public function getPaymentStatusAttribute(): ?string
+    {
+        return $this->status?->status_name;
+    }
+
+    /**
      * Get rental fee items
      */
     public function getRentalFees()
@@ -95,9 +110,9 @@ class Invoice extends Model
     /**
      * Check if invoice is fully paid
      */
-//    public function isPaid(): bool
-//    {
-//        return $this-> === 'paid';
-//    }
+    //    public function isPaid(): bool
+    //    {
+    //        return $this-> === 'paid';
+    //    }
 
 }

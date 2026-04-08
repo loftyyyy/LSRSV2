@@ -1,4 +1,10 @@
 <?php
 
-// Currently unused. You can add public API routes here later if needed.
+use App\Http\Controllers\RentalController;
+use Illuminate\Support\Facades\Route;
 
+// Authenticated API routes
+Route::middleware('auth')->group(function () {
+    // Rental Release
+    Route::post('/rentals/release', [RentalController::class, 'releaseItem']);
+});

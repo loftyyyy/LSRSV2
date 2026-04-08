@@ -690,6 +690,7 @@ class RentalController extends Controller
             'returnedTo',
             'extendedBy',
             'invoices.invoiceItems',
+            'invoices.status',
         ]);
 
         // Add calculated penalty if overdue

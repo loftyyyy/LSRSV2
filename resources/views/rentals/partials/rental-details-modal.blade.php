@@ -708,6 +708,7 @@
 
             var invoiceDate = invoice.invoice_date ? formatRentalDate(invoice.invoice_date) : '-';
             var totalAmount = invoice.total_amount || 0;
+            var isPaid = statusName === 'paid';
 
             html += '<div class="px-4 py-3 flex items-center justify-between hover:bg-neutral-100 dark:hover:bg-neutral-800/50 transition-colors">' +
                 '<div class="flex items-center gap-3">' +
@@ -719,9 +720,23 @@
                         '<p class="text-xs text-neutral-500 dark:text-neutral-400 font-geist-mono">₱' + Number(totalAmount).toLocaleString() + '</p>' +
                     '</div>' +
                 '</div>' +
-                '<span class="inline-flex items-center rounded-full ' + statusColor + ' px-2 py-1 text-[10px] font-medium border flex-shrink-0 ml-2">' +
-                    (invoice.payment_status || 'Unknown') +
-                '</span>' +
+                '<div class="flex items-center gap-2 flex-shrink-0">' +
+                    '<span class="inline-flex items-center rounded-full ' + statusColor + ' px-2 py-1 text-[10px] font-medium border">' +
+                        (invoice.payment_status || 'Unknown') +
+                    '</span>' +
+                    (isPaid ? 
+                        '<button disabled class="inline-flex items-center rounded-lg px-2.5 py-1 text-[10px] font-medium bg-neutral-200 text-neutral-500 dark:bg-neutral-700 dark:text-neutral-400 cursor-not-allowed">' +
+                            'Paid' +
+                        '</button>' :
+                        '<a ' +
+                            'href="/payments?invoice_id=' + invoice.invoice_id + '" ' +
+                            'class="inline-flex items-center rounded-lg px-2.5 py-1 text-[10px] font-medium bg-violet-600 text-white hover:bg-violet-500 dark:hover:bg-violet-700 cursor-pointer transition-colors duration-100 ease-in-out" ' +
+                            'title="Pay this invoice"' +
+                        '>' +
+                            'Pay' +
+                        '</a>'
+                    ) +
+                '</div>' +
             '</div>';
         });
         html += '</div>';

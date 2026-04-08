@@ -9,8 +9,13 @@ class PaymentStatus extends Model
 {
     /** @use HasFactory<\Database\Factories\PaymentStatusFactory> */
     use HasFactory;
+
     protected $table = 'payment_statuses';
+
     protected $primaryKey = 'status_id';
+
+    public $timestamps = false;
+
     protected $fillable = [
         'status_name',
     ];

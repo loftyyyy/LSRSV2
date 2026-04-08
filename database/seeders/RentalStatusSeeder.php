@@ -14,6 +14,7 @@ class RentalStatusSeeder extends Seeder
     public function run(): void
     {
         DB::table('rental_statuses')->insert([
+            ['status_name' => 'pending'],
             ['status_name' => 'rented'],
             ['status_name' => 'returned'],
             ['status_name' => 'overdue'],

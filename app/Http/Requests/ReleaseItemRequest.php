@@ -22,11 +22,20 @@ class ReleaseItemRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // Item selection - EXPLICIT, no auto-lookup
+            // Item selection - optional if releasing from reservation (reservation_item_id will be used)
             'item_id' => [
-                'required',
+                'required_without:reservation_item_id',
+                'nullable',
                 'integer',
                 'exists:inventories,item_id',
+            ],
+
+            // Reservation item ID - optional, used when releasing from a confirmed reservation
+            'reservation_item_id' => [
+                'required_without:item_id',
+                'nullable',
+                'integer',
+                'exists:reservation_items,reservation_item_id',
             ],
 
             // Customer information
@@ -55,12 +64,12 @@ class ReleaseItemRequest extends FormRequest
                 'exists:reservations,reservation_id',
             ],
 
-            // Deposit collection
-            'collect_deposit' => [
+            // Rental payment collection (replacing old deposit collection)
+            'collect_rental_payment' => [
                 'sometimes',
                 'boolean',
             ],
-            'deposit_payment_method' => [
+            'rental_payment_method' => [
                 'nullable',
                 'string',
                 'in:cash,card,gcash,paymaya,bank_transfer',
@@ -72,11 +81,6 @@ class ReleaseItemRequest extends FormRequest
                 'string',
                 'max:1000',
             ],
-            'deposit_payment_notes' => [
-                'nullable',
-                'string',
-                'max:500',
-            ],
         ];
     }
 
@@ -86,15 +90,17 @@ class ReleaseItemRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'item_id.required' => 'Physical item ID is required to release an item.',
+            'item_id.required_without' => 'Physical item ID or reservation item ID is required to release an item.',
             'item_id.exists' => 'The selected item does not exist in inventory.',
+            'reservation_item_id.required_without' => 'Reservation item ID or physical item ID is required to release an item.',
+            'reservation_item_id.exists' => 'The selected reservation item does not exist.',
             'customer_id.required' => 'Customer ID is required.',
             'customer_id.exists' => 'The selected customer does not exist.',
             'released_date.required' => 'Release date is required.',
             'released_date.before_or_equal' => 'Release date cannot be in the future.',
             'due_date.required' => 'Due date is required.',
             'due_date.after' => 'Due date must be after the release date.',
-            'deposit_payment_method.in' => 'Invalid payment method. Must be one of: cash, card, gcash, paymaya, bank_transfer.',
+            'rental_payment_method.in' => 'Invalid payment method. Must be one of: cash, card, gcash, paymaya, bank_transfer.',
         ];
     }
 
@@ -105,11 +111,12 @@ class ReleaseItemRequest extends FormRequest
     {
         return [
             'item_id' => 'physical item',
+            'reservation_item_id' => 'reservation item',
             'customer_id' => 'customer',
             'released_date' => 'release date',
             'due_date' => 'due date',
-            'collect_deposit' => 'deposit collection',
-            'deposit_payment_method' => 'payment method',
+            'collect_rental_payment' => 'rental payment collection',
+            'rental_payment_method' => 'payment method',
         ];
     }
 }
