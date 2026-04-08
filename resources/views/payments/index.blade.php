@@ -56,24 +56,41 @@
     </header>
 
 
-    {{-- Stats --}}
-    <section class="grid grid-cols-4 gap-6 mb-8">
-        @foreach ([
-            ['label' => 'Total Revenue', 'value' => '₱3', 'color' => 'text-emerald-600 dark:text-emerald-400'],
-            ['label' => 'Pending Payments', 'value' => '₱3', 'color' => 'text-amber-600 dark:text-amber-400'],
-            ['label' => 'Overdue', 'value' => '₱1', 'color' => 'text-rose-600 dark:text-rose-400'],
-            ['label' => 'Collection Rate', 'value' => '20.6%', 'color' => 'text-sky-600 dark:text-sky-400'],
-        ] as $stat)
-            <div class="rounded-2xl p-6 border border-neutral-200 bg-white dark:border-neutral-900 dark:bg-neutral-950/60 shadow-sm dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
-                <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
-                    {{ $stat['label'] }}
-                </div>
-                <div class="text-3xl font-semibold {{ $stat['color'] }} transition-colors duration-300 ease-in-out">
-                    {{ $stat['value'] }}
-                </div>
-            </div>
-        @endforeach
-    </section>
+     {{-- Stats --}}
+     <section class="grid grid-cols-4 gap-6 mb-8">
+         <div class="rounded-2xl p-6 border border-neutral-200 bg-white dark:border-neutral-900 dark:bg-neutral-950/60 shadow-sm dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
+             <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
+                 Total Revenue
+             </div>
+             <div id="totalRevenueCount" class="text-3xl font-semibold text-emerald-600 dark:text-emerald-400 transition-colors duration-300 ease-in-out">
+                 ₱0
+             </div>
+         </div>
+         <div class="rounded-2xl p-6 border border-neutral-200 bg-white dark:border-neutral-900 dark:bg-neutral-950/60 shadow-sm dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
+             <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
+                 Pending Payments
+             </div>
+             <div id="pendingPaymentsCount" class="text-3xl font-semibold text-amber-600 dark:text-amber-400 transition-colors duration-300 ease-in-out">
+                 ₱0
+             </div>
+         </div>
+         <div class="rounded-2xl p-6 border border-neutral-200 bg-white dark:border-neutral-900 dark:bg-neutral-950/60 shadow-sm dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
+             <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
+                 Overdue
+             </div>
+             <div id="overduePaymentsCount" class="text-3xl font-semibold text-rose-600 dark:text-rose-400 transition-colors duration-300 ease-in-out">
+                 ₱0
+             </div>
+         </div>
+         <div class="rounded-2xl p-6 border border-neutral-200 bg-white dark:border-neutral-900 dark:bg-neutral-950/60 shadow-sm dark:shadow-[0_18px_60px_rgba(0,0,0,0.65)] transition-colors duration-300 ease-in-out">
+             <div class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 transition-colors duration-300 ease-in-out">
+                 Collection Rate
+             </div>
+             <div id="collectionRateCount" class="text-3xl font-semibold text-sky-600 dark:text-sky-400 transition-colors duration-300 ease-in-out">
+                 0%
+             </div>
+         </div>
+     </section>
 
 
     {{-- Filters + table --}}
@@ -212,25 +229,27 @@
         }
     });
 
-    // Load invoices from API
-    function loadInvoices() {
-        if (!window.axios) return;
+     // Load invoices from API
+     function loadInvoices() {
+         if (!window.axios) return;
 
-        const url = currentFilter === 'all' 
-            ? '/api/invoices/monitor?status=all'
-            : `/api/invoices/monitor?status=${currentFilter}`;
+         // Use 'all' as default if currentFilter is not set
+         const filterToUse = currentFilter || 'all';
+         const url = filterToUse === 'all' 
+             ? '/api/invoices/monitor?status=all'
+             : `/api/invoices/monitor?status=${filterToUse}`;
 
-        window.axios.get(url)
-            .then(function(resp) {
-                const invoices = resp.data?.invoices?.data || [];
-                renderInvoices(invoices);
-            })
-            .catch(function(err) {
-                console.error('Error loading invoices:', err);
-                invoicesTableBody.innerHTML = '';
-                noInvoices.classList.remove('hidden');
-            });
-    }
+         window.axios.get(url)
+             .then(function(resp) {
+                 const invoices = resp.data?.invoices?.data || [];
+                 renderInvoices(invoices);
+             })
+             .catch(function(err) {
+                 console.error('Error loading invoices:', err);
+                 invoicesTableBody.innerHTML = '';
+                 noInvoices.classList.remove('hidden');
+             });
+     }
 
     // Render invoices in table
     function renderInvoices(invoices) {
@@ -245,7 +264,14 @@
 
         invoices.forEach(function(inv) {
             const row = document.createElement('tr');
-            row.className = 'border-b border-neutral-200 hover:bg-neutral-100 dark:border-neutral-900/60 dark:hover:bg-white/5 transition-colors duration-300 ease-in-out';
+            row.className = 'border-b border-neutral-200 hover:bg-neutral-100 dark:border-neutral-900/60 dark:hover:bg-white/5 transition-colors duration-300 ease-in-out cursor-pointer';
+            row.addEventListener('click', function(e) {
+                // Don't trigger if clicking on action buttons
+                if (e.target.closest('button')) {
+                    return;
+                }
+                openRecordPaymentModalWithInvoice(inv.invoice_id);
+            });
 
             const customer = inv.customer 
                 ? `${inv.customer.first_name} ${inv.customer.last_name}` 
@@ -300,8 +326,75 @@
         // Implement download functionality
     }
 
-    // Load invoices on page load
-    loadInvoices();
+    // Open record payment modal with selected invoice
+    function openRecordPaymentModalWithInvoice(invoiceId) {
+        openRecordPaymentModal();
+        // Wait for modal to open and invoices to load
+        setTimeout(function() {
+            const invoiceSelect = document.getElementById('invoiceSelect');
+            if (invoiceSelect) {
+                invoiceSelect.value = invoiceId;
+                // Trigger change event to update balance info
+                invoiceSelect.dispatchEvent(new Event('change'));
+                // Focus on amount field
+                setTimeout(function() {
+                    const amountInput = document.getElementById('paymentAmount');
+                    if (amountInput) {
+                        amountInput.focus();
+                    }
+                }, 100);
+            }
+        }, 100);
+    }
+
+     // Load payment metrics
+     function loadPaymentMetrics() {
+         if (!window.axios) return;
+
+         window.axios.get('/api/invoices/monitor?status=all')
+             .then(function(resp) {
+                 const invoices = resp.data?.invoices?.data || [];
+                 
+                 // Calculate metrics
+                 let totalRevenue = 0;
+                 let pendingAmount = 0;
+                 let overdueAmount = 0;
+                 let paidAmount = 0;
+
+                 invoices.forEach(function(inv) {
+                     totalRevenue += parseFloat(inv.total_amount || 0);
+                     paidAmount += parseFloat(inv.amount_paid || 0);
+                     
+                     const status = inv.status?.status_name?.toLowerCase() || '';
+                     if (status === 'unpaid') {
+                         pendingAmount += parseFloat(inv.balance_due || 0);
+                     } else if (status === 'overdue') {
+                         overdueAmount += parseFloat(inv.balance_due || 0);
+                     }
+                 });
+
+                 // Calculate collection rate
+                 const collectionRate = totalRevenue > 0 ? ((paidAmount / totalRevenue) * 100).toFixed(1) : 0;
+
+                 // Update KPI displays
+                 const totalRevenueEl = document.getElementById('totalRevenueCount');
+                 const pendingPaymentsEl = document.getElementById('pendingPaymentsCount');
+                 const overduePaymentsEl = document.getElementById('overduePaymentsCount');
+                 const collectionRateEl = document.getElementById('collectionRateCount');
+
+                 if (totalRevenueEl) totalRevenueEl.textContent = '₱' + totalRevenue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                 if (pendingPaymentsEl) pendingPaymentsEl.textContent = '₱' + pendingAmount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                 if (overduePaymentsEl) overduePaymentsEl.textContent = '₱' + overdueAmount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                 if (collectionRateEl) collectionRateEl.textContent = collectionRate + '%';
+             })
+             .catch(function(err) {
+                 console.error('Error loading payment metrics:', err);
+             });
+     }
+
+     // Load invoices on page load
+     loadPaymentMetrics();
+     loadInvoices();
 </script>
 
 {{-- Include Record Payment Modal --}}

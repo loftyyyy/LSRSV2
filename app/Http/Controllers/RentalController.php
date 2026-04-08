@@ -322,9 +322,9 @@ class RentalController extends Controller
     {
         // Basic Rental Stats
         $totalRentals = Rental::count();
-        $activeRentals = Rental::whereHas('status', fn ($q) => $q->where('status_name', 'active'))->count();
+        $activeRentals = Rental::whereHas('status', fn ($q) => $q->where('status_name', 'rented'))->count();
         $completedRentals = Rental::whereHas('status', fn ($q) => $q->where('status_name', 'returned'))->count();
-        $cancelledRentals = Rental::whereHas('status', fn ($q) => $q->where('status_name', 'cancelled'))->count();
+        $cancelledRentals = Rental::whereHas('status', fn ($q) => $q->where('status_name', 'overdue'))->count();
 
         // Overdue & Late Returns
         $overdueRentals = Rental::whereNull('return_date')

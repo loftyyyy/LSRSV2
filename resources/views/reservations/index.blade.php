@@ -169,7 +169,6 @@
                             <th class="py-2.5 pr-4 font-medium">Pickup</th>
                             <th class="py-2.5 pr-4 font-medium">Return</th>
                             <th class="py-2.5 pr-4 font-medium">Status</th>
-                            <th class="py-2.5 pr-4 font-medium text-left">Amount</th>
                             <th class="py-2.5 pl-2 font-medium text-left">Actions</th>
                         </tr>
                         </thead>
@@ -576,7 +575,6 @@ var row = document.createElement('tr');
                 '<td class="py-3.5 pr-4 text-neutral-600 dark:text-neutral-300 font-geist-mono">' + formatDate(reservation.start_date) + '</td>' +
                 '<td class="py-3.5 pr-2 text-neutral-600 dark:text-neutral-300 font-geist-mono">' + formatDate(reservation.end_date) + '</td>' +
                 '<td class="py-3.5 pr-2"><span class="inline-flex items-center rounded-full ' + statusColor + ' px-2 py-1 text-[11px] font-medium border transition-colors duration-300 ease-in-out"><span class="mr-1.5 h-1.5 w-1.5 rounded-full ' + statusBgColor + '"></span>' + statusLabel + '</span></td>' +
-                '<td class="py-3.5 pr-4 text-left text-neutral-900 dark:text-neutral-100 font-geist-mono">₱' + totalAmount.toLocaleString() + '</td>' +
                 '<td class="py-3.5 pl-2 text-left text-neutral-500 dark:text-neutral-400"><div class="inline-flex items-center gap-2">' + actionButtonHtml + '</div></td>';
 
             tbody.appendChild(row);
