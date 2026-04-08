@@ -104,7 +104,11 @@
                 <!-- Search -->
                 <div class="flex items-center gap-3 rounded-2xl px-4 py-2.5 border border-neutral-300 bg-white focus-within:border-neutral-500 dark:border-neutral-800 dark:bg-black/60 transition-colors duration-300 ease-in-out">
                     <x-icon name="search" class="h-4 w-4 text-neutral-500 transition-colors duration-300 ease-in-out" />
-                    <input type="text" placeholder="Search by customer, item, or ID..." class="w-72 bg-transparent text-xs text-neutral-700 placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500 focus:outline-none transition-colors duration-300 ease-in-out">
+                    <input 
+                        id="searchInput"
+                        type="text" 
+                        placeholder="Search by customer, item, or ID..." 
+                        class="w-72 bg-transparent text-xs text-neutral-700 placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500 focus:outline-none transition-colors duration-300 ease-in-out">
                 </div>
 
                 <!-- Filter with toggle icons -->
@@ -164,39 +168,63 @@
 
 
 <script>
-    const filterButton = document.getElementById('filter-button');
-    const filterButtonText = document.getElementById('filter-button-text');
-    const filterMenu = document.getElementById('filter-menu');
-    const iconDown = document.getElementById('icon-down');
-    const iconUp = document.getElementById('icon-up');
-    const invoicesTableBody = document.getElementById('invoicesTableBody');
-    const noInvoices = document.getElementById('noInvoices');
+     const filterButton = document.getElementById('filter-button');
+     const filterButtonText = document.getElementById('filter-button-text');
+     const filterMenu = document.getElementById('filter-menu');
+     const iconDown = document.getElementById('icon-down');
+     const iconUp = document.getElementById('icon-up');
+     const invoicesTableBody = document.getElementById('invoicesTableBody');
+     const noInvoices = document.getElementById('noInvoices');
 
-    let isOpen = false;
-    let currentFilter = 'all';
+     let isOpen = false;
+     let currentFilter = 'all';
+     let highlightedInvoiceId = null;
 
-    // Toggle dropdown
-    filterButton.addEventListener('click', (e) => {
-        e.stopPropagation();
-        isOpen = !isOpen;
+     // Initialize filter button text to "All Status"
+     function initializeFilterText() {
+         const filterButtonText = document.getElementById('filter-button-text');
+         if (filterButtonText) {
+             filterButtonText.textContent = 'All Status';
+         }
+     }
 
-        filterMenu.classList.toggle('opacity-0', !isOpen);
-        filterMenu.classList.toggle('scale-95', !isOpen);
-        filterMenu.classList.toggle('pointer-events-none', !isOpen);
-        filterMenu.classList.toggle('opacity-100', isOpen);
-        filterMenu.classList.toggle('scale-100', isOpen);
-        filterMenu.classList.toggle('pointer-events-auto', isOpen);
+     // Check for invoice_id in URL query parameters
+     function checkForInvoiceIdInUrl() {
+         const urlParams = new URLSearchParams(window.location.search);
+         const invoiceId = urlParams.get('invoice_id');
+         if (invoiceId) {
+             highlightedInvoiceId = parseInt(invoiceId);
+             // Remove the query parameter from the URL to keep it clean
+             window.history.replaceState({}, document.title, window.location.pathname);
+             // Immediately open the payment modal with this invoice
+             setTimeout(() => {
+                 openRecordPaymentModalWithInvoice(highlightedInvoiceId);
+             }, 500);
+         }
+     }
 
-        iconDown.classList.toggle('hidden', isOpen);
-        iconUp.classList.toggle('hidden', !isOpen);
-    });
+     // Toggle dropdown
+     filterButton.addEventListener('click', (e) => {
+         e.stopPropagation();
+         isOpen = !isOpen;
 
-    // Update filter button text when a status is clicked
-    filterMenu.querySelectorAll('li').forEach(item => {
-        item.addEventListener('click', (e) => {
-            e.stopPropagation();
-            filterButtonText.textContent = item.textContent;
-            isOpen = false;
+         filterMenu.classList.toggle('opacity-0', !isOpen);
+         filterMenu.classList.toggle('scale-95', !isOpen);
+         filterMenu.classList.toggle('pointer-events-none', !isOpen);
+         filterMenu.classList.toggle('opacity-100', isOpen);
+         filterMenu.classList.toggle('scale-100', isOpen);
+         filterMenu.classList.toggle('pointer-events-auto', isOpen);
+
+         iconDown.classList.toggle('hidden', isOpen);
+         iconUp.classList.toggle('hidden', !isOpen);
+     });
+
+     // Update filter button text when a status is clicked
+     filterMenu.querySelectorAll('li').forEach(item => {
+         item.addEventListener('click', (e) => {
+             e.stopPropagation();
+             filterButtonText.textContent = item.textContent;
+             isOpen = false;
 
             filterMenu.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
             filterMenu.classList.remove('opacity-100', 'scale-100', 'pointer-events-auto');
@@ -217,61 +245,93 @@
         });
     });
 
-    // Close dropdown when clicking outside
-    document.addEventListener('click', () => {
-        if (isOpen) {
-            isOpen = false;
-            filterMenu.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
-            filterMenu.classList.remove('opacity-100', 'scale-100', 'pointer-events-auto');
+     // Close dropdown when clicking outside
+     document.addEventListener('click', () => {
+         if (isOpen) {
+             isOpen = false;
+             filterMenu.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+             filterMenu.classList.remove('opacity-100', 'scale-100', 'pointer-events-auto');
 
-            iconDown.classList.remove('hidden');
-            iconUp.classList.add('hidden');
-        }
-    });
+             iconDown.classList.remove('hidden');
+             iconUp.classList.add('hidden');
+         }
+     });
 
-     // Load invoices from API
-     function loadInvoices() {
-         if (!window.axios) return;
-
-         // Use 'all' as default if currentFilter is not set
-         const filterToUse = currentFilter || 'all';
-         const url = filterToUse === 'all' 
-             ? '/api/invoices/monitor?status=all'
-             : `/api/invoices/monitor?status=${filterToUse}`;
-
-         window.axios.get(url)
-             .then(function(resp) {
-                 const invoices = resp.data?.invoices?.data || [];
-                 renderInvoices(invoices);
-             })
-             .catch(function(err) {
-                 console.error('Error loading invoices:', err);
-                 invoicesTableBody.innerHTML = '';
-                 noInvoices.classList.remove('hidden');
-             });
+     // Search input event listener
+     let searchTimeout;
+     const searchInput = document.getElementById('searchInput');
+     if (searchInput) {
+         searchInput.addEventListener('input', function(e) {
+             // Clear previous timeout
+             clearTimeout(searchTimeout);
+             
+             // Set a new timeout to avoid making API calls on every keystroke
+             searchTimeout = setTimeout(() => {
+                 const searchQuery = e.target.value;
+                 loadInvoices(searchQuery);
+             }, 300); // 300ms debounce
+         });
      }
 
-    // Render invoices in table
-    function renderInvoices(invoices) {
-        invoicesTableBody.innerHTML = '';
+      // Load invoices from API
+      function loadInvoices(searchQuery = '') {
+          if (!window.axios) {
+              console.warn('Axios not available, retrying in 100ms');
+              setTimeout(() => loadInvoices(searchQuery), 100);
+              return;
+          }
 
-        if (!invoices || invoices.length === 0) {
-            noInvoices.classList.remove('hidden');
-            return;
-        }
+          // Use 'all' as default if currentFilter is not set
+          const filterToUse = currentFilter || 'all';
+          let url = filterToUse === 'all' 
+              ? '/api/invoices/monitor?status=all'
+              : `/api/invoices/monitor?status=${filterToUse}`;
+          
+          // Add search parameter if provided
+          if (searchQuery && searchQuery.trim() !== '') {
+              url += `&search=${encodeURIComponent(searchQuery.trim())}`;
+          }
 
-        noInvoices.classList.add('hidden');
+          window.axios.get(url)
+              .then(function(resp) {
+                  const invoices = resp.data?.invoices?.data || [];
+                  console.log('Loaded invoices:', invoices.length, resp.data);
+                  renderInvoices(invoices);
+              })
+              .catch(function(err) {
+                  console.error('Error loading invoices:', err);
+                  invoicesTableBody.innerHTML = '';
+                  noInvoices.classList.remove('hidden');
+              });
+      }
 
-        invoices.forEach(function(inv) {
-            const row = document.createElement('tr');
-            row.className = 'border-b border-neutral-200 hover:bg-neutral-100 dark:border-neutral-900/60 dark:hover:bg-white/5 transition-colors duration-300 ease-in-out cursor-pointer';
-            row.addEventListener('click', function(e) {
-                // Don't trigger if clicking on action buttons
-                if (e.target.closest('button')) {
-                    return;
-                }
-                openRecordPaymentModalWithInvoice(inv.invoice_id);
-            });
+     // Render invoices in table
+     function renderInvoices(invoices) {
+         invoicesTableBody.innerHTML = '';
+
+         if (!invoices || invoices.length === 0) {
+             noInvoices.classList.remove('hidden');
+             return;
+         }
+
+         noInvoices.classList.add('hidden');
+
+         invoices.forEach(function(inv) {
+             const row = document.createElement('tr');
+             row.className = 'border-b border-neutral-200 hover:bg-neutral-100 dark:border-neutral-900/60 dark:hover:bg-white/5 transition-colors duration-300 ease-in-out cursor-pointer';
+             
+             // Highlight the invoice if it matches the URL parameter
+             if (highlightedInvoiceId === inv.invoice_id) {
+                 row.classList.add('bg-violet-50', 'dark:bg-violet-900/20');
+             }
+             
+             row.addEventListener('click', function(e) {
+                 // Don't trigger if clicking on action buttons
+                 if (e.target.closest('button')) {
+                     return;
+                 }
+                 openRecordPaymentModalWithInvoice(inv.invoice_id);
+             });
 
             const customer = inv.customer 
                 ? `${inv.customer.first_name} ${inv.customer.last_name}` 
@@ -326,26 +386,21 @@
         // Implement download functionality
     }
 
-    // Open record payment modal with selected invoice
-    function openRecordPaymentModalWithInvoice(invoiceId) {
-        openRecordPaymentModal();
-        // Wait for modal to open and invoices to load
-        setTimeout(function() {
-            const invoiceSelect = document.getElementById('invoiceSelect');
-            if (invoiceSelect) {
-                invoiceSelect.value = invoiceId;
-                // Trigger change event to update balance info
-                invoiceSelect.dispatchEvent(new Event('change'));
-                // Focus on amount field
-                setTimeout(function() {
-                    const amountInput = document.getElementById('paymentAmount');
-                    if (amountInput) {
-                        amountInput.focus();
-                    }
-                }, 100);
-            }
-        }, 100);
-    }
+     // Open record payment modal with selected invoice
+     function openRecordPaymentModalWithInvoice(invoiceId) {
+         // Set the pending invoice in the modal state
+         if (window.recordPaymentModalState) {
+             window.recordPaymentModalState.pendingInvoiceId = invoiceId;
+         }
+         openRecordPaymentModal();
+         // Focus on amount field after modal is fully loaded
+         setTimeout(function() {
+             const amountInput = document.getElementById('paymentAmount');
+             if (amountInput) {
+                 amountInput.focus();
+             }
+         }, 700);
+     }
 
      // Load payment metrics
      function loadPaymentMetrics() {
@@ -392,10 +447,22 @@
              });
      }
 
-     // Load invoices on page load
-     loadPaymentMetrics();
-     loadInvoices();
-</script>
+      // Load invoices on page load
+      // Wait for axios to be available
+      function initializePaymentsPage() {
+          if (!window.axios) {
+              setTimeout(initializePaymentsPage, 50);
+              return;
+          }
+          
+          initializeFilterText();
+          checkForInvoiceIdInUrl();
+          loadPaymentMetrics();
+          loadInvoices();
+      }
+      
+      initializePaymentsPage();
+  </script>
 
 {{-- Include Record Payment Modal --}}
 @include('payments.partials.record-payment-modal')

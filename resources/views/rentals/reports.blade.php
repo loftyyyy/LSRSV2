@@ -77,6 +77,15 @@
                 </div>
 
                 <div class="flex items-center gap-3 text-xs">
+                    <select id="reportType" class="w-48 rounded-lg border border-neutral-300 bg-white px-3 py-2 text-xs text-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white focus:border-violet-500 focus:outline-none pr-8">
+                        <option value="rental_summary">Rental Summary</option>
+                        <option value="deposits">Deposit Management</option>
+                        <option value="penalties">Late Fees & Penalties</option>
+                        <option value="customer_payments">Customer Payment History</option>
+                        <option value="aged_invoices">Aged Invoices</option>
+                        <option value="overdue_rentals">Overdue Rentals</option>
+                    </select>
+
                     <a href="/rentals" class="inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-[14px] font-medium border dark:hover:text-black hover:text-white border-neutral-300 bg-white text-neutral-700 dark:hover:bg-violet-600 hover:bg-violet-600 dark:border-neutral-800 dark:bg-neutral-950/80 dark:text-neutral-200 dark:hover:bg-neutral-900 transition-colors duration-300 ease-in-out">
                         <x-icon name="arrow-left" class="h-4 w-4" />
                         <span>Back to Rentals</span>
@@ -887,9 +896,10 @@
 
          initializeRentalReports();
 
-        function generateCSV() {
-            window.open('/api/rentals/reports/csv', '_blank');
-        }
+         function generateCSV() {
+             const reportType = document.getElementById('reportType')?.value || 'rental_summary';
+             window.open(`/api/rentals/reports/csv?report_type=${reportType}`, '_blank');
+         }
     </script>
 
 </body>

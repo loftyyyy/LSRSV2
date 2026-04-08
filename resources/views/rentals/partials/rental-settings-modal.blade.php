@@ -45,7 +45,7 @@
                                 <div class="relative mt-2">
                                     <span class="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500 dark:text-neutral-400 text-sm">₱</span>
                                     <input type="number" name="penalty_rate_per_day" id="settingPenaltyRate" step="0.01" min="0"
-                                        class="w-full rounded-xl border border-neutral-300 bg-white pl-8 pr-4 py-3 text-sm text-neutral-900 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white transition-colors duration-200" />
+                                           class="w-full rounded-xl border border-neutral-300 bg-white pl-8 pr-4 py-3 text-sm text-neutral-900 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white transition-colors duration-200" />
                                 </div>
                             </label>
                             <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-500">Amount charged per day for overdue rentals</p>
@@ -57,7 +57,7 @@
                                     Grace Period (Hours)
                                 </span>
                                 <input type="number" name="penalty_grace_period_hours" id="settingGracePeriod" min="0"
-                                    class="mt-2 w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white transition-colors duration-200" />
+                                       class="mt-2 w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white transition-colors duration-200" />
                             </label>
                             <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-500">Hours after due date before penalty starts</p>
                         </div>
@@ -70,7 +70,7 @@
                                 Maximum Penalty Days
                             </span>
                             <input type="number" name="max_penalty_days" id="settingMaxPenaltyDays" min="0"
-                                class="mt-2 w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white transition-colors duration-200" />
+                                   class="mt-2 w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white transition-colors duration-200" />
                         </label>
                         <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-500">Maximum number of days to charge penalty (0 = unlimited)</p>
                     </div>
@@ -90,7 +90,7 @@
                                     Reminder Days Before Due
                                 </span>
                                 <input type="number" name="notification_due_days_before" id="settingReminderDays" min="0"
-                                    class="mt-2 w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white transition-colors duration-200" />
+                                       class="mt-2 w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white transition-colors duration-200" />
                             </label>
                             <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-500">Days before due date to send reminder</p>
                         </div>
@@ -98,7 +98,7 @@
                         <div>
                             <label class="flex items-center gap-3 mt-8">
                                 <input type="checkbox" name="notification_overdue_enabled" id="settingOverdueNotifications"
-                                    class="h-5 w-5 rounded border-neutral-300 text-violet-600 focus:ring-violet-500 dark:border-neutral-600 dark:bg-neutral-800" />
+                                       class="h-5 w-5 rounded border-neutral-300 text-violet-600 focus:ring-violet-500 dark:border-neutral-600 dark:bg-neutral-800" />
                                 <span class="text-sm font-medium text-neutral-700 dark:text-neutral-300">
                                     Enable Overdue Notifications
                                 </span>
@@ -121,7 +121,7 @@
                                     Default Rental Period (Days)
                                 </span>
                                 <input type="number" name="default_rental_days" id="settingDefaultRentalDays" min="1"
-                                    class="mt-2 w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white transition-colors duration-200" />
+                                       class="mt-2 w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white transition-colors duration-200" />
                             </label>
                             <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-500">Default number of days for new rentals</p>
                         </div>
@@ -132,7 +132,7 @@
                                     Maximum Extensions Allowed
                                 </span>
                                 <input type="number" name="max_extension_count" id="settingMaxExtensions" min="0"
-                                    class="mt-2 w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white transition-colors duration-200" />
+                                       class="mt-2 w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white transition-colors duration-200" />
                             </label>
                             <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-500">Maximum number of extensions per rental (0 = unlimited)</p>
                         </div>
@@ -163,7 +163,7 @@
                 Cancel
             </button>
             <button type="button" id="saveRentalSettingsBtn" onclick="saveRentalSettings()"
-                class="px-5 py-2.5 text-sm font-medium text-white dark:text-black bg-violet-600 hover:bg-violet-700 disabled:bg-neutral-300 disabled:text-neutral-500 dark:disabled:bg-neutral-700 dark:disabled:text-neutral-500 rounded-xl transition-colors duration-200 flex items-center gap-2">
+                    class="px-5 py-2.5 text-sm font-medium text-white dark:text-black bg-violet-600 hover:bg-violet-700 disabled:bg-neutral-300 disabled:text-neutral-500 dark:disabled:bg-neutral-700 dark:disabled:text-neutral-500 rounded-xl transition-colors duration-200 flex items-center gap-2">
                 <x-icon name="save" class="h-4 w-4" />
                 <span>Save Settings</span>
             </button>
@@ -180,33 +180,41 @@
     };
 
     // Open settings modal
-    function openRentalSettingsModal() {
+    globalThis.openRentalSettingsModal = function openRentalSettingsModal() {
         globalThis.rentalSettingsModalState.isOpen = true;
 
-        // Show loading, hide form
-        document.getElementById('rentalSettingsLoading').classList.remove('hidden');
-        document.getElementById('rentalSettingsLoading').classList.add('flex');
-        document.getElementById('rentalSettingsForm').classList.add('hidden');
-        document.getElementById('rentalSettingsError').classList.add('hidden');
-        document.getElementById('rentalSettingsSuccess').classList.add('hidden');
+        var loading = document.getElementById('rentalSettingsLoading');
+        var form = document.getElementById('rentalSettingsForm');
+        var error = document.getElementById('rentalSettingsError');
+        var success = document.getElementById('rentalSettingsSuccess');
 
-        // Show modal
+        if (loading) {
+            loading.classList.remove('hidden');
+            loading.classList.add('flex');
+        }
+        if (form) form.classList.add('hidden');
+        if (error) error.classList.add('hidden');
+        if (success) success.classList.add('hidden');
+
         var modal = document.getElementById('rentalSettingsModal');
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
 
-        // Fetch current settings
         fetchRentalSettings();
-    }
+    };
 
     // Close settings modal
-    function closeRentalSettingsModal() {
+    globalThis.closeRentalSettingsModal = function closeRentalSettingsModal() {
         globalThis.rentalSettingsModalState.isOpen = false;
 
         var modal = document.getElementById('rentalSettingsModal');
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-    }
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+    };
 
     // Fetch rental settings from API
     function fetchRentalSettings() {
@@ -224,10 +232,13 @@
                 showSettingsError(error.response?.data?.message || 'Failed to load settings');
             })
             .finally(function() {
-                // Hide loading, show form
-                document.getElementById('rentalSettingsLoading').classList.add('hidden');
-                document.getElementById('rentalSettingsLoading').classList.remove('flex');
-                document.getElementById('rentalSettingsForm').classList.remove('hidden');
+                var loading = document.getElementById('rentalSettingsLoading');
+                if (loading) {
+                    loading.classList.add('hidden');
+                    loading.classList.remove('flex');
+                }
+                var form = document.getElementById('rentalSettingsForm');
+                if (form) form.classList.remove('hidden');
             });
     }
 
@@ -248,7 +259,7 @@
                     document.getElementById('settingReminderDays').value = setting.setting_value;
                     break;
                 case 'notification_overdue_enabled':
-                    document.getElementById('settingOverdueNotifications').checked = Boolean(setting.setting_value);
+                    document.getElementById('settingOverdueNotifications').checked = Boolean(parseInt(setting.setting_value));
                     break;
                 case 'default_rental_days':
                     document.getElementById('settingDefaultRentalDays').value = setting.setting_value;
@@ -270,11 +281,9 @@
         saveBtn.disabled = true;
         saveBtn.innerHTML = '<span class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span><span>Saving...</span>';
 
-        // Hide previous messages
         document.getElementById('rentalSettingsError').classList.add('hidden');
         document.getElementById('rentalSettingsSuccess').classList.add('hidden');
 
-        // Gather form data
         var settingsData = {
             penalty_rate_per_day: parseFloat(document.getElementById('settingPenaltyRate').value) || 0,
             penalty_grace_period_hours: parseInt(document.getElementById('settingGracePeriod').value) || 0,
@@ -289,7 +298,6 @@
             .then(function(response) {
                 if (response.data.success) {
                     document.getElementById('rentalSettingsSuccess').classList.remove('hidden');
-                    // Close modal after short delay
                     setTimeout(function() {
                         closeRentalSettingsModal();
                     }, 1500);

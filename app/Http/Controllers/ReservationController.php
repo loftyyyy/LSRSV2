@@ -430,8 +430,9 @@ class ReservationController extends Controller
                         ], 422);
                     }
 
-                    $rentalPrice = $itemData['rental_price'] ?? $variant->rental_price;
-                    $itemTotal = $rentalPrice * $requestedQuantity;
+                    // Use deposit amount for reservation invoice, not rental price
+                    $depositAmount = $itemData['deposit_amount'] ?? $variant->deposit_amount;
+                    $itemTotal = $depositAmount * $requestedQuantity;
                     $invoiceTotal += $itemTotal;
 
                     ReservationItem::create([
@@ -439,7 +440,7 @@ class ReservationController extends Controller
                         'item_id' => null,
                         'variant_id' => $variant->variant_id,
                         'quantity' => $requestedQuantity,
-                        'rental_price' => $rentalPrice,
+                        'rental_price' => $itemData['rental_price'] ?? $variant->rental_price,
                         'notes' => $itemData['notes'] ?? null,
                     ]);
                 }

@@ -40,7 +40,7 @@
                             Search Reservation
                         </span>
                         <input type="text" id="releaseSearchReservation" placeholder="Search by customer name, reservation ID..."
-                            class="mt-2 w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 placeholder-neutral-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:placeholder-neutral-500 transition-colors duration-200" />
+                               class="mt-2 w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 placeholder-neutral-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:placeholder-neutral-500 transition-colors duration-200" />
                     </label>
                 </div>
 
@@ -83,7 +83,7 @@
                             Customer <span class="text-rose-500">*</span>
                         </span>
                         <select name="customer_id" id="releaseCustomerId" required
-                            class="mt-2 w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white transition-colors duration-200">
+                                class="mt-2 w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white transition-colors duration-200">
                             <option value="">Select a customer...</option>
                         </select>
                     </label>
@@ -104,7 +104,7 @@
                             Item to Release <span class="text-rose-500">*</span>
                         </span>
                         <select name="item_id" id="releaseItemId" required
-                            class="mt-2 w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white transition-colors duration-200">
+                                class="mt-2 w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white transition-colors duration-200">
                             <option value="">Select an item...</option>
                         </select>
                     </label>
@@ -119,7 +119,7 @@
                                 Release Date <span class="text-rose-500">*</span>
                             </span>
                             <input type="date" name="released_date" id="releaseReleasedDate" required
-                                class="mt-2 w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white transition-colors duration-200" />
+                                   class="mt-2 w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white transition-colors duration-200" />
                         </label>
                     </div>
                     <div>
@@ -129,50 +129,8 @@
                                 Due Date <span class="text-rose-500">*</span>
                             </span>
                             <input type="date" name="due_date" id="releaseDueDate" required
-                                class="mt-2 w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white transition-colors duration-200" />
+                                   class="mt-2 w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white transition-colors duration-200" />
                         </label>
-                    </div>
-                </div>
-
-                {{-- Collect Rental Payment Section --}}
-                <div class="rounded-xl border border-emerald-200 dark:border-emerald-800/50 bg-emerald-50/50 dark:bg-emerald-900/20 p-4 space-y-4">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <span class="text-sm font-medium text-emerald-900 dark:text-emerald-100">Collect Rental Payment</span>
-                            <p class="text-xs text-emerald-700 dark:text-emerald-300 mt-1">Payment is mandatory before releasing the item</p>
-                        </div>
-                        <div class="px-3 py-1 rounded-full bg-emerald-600 text-white text-xs font-medium">Required</div>
-                    </div>
-
-                    <input type="hidden" name="collect_rental_payment" value="true">
-
-                    <div class="space-y-4">
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block">
-                                    <span class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Rental Payment Amount</span>
-                                    <div class="relative mt-2">
-                                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500 dark:text-neutral-400 text-sm">₱</span>
-                                        <input type="number" id="releaseRentalPaymentAmount" step="0.01" min="0" readonly
-                                            class="w-full rounded-xl border border-neutral-300 bg-neutral-100 pl-8 pr-4 py-3 text-sm text-neutral-900 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white cursor-not-allowed" />
-                                    </div>
-                                    <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">Rental fee + Security deposit automatically calculated from item configuration</p>
-                                </label>
-                            </div>
-                            <div>
-                                <label class="block">
-                                    <span class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Payment Method</span>
-                                    <select name="rental_payment_method" id="releaseRentalPaymentMethod"
-                                        class="mt-2 w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white transition-colors duration-200">
-                                        <option value="cash">Cash</option>
-                                        <option value="card">Card</option>
-                                        <option value="gcash">GCash</option>
-                                        <option value="paymaya">PayMaya</option>
-                                        <option value="bank_transfer">Bank Transfer</option>
-                                    </select>
-                                </label>
-                            </div>
-                        </div>
                     </div>
                 </div>
 
@@ -184,7 +142,7 @@
                             Release Notes
                         </span>
                         <textarea name="release_notes" id="releaseNotes" rows="2" placeholder="Any notes about this release..."
-                            class="mt-2 w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 placeholder-neutral-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:placeholder-neutral-500 resize-none transition-colors duration-200"></textarea>
+                                  class="mt-2 w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 placeholder-neutral-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:placeholder-neutral-500 resize-none transition-colors duration-200"></textarea>
                     </label>
                 </div>
 
@@ -204,7 +162,7 @@
                 Cancel
             </button>
             <button type="button" id="releaseItemSubmitBtn" onclick="submitReleaseItem()" disabled
-                class="hidden px-5 py-2.5 text-sm font-medium text-white dark:text-black bg-emerald-600 hover:bg-emerald-700 disabled:bg-neutral-300 disabled:text-neutral-500 dark:disabled:bg-neutral-700 dark:disabled:text-neutral-500 rounded-xl transition-colors duration-200 flex items-center gap-2">
+                    class="hidden px-5 py-2.5 text-sm font-medium text-white dark:text-black bg-emerald-600 hover:bg-emerald-700 disabled:bg-neutral-300 disabled:text-neutral-500 dark:disabled:bg-neutral-700 dark:disabled:text-neutral-500 rounded-xl transition-colors duration-200 flex items-center gap-2">
                 <x-icon name="package-check" class="h-4 w-4" />
                 <span>Release Item</span>
             </button>
@@ -225,35 +183,61 @@
     };
 
     // Open release item modal
-    function openReleaseItemModal() {
+    globalThis.openReleaseItemModal = function openReleaseItemModal() {
         globalThis.releaseItemModalState.isOpen = true;
         globalThis.releaseItemModalState.step = 1;
         globalThis.releaseItemModalState.selectedReservation = null;
 
-        // Reset UI
-        document.getElementById('releaseStep1').classList.remove('hidden');
-        document.getElementById('releaseItemForm').classList.add('hidden');
-        document.getElementById('releaseItemSubmitBtn').classList.add('hidden');
-        document.getElementById('releaseItemError').classList.add('hidden');
-        document.getElementById('releaseSearchReservation').value = '';
+        var releaseStep1 = document.getElementById('releaseStep1');
+        if (releaseStep1) releaseStep1.classList.remove('hidden');
 
-        // Show modal
+        var releaseItemForm = document.getElementById('releaseItemForm');
+        if (releaseItemForm) releaseItemForm.classList.add('hidden');
+
+        var releaseItemSubmitBtn = document.getElementById('releaseItemSubmitBtn');
+        if (releaseItemSubmitBtn) releaseItemSubmitBtn.classList.add('hidden');
+
+        var releaseItemError = document.getElementById('releaseItemError');
+        if (releaseItemError) releaseItemError.classList.add('hidden');
+
+        var releaseSearchReservation = document.getElementById('releaseSearchReservation');
+        if (releaseSearchReservation) releaseSearchReservation.value = '';
+
         var modal = document.getElementById('releaseItemModal');
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
 
-        // Load confirmed reservations
         loadConfirmedReservations();
-    }
+    };
 
     // Close release item modal
-    function closeReleaseItemModal() {
+    globalThis.closeReleaseItemModal = function closeReleaseItemModal() {
         globalThis.releaseItemModalState.isOpen = false;
 
         var modal = document.getElementById('releaseItemModal');
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-    }
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+    };
+
+    // ── Attach event listeners safely after DOM is ready ──────────────────────
+    var releaseSearchTimer;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        var releaseSearchInput = document.getElementById('releaseSearchReservation');
+        if (releaseSearchInput) {
+            releaseSearchInput.addEventListener('input', function() {
+                clearTimeout(releaseSearchTimer);
+                var query = this.value;
+                releaseSearchTimer = setTimeout(function() {
+                    loadConfirmedReservations(query);
+                }, 300);
+            });
+        }
+    });
 
     // Load confirmed reservations that can be released
     function loadConfirmedReservations(searchQuery) {
@@ -317,36 +301,29 @@
         globalThis.releaseItemModalState.selectedReservation = reservation;
         globalThis.releaseItemModalState.step = 2;
 
-        // Show form
         document.getElementById('releaseStep1').classList.add('hidden');
         document.getElementById('releaseItemForm').classList.remove('hidden');
         document.getElementById('releaseItemSubmitBtn').classList.remove('hidden');
         document.getElementById('releaseItemSubmitBtn').classList.add('flex');
 
-        // Set reservation info
         document.getElementById('releaseReservationId').value = reservation.reservation_id;
         document.getElementById('releaseSelectedReservation').classList.remove('hidden');
         document.getElementById('releaseReservationInfo').textContent = '#' + reservation.reservation_id + ' - ' + (reservation.customer ? reservation.customer.first_name + ' ' + reservation.customer.last_name : 'Unknown');
 
-        // Set customer info
         document.getElementById('releaseCustomerSelect').classList.add('hidden');
         document.getElementById('releaseCustomerInfo').classList.remove('hidden');
         document.getElementById('releaseCustomerName').textContent = reservation.customer ? (reservation.customer.first_name + ' ' + reservation.customer.last_name) : 'Unknown';
         document.getElementById('releaseCustomerIdHidden').value = reservation.customer_id;
 
-        // Load reservation items
         loadReservationItems(reservation);
 
-        // Set default dates
         var today = new Date().toISOString().split('T')[0];
         document.getElementById('releaseReleasedDate').value = today;
 
-        // Default due date (3 days from now or event date)
         var dueDate = new Date();
         dueDate.setDate(dueDate.getDate() + 3);
         document.getElementById('releaseDueDate').value = dueDate.toISOString().split('T')[0];
 
-        // Enable submit button
         document.getElementById('releaseItemSubmitBtn').disabled = false;
     }
 
@@ -355,27 +332,20 @@
         globalThis.releaseItemModalState.selectedReservation = null;
         globalThis.releaseItemModalState.step = 2;
 
-        // Show form
         document.getElementById('releaseStep1').classList.add('hidden');
         document.getElementById('releaseItemForm').classList.remove('hidden');
         document.getElementById('releaseItemSubmitBtn').classList.remove('hidden');
         document.getElementById('releaseItemSubmitBtn').classList.add('flex');
 
-        // Hide reservation info
         document.getElementById('releaseSelectedReservation').classList.add('hidden');
         document.getElementById('releaseReservationId').value = '';
 
-        // Show customer select, hide customer info
         document.getElementById('releaseCustomerSelect').classList.remove('hidden');
         document.getElementById('releaseCustomerInfo').classList.add('hidden');
 
-        // Load customers
         loadCustomersForRelease();
-
-        // Load available items
         loadAvailableItems();
 
-        // Set default dates
         var today = new Date().toISOString().split('T')[0];
         document.getElementById('releaseReleasedDate').value = today;
 
@@ -383,7 +353,6 @@
         dueDate.setDate(dueDate.getDate() + 3);
         document.getElementById('releaseDueDate').value = dueDate.toISOString().split('T')[0];
 
-        // Enable submit button
         document.getElementById('releaseItemSubmitBtn').disabled = false;
     }
 
@@ -401,35 +370,16 @@
         var itemSelect = document.getElementById('releaseItemId');
         itemSelect.innerHTML = '<option value="">Loading items...</option>';
 
-        console.log('Reservation data:', reservation);
-        console.log('Items:', reservation.items);
-
-        // Items should be available from reservation
         if (reservation.items && reservation.items.length > 0) {
             var html = '<option value="">Select an item to release...</option>';
             reservation.items.forEach(function(item) {
-                console.log('Processing item:', item);
-                console.log('Fulfillment status:', item.fulfillment_status);
-                
-                // Only show items that haven't been fulfilled yet
                 if (item.fulfillment_status !== 'fulfilled') {
                     var itemName = item.variant ? item.variant.name : 'Unknown Item';
-                    var rentalPrice = item.variant && item.variant.rental_price ? parseFloat(item.variant.rental_price) : 0;
-                    var depositAmount = item.variant && item.variant.deposit_amount ? parseFloat(item.variant.deposit_amount) : 0;
-                    var totalPayment = rentalPrice + depositAmount;
-                    var paymentDisplay = totalPayment > 0 ? ' (Total: ₱' + totalPayment.toFixed(2) + ')' : '';
-                    
-                    // Don't set a value attribute - we'll use the reservation_item_id instead
-                    // The backend will find the available physical item based on the reservation_item_id
-                    html += '<option value="0" data-reservation-item-id="' + item.reservation_item_id + '" data-variant-id="' + (item.variant_id || '') + '" data-rental-price="' + rentalPrice + '" data-deposit="' + depositAmount + '" data-total="' + totalPayment + '">' + itemName + paymentDisplay + '</option>';
-                    console.log('Added option:', itemName);
+                    html += '<option value="0" data-reservation-item-id="' + item.reservation_item_id + '" data-variant-id="' + (item.variant_id || '') + '">' + itemName + '</option>';
                 }
             });
             itemSelect.innerHTML = html;
-            
-            console.log('Final HTML:', html);
-            
-            // If no items, show message
+
             if (html === '<option value="">Select an item to release...</option>') {
                 itemSelect.innerHTML = '<option value="">No unreleased items available</option>';
             }
@@ -437,12 +387,9 @@
             itemSelect.innerHTML = '<option value="">No items available</option>';
         }
 
-        // Handle item selection to set reservation_item_id and calculate payment
         itemSelect.onchange = function() {
             var selected = itemSelect.options[itemSelect.selectedIndex];
             document.getElementById('releaseReservationItemId').value = selected.dataset.reservationItemId || '';
-            var totalPayment = selected.dataset.total || 0;
-            document.getElementById('releaseRentalPaymentAmount').value = totalPayment;
         };
     }
 
@@ -479,21 +426,14 @@
                 if (Array.isArray(items)) {
                     items.forEach(function(item) {
                         var itemName = item.name || item.sku || 'Item #' + item.item_id;
-                        var rentalPrice = item.rental_price ? parseFloat(item.rental_price) : 0;
-                        var depositAmount = item.deposit_amount ? parseFloat(item.deposit_amount) : 0;
-                        var totalPayment = rentalPrice + depositAmount;
-                        var paymentDisplay = totalPayment > 0 ? ' (Total: ₱' + totalPayment.toFixed(2) + ')' : '';
-                        html += '<option value="' + item.item_id + '" data-rental-price="' + rentalPrice + '" data-deposit="' + depositAmount + '" data-total="' + totalPayment + '">' + itemName + paymentDisplay + '</option>';
+                        html += '<option value="' + item.item_id + '">' + itemName + '</option>';
                     });
                 }
 
                 itemSelect.innerHTML = html;
 
-                // Update payment amount display when item is selected
                 itemSelect.onchange = function() {
-                    var selected = itemSelect.options[itemSelect.selectedIndex];
-                    var totalPayment = selected.dataset.total || 0;
-                    document.getElementById('releaseRentalPaymentAmount').value = totalPayment;
+                    // Just update the form when item is selected
                 };
             })
             .catch(function(error) {
@@ -502,31 +442,18 @@
             });
     }
 
-     // Search reservations with debounce
-     var releaseSearchTimer;
-     document.getElementById('releaseSearchReservation').addEventListener('input', function() {
-         clearTimeout(releaseSearchTimer);
-         var query = this.value;
-         releaseSearchTimer = setTimeout(function() {
-             loadConfirmedReservations(query);
-         }, 300);
-     });
-
     // Submit release item
     function submitReleaseItem() {
         if (globalThis.releaseItemModalState.isSubmitting) return;
 
-        // Hide previous error
         document.getElementById('releaseItemError').classList.add('hidden');
 
-        // Get form data
         var customerId = document.getElementById('releaseCustomerIdHidden').value || document.getElementById('releaseCustomerId').value;
         var itemId = document.getElementById('releaseItemId').value;
         var reservationItemId = document.getElementById('releaseReservationItemId').value;
         var releasedDate = document.getElementById('releaseReleasedDate').value;
         var dueDate = document.getElementById('releaseDueDate').value;
 
-        // Validation
         if (!customerId) {
             showReleaseError('Please select a customer');
             return;
@@ -546,14 +473,12 @@
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<span class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span><span>Releasing...</span>';
 
-        var collectRentalPayment = document.getElementById('releaseCollectRentalPayment').checked;
-
         var payload = {
             customer_id: customerId,
             released_date: releasedDate,
             due_date: dueDate,
             release_notes: document.getElementById('releaseNotes').value,
-            collect_rental_payment: collectRentalPayment
+            collect_rental_payment: false
         };
 
         if (document.getElementById('releaseReservationId').value) {
@@ -561,21 +486,14 @@
         }
         if (reservationItemId) {
             payload.reservation_item_id = reservationItemId;
-            // When releasing from a reservation, don't send item_id - let backend find available item
         } else if (itemId && itemId !== '0') {
-            // Only send item_id for walk-in releases (not from reservation)
             payload.item_id = parseInt(itemId);
-        }
-        if (collectRentalPayment) {
-            payload.rental_payment_method = document.getElementById('releaseRentalPaymentMethod').value;
-            // NOTE: rental_payment_amount is NOT sent - it's determined server-side from the item/variant configuration
         }
 
         axios.post('/api/rentals/release', payload)
             .then(function(response) {
                 if (response.data.data || response.data.message) {
                     closeReleaseItemModal();
-                    // Refresh the rental list
                     if (typeof fetchRentals === 'function') {
                         fetchRentals();
                     }

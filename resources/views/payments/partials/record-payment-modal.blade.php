@@ -81,8 +81,8 @@
                             required
                             class="w-full bg-transparent text-xs text-neutral-700 dark:text-neutral-100 focus:outline-none appearance-none cursor-pointer"
                         >
-                            <option value="1">Pending</option>
                             <option value="2">Completed</option>
+                            <option value="1">Pending</option>
                             <option value="3">Failed</option>
                             <option value="4">Refunded</option>
                         </select>
@@ -168,27 +168,28 @@
 
 <script>
 (function() {
-    var state = {
-        isOpen: false,
-        isSubmitting: false
-    };
-    
-    window.recordPaymentModalState = state;
-    
-    window.openRecordPaymentModal = function() {
-        state.isOpen = true;
-        var modal = document.getElementById('recordPaymentModal');
-        if (!modal) return;
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-        loadInvoices();
-        setTimeout(function() {
-            var sel = modal.querySelector('select[name="invoice_id"]');
-            if (sel) sel.focus();
-        }, 100);
-        document.getElementById('recordPaymentForm').reset();
-        hideMessages();
-    };
+     var state = {
+         isOpen: false,
+         isSubmitting: false,
+         pendingInvoiceId: null
+     };
+     
+     window.recordPaymentModalState = state;
+     
+      window.openRecordPaymentModal = function() {
+          state.isOpen = true;
+          var modal = document.getElementById('recordPaymentModal');
+          if (!modal) return;
+          modal.classList.remove('hidden');
+          modal.classList.add('flex');
+          loadModalInvoices();
+          setTimeout(function() {
+              var sel = modal.querySelector('select[name="invoice_id"]');
+              if (sel) sel.focus();
+          }, 100);
+          // Don't reset form here - it will be reset when closing
+          hideMessages();
+      };
     
     window.closeRecordPaymentModal = function() {
         state.isOpen = false;
@@ -241,37 +242,47 @@
         ldg.classList.toggle('hidden', !state.isSubmitting);
     }
     
-    function loadInvoices() {
-        if (!window.axios) return;
-        window.axios.get('/api/invoices/monitor?status=pending')
-            .then(function(resp) {
-                var sel = document.getElementById('invoiceSelect');
-                if (!sel) return;
-                sel.innerHTML = '<option value="">Select Invoice</option>';
-                var data = resp.data && resp.data.invoices && resp.data.invoices.data;
-                if (data && data.length) {
-                    data.forEach(function(inv) {
-                        var opt = document.createElement('option');
-                        opt.value = inv.invoice_id;
-                        var name = inv.customer ? inv.customer.first_name + ' ' + inv.customer.last_name : 'Unknown';
-                        opt.textContent = inv.invoice_number + ' - ' + name + ' (₱' + parseFloat(inv.balance_due).toFixed(2) + ')';
-                        opt.dataset.balance = inv.balance_due;
-                        sel.appendChild(opt);
-                    });
-                } else {
-                    var opt = document.createElement('option');
-                    opt.value = '';
-                    opt.textContent = 'No pending invoices';
-                    opt.disabled = true;
-                    sel.appendChild(opt);
-                }
-            })
-            .catch(function(err) {
-                console.error('Error loading invoices:', err);
-                var sel = document.getElementById('invoiceSelect');
-                if (sel) sel.innerHTML = '<option value="">Error loading</option>';
-            });
-    }
+     function loadModalInvoices() {
+          if (!window.axios) return;
+          window.axios.get('/api/invoices/monitor?status=pending')
+              .then(function(resp) {
+                  var sel = document.getElementById('invoiceSelect');
+                  if (!sel) return;
+                  sel.innerHTML = '<option value="">Select Invoice</option>';
+                  var data = resp.data && resp.data.invoices && resp.data.invoices.data;
+                  if (data && data.length) {
+                      data.forEach(function(inv) {
+                          var opt = document.createElement('option');
+                          opt.value = inv.invoice_id;
+                          var name = inv.customer ? inv.customer.first_name + ' ' + inv.customer.last_name : 'Unknown';
+                          opt.textContent = inv.invoice_number + ' - ' + name + ' (₱' + parseFloat(inv.balance_due).toFixed(2) + ')';
+                          opt.dataset.balance = inv.balance_due;
+                          sel.appendChild(opt);
+                      });
+                      
+                      // If there's a pending invoice to select, do it now
+                      if (window.recordPaymentModalState.pendingInvoiceId) {
+                          var pendingId = window.recordPaymentModalState.pendingInvoiceId;
+                          setTimeout(function() {
+                              sel.value = pendingId;
+                              sel.dispatchEvent(new Event('change'));
+                              window.recordPaymentModalState.pendingInvoiceId = null;
+                          }, 50);
+                      }
+                  } else {
+                      var opt = document.createElement('option');
+                      opt.value = '';
+                      opt.textContent = 'No pending invoices';
+                      opt.disabled = true;
+                      sel.appendChild(opt);
+                  }
+              })
+              .catch(function(err) {
+                  console.error('Error loading invoices:', err);
+                  var sel = document.getElementById('invoiceSelect');
+                  if (sel) sel.innerHTML = '<option value="">Error loading</option>';
+              });
+      }
     
     document.getElementById('invoiceSelect').addEventListener('change', function() {
         var opt = this.options[this.selectedIndex];

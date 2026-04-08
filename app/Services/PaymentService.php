@@ -46,10 +46,14 @@ class PaymentService
                 throw new \InvalidArgumentException('Payment amount cannot exceed the balance due');
             }
 
-            // Get paid status
-            $paidStatusId = $this->getPaymentStatusId('paid');
-            if (! $paidStatusId) {
-                throw new \RuntimeException('Payment status configuration error');
+            // Get payment status - use provided status_id or default to 'paid'
+            $statusId = $data['status_id'] ?? $this->getPaymentStatusId('paid');
+            if (! $statusId) {
+                // Fallback to paid status if not provided
+                $statusId = $this->getPaymentStatusId('paid');
+                if (! $statusId) {
+                    throw new \RuntimeException('Payment status configuration error');
+                }
             }
 
             // Generate payment reference
@@ -64,7 +68,7 @@ class PaymentService
                 'payment_date' => $data['payment_date'] ?? now(),
                 'notes' => $data['notes'] ?? null,
                 'processed_by' => $processedBy,
-                'status_id' => $paidStatusId,
+                'status_id' => $statusId,
             ]);
 
             // Update invoice totals
@@ -80,6 +84,22 @@ class PaymentService
                             'status_id' => $confirmedStatus->status_id,
                             'confirmed_at' => now(),
                             'confirmed_by' => $processedBy,
+                        ]);
+                    }
+                }
+
+                // Set inventory status to 'reserved' for all items in this reservation
+                $this->updateReservationItemsStatusToReserved($invoice->reservation_id);
+            }
+
+            // Auto-update rental status to 'rented' when rental fee invoice is fully paid
+            if ($invoice->rental_id && $invoice->invoice_type === 'rental' && $invoice->balance_due <= 0) {
+                $rental = \App\Models\Rental::find($invoice->rental_id);
+                if ($rental) {
+                    $rentedStatus = \App\Models\RentalStatus::whereRaw('LOWER(status_name) = ?', ['rented'])->first();
+                    if ($rentedStatus && strtolower($rental->status?->status_name ?? '') !== 'rented') {
+                        $rental->update([
+                            'status_id' => $rentedStatus->status_id,
                         ]);
                     }
                 }
@@ -433,6 +453,15 @@ class PaymentService
     {
         $invoice->amount_paid += $paymentAmount;
         $invoice->balance_due = max($invoice->total_amount - $invoice->amount_paid, 0);
+
+        // Update invoice status to 'paid' when fully paid
+        if ($invoice->balance_due <= 0) {
+            $paidStatus = PaymentStatus::whereRaw('LOWER(status_name) = ?', ['paid'])->first();
+            if ($paidStatus) {
+                $invoice->status_id = $paidStatus->status_id;
+            }
+        }
+
         $invoice->save();
     }
 
@@ -583,6 +612,28 @@ class PaymentService
     private function generateRefundReference(string $originalReference): string
     {
         return 'REF-'.$originalReference.'-'.strtoupper(Str::random(4));
+    }
+
+    /**
+     * Update inventory items status to 'reserved' for a reservation
+     */
+    private function updateReservationItemsStatusToReserved(int $reservationId): void
+    {
+        // Get the 'reserved' inventory status
+        $reservedStatus = \App\Models\InventoryStatus::whereRaw('LOWER(status_name) = ?', ['reserved'])->first();
+        if (! $reservedStatus) {
+            return; // Status doesn't exist, skip
+        }
+
+        // Get all items in this reservation
+        $reservationItems = \App\Models\ReservationItem::where('reservation_id', $reservationId)->get();
+
+        foreach ($reservationItems as $reservationItem) {
+            if ($reservationItem->item_id) {
+                \App\Models\Inventory::where('item_id', $reservationItem->item_id)
+                    ->update(['status_id' => $reservedStatus->status_id]);
+            }
+        }
     }
 
     /**

@@ -87,27 +87,14 @@ class RentalReleaseService
             }
             // Step 3.5: Get rental fee from item
             $rentalFee = (float) $item->rental_price ?? 0;
-            // Step 4: Create Rental record
+            // Step 4: Create Rental record - status stays PENDING until payment is collected
             $rental = $this->createRentalRecord($data, $item, $releasedBy, $depositAmount);
-            // Step 5: Create Invoice with line items
-            $invoice = $this->createInvoiceWithItems($rental, $item, $rentalFee, $depositAmount);
-            // Step 6: Collect rental payment if requested
-            if ($data['collect_rental_payment'] ?? true) {
-                $paymentResult = $this->collectRentalPayment(
-                    $rental,
-                    $invoice,
-                    $rentalFee,
-                    $depositAmount,
-                    $data['rental_payment_method'] ?? 'cash',
-                    $data['rental_payment_notes'] ?? null,
-                    $releasedBy
-                );
+            // Step 5: Create Invoice with line items (pending, NOT paid)
+            $invoice = $this->createInvoiceWithItems($rental, $item, $rentalFee, $depositAmount, $reservation);
+            // Step 6: Do NOT automatically collect payment - just create the pending invoice
+            // Payment will be collected separately and will trigger rental status change to 'rented'
 
-                if (isset($paymentResult['error'])) {
-                    throw new \RuntimeException($paymentResult['error']);
-                }
-            }
-            // Step 7: Update item inventory status
+            // Step 7: Update item inventory status to 'rented' immediately (item is given to customer)
             $this->updateItemStatus($item, 'rented');
             // Step 8: Handle reservation item allocation if applicable
             if ($reservation) {
@@ -267,16 +254,24 @@ class RentalReleaseService
 
     /**
      * Create invoice with line items
+     * For reservation-based rentals: only charge rental fee (deposit already paid via reservation invoice)
+     * For walk-in rentals: charge both rental fee and deposit
      */
     private function createInvoiceWithItems(
         Rental $rental,
         Inventory $item,
         float $rentalFee,
-        float $depositAmount
+        float $depositAmount,
+        ?Reservation $reservation = null
     ): Invoice {
         try {
             // Get pending payment status
             $pendingStatus = PaymentStatus::whereRaw('LOWER(status_name) = ?', ['pending'])->firstOrFail();
+
+            // For reservation-based rentals, only charge rental fee (deposit already paid)
+            $isReservationBased = $reservation !== null;
+            $invoiceTotal = $isReservationBased ? $rentalFee : ($rentalFee + $depositAmount);
+
             $invoice = Invoice::create([
                 'invoice_number' => $this->generateInvoiceNumber(),
                 'customer_id' => $rental->customer_id,
@@ -285,15 +280,16 @@ class RentalReleaseService
                 'invoice_type' => 'rental',
                 'invoice_date' => Carbon::now(),
                 'due_date' => Carbon::parse($rental->due_date)->addDays(7),
-                'subtotal' => $rentalFee + $depositAmount,
+                'subtotal' => $invoiceTotal,
                 'discount' => 0,
                 'tax' => 0,
-                'total_amount' => $rentalFee + $depositAmount,
+                'total_amount' => $invoiceTotal,
                 'amount_paid' => 0,
-                'balance_due' => $rentalFee + $depositAmount,
+                'balance_due' => $invoiceTotal,
                 'created_by' => auth()->id() ?: $rental->released_by,
                 'status_id' => $pendingStatus->status_id,
             ]);
+
             // Create rental fee line item
             InvoiceItem::create([
                 'invoice_id' => $invoice->invoice_id,
@@ -304,62 +300,23 @@ class RentalReleaseService
                 'unit_price' => $rentalFee,
                 'total_price' => $rentalFee,
             ]);
-            // Create deposit line item
-            InvoiceItem::create([
-                'invoice_id' => $invoice->invoice_id,
-                'description' => "Security Deposit: {$item->name}",
-                'item_type' => 'deposit',
-                'item_id' => $item->item_id,
-                'quantity' => 1,
-                'unit_price' => $depositAmount,
-                'total_price' => $depositAmount,
-            ]);
+
+            // Create deposit line item only for walk-in rentals (non-reservation based)
+            if (! $isReservationBased) {
+                InvoiceItem::create([
+                    'invoice_id' => $invoice->invoice_id,
+                    'description' => "Security Deposit: {$item->name}",
+                    'item_type' => 'deposit',
+                    'item_id' => $item->item_id,
+                    'quantity' => 1,
+                    'unit_price' => $depositAmount,
+                    'total_price' => $depositAmount,
+                ]);
+            }
 
             return $invoice;
         } catch (\Exception $e) {
             throw $e;
-        }
-    }
-
-    /**
-     * Collect rental payment (rental fee + deposit) using PaymentService
-     */
-    private function collectRentalPayment(
-        Rental $rental,
-        Invoice $invoice,
-        float $rentalFee,
-        float $depositAmount,
-        string $paymentMethod,
-        ?string $notes,
-        int $releasedBy
-    ): array|Payment {
-        try {
-            $totalPayment = $rentalFee + $depositAmount;
-
-            $payment = $this->paymentService->processPayment([
-                'invoice_id' => $invoice->invoice_id,
-                'amount' => $totalPayment,
-                'payment_method' => $paymentMethod,
-                'notes' => $notes ?? 'Rental payment (fee + deposit) collected during item release',
-            ], $releasedBy);
-
-            // Update rental status to 'rented' after payment is collected
-            $rentalStatus = RentalStatus::whereRaw('LOWER(status_name) = ?', ['rented'])
-                ->firstOrFail();
-
-            $rental->update([
-                'status_id' => $rentalStatus->status_id,
-                'deposit_status' => 'held',
-                'deposit_collected_by' => $releasedBy,
-                'deposit_collected_at' => $payment->payment_date,
-            ]);
-
-            return $payment;
-        } catch (\Exception $e) {
-            return [
-                'error' => "Failed to collect rental payment: {$e->getMessage()}",
-                'code' => 500,
-            ];
         }
     }
 

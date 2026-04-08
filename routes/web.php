@@ -172,6 +172,19 @@ Route::middleware('auth')->group(function () {
         Route::post('/rentals/bulk/extend', [RentalController::class, 'bulkExtend']);
         Route::post('/rentals/bulk/return', [RentalController::class, 'bulkReturn']);
 
+        // Rental Settings (BEFORE {rental} parameter routes)
+        Route::get('/rentals/settings', [RentalController::class, 'getSettings']);
+        Route::put('/rentals/settings', [RentalController::class, 'updateSettings']);
+
+        // Rental Notifications (BEFORE {rental} parameter routes)
+        Route::get('/rentals/notifications', [RentalController::class, 'getNotifications']);
+        Route::get('/rentals/notifications/count', [RentalController::class, 'getNotificationCount']);
+        Route::post('/rentals/notifications/check', [RentalController::class, 'checkNotifications']);
+        Route::post('/rentals/notifications/{notification}/read', [RentalController::class, 'markNotificationRead']);
+        Route::post('/rentals/notifications/{notification}/dismiss', [RentalController::class, 'dismissNotification']);
+        Route::post('/rentals/notifications/read-all', [RentalController::class, 'markAllNotificationsRead']);
+        Route::post('/rentals/notifications/dismiss-all', [RentalController::class, 'dismissAllNotifications']);
+
         // Rental Overdue List
         Route::get('/rentals/overdue/list', [RentalController::class, 'getOverdueRentals']);
 
@@ -196,19 +209,6 @@ Route::middleware('auth')->group(function () {
         Route::post('/rentals/{rental}/extend', [RentalController::class, 'extendRental']);
         Route::post('/rentals/{rental}/cancel', [RentalController::class, 'cancel']);
         Route::post('/rentals/{rental}/check-overdue', [RentalController::class, 'checkOverdue']);
-
-        // Rental Settings
-        Route::get('/rentals/settings', [RentalController::class, 'getSettings']);
-        Route::put('/rentals/settings', [RentalController::class, 'updateSettings']);
-
-        // Rental Notifications
-        Route::get('/rentals/notifications', [RentalController::class, 'getNotifications']);
-        Route::get('/rentals/notifications/count', [RentalController::class, 'getNotificationCount']);
-        Route::post('/rentals/notifications/check', [RentalController::class, 'checkNotifications']);
-        Route::post('/rentals/notifications/{notification}/read', [RentalController::class, 'markNotificationRead']);
-        Route::post('/rentals/notifications/{notification}/dismiss', [RentalController::class, 'dismissNotification']);
-        Route::post('/rentals/notifications/read-all', [RentalController::class, 'markAllNotificationsRead']);
-        Route::post('/rentals/notifications/dismiss-all', [RentalController::class, 'dismissAllNotifications']);
 
         // ============================================
         // INVOICE ROUTES

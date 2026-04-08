@@ -661,23 +661,27 @@
         // Populate Timeline
         populateRentalTimeline(rental, responseData);
 
-        // Update action buttons visibility based on status
-        var processReturnBtn = document.getElementById('rentalDetailsProcessReturnBtn');
-        var extendBtn = document.getElementById('rentalDetailsExtendBtn');
+         // Update action buttons visibility based on status
+         var processReturnBtn = document.getElementById('rentalDetailsProcessReturnBtn');
+         var extendBtn = document.getElementById('rentalDetailsExtendBtn');
 
-        if (rental.return_date) {
-            // Already returned - hide action buttons
-            processReturnBtn.classList.add('hidden');
-            extendBtn.classList.add('hidden');
-        } else {
-            processReturnBtn.classList.remove('hidden');
-            // Hide extend if overdue
-            if (isOverdue) {
-                extendBtn.classList.add('hidden');
-            } else {
-                extendBtn.classList.remove('hidden');
-            }
-        }
+         // Get current rental status (handle both 'rented' and 'active' as the same)
+         var currentStatus = (rental.status && rental.status.status_name) ? rental.status.status_name.toLowerCase() : '';
+         var isRented = currentStatus === 'rented' || currentStatus === 'active';
+         
+         // Only show Process Return button if status is "rented" (or "active")
+         if (isRented) {
+             processReturnBtn.classList.remove('hidden');
+         } else {
+             processReturnBtn.classList.add('hidden');
+         }
+         
+         // Only show Extend button if status is "rented" and not overdue
+         if (isRented && !isOverdue) {
+             extendBtn.classList.remove('hidden');
+         } else {
+             extendBtn.classList.add('hidden');
+         }
     }
 
     // Render rental invoices

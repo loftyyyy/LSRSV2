@@ -40,6 +40,11 @@ class StorePaymentRequest extends FormRequest
                 'string',
                 Rule::in(array_keys(PaymentService::PAYMENT_METHODS)),
             ],
+            'status_id' => [
+                'nullable',
+                'integer',
+                'exists:payment_statuses,status_id',
+            ],
             'payment_date' => [
                 'nullable',
                 'date',
@@ -73,6 +78,7 @@ class StorePaymentRequest extends FormRequest
             'amount.max' => 'Payment amount cannot exceed ₱9,999,999.99.',
             'payment_method.required' => 'Please select a payment method.',
             'payment_method.in' => 'Invalid payment method selected. Allowed methods: cash, card, gcash, paymaya, bank_transfer.',
+            'status_id.exists' => 'The selected payment status does not exist.',
             'payment_date.before_or_equal' => 'Payment date cannot be in the future.',
             'notes.max' => 'Notes cannot exceed 1000 characters.',
         ];

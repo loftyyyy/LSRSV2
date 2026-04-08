@@ -132,7 +132,7 @@ class RentalController extends Controller
         $rentalIds = $rentals->pluck('rental_id');
 
         return Invoice::whereIn('rental_id', $rentalIds)
-            ->where('payment_status', 'paid')
+            ->where('balance_due', '<=', 0)
             ->sum('total_amount');
     }
 
@@ -182,6 +182,23 @@ class RentalController extends Controller
      * Generate CSV for reports
      */
     public function generateCSV(Request $request)
+    {
+        $reportType = $request->get('report_type', 'rental_summary');
+
+        return match ($reportType) {
+            'deposits' => $this->generateDepositReport($request),
+            'penalties' => $this->generatePenaltiesReport($request),
+            'customer_payments' => $this->generateCustomerPaymentHistoryReport($request),
+            'aged_invoices' => $this->generateAgedInvoicesReport($request),
+            'overdue_rentals' => $this->generateOverdueRentalsReport($request),
+            default => $this->generateRentalSummaryReport($request),
+        };
+    }
+
+    /**
+     * Generate standard rental summary report
+     */
+    private function generateRentalSummaryReport(Request $request)
     {
         $query = Rental::with(['customer', 'item', 'status', 'reservation', 'releasedBy', 'invoices.invoiceItems']);
 
@@ -300,8 +317,496 @@ class RentalController extends Controller
     }
 
     /**
-     * Display Rental Page
+     * Generate Deposit Management Report
      */
+    private function generateDepositReport(Request $request)
+    {
+        $dateFrom = $request->get('date_from');
+        $dateTo = $request->get('date_to');
+
+        $query = Rental::with(['customer', 'item', 'invoices']);
+
+        if ($dateFrom) {
+            $query->where('released_date', '>=', Carbon::parse($dateFrom));
+        }
+        if ($dateTo) {
+            $query->where('released_date', '<=', Carbon::parse($dateTo));
+        }
+
+        $rentals = $query->get();
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="deposit-report-'.now()->format('Y-m-d').'.csv"',
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
+        ];
+
+        $callback = function () use ($rentals, $dateFrom, $dateTo) {
+            $output = fopen('php://output', 'w');
+
+            fputcsv($output, ['Deposit Management Report']);
+            fputcsv($output, ['Generated at', now()->format('Y-m-d H:i:s')]);
+            fputcsv($output, ['Date Range', ($dateFrom ?? 'All').' to '.($dateTo ?? 'All')]);
+            fputcsv($output, []);
+
+            fputcsv($output, ['Deposit Summary']);
+            $totalDeposits = $rentals->sum('deposit_amount');
+            $heldDeposits = $rentals->whereNull('return_date')->sum('deposit_amount');
+            $returnedDeposits = $rentals->whereNotNull('return_date')->sum('deposit_amount');
+
+            fputcsv($output, ['Total Deposits Collected', number_format($totalDeposits, 2)]);
+            fputcsv($output, ['Deposits Held (Active Rentals)', number_format($heldDeposits, 2)]);
+            fputcsv($output, ['Deposits Returned', number_format($returnedDeposits, 2)]);
+            fputcsv($output, []);
+
+            fputcsv($output, ['Detailed Deposit Information']);
+            fputcsv($output, [
+                'Rental ID',
+                'Customer Name',
+                'Item Name',
+                'Deposit Amount',
+                'Released Date',
+                'Return Date',
+                'Status',
+                'Notes',
+            ]);
+
+            foreach ($rentals as $rental) {
+                $customerName = $rental->customer
+                    ? $rental->customer->first_name.' '.$rental->customer->last_name
+                    : 'N/A';
+                $itemName = $rental->item->name ?? 'N/A';
+                $status = $rental->return_date ? 'Returned' : 'Held';
+                $notes = $rental->return_date ? 'Deposit returned' : 'Awaiting return';
+
+                fputcsv($output, [
+                    $rental->rental_id,
+                    $customerName,
+                    $itemName,
+                    number_format($rental->deposit_amount ?? 0, 2),
+                    $rental->released_date ? Carbon::parse($rental->released_date)->format('Y-m-d') : '',
+                    $rental->return_date ? Carbon::parse($rental->return_date)->format('Y-m-d') : 'Not Returned',
+                    $status,
+                    $notes,
+                ]);
+            }
+
+            fclose($output);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Generate Late Fees & Penalties Report
+     */
+    private function generatePenaltiesReport(Request $request)
+    {
+        $dateFrom = $request->get('date_from');
+        $dateTo = $request->get('date_to');
+
+        $query = Rental::with(['customer', 'item', 'invoices.invoiceItems', 'status']);
+
+        if ($dateFrom) {
+            $query->where('released_date', '>=', Carbon::parse($dateFrom));
+        }
+        if ($dateTo) {
+            $query->where('released_date', '<=', Carbon::parse($dateTo));
+        }
+
+        $rentals = $query->get();
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="penalties-report-'.now()->format('Y-m-d').'.csv"',
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
+        ];
+
+        $callback = function () use ($rentals, $dateFrom, $dateTo) {
+            $output = fopen('php://output', 'w');
+
+            fputcsv($output, ['Late Fees & Penalties Report']);
+            fputcsv($output, ['Generated at', now()->format('Y-m-d H:i:s')]);
+            fputcsv($output, ['Date Range', ($dateFrom ?? 'All').' to '.($dateTo ?? 'All')]);
+            fputcsv($output, []);
+
+            fputcsv($output, ['Penalties Summary']);
+            $totalPenalties = 0;
+            $paidPenalties = 0;
+            $unpaidPenalties = 0;
+            $overdueCount = 0;
+
+            foreach ($rentals as $rental) {
+                $penalties = $rental->invoices->sum(function ($invoice) {
+                    return $invoice->invoiceItems->whereIn('item_type', ['penalty', 'late_fee'])->sum('total_price');
+                });
+
+                if ($penalties > 0) {
+                    $totalPenalties += $penalties;
+                    $paidPenalties += $penalties * ($rental->invoices->first()?->balance_due ?? 0) > 0 ? 0 : 1;
+                    $unpaidPenalties += $rental->invoices->first()?->balance_due > 0 ? $penalties : 0;
+                }
+
+                if ($rental->status->status_name === 'overdue') {
+                    $overdueCount++;
+                }
+            }
+
+            fputcsv($output, ['Total Penalties Generated', number_format($totalPenalties, 2)]);
+            fputcsv($output, ['Penalties Collected', number_format($paidPenalties, 2)]);
+            fputcsv($output, ['Penalties Outstanding', number_format($unpaidPenalties, 2)]);
+            fputcsv($output, ['Overdue Rentals', $overdueCount]);
+            fputcsv($output, []);
+
+            fputcsv($output, ['Detailed Penalties Information']);
+            fputcsv($output, [
+                'Rental ID',
+                'Customer Name',
+                'Item Name',
+                'Due Date',
+                'Return Date',
+                'Days Overdue',
+                'Penalty Amount',
+                'Payment Status',
+                'Rental Status',
+            ]);
+
+            foreach ($rentals as $rental) {
+                $customerName = $rental->customer
+                    ? $rental->customer->first_name.' '.$rental->customer->last_name
+                    : 'N/A';
+                $itemName = $rental->item->name ?? 'N/A';
+
+                $penalties = $rental->invoices->sum(function ($invoice) {
+                    return $invoice->invoiceItems->whereIn('item_type', ['penalty', 'late_fee'])->sum('total_price');
+                });
+
+                $daysOverdue = 0;
+                if ($rental->return_date) {
+                    $daysOverdue = Carbon::parse($rental->due_date)->diffInDays(Carbon::parse($rental->return_date));
+                } elseif ($rental->status->status_name === 'overdue') {
+                    $daysOverdue = Carbon::parse($rental->due_date)->diffInDays(Carbon::now());
+                }
+
+                $paymentStatus = $rental->invoices->first()?->balance_due <= 0 ? 'Paid' : 'Unpaid';
+
+                fputcsv($output, [
+                    $rental->rental_id,
+                    $customerName,
+                    $itemName,
+                    $rental->due_date ? Carbon::parse($rental->due_date)->format('Y-m-d') : '',
+                    $rental->return_date ? Carbon::parse($rental->return_date)->format('Y-m-d') : 'Not Returned',
+                    $daysOverdue,
+                    number_format($penalties, 2),
+                    $paymentStatus,
+                    $rental->status->status_name ?? 'N/A',
+                ]);
+            }
+
+            fclose($output);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Generate Customer Payment History Report
+     */
+    private function generateCustomerPaymentHistoryReport(Request $request)
+    {
+        $dateFrom = $request->get('date_from');
+        $dateTo = $request->get('date_to');
+
+        $invoices = Invoice::with(['customer', 'payments', 'status'])
+            ->whereNotNull('customer_id');
+
+        if ($dateFrom) {
+            $invoices->where('invoice_date', '>=', Carbon::parse($dateFrom));
+        }
+        if ($dateTo) {
+            $invoices->where('invoice_date', '<=', Carbon::parse($dateTo));
+        }
+
+        $invoices = $invoices->get()->groupBy('customer_id');
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="customer-payment-history-'.now()->format('Y-m-d').'.csv"',
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
+        ];
+
+        $callback = function () use ($invoices, $dateFrom, $dateTo) {
+            $output = fopen('php://output', 'w');
+
+            fputcsv($output, ['Customer Payment History Report']);
+            fputcsv($output, ['Generated at', now()->format('Y-m-d H:i:s')]);
+            fputcsv($output, ['Date Range', ($dateFrom ?? 'All').' to '.($dateTo ?? 'All')]);
+            fputcsv($output, []);
+
+            fputcsv($output, ['Payment Summary by Customer']);
+            fputcsv($output, [
+                'Customer Name',
+                'Total Invoices',
+                'Total Invoice Amount',
+                'Total Paid',
+                'Total Outstanding',
+                'Payment Status',
+                'Average Days to Pay',
+                'Late Payments Count',
+            ]);
+
+            foreach ($invoices as $invoiceGroup) {
+                $customer = $invoiceGroup->first()?->customer;
+                if (! $customer) {
+                    continue;
+                }
+
+                $customerName = $customer->first_name.' '.$customer->last_name;
+                $totalAmount = $invoiceGroup->sum('total_amount');
+                $totalPaid = $invoiceGroup->sum('amount_paid');
+                $totalOutstanding = $invoiceGroup->sum('balance_due');
+                $paymentStatus = $totalOutstanding <= 0 ? 'Fully Paid' : 'Outstanding';
+
+                // Calculate average days to pay
+                $paidInvoices = $invoiceGroup->filter(fn ($i) => $i->balance_due <= 0 && $i->payments->count() > 0);
+                $avgDaysToPay = 0;
+                if ($paidInvoices->count() > 0) {
+                    $avgDaysToPay = $paidInvoices->map(function ($invoice) {
+                        $paymentDate = $invoice->payments->max('payment_date');
+
+                        return $paymentDate ? Carbon::parse($invoice->invoice_date)->diffInDays(Carbon::parse($paymentDate)) : 0;
+                    })->average();
+                }
+
+                // Count late payments
+                $latePayments = $invoiceGroup->filter(function ($invoice) {
+                    if ($invoice->payments->count() === 0) {
+                        return false;
+                    }
+                    $paymentDate = $invoice->payments->max('payment_date');
+
+                    return Carbon::parse($paymentDate)->isAfter($invoice->due_date);
+                })->count();
+
+                fputcsv($output, [
+                    $customerName,
+                    $invoiceGroup->count(),
+                    number_format($totalAmount, 2),
+                    number_format($totalPaid, 2),
+                    number_format($totalOutstanding, 2),
+                    $paymentStatus,
+                    round($avgDaysToPay, 2),
+                    $latePayments,
+                ]);
+            }
+
+            fclose($output);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Generate Aged Invoices Report
+     */
+    private function generateAgedInvoicesReport(Request $request)
+    {
+        $dateFrom = $request->get('date_from');
+        $dateTo = $request->get('date_to');
+
+        $invoices = Invoice::with(['customer', 'status'])
+            ->where('balance_due', '>', 0);
+
+        if ($dateFrom) {
+            $invoices->where('invoice_date', '>=', Carbon::parse($dateFrom));
+        }
+        if ($dateTo) {
+            $invoices->where('invoice_date', '<=', Carbon::parse($dateTo));
+        }
+
+        $invoices = $invoices->get();
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="aged-invoices-report-'.now()->format('Y-m-d').'.csv"',
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
+        ];
+
+        $callback = function () use ($invoices, $dateFrom, $dateTo) {
+            $output = fopen('php://output', 'w');
+
+            fputcsv($output, ['Aged Invoices Report']);
+            fputcsv($output, ['Generated at', now()->format('Y-m-d H:i:s')]);
+            fputcsv($output, ['Date Range', ($dateFrom ?? 'All').' to '.($dateTo ?? 'All')]);
+            fputcsv($output, []);
+
+            // Calculate aging buckets
+            $bucket0_30 = $invoices->filter(fn ($i) => Carbon::parse($i->due_date)->diffInDays(Carbon::now()) <= 30)->sum('balance_due');
+            $bucket31_60 = $invoices->filter(fn ($i) => Carbon::parse($i->due_date)->diffInDays(Carbon::now()) > 30 && Carbon::parse($i->due_date)->diffInDays(Carbon::now()) <= 60)->sum('balance_due');
+            $bucket61_90 = $invoices->filter(fn ($i) => Carbon::parse($i->due_date)->diffInDays(Carbon::now()) > 60 && Carbon::parse($i->due_date)->diffInDays(Carbon::now()) <= 90)->sum('balance_due');
+            $bucket90plus = $invoices->filter(fn ($i) => Carbon::parse($i->due_date)->diffInDays(Carbon::now()) > 90)->sum('balance_due');
+
+            fputcsv($output, ['Aging Summary']);
+            fputcsv($output, ['Aging Bucket', 'Count', 'Total Outstanding']);
+            fputcsv($output, ['0-30 Days', $invoices->filter(fn ($i) => Carbon::parse($i->due_date)->diffInDays(Carbon::now()) <= 30)->count(), number_format($bucket0_30, 2)]);
+            fputcsv($output, ['31-60 Days', $invoices->filter(fn ($i) => Carbon::parse($i->due_date)->diffInDays(Carbon::now()) > 30 && Carbon::parse($i->due_date)->diffInDays(Carbon::now()) <= 60)->count(), number_format($bucket31_60, 2)]);
+            fputcsv($output, ['61-90 Days', $invoices->filter(fn ($i) => Carbon::parse($i->due_date)->diffInDays(Carbon::now()) > 60 && Carbon::parse($i->due_date)->diffInDays(Carbon::now()) <= 90)->count(), number_format($bucket61_90, 2)]);
+            fputcsv($output, ['90+ Days', $invoices->filter(fn ($i) => Carbon::parse($i->due_date)->diffInDays(Carbon::now()) > 90)->count(), number_format($bucket90plus, 2)]);
+            fputcsv($output, ['Total Outstanding', $invoices->count(), number_format($invoices->sum('balance_due'), 2)]);
+            fputcsv($output, []);
+
+            fputcsv($output, ['Detailed Aged Invoices']);
+            fputcsv($output, [
+                'Invoice Number',
+                'Customer Name',
+                'Invoice Date',
+                'Due Date',
+                'Days Outstanding',
+                'Invoice Amount',
+                'Amount Paid',
+                'Balance Due',
+                'Aging Bucket',
+            ]);
+
+            foreach ($invoices as $invoice) {
+                $customerName = $invoice->customer
+                    ? $invoice->customer->first_name.' '.$invoice->customer->last_name
+                    : 'N/A';
+
+                $daysOutstanding = Carbon::parse($invoice->due_date)->diffInDays(Carbon::now());
+
+                if ($daysOutstanding <= 30) {
+                    $bucket = '0-30 Days';
+                } elseif ($daysOutstanding <= 60) {
+                    $bucket = '31-60 Days';
+                } elseif ($daysOutstanding <= 90) {
+                    $bucket = '61-90 Days';
+                } else {
+                    $bucket = '90+ Days';
+                }
+
+                fputcsv($output, [
+                    $invoice->invoice_number,
+                    $customerName,
+                    $invoice->invoice_date ? Carbon::parse($invoice->invoice_date)->format('Y-m-d') : '',
+                    $invoice->due_date ? Carbon::parse($invoice->due_date)->format('Y-m-d') : '',
+                    $daysOutstanding,
+                    number_format($invoice->total_amount, 2),
+                    number_format($invoice->amount_paid, 2),
+                    number_format($invoice->balance_due, 2),
+                    $bucket,
+                ]);
+            }
+
+            fclose($output);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Generate Overdue Rentals Report
+     */
+    private function generateOverdueRentalsReport(Request $request)
+    {
+        $dateFrom = $request->get('date_from');
+        $dateTo = $request->get('date_to');
+
+        $query = Rental::with(['customer', 'item', 'invoices', 'status'])
+            ->whereNull('return_date')
+            ->where('due_date', '<', Carbon::now());
+
+        if ($dateFrom) {
+            $query->where('released_date', '>=', Carbon::parse($dateFrom));
+        }
+        if ($dateTo) {
+            $query->where('released_date', '<=', Carbon::parse($dateTo));
+        }
+
+        $rentals = $query->get();
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="overdue-rentals-report-'.now()->format('Y-m-d').'.csv"',
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
+        ];
+
+        $callback = function () use ($rentals, $dateFrom, $dateTo) {
+            $output = fopen('php://output', 'w');
+
+            fputcsv($output, ['Overdue Rentals Report']);
+            fputcsv($output, ['Generated at', now()->format('Y-m-d H:i:s')]);
+            fputcsv($output, ['Date Range', ($dateFrom ?? 'All').' to '.($dateTo ?? 'All')]);
+            fputcsv($output, []);
+
+            fputcsv($output, ['Overdue Summary']);
+            fputcsv($output, ['Total Overdue Rentals', $rentals->count()]);
+            fputcsv($output, ['Total Overdue Amount', number_format($rentals->sum(fn ($r) => $r->invoices->sum('balance_due')), 2)]);
+            fputcsv($output, ['Total Penalties', number_format($rentals->sum(function ($rental) {
+                return $rental->invoices->sum(function ($invoice) {
+                    return $invoice->invoiceItems->whereIn('item_type', ['penalty', 'late_fee'])->sum('total_price');
+                });
+            }), 2)]);
+            fputcsv($output, []);
+
+            fputcsv($output, ['Detailed Overdue Rentals']);
+            fputcsv($output, [
+                'Rental ID',
+                'Customer Name',
+                'Item Name',
+                'Released Date',
+                'Due Date',
+                'Days Overdue',
+                'Outstanding Balance',
+                'Penalties',
+                'Total Amount Due',
+                'Contact Number',
+            ]);
+
+            foreach ($rentals as $rental) {
+                $customerName = $rental->customer
+                    ? $rental->customer->first_name.' '.$rental->customer->last_name
+                    : 'N/A';
+                $itemName = $rental->item->name ?? 'N/A';
+                $contactNumber = $rental->customer->contact_number ?? 'N/A';
+
+                $daysOverdue = Carbon::parse($rental->due_date)->diffInDays(Carbon::now());
+                $outstandingBalance = $rental->invoices->sum('balance_due');
+                $penalties = $rental->invoices->sum(function ($invoice) {
+                    return $invoice->invoiceItems->whereIn('item_type', ['penalty', 'late_fee'])->sum('total_price');
+                });
+                $totalDue = $outstandingBalance + $penalties;
+
+                fputcsv($output, [
+                    $rental->rental_id,
+                    $customerName,
+                    $itemName,
+                    $rental->released_date ? Carbon::parse($rental->released_date)->format('Y-m-d') : '',
+                    $rental->due_date ? Carbon::parse($rental->due_date)->format('Y-m-d') : '',
+                    $daysOverdue,
+                    number_format($outstandingBalance, 2),
+                    number_format($penalties, 2),
+                    number_format($totalDue, 2),
+                    $contactNumber,
+                ]);
+            }
+
+            fclose($output);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
     public function showRentalPage(): View
     {
         return view('rentals.index');
@@ -790,10 +1295,6 @@ class RentalController extends Controller
             'return_date' => 'required|date',
             'return_notes' => 'nullable|string',
             'condition_notes' => 'nullable|string',
-            'collect_rental_payment' => 'sometimes|boolean',
-            'rental_payment_amount' => 'nullable|numeric|min:0',
-            'rental_payment_method' => 'required_if:collect_rental_payment,true|in:cash,card,bank_transfer,gcash,paymaya',
-            'rental_payment_notes' => 'nullable|string',
             'deposit_return_action' => 'sometimes|in:full,partial,forfeit,hold',
             'deposit_return_method' => 'required_if:deposit_return_action,full,partial|in:cash,bank_transfer,gcash,paymaya,check',
             'deposit_return_reference' => 'nullable|string|max:100',
@@ -828,27 +1329,7 @@ class RentalController extends Controller
                 'return_notes' => $request->input('return_notes'),
             ]);
 
-            // Calculate and create final penalty if returned late
-            $this->createOrUpdatePenaltyInvoice($rental);
-
-            $finalInvoice = $this->upsertFinalRentalInvoice($rental, auth()->id());
-
-            if ($request->boolean('collect_rental_payment', false)) {
-                $paymentAmount = $request->filled('rental_payment_amount')
-                    ? (float) $request->input('rental_payment_amount')
-                    : (float) $finalInvoice->balance_due;
-
-                if ($paymentAmount > 0) {
-                    $this->createInvoicePayment(
-                        $finalInvoice,
-                        $paymentAmount,
-                        $request->input('rental_payment_method'),
-                        auth()->id(),
-                        $request->input('rental_payment_notes')
-                    );
-                }
-            }
-
+            // Process deposit handling (no invoice creation on return)
             $depositReturnAction = $request->input('deposit_return_action', 'hold');
             if ($depositReturnAction === 'full') {
                 $this->depositService->returnFullDeposit(
@@ -1208,7 +1689,7 @@ class RentalController extends Controller
         }
 
         // Check if rental has invoices that are already paid
-        $paidInvoices = $rental->invoices()->where('payment_status', 'paid')->count();
+        $paidInvoices = $rental->invoices()->where('balance_due', '<=', 0)->count();
         if ($paidInvoices > 0) {
             return response()->json([
                 'message' => 'Cannot cancel rental. It has paid invoices associated with it.',
@@ -1356,6 +1837,10 @@ class RentalController extends Controller
         }
 
         DB::transaction(function () use ($rental, $penaltyAmount) {
+            // Get unpaid status for penalty invoice
+            $unpaidStatus = $this->findPaymentStatusByName('unpaid');
+            $statusId = $unpaidStatus?->status_id ?? 1;
+
             // Find or create an invoice for this rental
             $invoice = Invoice::firstOrCreate(
                 [
@@ -1369,7 +1854,7 @@ class RentalController extends Controller
                     'subtotal' => 0,
                     'tax_amount' => 0,
                     'total_amount' => 0,
-                    'payment_status' => 'unpaid',
+                    'status_id' => $statusId,
                     'notes' => 'Late return penalty invoice',
                 ]
             );

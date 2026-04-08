@@ -64,11 +64,10 @@ class ReleaseItemRequest extends FormRequest
                 'exists:reservations,reservation_id',
             ],
 
-            // Rental payment collection (replacing old deposit collection)
-            // REQUIRED: Full deposit + rental fee must be collected before item release
+            // Rental payment collection (disabled - payment collected separately after invoice is created)
             'collect_rental_payment' => [
-                'required',
-                'in:true,1',
+                'sometimes',
+                'boolean',
             ],
             'rental_payment_method' => [
                 'nullable',
@@ -102,8 +101,7 @@ class ReleaseItemRequest extends FormRequest
             'due_date.required' => 'Due date is required.',
             'due_date.after' => 'Due date must be after the release date.',
             'rental_payment_method.in' => 'Invalid payment method. Must be one of: cash, card, gcash, paymaya, bank_transfer.',
-            'collect_rental_payment.required' => 'Payment collection is mandatory. Full deposit and rental fee must be collected before releasing the item.',
-            'collect_rental_payment.in' => 'Payment must be collected before releasing the item.',
+            'collect_rental_payment.boolean' => 'Payment collection value must be a boolean.',
         ];
     }
 

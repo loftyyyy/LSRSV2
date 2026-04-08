@@ -469,6 +469,24 @@ class InvoiceController extends Controller
             $query->where('balance_due', '>', 0);
         }
 
+        // Search functionality
+        if ($request->has('search') && ! empty($request->get('search'))) {
+            $searchTerm = $request->get('search');
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('invoice_number', 'like', "%{$searchTerm}%")
+                    ->orWhere('total_amount', 'like', "%{$searchTerm}%")
+                    ->orWhere('balance_due', 'like', "%{$searchTerm}%")
+                    ->orWhereHas('customer', function ($customerQuery) use ($searchTerm) {
+                        $customerQuery->where('first_name', 'like', "%{$searchTerm}%")
+                            ->orWhere('last_name', 'like', "%{$searchTerm}%")
+                            ->orWhere('email', 'like', "%{$searchTerm}%");
+                    })
+                    ->orWhereHas('payments', function ($paymentQuery) use ($searchTerm) {
+                        $paymentQuery->where('payment_reference', 'like', "%{$searchTerm}%");
+                    });
+            });
+        }
+
         // Additional filters
         if ($request->has('customer_id')) {
             $query->where('customer_id', $request->get('customer_id'));

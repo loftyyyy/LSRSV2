@@ -30,14 +30,14 @@ class DatabaseSeeder extends Seeder
             ReservationStatusSeeder::class,
             InventoryStatusSeeder::class,
             CustomerSeeder::class,
-            InventorySeeder::class,
-            ReservationSeeder::class,
-            ReservationItemSeeder::class,
-            RentalSeeder::class,
-            InvoiceSeeder::class,
-            InvoiceItemSeeder::class,
-            PaymentSeeder::class,
-            InventoryImageSeeder::class,
+//            InventorySeeder::class,
+//            ReservationSeeder::class,
+//            ReservationItemSeeder::class,
+//            RentalSeeder::class,
+//            InvoiceSeeder::class,
+//            InvoiceItemSeeder::class,
+//            PaymentSeeder::class,
+//            InventoryImageSeeder::class,
         ]);
     }
 }

@@ -1051,17 +1051,52 @@
         }
     }
 
-    function updateBulkActionBar() {
-        var bulkActionBar = document.getElementById('bulkActionBar');
-        var selectedCount = document.getElementById('selectedCount');
+     function updateBulkActionBar() {
+         var bulkActionBar = document.getElementById('bulkActionBar');
+         var selectedCount = document.getElementById('selectedCount');
+         var extendBtn = document.querySelector('button[onclick="openBulkExtendModal()"]');
+         var returnBtn = document.querySelector('button[onclick="openBulkReturnModal()"]');
 
-        if (rentalState.selectedRentals.length > 0) {
-            bulkActionBar.classList.remove('hidden');
-            selectedCount.textContent = rentalState.selectedRentals.length;
-        } else {
-            bulkActionBar.classList.add('hidden');
-        }
-    }
+         if (rentalState.selectedRentals.length > 0) {
+             bulkActionBar.classList.remove('hidden');
+             selectedCount.textContent = rentalState.selectedRentals.length;
+
+             // Check if any selected rental is returned
+             var hasReturnedRental = false;
+             rentalState.selectedRentals.forEach(function(rentalId) {
+                 var rentalRow = document.querySelector('tr[data-rental-id="' + rentalId + '"]');
+                 if (rentalRow) {
+                     var rentalStatus = rentalRow.getAttribute('data-rental-status');
+                     if (rentalStatus === 'returned') {
+                         hasReturnedRental = true;
+                     }
+                 }
+             });
+
+             // Disable buttons if any returned rental is selected
+             if (extendBtn) {
+                 if (hasReturnedRental) {
+                     extendBtn.disabled = true;
+                     extendBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                 } else {
+                     extendBtn.disabled = false;
+                     extendBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                 }
+             }
+
+             if (returnBtn) {
+                 if (hasReturnedRental) {
+                     returnBtn.disabled = true;
+                     returnBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                 } else {
+                     returnBtn.disabled = false;
+                     returnBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                 }
+             }
+         } else {
+             bulkActionBar.classList.add('hidden');
+         }
+     }
 
     function clearSelection() {
         rentalState.selectedRentals = [];
@@ -1080,36 +1115,53 @@
         updateBulkActionBar();
     }
 
-    function openBulkExtendModal() {
-        if (rentalState.selectedRentals.length === 0) {
-            showErrorNotification('Please select at least one rental to extend.');
-            return;
-        }
+     function openBulkExtendModal() {
+         if (rentalState.selectedRentals.length === 0) {
+             showErrorNotification('Please select at least one rental to extend.');
+             return;
+         }
 
-        var modal = document.getElementById('bulkExtendModal');
-        if (modal) {
-            // Update the count display
-            var countDisplay = document.getElementById('bulkExtendCount');
-            if (countDisplay) {
-                countDisplay.textContent = rentalState.selectedRentals.length;
-            }
+         // Check if any selected rental is returned
+         var hasReturnedRental = false;
+         rentalState.selectedRentals.forEach(function(rentalId) {
+             var rentalRow = document.querySelector('tr[data-rental-id="' + rentalId + '"]');
+             if (rentalRow) {
+                 var rentalStatus = rentalRow.getAttribute('data-rental-status');
+                 if (rentalStatus === 'returned') {
+                     hasReturnedRental = true;
+                 }
+             }
+         });
 
-            // Set default extension days
-            var daysInput = document.getElementById('bulkExtendDays');
-            if (daysInput) {
-                daysInput.value = 3;
-            }
+         if (hasReturnedRental) {
+             showErrorNotification('Cannot extend returned rentals. Please select only active or overdue rentals.');
+             return;
+         }
 
-            // Clear previous reason
-            var reasonInput = document.getElementById('bulkExtendReason');
-            if (reasonInput) {
-                reasonInput.value = '';
-            }
+         var modal = document.getElementById('bulkExtendModal');
+         if (modal) {
+             // Update the count display
+             var countDisplay = document.getElementById('bulkExtendCount');
+             if (countDisplay) {
+                 countDisplay.textContent = rentalState.selectedRentals.length;
+             }
 
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-        }
-    }
+             // Set default extension days
+             var daysInput = document.getElementById('bulkExtendDays');
+             if (daysInput) {
+                 daysInput.value = 3;
+             }
+
+             // Clear previous reason
+             var reasonInput = document.getElementById('bulkExtendReason');
+             if (reasonInput) {
+                 reasonInput.value = '';
+             }
+
+             modal.classList.remove('hidden');
+             modal.classList.add('flex');
+         }
+     }
 
     function closeBulkExtendModal() {
         var modal = document.getElementById('bulkExtendModal');

@@ -37,7 +37,7 @@
                         </span>
                         <div class="relative mt-2">
                             <input type="text" id="rentalSearchInput" placeholder="Search by customer name or item code..."
-                                class="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 placeholder-neutral-400 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:placeholder-neutral-500 transition-colors duration-200" />
+                                   class="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 placeholder-neutral-400 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:placeholder-neutral-500 transition-colors duration-200" />
                         </div>
                         {{-- Search Results --}}
                         <div id="rentalSearchResults" class="hidden mt-2 max-h-48 overflow-y-auto rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
@@ -78,7 +78,7 @@
                                 Return Date <span class="text-rose-500">*</span>
                             </span>
                             <input type="date" name="return_date" id="returnDate" required
-                                class="mt-2 w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white transition-colors duration-200" />
+                                   class="mt-2 w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white transition-colors duration-200" />
                         </label>
                     </div>
 
@@ -92,7 +92,7 @@
                                     Return Notes
                                 </span>
                                 <textarea name="return_notes" id="returnNotes" rows="3" placeholder="Any notes about the return..."
-                                    class="mt-2 w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 placeholder-neutral-400 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:placeholder-neutral-500 resize-none transition-colors duration-200"></textarea>
+                                          class="mt-2 w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 placeholder-neutral-400 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:placeholder-neutral-500 resize-none transition-colors duration-200"></textarea>
                             </label>
                         </div>
 
@@ -104,195 +104,11 @@
                                     Condition Notes
                                 </span>
                                 <textarea name="condition_notes" id="conditionNotes" rows="3" placeholder="Notes about item condition..."
-                                    class="mt-2 w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 placeholder-neutral-400 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:placeholder-neutral-500 resize-none transition-colors duration-200"></textarea>
+                                          class="mt-2 w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 placeholder-neutral-400 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:placeholder-neutral-500 resize-none transition-colors duration-200"></textarea>
                             </label>
                         </div>
                     </div>
-
-                    {{-- Divider --}}
-                    <div class="border-t border-neutral-200 dark:border-neutral-800 pt-5">
-                        <h4 class="text-sm font-semibold text-neutral-700 dark:text-neutral-300 flex items-center gap-2 mb-4">
-                            <x-icon name="credit-card" class="h-4 w-4" />
-                            Payment & Deposit
-                        </h4>
-
-                        {{-- Balance Due Display --}}
-                        <div id="balanceDueSection" class="hidden mb-4 p-4 rounded-xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800">
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm text-neutral-600 dark:text-neutral-400">Balance Due</span>
-                                <span id="balanceDueAmount" class="text-lg font-semibold text-neutral-900 dark:text-white">₱0.00</span>
-                            </div>
-                            <div id="penaltyInfo" class="hidden mt-2 pt-2 border-t border-neutral-200 dark:border-neutral-700">
-                                <div class="flex items-center justify-between text-sm">
-                                    <span class="text-rose-600 dark:text-rose-400">Overdue Penalty</span>
-                                    <span id="penaltyAmount" class="font-medium text-rose-600 dark:text-rose-400">₱0.00</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {{-- Collect Payment Toggle --}}
-                        <div class="flex items-center justify-between p-4 rounded-xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800">
-                            <div>
-                                <p class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Collect Rental Payment</p>
-                                <p class="text-xs text-neutral-500 dark:text-neutral-500 mt-0.5">Process payment for this rental</p>
-                            </div>
-                            <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" id="collectPaymentToggle" name="collect_rental_payment" class="sr-only peer" />
-                                <div class="w-11 h-6 bg-neutral-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-violet-500/30 rounded-full peer dark:bg-neutral-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-violet-600"></div>
-                            </label>
-                        </div>
-
-                        {{-- Payment Fields (hidden by default) --}}
-                        <div id="paymentFields" class="hidden mt-4 space-y-4">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {{-- Payment Amount --}}
-                                <div>
-                                    <label class="block">
-                                        <span class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Payment Amount</span>
-                                        <div class="relative mt-2">
-                                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500 dark:text-neutral-400 text-sm">₱</span>
-                                            <input type="number" name="rental_payment_amount" id="paymentAmount" step="0.01" min="0"
-                                                class="w-full rounded-xl border border-neutral-300 bg-white pl-8 pr-4 py-3 text-sm text-neutral-900 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white transition-colors duration-200" />
-                                        </div>
-                                    </label>
-                                </div>
-
-                                {{-- Payment Method --}}
-                                <div>
-                                    <label class="block">
-                                        <span class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Payment Method <span class="text-rose-500">*</span></span>
-                                        <select name="rental_payment_method" id="paymentMethod"
-                                            class="mt-2 w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white transition-colors duration-200">
-                                            <option value="">Select method</option>
-                                            <option value="cash">Cash</option>
-                                            <option value="card">Card</option>
-                                            <option value="bank_transfer">Bank Transfer</option>
-                                            <option value="gcash">GCash</option>
-                                            <option value="paymaya">PayMaya</option>
-                                        </select>
-                                    </label>
-                                </div>
-                            </div>
-
-                            {{-- Payment Notes --}}
-                            <div>
-                                <label class="block">
-                                    <span class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Payment Notes</span>
-                                    <input type="text" name="rental_payment_notes" id="paymentNotes" placeholder="e.g., reference number..."
-                                        class="mt-2 w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 placeholder-neutral-400 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:placeholder-neutral-500 transition-colors duration-200" />
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Deposit Section --}}
-                    <div class="border-t border-neutral-200 dark:border-neutral-800 pt-5">
-                        <h4 class="text-sm font-semibold text-neutral-700 dark:text-neutral-300 flex items-center gap-2 mb-4">
-                            <x-icon name="shield" class="h-4 w-4" />
-                            Security Deposit
-                        </h4>
-
-                        {{-- Deposit Info --}}
-                        <div id="depositInfoSection" class="hidden mb-4 p-4 rounded-xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800">
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm text-neutral-600 dark:text-neutral-400">Deposit Amount</span>
-                                <span id="depositAmount" class="text-lg font-semibold text-neutral-900 dark:text-white">₱0.00</span>
-                            </div>
-                            <div class="flex items-center justify-between mt-1">
-                                <span class="text-xs text-neutral-500 dark:text-neutral-500">Status</span>
-                                <span id="depositStatus" class="text-xs font-medium text-neutral-700 dark:text-neutral-300">-</span>
-                            </div>
-                        </div>
-
-                        {{-- Deposit Return Action --}}
-                        <div>
-                            <label class="block">
-                                <span class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Deposit Return Action</span>
-                                <select name="deposit_return_action" id="depositReturnAction"
-                                    class="mt-2 w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white transition-colors duration-200">
-                                    <option value="hold">Hold - Keep for now</option>
-                                    <option value="full">Full Return - Return entire deposit</option>
-                                    <option value="partial">Partial Return - Return with deductions</option>
-                                    <option value="forfeit">Forfeit - Customer forfeits deposit</option>
-                                </select>
-                            </label>
-                        </div>
-
-                        {{-- Deposit Return Fields (shown for full/partial) --}}
-                        <div id="depositReturnFields" class="hidden mt-4 space-y-4">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {{-- Return Method --}}
-                                <div>
-                                    <label class="block">
-                                        <span class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Return Method <span class="text-rose-500">*</span></span>
-                                        <select name="deposit_return_method" id="depositReturnMethod"
-                                            class="mt-2 w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white transition-colors duration-200">
-                                            <option value="">Select method</option>
-                                            <option value="cash">Cash</option>
-                                            <option value="bank_transfer">Bank Transfer</option>
-                                            <option value="gcash">GCash</option>
-                                            <option value="paymaya">PayMaya</option>
-                                            <option value="check">Check</option>
-                                        </select>
-                                    </label>
-                                </div>
-
-                                {{-- Reference Number --}}
-                                <div>
-                                    <label class="block">
-                                        <span class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Reference Number</span>
-                                        <input type="text" name="deposit_return_reference" id="depositReturnReference" placeholder="Transaction reference..."
-                                            class="mt-2 w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 placeholder-neutral-400 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:placeholder-neutral-500 transition-colors duration-200" />
-                                    </label>
-                                </div>
-                            </div>
-
-                            {{-- Deposit Return Notes --}}
-                            <div>
-                                <label class="block">
-                                    <span class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Notes</span>
-                                    <input type="text" name="deposit_return_notes" id="depositReturnNotes" placeholder="Notes about deposit return..."
-                                        class="mt-2 w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 placeholder-neutral-400 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:placeholder-neutral-500 transition-colors duration-200" />
-                                </label>
-                            </div>
-                        </div>
-
-                        {{-- Deductions Section (shown for partial) --}}
-                        <div id="deductionsSection" class="hidden mt-4 space-y-4">
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Deductions</span>
-                                <button type="button" onclick="addDeductionRow()" class="text-sm text-violet-600 hover:text-violet-700 dark:text-violet-400 dark:hover:text-violet-300 font-medium transition-colors duration-200">
-                                    + Add Deduction
-                                </button>
-                            </div>
-
-                            <div id="deductionsList" class="space-y-3">
-                                {{-- Deduction rows will be added here dynamically --}}
-                            </div>
-
-                            {{-- Deduction Summary --}}
-                            <div id="deductionSummary" class="hidden p-3 rounded-xl bg-neutral-100 dark:bg-neutral-800/50 border border-neutral-200 dark:border-neutral-700">
-                                <div class="flex items-center justify-between text-sm">
-                                    <span class="text-neutral-600 dark:text-neutral-400">Total Deductions</span>
-                                    <span id="totalDeductions" class="font-semibold text-neutral-900 dark:text-white">₱0.00</span>
-                                </div>
-                                <div class="flex items-center justify-between text-sm mt-1">
-                                    <span class="text-neutral-600 dark:text-neutral-400">Amount to Return</span>
-                                    <span id="amountToReturn" class="font-semibold text-emerald-600 dark:text-emerald-400">₱0.00</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {{-- Forfeit Notes (shown for forfeit) --}}
-                        <div id="forfeitNotesSection" class="hidden mt-4">
-                            <label class="block">
-                                <span class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Reason for Forfeit <span class="text-rose-500">*</span></span>
-                                <textarea name="deposit_return_notes" id="forfeitNotes" rows="2" placeholder="Explain why the deposit is being forfeited..."
-                                    class="mt-2 w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 placeholder-neutral-400 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:placeholder-neutral-500 resize-none transition-colors duration-200"></textarea>
-                            </label>
-                        </div>
-                    </div>
-                </div>
+                </div> {{-- END returnDetailsSection --}}
 
                 {{-- Error Display --}}
                 <div id="processReturnError" class="hidden p-4 rounded-xl bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800/50">
@@ -310,7 +126,7 @@
                 Cancel
             </button>
             <button type="button" id="processReturnSubmitBtn" onclick="submitProcessReturn()" disabled
-                class="px-5 py-2.5 text-sm font-medium text-white dark:text-black bg-violet-600 hover:bg-violet-700 disabled:bg-neutral-300 disabled:text-neutral-500 dark:disabled:bg-neutral-700 dark:disabled:text-neutral-500 rounded-xl transition-colors duration-200 flex items-center gap-2">
+                    class="px-5 py-2.5 text-sm font-medium text-white dark:text-black bg-violet-600 hover:bg-violet-700 disabled:bg-neutral-300 disabled:text-neutral-500 dark:disabled:bg-neutral-700 dark:disabled:text-neutral-500 rounded-xl transition-colors duration-200 flex items-center gap-2">
                 <x-icon name="check" class="h-4 w-4" />
                 <span>Process Return</span>
             </button>
@@ -329,56 +145,63 @@
     };
 
     // Open process return modal (general, no rental pre-selected)
-    function openProcessReturnModal() {
+    globalThis.openProcessReturnModal = function openProcessReturnModal() {
         globalThis.processReturnModalState.isOpen = true;
         globalThis.processReturnModalState.selectedRentalId = null;
         globalThis.processReturnModalState.selectedRental = null;
         globalThis.processReturnModalState.deductionCount = 0;
 
-        // Reset form
         resetProcessReturnForm();
 
-        // Show rental selection section
-        document.getElementById('rentalSelectionSection').classList.remove('hidden');
-        document.getElementById('returnDetailsSection').classList.add('hidden');
+        var rentalSelectionSection = document.getElementById('rentalSelectionSection');
+        if (rentalSelectionSection) rentalSelectionSection.classList.remove('hidden');
 
-        // Show modal
+        var returnDetailsSection = document.getElementById('returnDetailsSection');
+        if (returnDetailsSection) returnDetailsSection.classList.add('hidden');
+
         var modal = document.getElementById('processReturnModal');
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
 
-        // Focus search input
         setTimeout(function() {
-            document.getElementById('rentalSearchInput').focus();
+            var searchInput = document.getElementById('rentalSearchInput');
+            if (searchInput) searchInput.focus();
         }, 100);
-    }
+    };
 
     // Open process return modal for a specific rental (called from details modal)
-    function openProcessReturnModalForRental(rentalId) {
+    globalThis.openProcessReturnModalForRental = function openProcessReturnModalForRental(rentalId) {
         globalThis.processReturnModalState.isOpen = true;
         globalThis.processReturnModalState.selectedRentalId = rentalId;
         globalThis.processReturnModalState.deductionCount = 0;
 
-        // Reset form
         resetProcessReturnForm();
 
-        // Hide rental selection, show loading
-        document.getElementById('rentalSelectionSection').classList.add('hidden');
-        document.getElementById('processReturnLoading').classList.remove('hidden');
-        document.getElementById('processReturnLoading').classList.add('flex');
-        document.getElementById('returnDetailsSection').classList.add('hidden');
+        var rentalSelectionSection = document.getElementById('rentalSelectionSection');
+        if (rentalSelectionSection) rentalSelectionSection.classList.add('hidden');
 
-        // Show modal
+        var processReturnLoading = document.getElementById('processReturnLoading');
+        if (processReturnLoading) {
+            processReturnLoading.classList.remove('hidden');
+            processReturnLoading.classList.add('flex');
+        }
+
+        var returnDetailsSection = document.getElementById('returnDetailsSection');
+        if (returnDetailsSection) returnDetailsSection.classList.add('hidden');
+
         var modal = document.getElementById('processReturnModal');
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
 
-        // Fetch rental details
         fetchRentalForReturn(rentalId);
-    }
+    };
 
     // Close process return modal
-    function closeProcessReturnModal() {
+    globalThis.closeProcessReturnModal = function closeProcessReturnModal() {
         globalThis.processReturnModalState.isOpen = false;
         globalThis.processReturnModalState.selectedRentalId = null;
         globalThis.processReturnModalState.selectedRental = null;
@@ -389,55 +212,123 @@
         }
 
         var modal = document.getElementById('processReturnModal');
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-    }
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+    };
 
     // Reset form to initial state
     function resetProcessReturnForm() {
         var form = document.getElementById('processReturnForm');
-        form.reset();
+        if (form) form.reset();
 
-        document.getElementById('selectedRentalId').value = '';
-        document.getElementById('selectedRentalDisplay').classList.add('hidden');
-        document.getElementById('selectedRentalOverdue').classList.add('hidden');
-        document.getElementById('rentalSearchResults').classList.add('hidden');
-        document.getElementById('rentalSearchResults').innerHTML = '';
+        var selectedRentalId = document.getElementById('selectedRentalId');
+        if (selectedRentalId) selectedRentalId.value = '';
 
-        document.getElementById('balanceDueSection').classList.add('hidden');
-        document.getElementById('penaltyInfo').classList.add('hidden');
-        document.getElementById('depositInfoSection').classList.add('hidden');
+        var selectedRentalDisplay = document.getElementById('selectedRentalDisplay');
+        if (selectedRentalDisplay) selectedRentalDisplay.classList.add('hidden');
 
-        document.getElementById('paymentFields').classList.add('hidden');
-        document.getElementById('depositReturnFields').classList.add('hidden');
-        document.getElementById('deductionsSection').classList.add('hidden');
-        document.getElementById('forfeitNotesSection').classList.add('hidden');
-        document.getElementById('deductionsList').innerHTML = '';
-        document.getElementById('deductionSummary').classList.add('hidden');
+        var selectedRentalOverdue = document.getElementById('selectedRentalOverdue');
+        if (selectedRentalOverdue) selectedRentalOverdue.classList.add('hidden');
 
-        document.getElementById('processReturnError').classList.add('hidden');
-        document.getElementById('processReturnSubmitBtn').disabled = true;
-
-        // Set default return date to today
-        var today = new Date().toISOString().split('T')[0];
-        document.getElementById('returnDate').value = today;
-    }
-
-    // Search for active rentals
-    var rentalSearchTimer;
-    document.getElementById('rentalSearchInput')?.addEventListener('input', function(e) {
-        clearTimeout(rentalSearchTimer);
-        var query = e.target.value.trim();
-
-        if (query.length < 2) {
-            document.getElementById('rentalSearchResults').classList.add('hidden');
-            document.getElementById('rentalSearchResults').innerHTML = '';
-            return;
+        var rentalSearchResults = document.getElementById('rentalSearchResults');
+        if (rentalSearchResults) {
+            rentalSearchResults.classList.add('hidden');
+            rentalSearchResults.innerHTML = '';
         }
 
-        rentalSearchTimer = setTimeout(function() {
-            searchActiveRentals(query);
-        }, 300);
+        var depositReturnFields = document.getElementById('depositReturnFields');
+        if (depositReturnFields) depositReturnFields.classList.add('hidden');
+
+        var deductionsSection = document.getElementById('deductionsSection');
+        if (deductionsSection) deductionsSection.classList.add('hidden');
+
+        var forfeitNotesSection = document.getElementById('forfeitNotesSection');
+        if (forfeitNotesSection) forfeitNotesSection.classList.add('hidden');
+
+        var deductionsList = document.getElementById('deductionsList');
+        if (deductionsList) deductionsList.innerHTML = '';
+
+        var deductionSummary = document.getElementById('deductionSummary');
+        if (deductionSummary) deductionSummary.classList.add('hidden');
+
+        var processReturnError = document.getElementById('processReturnError');
+        if (processReturnError) processReturnError.classList.add('hidden');
+
+        var processReturnSubmitBtn = document.getElementById('processReturnSubmitBtn');
+        if (processReturnSubmitBtn) processReturnSubmitBtn.disabled = true;
+
+        var returnDate = document.getElementById('returnDate');
+        if (returnDate) {
+            returnDate.value = new Date().toISOString().split('T')[0];
+        }
+    }
+
+    // ── Attach event listeners safely after DOM is ready ──────────────────────
+    var rentalSearchTimer;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        var rentalSearchInput = document.getElementById('rentalSearchInput');
+        if (rentalSearchInput) {
+            rentalSearchInput.addEventListener('input', function(e) {
+                clearTimeout(rentalSearchTimer);
+                var query = e.target.value.trim();
+
+                if (query.length < 2) {
+                    document.getElementById('rentalSearchResults').classList.add('hidden');
+                    document.getElementById('rentalSearchResults').innerHTML = '';
+                    return;
+                }
+
+                rentalSearchTimer = setTimeout(function() {
+                    searchActiveRentals(query);
+                }, 300);
+            });
+        }
+
+        var depositReturnAction = document.getElementById('depositReturnAction');
+        if (depositReturnAction) {
+            depositReturnAction.addEventListener('change', function(e) {
+                var action = e.target.value;
+                var depositReturnFields = document.getElementById('depositReturnFields');
+                var deductionsSection = document.getElementById('deductionsSection');
+                var forfeitNotesSection = document.getElementById('forfeitNotesSection');
+
+                depositReturnFields.classList.add('hidden');
+                deductionsSection.classList.add('hidden');
+                forfeitNotesSection.classList.add('hidden');
+
+                if (action === 'full') {
+                    depositReturnFields.classList.remove('hidden');
+                } else if (action === 'partial') {
+                    depositReturnFields.classList.remove('hidden');
+                    deductionsSection.classList.remove('hidden');
+                    if (globalThis.processReturnModalState.deductionCount === 0) {
+                        addDeductionRow();
+                    }
+                } else if (action === 'forfeit') {
+                    forfeitNotesSection.classList.remove('hidden');
+                }
+            });
+        }
+
+        var processReturnModalEl = document.getElementById('processReturnModal');
+        if (processReturnModalEl) {
+            processReturnModalEl.addEventListener('click', function(e) {
+                if (e.target === this && globalThis.processReturnModalState.isOpen) {
+                    closeProcessReturnModal();
+                }
+            });
+        }
+    });
+
+    // Keyboard navigation
+    document.addEventListener('keydown', function(e) {
+        if (!globalThis.processReturnModalState.isOpen) return;
+        if (e.key === 'Escape') {
+            closeProcessReturnModal();
+        }
     });
 
     // Search active rentals API call
@@ -451,20 +342,20 @@
         axios.get('/api/rentals', {
             params: {
                 search: query,
-                status: 'rented', // Only show active rentals
+                status: 'rented',
                 per_page: 10
             },
             signal: globalThis.processReturnModalState.searchAbortController.signal
         })
-        .then(function(response) {
-            var rentals = response.data.data || [];
-            displayRentalSearchResults(rentals);
-        })
-        .catch(function(error) {
-            if (error.name !== 'CanceledError') {
-                console.error('Error searching rentals:', error);
-            }
-        });
+            .then(function(response) {
+                var rentals = response.data.data || [];
+                displayRentalSearchResults(rentals);
+            })
+            .catch(function(error) {
+                if (error.name !== 'CanceledError') {
+                    console.error('Error searching rentals:', error);
+                }
+            });
     }
 
     // Display search results
@@ -479,23 +370,23 @@
 
         var html = rentals.map(function(rental) {
             var customerName = rental.customer ? (rental.customer.first_name + ' ' + rental.customer.last_name) : 'Unknown Customer';
-            var itemCode = rental.item ? rental.item.item_code : 'N/A';
-            var itemName = rental.item ? rental.item.name : 'Unknown Item';
+            var itemCode = rental.item ? (rental.item.sku || rental.item.item_code || 'Item #' + rental.item.item_id) : 'N/A';
+            var itemName = rental.item ? (rental.item.name || 'Unknown Item') : 'Unknown Item';
             var dueDate = rental.due_date ? formatReturnDate(rental.due_date) : 'N/A';
             var isOverdue = rental.is_overdue || false;
 
             return '<div onclick="selectRental(' + rental.rental_id + ')" class="px-4 py-3 hover:bg-neutral-50 dark:hover:bg-neutral-800 cursor-pointer border-b border-neutral-100 dark:border-neutral-800 last:border-b-0 transition-colors duration-150">' +
                 '<div class="flex items-center justify-between">' +
-                    '<div>' +
-                        '<p class="text-sm font-medium text-neutral-900 dark:text-white">' + customerName + '</p>' +
-                        '<p class="text-xs text-neutral-500 dark:text-neutral-400">' + itemCode + ' - ' + itemName + '</p>' +
-                    '</div>' +
-                    '<div class="text-right">' +
-                        '<p class="text-xs text-neutral-500 dark:text-neutral-400">Due: ' + dueDate + '</p>' +
-                        (isOverdue ? '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400">Overdue</span>' : '') +
-                    '</div>' +
+                '<div>' +
+                '<p class="text-sm font-medium text-neutral-900 dark:text-white">' + customerName + '</p>' +
+                '<p class="text-xs text-neutral-500 dark:text-neutral-400">' + itemCode + ' - ' + itemName + '</p>' +
                 '</div>' +
-            '</div>';
+                '<div class="text-right">' +
+                '<p class="text-xs text-neutral-500 dark:text-neutral-400">Due: ' + dueDate + '</p>' +
+                (isOverdue ? '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400">Overdue</span>' : '') +
+                '</div>' +
+                '</div>' +
+                '</div>';
         }).join('');
 
         container.innerHTML = html;
@@ -510,11 +401,9 @@
         globalThis.processReturnModalState.selectedRentalId = rentalId;
         document.getElementById('selectedRentalId').value = rentalId;
 
-        // Show loading state
         document.getElementById('processReturnLoading').classList.remove('hidden');
         document.getElementById('processReturnLoading').classList.add('flex');
 
-        // Fetch full rental details
         fetchRentalForReturn(rentalId);
     }
 
@@ -556,21 +445,18 @@
     // Populate return form with rental data
     function populateReturnForm(rental, calculatedPenalty, isOverdue) {
         var customerName = rental.customer ? (rental.customer.first_name + ' ' + rental.customer.last_name) : 'Unknown';
-        var itemCode = rental.item ? rental.item.item_code : 'N/A';
-        var itemName = rental.item ? rental.item.name : 'Unknown Item';
+        var itemCode = rental.item ? (rental.item.sku || rental.item.item_code || 'Item #' + rental.item.item_id) : 'N/A';
+        var itemName = rental.item ? (rental.item.name || 'Unknown Item') : 'Unknown Item';
         var releaseDate = rental.release_date ? formatReturnDate(rental.release_date) : 'N/A';
         var dueDate = rental.due_date ? formatReturnDate(rental.due_date) : 'N/A';
 
-        // Update title
         document.getElementById('processReturnTitle').textContent = 'Return: ' + itemCode;
 
-        // Show selected rental display
         document.getElementById('selectedRentalCustomer').textContent = customerName;
         document.getElementById('selectedRentalItem').textContent = itemCode + ' - ' + itemName;
         document.getElementById('selectedRentalDates').textContent = 'Released: ' + releaseDate + ' | Due: ' + dueDate;
         document.getElementById('selectedRentalDisplay').classList.remove('hidden');
 
-        // Show overdue warning if applicable
         if (isOverdue && calculatedPenalty > 0) {
             document.getElementById('selectedRentalOverdueText').textContent = 'Overdue - Penalty: ₱' + formatNumber(calculatedPenalty);
             document.getElementById('selectedRentalOverdue').classList.remove('hidden');
@@ -578,79 +464,9 @@
             document.getElementById('selectedRentalOverdue').classList.add('hidden');
         }
 
-        // Calculate balance due from invoices
-        var balanceDue = 0;
-        if (rental.invoices && rental.invoices.length > 0) {
-            rental.invoices.forEach(function(invoice) {
-                balanceDue += parseFloat(invoice.balance_due || 0);
-            });
-        }
-
-        // Show balance due section
-        if (balanceDue > 0 || calculatedPenalty > 0) {
-            document.getElementById('balanceDueAmount').textContent = '₱' + formatNumber(balanceDue + calculatedPenalty);
-            document.getElementById('balanceDueSection').classList.remove('hidden');
-
-            if (calculatedPenalty > 0) {
-                document.getElementById('penaltyAmount').textContent = '₱' + formatNumber(calculatedPenalty);
-                document.getElementById('penaltyInfo').classList.remove('hidden');
-            }
-
-            // Pre-fill payment amount
-            document.getElementById('paymentAmount').value = (balanceDue + calculatedPenalty).toFixed(2);
-        }
-
-        // Show deposit info
-        var depositAmount = parseFloat(rental.deposit_amount || 0);
-        if (depositAmount > 0) {
-            document.getElementById('depositAmount').textContent = '₱' + formatNumber(depositAmount);
-            var depositStatus = rental.deposit_status || 'collected';
-            document.getElementById('depositStatus').textContent = depositStatus.charAt(0).toUpperCase() + depositStatus.slice(1).replace('_', ' ');
-            document.getElementById('depositInfoSection').classList.remove('hidden');
-        }
-
-        // Show return details section
         document.getElementById('returnDetailsSection').classList.remove('hidden');
-
-        // Enable submit button
         document.getElementById('processReturnSubmitBtn').disabled = false;
     }
-
-    // Toggle payment fields visibility
-    document.getElementById('collectPaymentToggle')?.addEventListener('change', function(e) {
-        var paymentFields = document.getElementById('paymentFields');
-        if (e.target.checked) {
-            paymentFields.classList.remove('hidden');
-        } else {
-            paymentFields.classList.add('hidden');
-        }
-    });
-
-    // Handle deposit action change
-    document.getElementById('depositReturnAction')?.addEventListener('change', function(e) {
-        var action = e.target.value;
-        var depositReturnFields = document.getElementById('depositReturnFields');
-        var deductionsSection = document.getElementById('deductionsSection');
-        var forfeitNotesSection = document.getElementById('forfeitNotesSection');
-
-        // Reset all sections
-        depositReturnFields.classList.add('hidden');
-        deductionsSection.classList.add('hidden');
-        forfeitNotesSection.classList.add('hidden');
-
-        if (action === 'full') {
-            depositReturnFields.classList.remove('hidden');
-        } else if (action === 'partial') {
-            depositReturnFields.classList.remove('hidden');
-            deductionsSection.classList.remove('hidden');
-            // Add initial deduction row if none exist
-            if (globalThis.processReturnModalState.deductionCount === 0) {
-                addDeductionRow();
-            }
-        } else if (action === 'forfeit') {
-            forfeitNotesSection.classList.remove('hidden');
-        }
-    });
 
     // Add deduction row
     function addDeductionRow() {
@@ -659,24 +475,24 @@
 
         var html = '<div id="deductionRow' + index + '" class="flex gap-3 items-start">' +
             '<div class="flex-1">' +
-                '<input type="text" name="deductions[' + index + '][type]" placeholder="Type (e.g., Damage, Cleaning)" ' +
-                    'class="w-full rounded-xl border border-neutral-300 bg-white px-4 py-2.5 text-sm text-neutral-900 placeholder-neutral-400 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:placeholder-neutral-500 transition-colors duration-200" />' +
+            '<input type="text" name="deductions[' + index + '][type]" placeholder="Type (e.g., Damage, Cleaning)" ' +
+            'class="w-full rounded-xl border border-neutral-300 bg-white px-4 py-2.5 text-sm text-neutral-900 placeholder-neutral-400 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:placeholder-neutral-500 transition-colors duration-200" />' +
             '</div>' +
             '<div class="w-32">' +
-                '<div class="relative">' +
-                    '<span class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 dark:text-neutral-400 text-sm">₱</span>' +
-                    '<input type="number" name="deductions[' + index + '][amount]" step="0.01" min="0" placeholder="0.00" onchange="updateDeductionSummary()" ' +
-                        'class="w-full rounded-xl border border-neutral-300 bg-white pl-7 pr-3 py-2.5 text-sm text-neutral-900 placeholder-neutral-400 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:placeholder-neutral-500 transition-colors duration-200" />' +
-                '</div>' +
+            '<div class="relative">' +
+            '<span class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 dark:text-neutral-400 text-sm">₱</span>' +
+            '<input type="number" name="deductions[' + index + '][amount]" step="0.01" min="0" placeholder="0.00" onchange="updateDeductionSummary()" ' +
+            'class="w-full rounded-xl border border-neutral-300 bg-white pl-7 pr-3 py-2.5 text-sm text-neutral-900 placeholder-neutral-400 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:placeholder-neutral-500 transition-colors duration-200" />' +
+            '</div>' +
             '</div>' +
             '<div class="flex-1">' +
-                '<input type="text" name="deductions[' + index + '][reason]" placeholder="Reason (optional)" ' +
-                    'class="w-full rounded-xl border border-neutral-300 bg-white px-4 py-2.5 text-sm text-neutral-900 placeholder-neutral-400 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:placeholder-neutral-500 transition-colors duration-200" />' +
+            '<input type="text" name="deductions[' + index + '][reason]" placeholder="Reason (optional)" ' +
+            'class="w-full rounded-xl border border-neutral-300 bg-white px-4 py-2.5 text-sm text-neutral-900 placeholder-neutral-400 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:placeholder-neutral-500 transition-colors duration-200" />' +
             '</div>' +
             '<button type="button" onclick="removeDeductionRow(' + index + ')" class="p-2.5 text-neutral-400 hover:text-rose-500 transition-colors duration-200">' +
-                '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>' +
+            '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>' +
             '</button>' +
-        '</div>';
+            '</div>';
 
         container.insertAdjacentHTML('beforeend', html);
         updateDeductionSummary();
@@ -730,22 +546,12 @@
         var form = document.getElementById('processReturnForm');
         var formData = new FormData(form);
 
-        // Build request data
         var data = {
             return_date: formData.get('return_date'),
             return_notes: formData.get('return_notes') || null,
             condition_notes: formData.get('condition_notes') || null
         };
 
-        // Payment data
-        if (document.getElementById('collectPaymentToggle').checked) {
-            data.collect_rental_payment = true;
-            data.rental_payment_amount = parseFloat(formData.get('rental_payment_amount')) || null;
-            data.rental_payment_method = formData.get('rental_payment_method');
-            data.rental_payment_notes = formData.get('rental_payment_notes') || null;
-        }
-
-        // Deposit data
         var depositAction = formData.get('deposit_return_action');
         if (depositAction && depositAction !== 'hold') {
             data.deposit_return_action = depositAction;
@@ -757,7 +563,6 @@
             }
 
             if (depositAction === 'partial') {
-                // Collect deductions
                 var deductions = [];
                 var deductionRows = document.querySelectorAll('#deductionsList > div');
                 deductionRows.forEach(function(row) {
@@ -781,14 +586,8 @@
             }
         }
 
-        // Validate required fields
         if (!data.return_date) {
             showProcessReturnError('Return date is required.');
-            return;
-        }
-
-        if (data.collect_rental_payment && !data.rental_payment_method) {
-            showProcessReturnError('Payment method is required when collecting payment.');
             return;
         }
 
@@ -797,27 +596,21 @@
             return;
         }
 
-        // Disable submit button and show loading
         var submitBtn = document.getElementById('processReturnSubmitBtn');
         var originalHtml = submitBtn.innerHTML;
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<div class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent dark:border-black dark:border-t-transparent"></div><span>Processing...</span>';
 
-        // Hide previous errors
         document.getElementById('processReturnError').classList.add('hidden');
 
-        // Submit to API
         axios.post('/api/rentals/' + rentalId + '/return', data)
             .then(function(response) {
-                // Success - close modal and refresh list
                 closeProcessReturnModal();
 
-                // Show success notification
                 if (typeof showNotification === 'function') {
                     showNotification('Return processed successfully', 'success');
                 }
 
-                // Refresh the rental list
                 if (typeof fetchRentals === 'function') {
                     fetchRentals();
                 }
@@ -854,20 +647,4 @@
             maximumFractionDigits: 2
         });
     }
-
-    // Keyboard navigation
-    document.addEventListener('keydown', function(e) {
-        if (!globalThis.processReturnModalState.isOpen) return;
-
-        if (e.key === 'Escape') {
-            closeProcessReturnModal();
-        }
-    });
-
-    // Close on backdrop click
-    document.getElementById('processReturnModal')?.addEventListener('click', function(e) {
-        if (e.target === this && globalThis.processReturnModalState.isOpen) {
-            closeProcessReturnModal();
-        }
-    });
 </script>
