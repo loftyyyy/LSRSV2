@@ -355,11 +355,12 @@
         {{-- Footer --}}
         <div class="flex-shrink-0 flex items-center justify-between px-6 py-4 border-t border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/30 rounded-b-3xl">
             <div class="flex items-center gap-2">
+                {{-- inline-flex removed from static classes; JS controls display --}}
                 <button
                     type="button"
                     id="rentalDetailsProcessReturnBtn"
                     onclick="processReturnFromDetails()"
-                    class="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-[14px] font-medium bg-violet-600 text-white hover:bg-violet-500 transition-colors duration-100 ease-in-out"
+                    class="hidden items-center gap-2 rounded-xl px-4 py-2.5 text-[14px] font-medium bg-violet-600 text-white hover:bg-violet-500 transition-colors duration-100 ease-in-out"
                 >
                     <x-icon name="arrow-left-circle" class="h-4 w-4" />
                     <span>Process Return</span>
@@ -368,7 +369,7 @@
                     type="button"
                     id="rentalDetailsExtendBtn"
                     onclick="extendRentalFromDetails()"
-                    class="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-[14px] font-medium border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:bg-neutral-800 transition-colors duration-100 ease-in-out"
+                    class="hidden items-center gap-2 rounded-xl px-4 py-2.5 text-[14px] font-medium border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:bg-neutral-800 transition-colors duration-100 ease-in-out"
                 >
                     <x-icon name="calendar" class="h-4 w-4" />
                     <span>Extend</span>
@@ -386,7 +387,6 @@
 </div>
 
 <style>
-    /* Optimize modal performance */
     #rentalDetailsModal {
         will-change: opacity;
         transform: translateZ(0);
@@ -398,7 +398,6 @@
         transform: translateZ(0);
     }
 
-    /* Custom scrollbar for rental details content */
     #rentalDetailsContent {
         scrollbar-width: thin;
         scrollbar-color: rgba(155, 155, 155, 0.5) transparent;
@@ -429,7 +428,6 @@
         background-color: rgba(100, 100, 100, 0.7);
     }
 
-    /* Custom scrollbar for invoices list */
     #detailRentalInvoices {
         scrollbar-width: thin;
         scrollbar-color: rgba(155, 155, 155, 0.3) transparent;
@@ -450,7 +448,6 @@
 </style>
 
 <script>
-    // Use globalThis to avoid redeclaration errors when Turbo navigates between pages
     if (!globalThis.rentalDetailsModalState) {
         globalThis.rentalDetailsModalState = {
             isOpen: false,
@@ -461,7 +458,6 @@
         };
     }
 
-    // Open rental details modal
     async function openRentalDetailsModal(rentalId) {
         globalThis.rentalDetailsModalState.isOpen = true;
         globalThis.rentalDetailsModalState.currentRentalId = rentalId;
@@ -470,7 +466,6 @@
         modal.classList.remove('hidden');
         modal.classList.add('flex');
 
-        // Show loading state
         document.getElementById('rentalDetailsLoading').classList.remove('hidden');
         document.getElementById('rentalDetailsData').classList.add('hidden');
         document.getElementById('rentalDetailsError').classList.add('hidden');
@@ -485,7 +480,6 @@
 
             populateRentalDetails(rental, response.data);
 
-            // Hide loading, show data
             document.getElementById('rentalDetailsLoading').classList.add('hidden');
             document.getElementById('rentalDetailsData').classList.remove('hidden');
         } catch (error) {
@@ -497,16 +491,12 @@
         }
     }
 
-    // Populate rental details in the modal
     function populateRentalDetails(rental, responseData) {
-        // Title
         document.getElementById('rentalDetailsTitle').textContent = 'Rental #' + String(rental.rental_id).padStart(3, '0');
 
-        // Status with dynamic styling
         var statusName = (rental.status && rental.status.status_name) ? rental.status.status_name.toLowerCase() : 'unknown';
         var isOverdue = responseData.is_overdue;
 
-        // Override status display if overdue
         if (isOverdue && statusName !== 'returned') {
             statusName = 'overdue';
         }
@@ -547,10 +537,8 @@
         statusDot.className = 'h-2.5 w-2.5 rounded-full ' + config.dotClass;
         statusText.textContent = config.label;
 
-        // Rental ID
         document.getElementById('detailRentalId').textContent = '#' + String(rental.rental_id).padStart(3, '0');
 
-        // Customer Info
         var customerName = rental.customer
             ? (rental.customer.first_name + ' ' + rental.customer.last_name)
             : '-';
@@ -558,14 +546,12 @@
         document.getElementById('detailRentalCustomerEmail').textContent = (rental.customer && rental.customer.email) || '-';
         document.getElementById('detailRentalCustomerPhone').textContent = (rental.customer && rental.customer.contact_number) || '-';
 
-        // Item Info
         var item = rental.item || {};
         document.getElementById('detailRentalItemName').textContent = item.name || '-';
         document.getElementById('detailRentalItemSku').textContent = item.sku || '-';
         var itemDetails = [item.size, item.color, item.design].filter(Boolean).join(' · ');
         document.getElementById('detailRentalItemDetails').textContent = itemDetails || 'No additional details';
 
-        // Dates
         document.getElementById('detailRentalReleasedDate').textContent = rental.released_date
             ? formatRentalDate(rental.released_date)
             : '-';
@@ -576,7 +562,6 @@
             ? formatRentalDate(rental.return_date)
             : 'Not returned';
 
-        // Highlight due date if overdue
         var dueDateCard = document.getElementById('detailRentalDueDateCard');
         if (isOverdue) {
             dueDateCard.className = 'bg-rose-50 dark:bg-rose-900/20 rounded-xl p-3 border border-rose-200 dark:border-rose-800/50';
@@ -584,7 +569,6 @@
             dueDateCard.className = 'bg-neutral-50 dark:bg-neutral-900/50 rounded-xl p-3 border border-neutral-200 dark:border-neutral-800';
         }
 
-        // Overdue warning
         var overdueWarning = document.getElementById('detailRentalOverdueWarning');
         if (isOverdue) {
             overdueWarning.classList.remove('hidden');
@@ -598,26 +582,23 @@
             overdueWarning.classList.add('hidden');
         }
 
-        // Financial
         var depositAmount = rental.deposit_collected || 0;
         document.getElementById('detailRentalDeposit').textContent = '₱' + Number(depositAmount).toLocaleString();
 
         var depositStatus = rental.deposit_returned
             ? 'Returned'
             : rental.deposit_forfeited
-            ? 'Forfeited'
-            : depositAmount > 0
-            ? 'Held'
-            : 'None';
+                ? 'Forfeited'
+                : depositAmount > 0
+                    ? 'Held'
+                    : 'None';
         document.getElementById('detailRentalDepositStatus').textContent = depositStatus;
-
         document.getElementById('detailRentalPenalty').textContent = '₱' + Number(responseData.calculated_penalty || 0).toLocaleString();
 
-        // Released By
         if (rental.released_by_user || rental.releasedBy) {
             var releasedBy = rental.released_by_user || rental.releasedBy;
-            var initials = (releasedBy.name ? releasedBy.name.charAt(0) : (releasedBy.first_name ? releasedBy.first_name.charAt(0) : 'U')).toUpperCase();
-            document.getElementById('detailReleasedByAvatar').textContent = initials;
+            var releasedInitials = (releasedBy.name ? releasedBy.name.charAt(0) : (releasedBy.first_name ? releasedBy.first_name.charAt(0) : 'U')).toUpperCase();
+            document.getElementById('detailReleasedByAvatar').textContent = releasedInitials;
             document.getElementById('detailReleasedByName').textContent = releasedBy.name || ((releasedBy.first_name || '') + ' ' + (releasedBy.last_name || '')).trim() || '-';
             document.getElementById('detailReleasedByEmail').textContent = releasedBy.email || '-';
         } else {
@@ -626,65 +607,60 @@
             document.getElementById('detailReleasedByEmail').textContent = '-';
         }
 
-        // Returned To
         var returnedToSection = document.getElementById('detailReturnedToSection');
         if (rental.return_date && (rental.returned_to_user || rental.returnedTo)) {
             returnedToSection.classList.remove('hidden');
             var returnedTo = rental.returned_to_user || rental.returnedTo;
-            var initials = (returnedTo.name ? returnedTo.name.charAt(0) : (returnedTo.first_name ? returnedTo.first_name.charAt(0) : 'U')).toUpperCase();
-            document.getElementById('detailReturnedToAvatar').textContent = initials;
+            var returnedInitials = (returnedTo.name ? returnedTo.name.charAt(0) : (returnedTo.first_name ? returnedTo.first_name.charAt(0) : 'U')).toUpperCase();
+            document.getElementById('detailReturnedToAvatar').textContent = returnedInitials;
             document.getElementById('detailReturnedToName').textContent = returnedTo.name || ((returnedTo.first_name || '') + ' ' + (returnedTo.last_name || '')).trim() || '-';
             document.getElementById('detailReturnedToEmail').textContent = returnedTo.email || '-';
         } else {
             returnedToSection.classList.add('hidden');
         }
 
-        // Linked Reservation
         var linkedReservationEl = document.getElementById('detailLinkedReservation');
         if (rental.reservation_id && rental.reservation) {
             linkedReservationEl.innerHTML = '<div class="flex items-center justify-between">' +
                 '<div class="flex items-center gap-3">' +
-                    '<div class="h-8 w-8 rounded-lg bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center flex-shrink-0">' +
-                        '<span class="text-[10px] font-bold text-violet-600 dark:text-violet-400 font-geist-mono">#' + rental.reservation_id + '</span>' +
-                    '</div>' +
-                    '<p class="text-sm font-medium text-neutral-900 dark:text-white">Reservation #' + String(rental.reservation_id).padStart(3, '0') + '</p>' +
+                '<div class="h-8 w-8 rounded-lg bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center flex-shrink-0">' +
+                '<span class="text-[10px] font-bold text-violet-600 dark:text-violet-400 font-geist-mono">#' + rental.reservation_id + '</span>' +
+                '</div>' +
+                '<p class="text-sm font-medium text-neutral-900 dark:text-white">Reservation #' + String(rental.reservation_id).padStart(3, '00') + '</p>' +
                 '</div>' +
                 '<span class="text-xs text-violet-600 dark:text-violet-400 font-medium">Linked</span>' +
-            '</div>';
+                '</div>';
         } else {
             linkedReservationEl.innerHTML = '<p class="text-sm text-neutral-500 dark:text-neutral-400">No linked reservation</p>';
         }
 
-        // Invoices
         renderRentalInvoices(rental.invoices || []);
-
-        // Populate Timeline
         populateRentalTimeline(rental, responseData);
 
-         // Update action buttons visibility based on status
-         var processReturnBtn = document.getElementById('rentalDetailsProcessReturnBtn');
-         var extendBtn = document.getElementById('rentalDetailsExtendBtn');
+        // ── Button visibility ──────────────────────────────────────────────
+        // Derive isReturned from the ORIGINAL status name (before overdue override)
+        var originalStatusName = (rental.status && rental.status.status_name)
+            ? rental.status.status_name.toLowerCase()
+            : '';
+        var isReturned = originalStatusName === 'returned';
 
-         // Get current rental status
-         var currentStatus = (rental.status && rental.status.status_name) ? rental.status.status_name.toLowerCase() : '';
-         var isReturned = currentStatus === 'returned';
-         
-         // Only show Process Return button if status is NOT "returned"
-         if (!isReturned) {
-             processReturnBtn.classList.remove('hidden');
-         } else {
-             processReturnBtn.classList.add('hidden');
-         }
-         
-         // Only show Extend button if status is NOT "returned" and not overdue
-         if (!isReturned && !isOverdue) {
-             extendBtn.classList.remove('hidden');
-         } else {
-             extendBtn.classList.add('hidden');
-         }
+        var processReturnBtn = document.getElementById('rentalDetailsProcessReturnBtn');
+        var extendBtn = document.getElementById('rentalDetailsExtendBtn');
+
+        if (!isReturned) {
+            processReturnBtn.classList.remove('hidden');
+            processReturnBtn.classList.add('inline-flex');
+            extendBtn.classList.remove('hidden');
+            extendBtn.classList.add('inline-flex');
+        } else {
+            processReturnBtn.classList.add('hidden');
+            processReturnBtn.classList.remove('inline-flex');
+            extendBtn.classList.add('hidden');
+            extendBtn.classList.remove('inline-flex');
+        }
+        // ──────────────────────────────────────────────────────────────────
     }
 
-    // Render rental invoices
     function renderRentalInvoices(invoices) {
         var container = document.getElementById('detailRentalInvoices');
         var countEl = document.getElementById('detailRentalInvoicesCount');
@@ -695,7 +671,7 @@
             container.innerHTML = '<div class="p-4 text-center text-sm text-neutral-500 dark:text-neutral-400">' +
                 '<svg class="h-6 w-6 text-neutral-300 dark:text-neutral-600 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>' +
                 'No invoices found' +
-            '</div>';
+                '</div>';
             return;
         }
 
@@ -716,39 +692,30 @@
 
             html += '<div class="px-4 py-3 flex items-center justify-between hover:bg-neutral-100 dark:hover:bg-neutral-800/50 transition-colors">' +
                 '<div class="flex items-center gap-3">' +
-                    '<div class="h-8 w-8 rounded-lg bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center flex-shrink-0">' +
-                        '<span class="text-[10px] font-bold text-neutral-600 dark:text-neutral-400 font-geist-mono">#' + invoice.invoice_id + '</span>' +
-                    '</div>' +
-                    '<div class="min-w-0">' +
-                        '<p class="text-sm font-medium text-neutral-900 dark:text-white truncate">' + invoiceDate + '</p>' +
-                        '<p class="text-xs text-neutral-500 dark:text-neutral-400 font-geist-mono">₱' + Number(totalAmount).toLocaleString() + '</p>' +
-                    '</div>' +
+                '<div class="h-8 w-8 rounded-lg bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center flex-shrink-0">' +
+                '<span class="text-[10px] font-bold text-neutral-600 dark:text-neutral-400 font-geist-mono">#' + invoice.invoice_id + '</span>' +
+                '</div>' +
+                '<div class="min-w-0">' +
+                '<p class="text-sm font-medium text-neutral-900 dark:text-white truncate">' + invoiceDate + '</p>' +
+                '<p class="text-xs text-neutral-500 dark:text-neutral-400 font-geist-mono">₱' + Number(totalAmount).toLocaleString() + '</p>' +
+                '</div>' +
                 '</div>' +
                 '<div class="flex items-center gap-2 flex-shrink-0">' +
-                    '<span class="inline-flex items-center rounded-full ' + statusColor + ' px-2 py-1 text-[10px] font-medium border">' +
-                        (invoice.payment_status || 'Unknown') +
-                    '</span>' +
-                    (isPaid ? 
-                        '<button disabled class="inline-flex items-center rounded-lg px-2.5 py-1 text-[10px] font-medium bg-neutral-200 text-neutral-500 dark:bg-neutral-700 dark:text-neutral-400 cursor-not-allowed">' +
-                            'Paid' +
-                        '</button>' :
-                        '<a ' +
-                            'href="/payments?invoice_id=' + invoice.invoice_id + '" ' +
-                            'class="inline-flex items-center rounded-lg px-2.5 py-1 text-[10px] font-medium bg-violet-600 text-white hover:bg-violet-500 dark:hover:bg-violet-700 cursor-pointer transition-colors duration-100 ease-in-out" ' +
-                            'title="Pay this invoice"' +
-                        '>' +
-                            'Pay' +
-                        '</a>'
-                    ) +
+                '<span class="inline-flex items-center rounded-full ' + statusColor + ' px-2 py-1 text-[10px] font-medium border">' +
+                (invoice.payment_status || 'Unknown') +
+                '</span>' +
+                (isPaid ?
+                        '<button disabled class="inline-flex items-center rounded-lg px-2.5 py-1 text-[10px] font-medium bg-neutral-200 text-neutral-500 dark:bg-neutral-700 dark:text-neutral-400 cursor-not-allowed">Paid</button>' :
+                        '<a href="/payments?invoice_id=' + invoice.invoice_id + '" class="inline-flex items-center rounded-lg px-2.5 py-1 text-[10px] font-medium bg-violet-600 text-white hover:bg-violet-500 dark:hover:bg-violet-700 cursor-pointer transition-colors duration-100 ease-in-out" title="Pay this invoice">Pay</a>'
+                ) +
                 '</div>' +
-            '</div>';
+                '</div>';
         });
         html += '</div>';
 
         container.innerHTML = html;
     }
 
-    // Format date helper
     function formatRentalDate(dateString) {
         var date = new Date(dateString);
         return date.toLocaleDateString('en-US', {
@@ -758,7 +725,6 @@
         });
     }
 
-    // Close rental details modal
     function closeRentalDetailsModal() {
         globalThis.rentalDetailsModalState.isOpen = false;
         globalThis.rentalDetailsModalState.currentRentalId = null;
@@ -769,17 +735,14 @@
         modal.classList.remove('flex');
     }
 
-    // Populate the rental timeline
     function populateRentalTimeline(rental, responseData) {
         var isOverdue = responseData.is_overdue;
 
-        // Created at
         var createdEl = document.getElementById('timelineCreatedAt');
         if (createdEl) {
             createdEl.textContent = rental.created_at ? formatRentalDateTime(rental.created_at) : '-';
         }
 
-        // Released at
         var releasedAtEl = document.getElementById('timelineReleasedAt');
         var releasedByEl = document.getElementById('timelineReleasedBy');
         if (releasedAtEl) {
@@ -787,57 +750,45 @@
         }
         if (releasedByEl) {
             var releasedBy = rental.released_by_user || rental.releasedBy;
-            if (releasedBy) {
-                releasedByEl.textContent = 'by ' + (releasedBy.name || ((releasedBy.first_name || '') + ' ' + (releasedBy.last_name || '')).trim());
-            } else {
-                releasedByEl.textContent = '';
-            }
+            releasedByEl.textContent = releasedBy
+                ? 'by ' + (releasedBy.name || ((releasedBy.first_name || '') + ' ' + (releasedBy.last_name || '')).trim())
+                : '';
         }
 
-        // Extension events
         var extensionContainer = document.getElementById('timelineExtensionEvents');
         if (extensionContainer) {
             extensionContainer.innerHTML = '';
-
-            // Check for extensions
-            if (rental.extension_count > 0) {
+            if (rental.extension_count > 0 && rental.last_extended_at) {
+                var extendedBy = rental.extended_by_user || rental.extendedBy;
+                var extenderName = extendedBy
+                    ? (extendedBy.name || ((extendedBy.first_name || '') + ' ' + (extendedBy.last_name || '')).trim())
+                    : '';
                 var extensionHtml = '';
-
-                // Show extension info if available
-                if (rental.last_extended_at) {
-                    var extendedBy = rental.extended_by_user || rental.extendedBy;
-                    var extenderName = extendedBy ? (extendedBy.name || ((extendedBy.first_name || '') + ' ' + (extendedBy.last_name || '')).trim()) : '';
-
-                    for (var i = 0; i < rental.extension_count; i++) {
-                        var isLast = (i === rental.extension_count - 1);
-                        extensionHtml += '<div class="relative flex items-start gap-3">';
-                        extensionHtml += '<div class="absolute left-[-15px] top-1 h-4 w-4 rounded-full bg-violet-500 border-2 border-white dark:border-neutral-900 z-10 flex items-center justify-center">';
-                        extensionHtml += '<div class="h-1.5 w-1.5 rounded-full bg-white"></div>';
-                        extensionHtml += '</div>';
-                        extensionHtml += '<div class="flex-1 min-w-0">';
-                        extensionHtml += '<p class="text-xs font-medium text-neutral-900 dark:text-white">Extension #' + (i + 1) + '</p>';
-
-                        if (isLast) {
-                            extensionHtml += '<p class="text-xs text-neutral-500 dark:text-neutral-400">' + formatRentalDateTime(rental.last_extended_at) + '</p>';
-                            if (extenderName) {
-                                extensionHtml += '<p class="text-xs text-neutral-400 dark:text-neutral-500 mt-0.5">by ' + extenderName + '</p>';
-                            }
-                            if (rental.extension_reason) {
-                                extensionHtml += '<p class="text-xs text-neutral-400 dark:text-neutral-500 mt-0.5 italic">"' + rental.extension_reason + '"</p>';
-                            }
-                        } else {
-                            extensionHtml += '<p class="text-xs text-neutral-500 dark:text-neutral-400">Extended</p>';
+                for (var i = 0; i < rental.extension_count; i++) {
+                    var isLast = (i === rental.extension_count - 1);
+                    extensionHtml += '<div class="relative flex items-start gap-3">' +
+                        '<div class="absolute left-[-15px] top-1 h-4 w-4 rounded-full bg-violet-500 border-2 border-white dark:border-neutral-900 z-10 flex items-center justify-center">' +
+                        '<div class="h-1.5 w-1.5 rounded-full bg-white"></div>' +
+                        '</div>' +
+                        '<div class="flex-1 min-w-0">' +
+                        '<p class="text-xs font-medium text-neutral-900 dark:text-white">Extension #' + (i + 1) + '</p>';
+                    if (isLast) {
+                        extensionHtml += '<p class="text-xs text-neutral-500 dark:text-neutral-400">' + formatRentalDateTime(rental.last_extended_at) + '</p>';
+                        if (extenderName) {
+                            extensionHtml += '<p class="text-xs text-neutral-400 dark:text-neutral-500 mt-0.5">by ' + extenderName + '</p>';
                         }
-
-                        extensionHtml += '</div></div>';
+                        if (rental.extension_reason) {
+                            extensionHtml += '<p class="text-xs text-neutral-400 dark:text-neutral-500 mt-0.5 italic">"' + rental.extension_reason + '"</p>';
+                        }
+                    } else {
+                        extensionHtml += '<p class="text-xs text-neutral-500 dark:text-neutral-400">Extended</p>';
                     }
+                    extensionHtml += '</div></div>';
                 }
-
                 extensionContainer.innerHTML = extensionHtml;
             }
         }
 
-        // Due date
         var dueLabelEl = document.getElementById('timelineDueLabel');
         var dueAtEl = document.getElementById('timelineDueAt');
         var dueIconEl = document.getElementById('timelineDueIcon');
@@ -845,7 +796,6 @@
         if (dueAtEl) {
             var originalDue = rental.original_due_date || rental.due_date;
             var currentDue = rental.due_date;
-
             if (originalDue !== currentDue && rental.extension_count > 0) {
                 dueAtEl.innerHTML = formatRentalDate(currentDue) + '<br><span class="line-through text-neutral-400">' + formatRentalDate(originalDue) + '</span>';
             } else {
@@ -863,43 +813,34 @@
             }
         }
 
-        // Overdue event
         var overdueEvent = document.getElementById('timelineOverdueEvent');
         var overdueDaysEl = document.getElementById('timelineOverdueDays');
-
         if (overdueEvent && overdueDaysEl) {
             if (isOverdue && !rental.return_date) {
                 overdueEvent.classList.remove('hidden');
                 var dueDate = new Date(rental.due_date);
                 var today = new Date();
-                var diffTime = Math.abs(today - dueDate);
-                var diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                var diffDays = Math.ceil(Math.abs(today - dueDate) / (1000 * 60 * 60 * 24));
                 overdueDaysEl.textContent = diffDays + ' day' + (diffDays !== 1 ? 's' : '') + ' overdue • ₱' + Number(responseData.calculated_penalty || 0).toLocaleString() + ' penalty';
             } else {
                 overdueEvent.classList.add('hidden');
             }
         }
 
-        // Returned event
         var returnedEvent = document.getElementById('timelineReturnedEvent');
         var returnedAtEl = document.getElementById('timelineReturnedAt');
         var returnedByEl = document.getElementById('timelineReturnedBy');
-
         if (returnedEvent) {
             if (rental.return_date) {
                 returnedEvent.classList.remove('hidden');
-
                 if (returnedAtEl) {
                     returnedAtEl.textContent = formatRentalDateTime(rental.return_date);
                 }
-
                 if (returnedByEl) {
                     var returnedTo = rental.returned_to_user || rental.returnedTo;
-                    if (returnedTo) {
-                        returnedByEl.textContent = 'received by ' + (returnedTo.name || ((returnedTo.first_name || '') + ' ' + (returnedTo.last_name || '')).trim());
-                    } else {
-                        returnedByEl.textContent = '';
-                    }
+                    returnedByEl.textContent = returnedTo
+                        ? 'received by ' + (returnedTo.name || ((returnedTo.first_name || '') + ' ' + (returnedTo.last_name || '')).trim())
+                        : '';
                 }
             } else {
                 returnedEvent.classList.add('hidden');
@@ -907,7 +848,6 @@
         }
     }
 
-    // Format date with time helper
     function formatRentalDateTime(dateString) {
         var date = new Date(dateString);
         return date.toLocaleDateString('en-US', {
@@ -919,12 +859,9 @@
         });
     }
 
-    // Process return from details modal
     function processReturnFromDetails() {
         var rentalId = globalThis.rentalDetailsModalState.currentRentalId;
         closeRentalDetailsModal();
-
-        // Small delay to allow close animation
         setTimeout(function() {
             if (typeof openProcessReturnModalForRental === 'function') {
                 openProcessReturnModalForRental(rentalId);
@@ -934,12 +871,9 @@
         }, 100);
     }
 
-    // Extend rental from details modal
     function extendRentalFromDetails() {
         var rentalId = globalThis.rentalDetailsModalState.currentRentalId;
         closeRentalDetailsModal();
-
-        // Small delay to allow close animation
         setTimeout(function() {
             if (typeof openExtendRentalModal === 'function') {
                 openExtendRentalModal(rentalId);
@@ -949,20 +883,15 @@
         }, 100);
     }
 
-    // Handle keyboard navigation
     document.addEventListener('keydown', function(e) {
         if (!globalThis.rentalDetailsModalState.isOpen) return;
-
-        // Check if other modals are open
         var processReturnModalOpen = document.getElementById('processReturnModal') && !document.getElementById('processReturnModal').classList.contains('hidden');
         var extendRentalModalOpen = document.getElementById('extendRentalModal') && !document.getElementById('extendRentalModal').classList.contains('hidden');
-
         if (e.key === 'Escape' && !processReturnModalOpen && !extendRentalModalOpen) {
             closeRentalDetailsModal();
         }
     });
 
-    // Close modal on backdrop click
     document.getElementById('rentalDetailsModal')?.addEventListener('click', function(e) {
         if (e.target === this && globalThis.rentalDetailsModalState.isOpen) {
             closeRentalDetailsModal();
