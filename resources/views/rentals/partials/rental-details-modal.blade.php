@@ -665,19 +665,19 @@
          var processReturnBtn = document.getElementById('rentalDetailsProcessReturnBtn');
          var extendBtn = document.getElementById('rentalDetailsExtendBtn');
 
-         // Get current rental status (handle both 'rented' and 'active' as the same)
+         // Get current rental status
          var currentStatus = (rental.status && rental.status.status_name) ? rental.status.status_name.toLowerCase() : '';
-         var isRented = currentStatus === 'rented' || currentStatus === 'active';
+         var isReturned = currentStatus === 'returned';
          
-         // Only show Process Return button if status is "rented" (or "active")
-         if (isRented) {
+         // Only show Process Return button if status is NOT "returned"
+         if (!isReturned) {
              processReturnBtn.classList.remove('hidden');
          } else {
              processReturnBtn.classList.add('hidden');
          }
          
-         // Only show Extend button if status is "rented" and not overdue
-         if (isRented && !isOverdue) {
+         // Only show Extend button if status is NOT "returned" and not overdue
+         if (!isReturned && !isOverdue) {
              extendBtn.classList.remove('hidden');
          } else {
              extendBtn.classList.add('hidden');
