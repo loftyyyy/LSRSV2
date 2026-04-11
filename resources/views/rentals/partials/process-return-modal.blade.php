@@ -108,6 +108,93 @@
                             </label>
                         </div>
                     </div>
+
+                    {{-- Deposit Handling Section --}}
+                    <div id="depositHandlingContainer" class="pt-5 border-t border-neutral-200 dark:border-neutral-800">
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="text-sm font-semibold text-neutral-900 dark:text-white">Deposit Handling</h4>
+                            <span id="depositStatusBadge" class="px-2.5 py-1 text-xs font-medium rounded-full bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400">
+                                No Deposit
+                            </span>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block">
+                                    <span class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Action</span>
+                                    <select name="deposit_return_action" id="depositReturnAction" class="mt-2 w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white transition-colors duration-200">
+                                        <option value="hold">Hold (Process Later)</option>
+                                        <option value="full">Return Full Deposit</option>
+                                        <option value="partial">Partial Return (Deductions)</option>
+                                        <option value="forfeit">Forfeit Deposit</option>
+                                    </select>
+                                </label>
+                            </div>
+                        </div>
+
+                        {{-- Deposit Return Method & Details (Hidden by default) --}}
+                        <div id="depositReturnFields" class="hidden mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block">
+                                    <span class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Return Method <span class="text-rose-500">*</span></span>
+                                    <select name="deposit_return_method" id="depositReturnMethod" class="mt-2 w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white transition-colors duration-200">
+                                        <option value="">Select method...</option>
+                                        <option value="cash">Cash</option>
+                                        <option value="bank_transfer">Bank Transfer</option>
+                                        <option value="gcash">GCash</option>
+                                        <option value="paymaya">PayMaya</option>
+                                        <option value="check">Check</option>
+                                    </select>
+                                </label>
+                            </div>
+                            <div>
+                                <label class="block">
+                                    <span class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Reference / Check No.</span>
+                                    <input type="text" name="deposit_return_reference" id="depositReturnReference" placeholder="Optional" class="mt-2 w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white transition-colors duration-200" />
+                                </label>
+                            </div>
+                        </div>
+
+                        {{-- Deductions Section (Hidden by default) --}}
+                        <div id="deductionsSection" class="hidden mt-5 space-y-4 p-5 rounded-xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800">
+                            <div class="flex items-center justify-between">
+                                <h5 class="text-sm font-medium text-neutral-900 dark:text-white">Deductions (Damages, Late Fees, etc.)</h5>
+                                <button type="button" onclick="addDeductionRow()" class="text-xs font-medium text-violet-600 hover:text-violet-700 dark:text-violet-400 flex items-center gap-1 transition-colors">
+                                    <x-icon name="plus" class="h-3 w-3" /> Add Deduction
+                                </button>
+                            </div>
+                            
+                            <div id="deductionsList" class="space-y-3">
+                                <!-- Deduction rows dynamically inserted here -->
+                            </div>
+                            
+                            <div id="deductionSummary" class="hidden mt-4 pt-4 border-t border-neutral-200 dark:border-neutral-800">
+                                <div class="flex justify-between text-sm text-neutral-600 dark:text-neutral-400 mb-1">
+                                    <span>Original Deposit:</span>
+                                    <span id="originalDepositAmount">₱0.00</span>
+                                </div>
+                                <div class="flex justify-between text-sm text-neutral-600 dark:text-neutral-400">
+                                    <span>Total Deductions:</span>
+                                    <span id="totalDeductions" class="font-medium text-rose-600 dark:text-rose-400">₱0.00</span>
+                                </div>
+                                <div class="flex justify-between text-sm font-semibold text-neutral-900 dark:text-white mt-3 pt-3 border-t border-neutral-200 dark:border-neutral-800">
+                                    <span>Amount to Return:</span>
+                                    <span id="amountToReturn">₱0.00</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Forfeit Notes (Hidden by default) --}}
+                        <div id="forfeitNotesSection" class="hidden mt-4">
+                            <label class="block">
+                                <span class="text-sm font-medium text-neutral-700 dark:text-neutral-300 flex items-center gap-2">
+                                    <x-icon name="file-text" class="h-4 w-4" />
+                                    Reason for Forfeiture <span class="text-rose-500">*</span>
+                                </span>
+                                <textarea name="deposit_return_notes" id="forfeitNotes" rows="2" placeholder="Explain why the deposit is being forfeited..." class="mt-2 w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 placeholder-neutral-400 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white transition-colors duration-200 resize-none"></textarea>
+                            </label>
+                        </div>
+                    </div>
                 </div> {{-- END returnDetailsSection --}}
 
                 {{-- Error Display --}}
@@ -294,21 +381,34 @@
                 var depositReturnFields = document.getElementById('depositReturnFields');
                 var deductionsSection = document.getElementById('deductionsSection');
                 var forfeitNotesSection = document.getElementById('forfeitNotesSection');
+                var submitBtn = document.getElementById('processReturnSubmitBtn');
+                
+                var depositReturnMethod = document.getElementById('depositReturnMethod');
+                var forfeitNotes = document.getElementById('forfeitNotes');
 
                 depositReturnFields.classList.add('hidden');
                 deductionsSection.classList.add('hidden');
                 forfeitNotesSection.classList.add('hidden');
+                if (submitBtn) submitBtn.disabled = false;
+                
+                if (depositReturnMethod) depositReturnMethod.required = false;
+                if (forfeitNotes) forfeitNotes.required = false;
 
                 if (action === 'full') {
                     depositReturnFields.classList.remove('hidden');
+                    if (depositReturnMethod) depositReturnMethod.required = true;
                 } else if (action === 'partial') {
                     depositReturnFields.classList.remove('hidden');
                     deductionsSection.classList.remove('hidden');
+                    if (depositReturnMethod) depositReturnMethod.required = true;
                     if (globalThis.processReturnModalState.deductionCount === 0) {
                         addDeductionRow();
+                    } else {
+                        updateDeductionSummary();
                     }
                 } else if (action === 'forfeit') {
                     forfeitNotesSection.classList.remove('hidden');
+                    if (forfeitNotes) forfeitNotes.required = true;
                 }
             });
         }
@@ -457,11 +557,74 @@
         document.getElementById('selectedRentalDates').textContent = 'Released: ' + releaseDate + ' | Due: ' + dueDate;
         document.getElementById('selectedRentalDisplay').classList.remove('hidden');
 
+        var depositAmount = parseFloat(rental.deposit_amount || 0);
+        var depositReturned = parseFloat(rental.deposit_returned_amount || 0);
+        var depositDeducted = parseFloat(rental.deposit_deducted_amount || 0);
+        var remainingDeposit = depositAmount - depositReturned - depositDeducted;
+        
+        // Consider it held if there's remaining deposit money, regardless of the explicit status
+        // (This handles reservation-based rentals where the status might still say 'not_collected')
+        var hasHeldDeposit = remainingDeposit > 0;
+        
+        var depositAction = document.getElementById('depositReturnAction');
+        var depositStatusBadge = document.getElementById('depositStatusBadge');
+        var depositHandlingContainer = document.getElementById('depositHandlingContainer');
+        
+        if (depositStatusBadge) {
+            if (hasHeldDeposit) {
+                depositStatusBadge.textContent = 'Deposit: ₱' + formatNumber(remainingDeposit);
+                depositStatusBadge.className = 'px-2.5 py-1 text-xs font-medium rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
+            } else {
+                depositStatusBadge.textContent = 'No Deposit / Already Processed';
+                depositStatusBadge.className = 'px-2.5 py-1 text-xs font-medium rounded-full bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400';
+            }
+        }
+        
+        // Hide deposit actions if no deposit is held
+        if (depositAction) {
+            Array.from(depositAction.options).forEach(function(opt) {
+                if (opt.value !== 'hold') {
+                    opt.disabled = !hasHeldDeposit;
+                }
+            });
+        }
+
         if (isOverdue && calculatedPenalty > 0) {
             document.getElementById('selectedRentalOverdueText').textContent = 'Overdue - Penalty: ₱' + formatNumber(calculatedPenalty);
             document.getElementById('selectedRentalOverdue').classList.remove('hidden');
+            
+            // Automatically suggest partial return for the penalty
+            if (depositAction && hasHeldDeposit) {
+                var penaltyDeduction = Math.min(calculatedPenalty, remainingDeposit);
+                depositAction.value = 'partial';
+                var event = new Event('change');
+                depositAction.dispatchEvent(event);
+                
+                // Set the first deduction row to Late Penalty
+                setTimeout(function() {
+                    var typeInput = document.querySelector('input[name="deductions[0][type]"]');
+                    var amountInput = document.querySelector('input[name="deductions[0][amount]"]');
+                    var reasonInput = document.querySelector('input[name="deductions[0][reason]"]');
+                    
+                    if (typeInput && amountInput) {
+                        typeInput.value = 'late';
+                        amountInput.value = penaltyDeduction.toFixed(2);
+                        if (reasonInput) reasonInput.value = 'Late Return Penalty' + (calculatedPenalty > penaltyDeduction ? ' (Partial)' : '');
+                        updateDeductionSummary();
+                    }
+                }, 100);
+            } else if (depositAction) {
+                depositAction.value = 'hold';
+                var event = new Event('change');
+                depositAction.dispatchEvent(event);
+            }
         } else {
             document.getElementById('selectedRentalOverdue').classList.add('hidden');
+            if (depositAction) {
+                depositAction.value = hasHeldDeposit ? 'full' : 'hold';
+                var event = new Event('change');
+                depositAction.dispatchEvent(event);
+            }
         }
 
         document.getElementById('returnDetailsSection').classList.remove('hidden');
@@ -475,13 +638,13 @@
 
         var html = '<div id="deductionRow' + index + '" class="flex gap-3 items-start">' +
             '<div class="flex-1">' +
-            '<input type="text" name="deductions[' + index + '][type]" placeholder="Type (e.g., Damage, Cleaning)" ' +
+            '<input type="text" name="deductions[' + index + '][type]" placeholder="Type (e.g., Damage, Cleaning)" required ' +
             'class="w-full rounded-xl border border-neutral-300 bg-white px-4 py-2.5 text-sm text-neutral-900 placeholder-neutral-400 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:placeholder-neutral-500 transition-colors duration-200" />' +
             '</div>' +
             '<div class="w-32">' +
             '<div class="relative">' +
             '<span class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 dark:text-neutral-400 text-sm">₱</span>' +
-            '<input type="number" name="deductions[' + index + '][amount]" step="0.01" min="0" placeholder="0.00" onchange="updateDeductionSummary()" ' +
+            '<input type="number" name="deductions[' + index + '][amount]" step="0.01" min="0" placeholder="0.00" onchange="updateDeductionSummary()" required ' +
             'class="w-full rounded-xl border border-neutral-300 bg-white pl-7 pr-3 py-2.5 text-sm text-neutral-900 placeholder-neutral-400 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:placeholder-neutral-500 transition-colors duration-200" />' +
             '</div>' +
             '</div>' +
@@ -517,9 +680,32 @@
         });
 
         var depositAmount = parseFloat(globalThis.processReturnModalState.selectedRental?.deposit_amount || 0);
-        var amountToReturn = Math.max(0, depositAmount - total);
+        var depositReturned = parseFloat(globalThis.processReturnModalState.selectedRental?.deposit_returned_amount || 0);
+        var depositDeducted = parseFloat(globalThis.processReturnModalState.selectedRental?.deposit_deducted_amount || 0);
+        var remainingDeposit = depositAmount - depositReturned - depositDeducted;
 
-        document.getElementById('totalDeductions').textContent = '₱' + formatNumber(total);
+        var amountToReturn = Math.max(0, remainingDeposit - total);
+
+        var originalDepositAmountEl = document.getElementById('originalDepositAmount');
+        if (originalDepositAmountEl) {
+            originalDepositAmountEl.textContent = '₱' + formatNumber(remainingDeposit);
+        }
+
+        var totalDeductionsEl = document.getElementById('totalDeductions');
+        if (totalDeductionsEl) {
+            totalDeductionsEl.textContent = '₱' + formatNumber(total);
+            if (total > remainingDeposit) {
+                totalDeductionsEl.className = 'font-bold text-rose-600 dark:text-rose-400';
+            } else {
+                totalDeductionsEl.className = 'font-medium text-rose-600 dark:text-rose-400';
+            }
+        }
+        
+        var submitBtn = document.getElementById('processReturnSubmitBtn');
+        if (submitBtn) {
+            submitBtn.disabled = total > remainingDeposit;
+        }
+
         document.getElementById('amountToReturn').textContent = '₱' + formatNumber(amountToReturn);
 
         if (total > 0 || deductionInputs.length > 0) {
@@ -544,6 +730,12 @@
         }
 
         var form = document.getElementById('processReturnForm');
+        
+        // Trigger HTML5 validation UI natively
+        if (!form.reportValidity()) {
+            return;
+        }
+
         var formData = new FormData(form);
 
         var data = {

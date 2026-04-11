@@ -417,8 +417,11 @@
                  let paidAmount = 0;
 
                  invoices.forEach(function(inv) {
-                     totalRevenue += parseFloat(inv.total_amount || 0);
-                     paidAmount += parseFloat(inv.amount_paid || 0);
+                     // Only calculate invoices of type "Rental" for Total Revenue
+                     if (inv.invoice_type === 'rental') {
+                         totalRevenue += parseFloat(inv.total_amount || 0);
+                         paidAmount += parseFloat(inv.amount_paid || 0);
+                     }
                      
                      const status = inv.status?.status_name?.toLowerCase() || '';
                      if (status === 'unpaid') {

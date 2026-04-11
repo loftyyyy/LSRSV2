@@ -1278,9 +1278,12 @@ class RentalController extends Controller
             ], 201);
 
         } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Process Return Error: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
+
             return response()->json([
-                'message' => 'Failed to release item',
+                'message' => 'Failed to process return',
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ], 500);
         }
     }
@@ -1291,7 +1294,7 @@ class RentalController extends Controller
      */
     public function processReturn(Rental $rental, Request $request): JsonResponse
     {
-        $request->validate([
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'return_date' => 'required|date',
             'return_notes' => 'nullable|string',
             'condition_notes' => 'nullable|string',
@@ -1305,8 +1308,19 @@ class RentalController extends Controller
             'deductions.*.reason' => 'nullable|string',
         ]);
 
+        if ($validator->fails()) {
+            \Illuminate\Support\Facades\Log::warning('Process Return Validation Failed: ', $validator->errors()->toArray());
+
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
         // Check if rental was already returned
         if ($rental->return_date !== null) {
+            \Illuminate\Support\Facades\Log::warning('Process Return Blocked: Rental #'.$rental->rental_id.' was already returned.');
+
             return response()->json([
                 'message' => 'This rental has already been returned.',
             ], 422);
@@ -1360,6 +1374,9 @@ class RentalController extends Controller
             if ($returnedStatus) {
                 $rental->update(['status_id' => $returnedStatus->status_id]);
             }
+
+            // Generate penalty invoice if overdue
+            $this->createOrUpdatePenaltyInvoice($rental);
 
             $reservationItemId = null;
             if ($rental->reservation_id) {
@@ -1424,6 +1441,7 @@ class RentalController extends Controller
             return response()->json([
                 'message' => 'Failed to process return',
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ], 500);
         }
     }
@@ -1798,7 +1816,8 @@ class RentalController extends Controller
             }
 
             // Calculate days late (from original due date, not grace period)
-            $daysLate = $returnDate->diffInDays($dueDate);
+            // Use ceil to charge a full day penalty for any partial day late
+            $daysLate = (int) ceil($dueDate->diffInRealHours($returnDate) / 24);
         } else {
             // Rental is still active
             $now = Carbon::now();
@@ -1811,7 +1830,7 @@ class RentalController extends Controller
                 return 0;
             }
 
-            $daysLate = $now->diffInDays($dueDate);
+            $daysLate = (int) ceil($dueDate->diffInRealHours($now) / 24);
         }
 
         // Apply maximum penalty days cap if configured
@@ -1837,9 +1856,9 @@ class RentalController extends Controller
         }
 
         DB::transaction(function () use ($rental, $penaltyAmount) {
-            // Get unpaid status for penalty invoice
-            $unpaidStatus = $this->findPaymentStatusByName('unpaid');
-            $statusId = $unpaidStatus?->status_id ?? 1;
+            // Get paid status for penalty invoice since it's deducted from deposit
+            $paidStatus = $this->findPaymentStatusByName('paid');
+            $statusId = $paidStatus?->status_id ?? 2; // Assuming 2 is typically 'paid'
 
             // Find or create an invoice for this rental
             $invoice = Invoice::firstOrCreate(
@@ -1862,7 +1881,7 @@ class RentalController extends Controller
             // Calculate days late for description
             $dueDate = Carbon::parse($rental->due_date);
             $currentDate = $rental->return_date ? Carbon::parse($rental->return_date) : Carbon::now();
-            $daysLate = $currentDate->diffInDays($dueDate);
+            $daysLate = (int) ceil($dueDate->diffInRealHours($currentDate) / 24);
 
             // Check if penalty item already exists
             $existingPenaltyItem = InvoiceItem::where('invoice_id', $invoice->invoice_id)

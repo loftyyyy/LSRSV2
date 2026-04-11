@@ -2,23 +2,20 @@
 
 namespace App\Services;
 
-use App\Models\Payment;
-use App\Models\PaymentStatus;
-use App\Models\Rental;
 use App\Models\DepositReturn;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
+use App\Models\Payment;
+use App\Models\PaymentStatus;
+use App\Models\Rental;
 use Illuminate\Support\Facades\DB;
 
 class DepositService
 {
     /**
      * Collect deposit when item is released to customer
-     * 
-     * @param Rental $rental
-     * @param float $amount
-     * @param int $collectedBy User ID
-     * @return Rental
+     *
+     * @param  int  $collectedBy  User ID
      */
     public function collectDeposit(
         Rental $rental,
@@ -26,8 +23,7 @@ class DepositService
         int $collectedBy,
         string $paymentMethod,
         ?string $notes = null
-    ): Rental
-    {
+    ): Rental {
         if ($amount <= 0) {
             throw new \InvalidArgumentException('Deposit amount must be greater than zero');
         }
@@ -38,7 +34,7 @@ class DepositService
 
         return DB::transaction(function () use ($rental, $amount, $collectedBy, $paymentMethod, $notes) {
             $paidStatusId = $this->getPaymentStatusId('paid');
-            if (!$paidStatusId) {
+            if (! $paidStatusId) {
                 throw new \RuntimeException('Paid payment status is not configured.');
             }
 
@@ -94,17 +90,14 @@ class DepositService
 
     /**
      * Process full deposit return (no deductions)
-     * 
-     * @param Rental $rental
-     * @param string $returnMethod
-     * @param int $processedBy User ID
-     * @param string|null $reference Transaction reference
-     * @return DepositReturn
+     *
+     * @param  int  $processedBy  User ID
+     * @param  string|null  $reference  Transaction reference
      */
     public function returnFullDeposit(
-        Rental $rental, 
-        string $returnMethod, 
-        int $processedBy, 
+        Rental $rental,
+        string $returnMethod,
+        int $processedBy,
         ?string $reference = null
     ): DepositReturn {
         $this->validateCanReturn($rental);
@@ -139,14 +132,8 @@ class DepositService
 
     /**
      * Process partial deposit return (with deductions)
-     * 
-     * @param Rental $rental
-     * @param array $deductions Array of ['type' => 'damage', 'amount' => 500, 'reason' => '...']
-     * @param string $returnMethod
-     * @param int $processedBy
-     * @param int|null $inspectionId
-     * @param string|null $reference
-     * @return DepositReturn
+     *
+     * @param  array  $deductions  Array of ['type' => 'damage', 'amount' => 500, 'reason' => '...']
      */
     public function returnPartialDeposit(
         Rental $rental,
@@ -160,8 +147,8 @@ class DepositService
 
         return DB::transaction(function () use ($rental, $deductions, $returnMethod, $processedBy, $inspectionId, $reference) {
             $totalDeductions = collect($deductions)->sum('amount');
-            
-            if ($totalDeductions >= $rental->deposit_amount) {
+
+            if ($totalDeductions > $rental->deposit_amount) {
                 throw new \InvalidArgumentException('Total deductions cannot exceed deposit amount');
             }
 
@@ -200,11 +187,6 @@ class DepositService
 
     /**
      * Forfeit entire deposit (no-show, cancellation, or total damage)
-     * 
-     * @param Rental $rental
-     * @param string $reason
-     * @param int $processedBy
-     * @return DepositReturn
      */
     public function forfeitDeposit(
         Rental $rental,
@@ -227,7 +209,7 @@ class DepositService
                         'type' => 'forfeiture',
                         'amount' => $rental->deposit_amount,
                         'reason' => $reason,
-                    ]
+                    ],
                 ],
                 'return_method' => 'forfeiture',
                 'status' => 'processed',
@@ -248,9 +230,6 @@ class DepositService
 
     /**
      * Get deposit summary for a rental
-     * 
-     * @param Rental $rental
-     * @return array
      */
     public function getDepositSummary(Rental $rental): array
     {
@@ -272,12 +251,14 @@ class DepositService
      */
     private function validateCanReturn(Rental $rental): void
     {
-        if ($rental->deposit_status !== 'held') {
-            throw new \RuntimeException('Cannot return: deposit is not currently held');
-        }
+        $depositAmount = (float) $rental->deposit_amount;
+        $depositReturned = (float) $rental->deposit_returned_amount;
+        $depositDeducted = (float) $rental->deposit_deducted_amount;
+        $remainingDeposit = $depositAmount - $depositReturned - $depositDeducted;
 
-        if ($rental->deposit_amount <= 0) {
-            throw new \RuntimeException('Cannot return: no deposit amount held');
+        // Instead of strict string matching for 'held', check if there is mathematical deposit remaining
+        if ($remainingDeposit <= 0) {
+            throw new \RuntimeException('Cannot return: no deposit amount is currently held or remaining');
         }
 
         // Optional: Check if item has been returned
@@ -292,14 +273,14 @@ class DepositService
     private function createDeductionInvoice(Rental $rental, array $deductions, int $createdBy): void
     {
         $totalDeductions = collect($deductions)->sum('amount');
-        
+
         if ($totalDeductions <= 0) {
             return;
         }
 
-        $pendingStatusId = $this->getPaymentStatusId('pending');
-        if (!$pendingStatusId) {
-            throw new \RuntimeException('Pending payment status is not configured.');
+        $paidStatusId = $this->getPaymentStatusId('paid');
+        if (! $paidStatusId) {
+            throw new \RuntimeException('Paid payment status is not configured.');
         }
 
         $invoice = Invoice::create([
@@ -315,9 +296,9 @@ class DepositService
             'balance_due' => 0,
             'invoice_date' => now(),
             'due_date' => now(),
-            'invoice_type' => 'final',
+            'invoice_type' => 'penalty',
             'created_by' => $createdBy,
-            'status_id' => $pendingStatusId,
+            'status_id' => $paidStatusId,
         ]);
 
         foreach ($deductions as $deduction) {
@@ -352,7 +333,7 @@ class DepositService
     private function findOrCreateInvoice(Rental $rental, string $invoiceType, int $createdBy): Invoice
     {
         $pendingStatusId = $this->getPaymentStatusId('pending');
-        if (!$pendingStatusId) {
+        if (! $pendingStatusId) {
             throw new \RuntimeException('Pending payment status is not configured.');
         }
 
@@ -405,6 +386,6 @@ class DepositService
 
     private function generateReference(string $prefix): string
     {
-        return $prefix . '-' . now()->format('YmdHis') . '-' . strtoupper(substr(bin2hex(random_bytes(3)), 0, 6));
+        return $prefix.'-'.now()->format('YmdHis').'-'.strtoupper(substr(bin2hex(random_bytes(3)), 0, 6));
     }
 }
