@@ -595,11 +595,26 @@
         document.getElementById('detailRentalDepositStatus').textContent = depositStatus;
         document.getElementById('detailRentalPenalty').textContent = '₱' + Number(responseData.calculated_penalty || 0).toLocaleString();
 
-        if (rental.released_by_user || rental.releasedBy) {
-            var releasedBy = rental.released_by_user || rental.releasedBy;
-            var releasedInitials = (releasedBy.name ? releasedBy.name.charAt(0) : (releasedBy.first_name ? releasedBy.first_name.charAt(0) : 'U')).toUpperCase();
-            document.getElementById('detailReleasedByAvatar').textContent = releasedInitials;
-            document.getElementById('detailReleasedByName').textContent = releasedBy.name || ((releasedBy.first_name || '') + ' ' + (releasedBy.last_name || '')).trim() || '-';
+        // Released By: handle multiple potential shapes from API
+        var releasedBy = null;
+        if (rental.released_by_user) {
+            releasedBy = rental.released_by_user;
+        } else if (rental.released_by) {
+            releasedBy = rental.released_by;
+        } else if (rental.releasedBy) {
+            releasedBy = rental.releasedBy;
+        }
+
+        if (releasedBy) {
+            var initials = 'U';
+            if (releasedBy.name) {
+                initials = releasedBy.name.charAt(0);
+            } else if (releasedBy.first_name) {
+                initials = releasedBy.first_name.charAt(0);
+            }
+            document.getElementById('detailReleasedByAvatar').textContent = initials.toUpperCase();
+            var displayName = releasedBy.name || ((releasedBy.first_name || '') + ' ' + (releasedBy.last_name || '')).trim();
+            document.getElementById('detailReleasedByName').textContent = displayName || '-';
             document.getElementById('detailReleasedByEmail').textContent = releasedBy.email || '-';
         } else {
             document.getElementById('detailReleasedByAvatar').textContent = '--';
@@ -620,13 +635,15 @@
         }
 
         var linkedReservationEl = document.getElementById('detailLinkedReservation');
-        if (rental.reservation_id && rental.reservation) {
+        var linkedObj = rental.reservation || rental.linkedReservation || null;
+        var hasLinked = rental.reservation_id && (linkedObj);
+        if (hasLinked) {
             linkedReservationEl.innerHTML = '<div class="flex items-center justify-between">' +
                 '<div class="flex items-center gap-3">' +
                 '<div class="h-8 w-8 rounded-lg bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center flex-shrink-0">' +
                 '<span class="text-[10px] font-bold text-violet-600 dark:text-violet-400 font-geist-mono">#' + rental.reservation_id + '</span>' +
                 '</div>' +
-                '<p class="text-sm font-medium text-neutral-900 dark:text-white">Reservation #' + String(rental.reservation_id).padStart(3, '00') + '</p>' +
+                '<p class="text-sm font-medium text-neutral-900 dark:text-white">Reservation #' + String(rental.reservation_id).padStart(3, '0') + '</p>' +
                 '</div>' +
                 '<span class="text-xs text-violet-600 dark:text-violet-400 font-medium">Linked</span>' +
                 '</div>';
