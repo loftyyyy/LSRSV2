@@ -75,7 +75,7 @@ class PaymentService
             $this->updateInvoiceAfterPayment($invoice, $payment->amount);
 
             // Auto-confirm reservation if deposit is paid and invoice is fully paid
-            if ($invoice->reservation_id && $invoice->balance_due - $payment->amount <= 0) {
+            if ($invoice->reservation_id && $invoice->balance_due <= 0) {
                 $reservation = Reservation::find($invoice->reservation_id);
                 if ($reservation && strtolower($reservation->status->status_name ?? '') === 'pending') {
                     $confirmedStatus = ReservationStatus::where('status_name', 'confirmed')->first();
@@ -90,6 +90,23 @@ class PaymentService
 
                 // Set inventory status to 'reserved' for all items in this reservation
                 $this->updateReservationItemsStatusToReserved($invoice->reservation_id);
+
+                // If there are already rentals associated with this reservation (e.g. manual confirmation before payment),
+                // we should update their deposit status now that the deposit is fully paid
+                $hasDeposit = $invoice->invoiceItems()->where('item_type', 'deposit')->exists();
+                if ($hasDeposit) {
+                    $rentals = \App\Models\Rental::where('reservation_id', $invoice->reservation_id)
+                        ->where('deposit_status', 'not_collected')
+                        ->get();
+
+                    foreach ($rentals as $r) {
+                        $r->update([
+                            'deposit_status' => 'held',
+                            'deposit_collected_by' => $processedBy,
+                            'deposit_collected_at' => $payment->payment_date,
+                        ]);
+                    }
+                }
             }
 
             // Auto-update rental status to 'rented' when rental fee invoice is fully paid
@@ -100,6 +117,16 @@ class PaymentService
                     if ($rentedStatus && strtolower($rental->status?->status_name ?? '') !== 'rented') {
                         $rental->update([
                             'status_id' => $rentedStatus->status_id,
+                        ]);
+                    }
+
+                    // Automatically hold deposit if this rental invoice included the deposit
+                    $hasDeposit = $invoice->invoiceItems()->where('item_type', 'deposit')->exists();
+                    if ($hasDeposit && $rental->deposit_status === 'not_collected') {
+                        $rental->update([
+                            'deposit_status' => 'held',
+                            'deposit_collected_by' => $processedBy,
+                            'deposit_collected_at' => $payment->payment_date,
                         ]);
                     }
                 }
@@ -629,9 +656,37 @@ class PaymentService
         $reservationItems = \App\Models\ReservationItem::where('reservation_id', $reservationId)->get();
 
         foreach ($reservationItems as $reservationItem) {
-            if ($reservationItem->item_id) {
-                \App\Models\Inventory::where('item_id', $reservationItem->item_id)
-                    ->update(['status_id' => $reservedStatus->status_id]);
+            $allocatedCount = \App\Models\ReservationItemAllocation::where('reservation_item_id', $reservationItem->reservation_item_id)
+                ->where('allocation_status', 'allocated')
+                ->count();
+
+            $needed = $reservationItem->quantity - $allocatedCount;
+
+            if ($needed > 0) {
+                // Find available items
+                $availableItems = \App\Models\Inventory::where('variant_id', $reservationItem->variant_id)
+                    ->whereHas('status', function ($q) {
+                        $q->whereRaw('LOWER(status_name) = ?', ['available']);
+                    })
+                    ->limit($needed)
+                    ->get();
+
+                foreach ($availableItems as $invItem) {
+                    \App\Models\ReservationItemAllocation::create([
+                        'reservation_item_id' => $reservationItem->reservation_item_id,
+                        'item_id' => $invItem->item_id,
+                        'allocation_status' => 'allocated',
+                        'allocated_at' => now(),
+                        'updated_by' => \Illuminate\Support\Facades\Auth::id() ?? 1,
+                    ]);
+
+                    $invItem->update(['status_id' => $reservedStatus->status_id]);
+
+                    // Update item_id on the reservation item if it's null (for single quantity items backward compatibility)
+                    if (! $reservationItem->item_id && $reservationItem->quantity == 1) {
+                        $reservationItem->update(['item_id' => $invItem->item_id]);
+                    }
+                }
             }
         }
     }

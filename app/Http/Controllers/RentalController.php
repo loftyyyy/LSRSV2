@@ -1196,6 +1196,7 @@ class RentalController extends Controller
             'releasedBy',
             'returnedTo',
             'extendedBy',
+            'extensions.extendedBy',
             'invoices.invoiceItems',
             'invoices.status',
         ]);
@@ -1473,8 +1474,19 @@ class RentalController extends Controller
 
         DB::beginTransaction();
         try {
+            $oldDueDate = $rental->due_date;
+            $newDueDate = $request->new_due_date;
+
+            \App\Models\RentalExtension::create([
+                'rental_id' => $rental->rental_id,
+                'old_due_date' => $oldDueDate,
+                'new_due_date' => $newDueDate,
+                'extension_reason' => $request->extension_reason,
+                'extended_by' => auth()->id(),
+            ]);
+
             $rental->update([
-                'due_date' => $request->new_due_date,
+                'due_date' => $newDueDate,
                 'extension_count' => $rental->extension_count + 1,
                 'extended_by' => auth()->id(),
                 'last_extended_at' => now(),
@@ -1483,7 +1495,7 @@ class RentalController extends Controller
 
             DB::commit();
 
-            $rental->load(['customer', 'item', 'status', 'extendedBy']);
+            $rental->load(['customer', 'item', 'status', 'extendedBy', 'extensions.extendedBy']);
 
             return response()->json([
                 'message' => 'Rental extended successfully',

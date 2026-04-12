@@ -11,7 +11,9 @@ class Rental extends Model
     use HasFactory;
 
     protected $table = 'rentals';
+
     protected $primaryKey = 'rental_id';
+
     protected $fillable = [
         'reservation_id',
         'item_id',
@@ -81,6 +83,11 @@ class Rental extends Model
         return $this->belongsTo(User::class, 'extended_by', 'user_id');
     }
 
+    public function extensions()
+    {
+        return $this->hasMany(RentalExtension::class, 'rental_id', 'rental_id')->orderBy('created_at', 'asc');
+    }
+
     public function status()
     {
         return $this->belongsTo(RentalStatus::class, 'status_id', 'status_id');
@@ -133,9 +140,10 @@ class Rental extends Model
      */
     public function getRemainingDepositAttribute(): float
     {
-        if (!$this->hasDepositHeld()) {
+        if (! $this->hasDepositHeld()) {
             return 0;
         }
+
         return $this->deposit_amount - $this->deposit_returned_amount - $this->deposit_deducted_amount;
     }
 
@@ -156,5 +164,4 @@ class Rental extends Model
             ->whereNotNull('return_date')
             ->where('deposit_amount', '>', 0);
     }
-
 }

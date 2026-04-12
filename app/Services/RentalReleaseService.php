@@ -222,7 +222,7 @@ class RentalReleaseService
     /**
      * Create rental record
      */
-    private function createRentalRecord(array $data, Inventory $item, int $releasedBy, float $depositAmount): Rental
+    private function createRentalRecord(array $data, Inventory $item, int $releasedBy, float $depositAmount, ?Reservation $reservation = null): Rental
     {
         // Set status to 'pending' initially - will be updated to 'rented' after payment is collected
         $rentalStatus = RentalStatus::whereRaw('LOWER(status_name) = ?', ['pending'])
@@ -231,6 +231,34 @@ class RentalReleaseService
         if (! $rentalStatus) {
             throw new \Exception('Pending rental status not found in database');
         }
+
+        $depositStatus = 'not_collected';
+        $depositCollectedBy = null;
+        $depositCollectedAt = null;
+
+        // If it's a reservation, check if the reservation invoice with deposit is already paid
+        if ($reservation) {
+            $reservationInvoice = Invoice::where('reservation_id', $reservation->reservation_id)
+                ->whereHas('invoiceItems', function ($q) {
+                    $q->where('item_type', 'deposit');
+                })
+                ->whereHas('status', function ($q) {
+                    $q->whereRaw('LOWER(status_name) = ?', ['paid']);
+                })->first();
+
+            if ($reservationInvoice) {
+                $depositStatus = 'held';
+                // Try to get the latest payment to record who collected it
+                $latestPayment = Payment::where('invoice_id', $reservationInvoice->invoice_id)
+                    ->orderBy('payment_date', 'desc')
+                    ->first();
+                if ($latestPayment) {
+                    $depositCollectedBy = $latestPayment->processed_by;
+                    $depositCollectedAt = $latestPayment->payment_date;
+                }
+            }
+        }
+
         try {
             $rental = Rental::create([
                 'reservation_id' => $data['reservation_id'] ?? null,
@@ -243,7 +271,9 @@ class RentalReleaseService
                 'status_id' => $rentalStatus->status_id,
                 'extension_count' => 0,
                 'deposit_amount' => $depositAmount,
-                'deposit_status' => 'not_collected',  // Will be updated to 'held' when payment is collected
+                'deposit_status' => $depositStatus,
+                'deposit_collected_by' => $depositCollectedBy,
+                'deposit_collected_at' => $depositCollectedAt,
             ]);
 
             return $rental;

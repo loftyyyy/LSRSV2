@@ -582,12 +582,12 @@
             overdueWarning.classList.add('hidden');
         }
 
-        var depositAmount = rental.deposit_collected || 0;
+        var depositAmount = rental.deposit_amount || 0;
         document.getElementById('detailRentalDeposit').textContent = '₱' + Number(depositAmount).toLocaleString();
 
-        var depositStatus = rental.deposit_returned
+        var depositStatus = (rental.deposit_status === 'returned_full' || rental.deposit_status === 'returned_partial')
             ? 'Returned'
-            : rental.deposit_forfeited
+            : rental.deposit_status === 'forfeited'
                 ? 'Forfeited'
                 : depositAmount > 0
                     ? 'Held'
@@ -775,7 +775,37 @@
         var extensionContainer = document.getElementById('timelineExtensionEvents');
         if (extensionContainer) {
             extensionContainer.innerHTML = '';
-            if (rental.extension_count > 0 && rental.last_extended_at) {
+            if (rental.extensions && rental.extensions.length > 0) {
+                var extensionHtml = '';
+                for (var i = 0; i < rental.extensions.length; i++) {
+                    var ext = rental.extensions[i];
+                    var extendedBy = ext.extended_by_user || ext.extendedBy;
+                    var extenderName = extendedBy
+                        ? (extendedBy.name || ((extendedBy.first_name || '') + ' ' + (extendedBy.last_name || '')).trim())
+                        : '';
+                    
+                    extensionHtml += '<div class="relative flex items-start gap-3">' +
+                        '<div class="absolute left-[-15px] top-1 h-4 w-4 rounded-full bg-violet-500 border-2 border-white dark:border-neutral-900 z-10 flex items-center justify-center">' +
+                        '<div class="h-1.5 w-1.5 rounded-full bg-white"></div>' +
+                        '</div>' +
+                        '<div class="flex-1 min-w-0">' +
+                        '<p class="text-xs font-medium text-neutral-900 dark:text-white">Extension #' + (i + 1) + '</p>';
+                    
+                    extensionHtml += '<p class="text-xs text-neutral-500 dark:text-neutral-400">' + formatRentalDateTime(ext.created_at) + '</p>';
+                    if (extenderName) {
+                        extensionHtml += '<p class="text-xs text-neutral-400 dark:text-neutral-500 mt-0.5">by ' + extenderName + '</p>';
+                    }
+                    if (ext.extension_reason) {
+                        extensionHtml += '<p class="text-xs text-neutral-400 dark:text-neutral-500 mt-0.5 italic">"' + ext.extension_reason + '"</p>';
+                    }
+                    
+                    extensionHtml += '<p class="text-[10px] text-violet-600 dark:text-violet-400 mt-1 font-medium">Due updated: ' + formatRentalDate(ext.old_due_date) + ' &rarr; ' + formatRentalDate(ext.new_due_date) + '</p>';
+                    
+                    extensionHtml += '</div></div>';
+                }
+                extensionContainer.innerHTML = extensionHtml;
+            } else if (rental.extension_count > 0 && rental.last_extended_at) {
+                // Fallback for older extensions before the tracking table was added
                 var extendedBy = rental.extended_by_user || rental.extendedBy;
                 var extenderName = extendedBy
                     ? (extendedBy.name || ((extendedBy.first_name || '') + ' ' + (extendedBy.last_name || '')).trim())

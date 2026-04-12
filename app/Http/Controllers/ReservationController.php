@@ -398,6 +398,7 @@ class ReservationController extends Controller
             // Auto-create invoice for the reservation
             $unpaidStatus = PaymentStatus::where('status_name', 'unpaid')->first();
             $invoiceTotal = 0;
+            $invoiceItemsData = [];
 
             // Add items to reservation if provided
             if ($request->has('items') && ! empty($request->items)) {
@@ -443,11 +444,20 @@ class ReservationController extends Controller
                         'rental_price' => $itemData['rental_price'] ?? $variant->rental_price,
                         'notes' => $itemData['notes'] ?? null,
                     ]);
+
+                    $invoiceItemsData[] = [
+                        'description' => "Reservation Deposit: {$variant->name}",
+                        'item_type' => 'deposit',
+                        'item_id' => null,
+                        'quantity' => $requestedQuantity,
+                        'unit_price' => $depositAmount,
+                        'total_price' => $itemTotal,
+                    ];
                 }
             }
 
             // Create invoice with unpaid status
-            Invoice::create([
+            $invoice = Invoice::create([
                 'invoice_number' => $this->generateInvoiceNumber(),
                 'customer_id' => $reservation->customer_id,
                 'reservation_id' => $reservation->reservation_id,
@@ -460,6 +470,12 @@ class ReservationController extends Controller
                 'status_id' => $unpaidStatus?->status_id ?? 1,
                 'created_by' => Auth::id(),
             ]);
+
+            // Add the generated invoice items
+            foreach ($invoiceItemsData as $itemData) {
+                $itemData['invoice_id'] = $invoice->invoice_id;
+                \App\Models\InvoiceItem::create($itemData);
+            }
 
             DB::commit();
 
@@ -842,10 +858,29 @@ class ReservationController extends Controller
             ->value('status_id');
 
         foreach ($reservation->items as $reservationItem) {
-            if ($availableStatusId && $reservationItem->item_id) {
-                $reservationItem->item()->update([
-                    'status_id' => $availableStatusId,
-                ]);
+            if ($availableStatusId) {
+                // Free up allocated items
+                $allocations = \App\Models\ReservationItemAllocation::where('reservation_item_id', $reservationItem->reservation_item_id)
+                    ->where('allocation_status', 'allocated')
+                    ->get();
+
+                foreach ($allocations as $allocation) {
+                    \App\Models\Inventory::where('item_id', $allocation->item_id)->update([
+                        'status_id' => $availableStatusId,
+                    ]);
+                    $allocation->update([
+                        'allocation_status' => 'released',
+                        'released_at' => now(),
+                        'updated_by' => Auth::id() ?? 1,
+                    ]);
+                }
+
+                // Backward compatibility
+                if ($reservationItem->item_id) {
+                    $reservationItem->item()->update([
+                        'status_id' => $availableStatusId,
+                    ]);
+                }
             }
         }
 
@@ -926,6 +961,43 @@ class ReservationController extends Controller
             'confirmed_at' => now(),
             'confirmed_by' => Auth::id(),
         ]);
+
+        // Allocate physical items and set them to 'reserved'
+        $reservedStatus = InventoryStatus::whereRaw('LOWER(status_name) = ?', ['reserved'])->first();
+        if ($reservedStatus) {
+            foreach ($reservation->items as $reservationItem) {
+                $allocatedCount = \App\Models\ReservationItemAllocation::where('reservation_item_id', $reservationItem->reservation_item_id)
+                    ->where('allocation_status', 'allocated')
+                    ->count();
+
+                $needed = $reservationItem->quantity - $allocatedCount;
+
+                if ($needed > 0) {
+                    $availableItems = \App\Models\Inventory::where('variant_id', $reservationItem->variant_id)
+                        ->whereHas('status', function ($q) {
+                            $q->whereRaw('LOWER(status_name) = ?', ['available']);
+                        })
+                        ->limit($needed)
+                        ->get();
+
+                    foreach ($availableItems as $invItem) {
+                        \App\Models\ReservationItemAllocation::create([
+                            'reservation_item_id' => $reservationItem->reservation_item_id,
+                            'item_id' => $invItem->item_id,
+                            'allocation_status' => 'allocated',
+                            'allocated_at' => now(),
+                            'updated_by' => Auth::id() ?? 1,
+                        ]);
+
+                        $invItem->update(['status_id' => $reservedStatus->status_id]);
+
+                        if (! $reservationItem->item_id && $reservationItem->quantity == 1) {
+                            $reservationItem->update(['item_id' => $invItem->item_id]);
+                        }
+                    }
+                }
+            }
+        }
 
         $reservation->load(['customer', 'status', 'reservedBy', 'items.item', 'items.variant']);
 

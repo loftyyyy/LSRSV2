@@ -333,7 +333,7 @@
             if (!inventoryState.abortController) {
                 inventoryState.abortController = new AbortController();
             }
-            
+
             var response = await axios.get('/api/inventories/reports/statistics', {
                 signal: inventoryState.abortController.signal
             });
@@ -381,7 +381,7 @@
              if (!inventoryState.abortController) {
                  inventoryState.abortController = new AbortController();
              }
-             
+
              var params = new URLSearchParams({
                  page: inventoryState.currentPage,
                  per_page: inventoryState.perPage,
@@ -444,7 +444,7 @@
       // Update search indicators
       function updateSearchIndicators() {
           var searchIndicatorsDiv = document.getElementById('searchIndicators');
-          
+
           // Guard against missing element
           if (!searchIndicatorsDiv) {
               return;
@@ -484,10 +484,10 @@
           if (items && items.length > 0) {
               console.log('[Inventory] First item:', items[0]?.name, items[0]?.sku);
           }
-          
+
           try {
               var tbody = document.getElementById('inventoryTableBody');
-              
+
               // Guard against missing tbody element (can happen during Turbo navigation)
               if (!tbody) {
                   console.warn('[Inventory] inventoryTableBody element not found');
@@ -513,30 +513,79 @@
               items.forEach(item => {
                  // Get status name from the status relationship
                  var statusName = item.status?.status_name || 'unknown';
-                 
-                 var statusColor = statusName === 'available'
-                     ? 'bg-emerald-500/15 text-emerald-600 border-emerald-500/40 dark:text-emerald-300'
-                     : statusName === 'rented'
-                     ? 'bg-blue-500/15 text-blue-600 border-blue-500/40 dark:text-blue-300'
-                     : statusName === 'maintenance'
-                     ? 'bg-amber-500/15 text-amber-600 border-amber-500/40 dark:text-amber-300'
-                     : 'bg-gray-500/15 text-gray-600 border-gray-500/40 dark:text-gray-300';
 
-                 var statusBgColor = statusName === 'available'
-                     ? 'bg-emerald-500'
-                     : statusName === 'rented'
-                     ? 'bg-blue-500'
-                     : statusName === 'maintenance'
-                     ? 'bg-amber-500'
-                     : 'bg-gray-500';
+                  var statusConfig = {
+                      'available': {
+                          label: 'Available',
+                          subtitle: 'Ready for rent',
+                          cardClass: 'bg-emerald-500/10 dark:bg-emerald-500/20 border-emerald-500/30 dark:border-emerald-500/30',
+                          dotClass: 'bg-emerald-500',
+                          textClass: 'text-emerald-700 dark:text-emerald-400',
+                          badgeClass: 'bg-emerald-500/15 text-emerald-600 border-emerald-500/40 dark:text-emerald-300',
+                          bgClass: 'bg-emerald-500'
+                      },
+                      'rented': {
+                          label: 'Rented',
+                          subtitle: 'Currently rented',
+                          cardClass: 'bg-blue-500/10 dark:bg-blue-500/20 border-blue-500/30 dark:border-blue-500/30',
+                          dotClass: 'bg-blue-500',
+                          textClass: 'text-blue-700 dark:text-blue-400',
+                          badgeClass: 'bg-blue-500/15 text-blue-600 border-blue-500/40 dark:text-blue-300',
+                          bgClass: 'bg-blue-500'
+                      },
+                      'maintenance': {
+                          label: 'Maintenance',
+                          subtitle: 'Under maintenance',
+                          cardClass: 'bg-amber-500/10 dark:bg-amber-500/20 border-amber-500/30 dark:border-amber-500/30',
+                          dotClass: 'bg-amber-500',
+                          textClass: 'text-amber-700 dark:text-amber-400',
+                          badgeClass: 'bg-amber-500/15 text-amber-600 border-amber-500/40 dark:text-amber-300',
+                          bgClass: 'bg-amber-500'
+                      },
+                      'reserved': {
+                          label: 'Reserved',
+                          subtitle: 'Booked for schedule',
+                          cardClass: 'bg-cyan-500/10 dark:bg-cyan-500/20 border-cyan-500/30 dark:border-cyan-500/30',
+                          dotClass: 'bg-cyan-500',
+                          textClass: 'text-cyan-700 dark:text-cyan-400',
+                          badgeClass: 'bg-cyan-500/15 text-cyan-600 border-cyan-500/40 dark:text-cyan-300',
+                          bgClass: 'bg-cyan-500'
+                      },
+                      'sold': {
+                          label: 'Sold',
+                          subtitle: 'No longer rentable',
+                          cardClass: 'bg-rose-500/10 dark:bg-rose-500/20 border-rose-500/30 dark:border-rose-500/30',
+                          dotClass: 'bg-rose-500',
+                          textClass: 'text-rose-700 dark:text-rose-400',
+                          badgeClass: 'bg-rose-500/15 text-rose-600 border-rose-500/40 dark:text-rose-300',
+                          bgClass: 'bg-rose-500'
+                      },
+                      'retired': {
+                          label: 'Retired',
+                          subtitle: 'No longer available',
+                          cardClass: 'bg-neutral-500/10 dark:bg-neutral-500/20 border-neutral-500/30 dark:border-neutral-500/30',
+                          dotClass: 'bg-neutral-500',
+                          textClass: 'text-neutral-700 dark:text-neutral-400',
+                          badgeClass: 'bg-neutral-500/15 text-neutral-600 border-neutral-500/40 dark:text-neutral-300',
+                          bgClass: 'bg-neutral-500'
+                      }
+                  };
 
-                 var statusLabel = statusName === 'available'
-                     ? 'Available'
-                     : statusName === 'rented'
-                     ? 'Rented'
-                     : statusName === 'maintenance'
-                     ? 'Maintenance'
-                     : 'Retired';
+                  var statusColor = statusConfig[statusName]?.badgeClass ||
+                      'bg-neutral-500/15 text-neutral-600 border-neutral-500/40 dark:text-neutral-300';
+
+                  var statusBgColor = statusConfig[statusName]?.bgClass ||
+                      'bg-neutral-500';
+
+                  const statusMap = {
+                      available: 'Available',
+                      rented: 'Rented',
+                      maintenance: 'Maintenance',
+                      retired: 'Retired',
+                      reserved: 'Reserved',
+                      sold: 'Sold'
+                  };
+                  var statusLabel = statusMap[statusName] || 'Unknown';
 
                  // Format item type (capitalize first letter)
                  var itemType = item.item_type ? item.item_type.charAt(0).toUpperCase() + item.item_type.slice(1) : 'N/A';
@@ -570,12 +619,12 @@
                          </div>
                      </td>
                  `;
-                 
+
                  // Add click handler for row to open details modal
                  row.addEventListener('click', function() {
                      openItemDetailsModal(item.item_id);
                  });
-                 
+
                  tbody.appendChild(row);
              });
 
