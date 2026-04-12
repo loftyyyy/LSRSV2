@@ -112,7 +112,7 @@ class RentalReleaseService
             // Step 3.5: Get rental fee from item
             $rentalFee = (float) $item->rental_price ?? 0;
             // Step 4: Create Rental record - status stays PENDING until payment is collected
-            $rental = $this->createRentalRecord($data, $item, $releasedBy, $depositAmount);
+            $rental = $this->createRentalRecord($data, $item, $releasedBy, $depositAmount, $reservation);
             // Step 5: Create Invoice with line items (pending, NOT paid)
             $invoice = $this->createInvoiceWithItems($rental, $item, $rentalFee, $depositAmount, $reservation);
             // Step 6: Do NOT automatically collect payment - just create the pending invoice
