@@ -43,14 +43,34 @@ class RentalReleaseService
                         'code' => 404,
                     ];
                 }
-                // Find an available physical item for this variant
-                $availableItem = Inventory::where('variant_id', $reservationItem->variant_id)
-                    ->whereHas('status', function ($q) {
-                        $q->whereRaw('LOWER(status_name) = ?', ['available']);
+                // Find an available physical item for this variant, or a reserved one that is allocated to this reservation item
+                $availableItem = Inventory::where(function ($query) use ($reservationItem) {
+                    // Priority 1: Allocated and reserved for this reservation item
+                    $query->where('variant_id', $reservationItem->variant_id)
+                        ->whereHas('status', function ($q) {
+                            $q->whereRaw('LOWER(status_name) = ?', ['reserved']);
+                        })->whereHas('allocations', function ($q) use ($reservationItem) {
+                            $q->where('reservation_item_id', $reservationItem->reservation_item_id)
+                                ->where('allocation_status', 'allocated');
+                        });
+                })
+                    ->orWhere(function ($query) use ($reservationItem) {
+                        // Priority 2: Fallback to available
+                        $query->where('variant_id', $reservationItem->variant_id)
+                            ->whereHas('status', function ($q) {
+                                $q->whereRaw('LOWER(status_name) = ?', ['available']);
+                            })->whereDoesntHave('rentals', function ($q) {
+                                $q->whereNull('return_date');
+                            });
                     })
-                    ->whereDoesntHave('rentals', function ($q) {
-                        $q->whereNull('return_date');
-                    })
+                    ->orderByRaw("
+                        CASE WHEN EXISTS (
+                            SELECT 1 FROM reservation_item_allocations
+                            WHERE reservation_item_allocations.item_id = inventories.item_id
+                            AND reservation_item_allocations.reservation_item_id = ?
+                            AND reservation_item_allocations.allocation_status = 'allocated'
+                        ) THEN 0 ELSE 1 END
+                    ", [$reservationItem->reservation_item_id])
                     ->first();
 
                 if (! $availableItem) {
@@ -60,10 +80,14 @@ class RentalReleaseService
                     ];
                 }
                 $data['item_id'] = $availableItem->item_id;
+                if (! isset($data['reservation_id'])) {
+                    $data['reservation_id'] = $reservationItem->reservation_id;
+                }
             }
 
             // Step 1: Load and validate the physical item
-            $item = $this->getAndValidateItem($data['item_id']);
+            $reservationId = $data['reservation_id'] ?? null;
+            $item = $this->getAndValidateItem($data['item_id'], $reservationId);
 
             if (isset($item['error'])) {
                 return $item;
@@ -152,7 +176,7 @@ class RentalReleaseService
     /**
      * Get and validate the physical item
      */
-    private function getAndValidateItem(int $itemId): array|Inventory
+    private function getAndValidateItem(int $itemId, ?int $reservationId = null): array|Inventory
     {
         $item = Inventory::with(['variant', 'status'])
             ->find($itemId);
@@ -164,13 +188,36 @@ class RentalReleaseService
             ];
         }
 
-        // Check if item is available
-        if ($item->status?->status_name !== 'available') {
+        $allowedStatuses = ['available'];
+        $isAllocated = false;
+
+        if ($reservationId) {
+            $isAllocated = ReservationItemAllocation::where('item_id', $itemId)
+                ->where('allocation_status', 'allocated')
+                ->whereHas('reservationItem', function ($q) use ($reservationId) {
+                    $q->where('reservation_id', $reservationId);
+                })
+                ->exists();
+
+            if ($isAllocated) {
+                $allowedStatuses[] = 'reserved';
+            }
+        }
+
+        // Check if item status is allowed
+        if (! in_array(strtolower($item->status?->status_name ?? ''), $allowedStatuses)) {
             $currentStatus = $item->status?->status_name ?? 'unknown';
+
+            if ($currentStatus === 'reserved' && ! $isAllocated) {
+                return [
+                    'error' => "Item #{$item->sku} is reserved for another customer/reservation.",
+                    'code' => 422,
+                ];
+            }
 
             return [
                 'error' => "Item #{$item->sku} is currently {$currentStatus}. ".
-                          'Only available items can be released.',
+                          'Only available or correctly reserved items can be released.',
                 'code' => 422,
             ];
         }
@@ -316,7 +363,7 @@ class RentalReleaseService
                 'total_amount' => $invoiceTotal,
                 'amount_paid' => 0,
                 'balance_due' => $invoiceTotal,
-                'created_by' => auth()->id() ?: $rental->released_by,
+                'created_by' => \Illuminate\Support\Facades\Auth::id() ?: $rental->released_by,
                 'status_id' => $pendingStatus->status_id,
             ]);
 
@@ -489,7 +536,7 @@ class RentalReleaseService
             'reference_type' => 'rental',
             'reference_id' => $rental->rental_id,
             'notes' => $notes ?? "Item released to customer: {$rental->customer->first_name} {$rental->customer->last_name}",
-            'created_by' => auth()->id() ?: $rental->released_by,
+            'created_by' => \Illuminate\Support\Facades\Auth::id() ?: $rental->released_by,
         ]);
     }
 
