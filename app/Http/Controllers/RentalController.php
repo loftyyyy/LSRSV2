@@ -807,6 +807,7 @@ class RentalController extends Controller
         return response()->stream($callback, 200, $headers);
     }
 
+
     public function showRentalPage(): View
     {
         return view('rentals.index');
