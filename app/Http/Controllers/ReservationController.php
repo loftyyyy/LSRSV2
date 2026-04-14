@@ -512,8 +512,8 @@ class ReservationController extends Controller
             'reservedBy',
             'items.item',
             'items.variant',
-            'rentals',
-            'invoices',
+            'rentals.status',
+            'invoices.status',
         ]);
 
         return response()->json([

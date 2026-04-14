@@ -468,8 +468,8 @@
             : '-';
 
         // Reserved By
-        if (reservation.reserved_by_user || reservation.reservedBy) {
-            var reservedBy = reservation.reserved_by_user || reservation.reservedBy;
+        var reservedBy = reservation.reserved_by_user || reservation.reservedBy || reservation.reserved_by;
+        if (reservedBy && typeof reservedBy === 'object') {
             var initials = (reservedBy.name?.charAt(0) || reservedBy.first_name?.charAt(0) || 'U').toUpperCase();
             document.getElementById('detailReservedByAvatar').textContent = initials;
             document.getElementById('detailReservedByName').textContent = reservedBy.name || `${reservedBy.first_name || ''} ${reservedBy.last_name || ''}`.trim() || '-';
@@ -599,7 +599,7 @@
                     };
                     var statusColor = statusColors[statusName] || 'bg-neutral-500/15 text-neutral-600 border-neutral-500/40 dark:text-neutral-300';
 
-                    var rentalDate = rental.rental_date ? formatReservationDate(rental.rental_date) : '-';
+                    var rentalDate = rental.released_date ? formatReservationDate(rental.released_date) : (rental.created_at ? formatReservationDate(rental.created_at) : '-');
 
                     return `
                         <div class="px-4 py-3 flex items-center justify-between hover:bg-neutral-100 dark:hover:bg-neutral-800/50 transition-colors">
