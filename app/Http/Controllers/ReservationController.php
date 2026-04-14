@@ -513,6 +513,7 @@ class ReservationController extends Controller
             'items.item',
             'items.variant',
             'rentals.status',
+            'rentals.item',
             'invoices.status',
         ]);
 
