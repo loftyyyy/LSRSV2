@@ -692,43 +692,78 @@
             return;
         }
 
-        var html = '<div class="divide-y divide-neutral-200 dark:divide-neutral-800">';
-        invoices.forEach(function(invoice) {
-            var statusName = (invoice.payment_status || 'unknown').toLowerCase();
-            var statusColors = {
-                'paid': 'bg-emerald-500/15 text-emerald-600 border-emerald-500/40 dark:text-emerald-300',
-                'unpaid': 'bg-amber-500/15 text-amber-600 border-amber-500/40 dark:text-amber-300',
-                'partial': 'bg-neutral-500/15 text-neutral-600 border-neutral-500/40 dark:text-neutral-300',
-                'cancelled': 'bg-red-500/15 text-red-600 border-red-500/40 dark:text-red-300'
-            };
-            var statusColor = statusColors[statusName] || 'bg-neutral-500/15 text-neutral-600 border-neutral-500/40 dark:text-neutral-300';
+        var html = `
+            <div class="divide-y divide-neutral-200 dark:divide-neutral-800">
+                ${invoices.map(invoice => {
+                    var statusName = invoice.status?.status_name?.toLowerCase() || invoice.payment_status?.toLowerCase() || 'unknown';
+                    var statusColors = {
+                        'paid': 'bg-emerald-500/15 text-emerald-600 border-emerald-500/40 dark:text-emerald-300',
+                        'unpaid': 'bg-amber-500/15 text-amber-600 border-amber-500/40 dark:text-amber-300',
+                        'partial': 'bg-neutral-500/15 text-neutral-600 border-neutral-500/40 dark:text-neutral-300',
+                        'cancelled': 'bg-red-500/15 text-red-600 border-red-500/40 dark:text-red-300'
+                    };
+                    var statusColor = statusColors[statusName] || 'bg-neutral-500/15 text-neutral-600 border-neutral-500/40 dark:text-neutral-300';
 
-            var invoiceDate = invoice.invoice_date ? formatRentalDate(invoice.invoice_date) : '-';
-            var totalAmount = invoice.total_amount || 0;
-            var isPaid = statusName === 'paid';
+                    var invoiceDate = invoice.invoice_date ? formatRentalDate(invoice.invoice_date) : '-';
+                    var totalAmount = invoice.total_amount || 0;
+                    var amountPaid = invoice.amount_paid || 0;
+                    var balanceDue = invoice.balance_due || 0;
+                    
+                    var isPaid = statusName === 'paid';
+                    var paymentButtonClass = isPaid 
+                        ? 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 cursor-not-allowed' 
+                        : 'bg-violet-600 text-white hover:bg-violet-500 dark:hover:bg-violet-700 cursor-pointer';
 
-            html += '<div class="px-4 py-3 flex items-center justify-between hover:bg-neutral-100 dark:hover:bg-neutral-800/50 transition-colors">' +
-                '<div class="flex items-center gap-3">' +
-                '<div class="h-8 w-8 rounded-lg bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center flex-shrink-0">' +
-                '<span class="text-[10px] font-bold text-neutral-600 dark:text-neutral-400 font-geist-mono">#' + invoice.invoice_id + '</span>' +
-                '</div>' +
-                '<div class="min-w-0">' +
-                '<p class="text-sm font-medium text-neutral-900 dark:text-white truncate">' + invoiceDate + '</p>' +
-                '<p class="text-xs text-neutral-500 dark:text-neutral-400 font-geist-mono">₱' + Number(totalAmount).toLocaleString() + '</p>' +
-                '</div>' +
-                '</div>' +
-                '<div class="flex items-center gap-2 flex-shrink-0">' +
-                '<span class="inline-flex items-center rounded-full ' + statusColor + ' px-2 py-1 text-[10px] font-medium border">' +
-                (invoice.payment_status || 'Unknown') +
-                '</span>' +
-                (isPaid ?
-                        '<button disabled class="inline-flex items-center rounded-lg px-2.5 py-1 text-[10px] font-medium bg-neutral-200 text-neutral-500 dark:bg-neutral-700 dark:text-neutral-400 cursor-not-allowed">Paid</button>' :
-                        '<a href="/payments?invoice_id=' + invoice.invoice_id + '" class="inline-flex items-center rounded-lg px-2.5 py-1 text-[10px] font-medium bg-violet-600 text-white hover:bg-violet-500 dark:hover:bg-violet-700 cursor-pointer transition-colors duration-100 ease-in-out" title="Pay this invoice">Pay</a>'
-                ) +
-                '</div>' +
-                '</div>';
-        });
-        html += '</div>';
+                    return `
+                        <div class="px-4 py-3 flex flex-col gap-2 hover:bg-neutral-100 dark:hover:bg-neutral-800/50 transition-colors">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3 flex-1 min-w-0">
+                                    <div class="h-8 w-8 rounded-lg bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center flex-shrink-0">
+                                        <span class="text-[10px] font-bold text-neutral-600 dark:text-neutral-400 font-geist-mono">#${invoice.invoice_id}</span>
+                                    </div>
+                                    <div class="min-w-0 flex-1 flex flex-col">
+                                        <p class="text-sm font-medium text-neutral-900 dark:text-white truncate">${invoiceDate}</p>
+                                        <p class="text-[11px] text-neutral-500 dark:text-neutral-400 flex items-center gap-2">
+                                            <span>Total: <span class="font-medium text-neutral-700 dark:text-neutral-300">₱${Number(totalAmount).toLocaleString()}</span></span>
+                                            <span>&bull;</span>
+                                            <span>Paid: <span class="font-medium text-emerald-600 dark:text-emerald-400">₱${Number(amountPaid).toLocaleString()}</span></span>
+                                            ${balanceDue > 0 ? `<span>&bull;</span><span>Bal: <span class="font-medium text-amber-600 dark:text-amber-400">₱${Number(balanceDue).toLocaleString()}</span></span>` : ''}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2 flex-shrink-0 ml-2">
+                                    ${invoice.invoice_type ? `
+                                        <span class="inline-flex items-center rounded-full bg-blue-500/15 text-blue-600 border-blue-500/40 dark:text-blue-300 px-2 py-1 text-[10px] font-medium border capitalize">
+                                            ${invoice.invoice_type === 'reservation' ? 'Deposit' : invoice.invoice_type}
+                                        </span>
+                                    ` : ''}
+                                    <span class="inline-flex items-center rounded-full ${statusColor} px-2 py-1 text-[10px] font-medium border">
+                                        ${invoice.status?.status_name || invoice.payment_status || 'Unknown'}
+                                    </span>
+                                    ${!isPaid ? `
+                                        <a 
+                                            href="/payments?invoice_id=${invoice.invoice_id}" 
+                                            class="inline-flex items-center rounded-lg px-2.5 py-1 text-[10px] font-medium ${paymentButtonClass} transition-colors duration-100 ease-in-out"
+                                            title="Pay this invoice"
+                                        >
+                                            Pay
+                                        </a>
+                                    ` : `
+                                        <button 
+                                            disabled 
+                                            class="inline-flex items-center rounded-lg px-2.5 py-1 text-[10px] font-medium ${paymentButtonClass}"
+                                            title="Already paid"
+                                        >
+                                            Paid
+                                        </button>
+                                    `}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        `;
 
         container.innerHTML = html;
     }
