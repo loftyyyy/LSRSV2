@@ -330,7 +330,16 @@
                  if (e.target.closest('button')) {
                      return;
                  }
-                 openRecordPaymentModalWithInvoice(inv.invoice_id);
+                 
+                 const statusName = inv.status?.status_name?.toLowerCase() || 'unknown';
+                 
+                 // If the invoice is fully paid, open invoice details instead of record payment modal
+                 if (statusName === 'paid') {
+                     // We don't have an invoice details modal yet so for now just open the PDF receipt
+                     window.open(`/api/invoices/reports/invoice/${inv.invoice_id}`, '_blank');
+                 } else {
+                     openRecordPaymentModalWithInvoice(inv.invoice_id);
+                 }
              });
 
             const customer = inv.customer 
@@ -382,8 +391,7 @@
 
     // Download invoice (placeholder)
     function downloadInvoice(invoiceId) {
-        console.log('Download invoice:', invoiceId);
-        // Implement download functionality
+        window.open(`/api/invoices/reports/invoice/${invoiceId}`, '_blank');
     }
 
      // Open record payment modal with selected invoice
