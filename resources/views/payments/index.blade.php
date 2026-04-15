@@ -335,8 +335,7 @@
                  
                  // If the invoice is fully paid, open invoice details instead of record payment modal
                  if (statusName === 'paid') {
-                     // We don't have an invoice details modal yet so for now just open the PDF receipt
-                     window.open(`/api/invoices/reports/invoice/${inv.invoice_id}`, '_blank');
+                     openInvoiceDetailsModal(inv.invoice_id);
                  } else {
                      openRecordPaymentModalWithInvoice(inv.invoice_id);
                  }
