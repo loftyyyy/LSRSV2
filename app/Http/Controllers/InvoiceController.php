@@ -352,7 +352,7 @@ class InvoiceController extends Controller
             'customer',
             'reservation',
             'rental',
-            'items',
+            'invoiceItems.item',
             'payments',
             'status',
             'createdBy',

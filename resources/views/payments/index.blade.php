@@ -477,5 +477,8 @@
 
 {{-- Include Record Payment Modal --}}
 @include('payments.partials.record-payment-modal')
+
+{{-- Include Invoice Details Modal --}}
+@include('payments.partials.invoice-details-modal')
 </body>
 </html>
