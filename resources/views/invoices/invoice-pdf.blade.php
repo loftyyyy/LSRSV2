@@ -11,7 +11,7 @@
         }
         
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'DejaVu Sans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
             color: #333;
         }
@@ -269,7 +269,7 @@
                     <div class="section-title">Bill To:</div>
                     <strong>{{ $invoice->customer->first_name }} {{ $invoice->customer->last_name }}</strong>
                     <p>Email: {{ $invoice->customer->email }}</p>
-                    <p>Phone: {{ $invoice->customer->phone ?? 'N/A' }}</p>
+                    <p>Phone: {{ $invoice->customer->contact_number ?? 'N/A' }}</p>
                     <p>Address: {{ $invoice->customer->address ?? 'N/A' }}</p>
                 </div>
                 <div class="info-block">
@@ -304,8 +304,8 @@
                         <td>{{ $item->description ?? 'N/A' }}</td>
                         <td>{{ ucfirst($item->item_type ?? 'N/A') }}</td>
                         <td>{{ $item->quantity ?? 1 }}</td>
-                        <td>₱{{ number_format($item->unit_price ?? 0, 2) }}</td>
-                        <td class="text-right">₱{{ number_format($item->total_price ?? 0, 2) }}</td>
+                        <td>&#8369;{{ number_format($item->unit_price ?? 0, 2) }}</td>
+                        <td class="text-right">&#8369;{{ number_format($item->total_price ?? 0, 2) }}</td>
                     </tr>
                     @endforeach
                 </tbody>
@@ -317,15 +317,15 @@
             <table class="summary-table">
                 <tr>
                     <td class="summary-label">Subtotal:</td>
-                    <td class="summary-value">₱{{ number_format($invoice->total_amount ?? 0, 2) }}</td>
+                    <td class="summary-value">&#8369;{{ number_format($invoice->total_amount ?? 0, 2) }}</td>
                 </tr>
                 <tr>
                     <td class="summary-label">Amount Paid:</td>
-                    <td class="summary-value">₱{{ number_format($invoice->amount_paid ?? 0, 2) }}</td>
+                    <td class="summary-value">&#8369;{{ number_format($invoice->amount_paid ?? 0, 2) }}</td>
                 </tr>
                 <tr class="summary-total">
                     <td class="summary-label">Balance Due:</td>
-                    <td class="summary-value">₱{{ number_format($invoice->balance_due ?? 0, 2) }}</td>
+                    <td class="summary-value">&#8369;{{ number_format($invoice->balance_due ?? 0, 2) }}</td>
                 </tr>
             </table>
         </div>
@@ -347,7 +347,7 @@
                     @foreach($invoice->payments as $payment)
                     <tr>
                         <td>{{ \Carbon\Carbon::parse($payment->payment_date)->format('M d, Y') }}</td>
-                        <td>₱{{ number_format($payment->amount ?? 0, 2) }}</td>
+                        <td>&#8369;{{ number_format($payment->amount ?? 0, 2) }}</td>
                         <td>{{ ucfirst($payment->payment_method ?? 'N/A') }}</td>
                         <td>{{ $payment->reference_number ?? '-' }}</td>
                         <td>
