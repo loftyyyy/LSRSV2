@@ -39,6 +39,14 @@ return new class extends Migration
             $table->index('item_type');
             $table->index(['name', 'size', 'color']);
         });
+
+        Schema::table('customers', function (Blueprint $table) {
+            $table->index('email');
+            $table->index('first_name');
+            $table->index('last_name');
+            $table->index('contact_number');
+            $table->index(['first_name', 'last_name']);
+        });
     }
 
     /**
@@ -73,6 +81,14 @@ return new class extends Migration
         Schema::table('inventories', function (Blueprint $table) {
             $table->dropIndex(['item_type']);
             $table->dropIndex(['name', 'size', 'color']);
+        });
+
+        Schema::table('customers', function (Blueprint $table) {
+            $table->dropIndex(['email']);
+            $table->dropIndex(['first_name']);
+            $table->dropIndex(['last_name']);
+            $table->dropIndex(['contact_number']);
+            $table->dropIndex(['first_name', 'last_name']);
         });
     }
 };
