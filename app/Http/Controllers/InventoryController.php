@@ -86,6 +86,7 @@ class InventoryController extends Controller
 
         $callback = function () use ($reportData, $reportType) {
             $output = fopen('php://output', 'w');
+fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
 
             // Add report header
             fputcsv($output, ['Inventory Report']);
@@ -97,7 +98,7 @@ class InventoryController extends Controller
             if ($reportType === 'inventory_summary') {
                 // Inventory Summary Report
                 fputcsv($output, ['Total Items', $reportData['total_count']]);
-                fputcsv($output, ['Total Value', '$'.number_format($reportData['total_value'], 2)]);
+                fputcsv($output, ['Total Value', '₱'.number_format($reportData['total_value'], 2)]);
                 fputcsv($output, []); // Empty row
 
                 fputcsv($output, ['Items by Status']);
@@ -120,8 +121,8 @@ class InventoryController extends Controller
                         $item->design ?? 'N/A',
                         $item->status->status_name ?? 'N/A',
                         $item->variant->variant_sku ?? 'N/A',
-                        '$'.number_format($item->rental_price ?? 0, 2),
-                        '$'.number_format($item->deposit_amount ?? 0, 2),
+                        '₱'.number_format($item->rental_price ?? 0, 2),
+                        '₱'.number_format($item->deposit_amount ?? 0, 2),
                         $item->images->count(),
                     ]);
                 }
@@ -156,8 +157,8 @@ class InventoryController extends Controller
                         $item->design ?? 'N/A',
                         $item->status->status_name ?? 'N/A',
                         $item->variant->variant_sku ?? 'N/A',
-                        '$'.number_format($item->rental_price ?? 0, 2),
-                        '$'.number_format($item->deposit_amount ?? 0, 2),
+                        '₱'.number_format($item->rental_price ?? 0, 2),
+                        '₱'.number_format($item->deposit_amount ?? 0, 2),
                         $item->images->count(),
                     ]);
                 }
@@ -181,8 +182,8 @@ class InventoryController extends Controller
                         $item->design ?? 'N/A',
                         $item->status->status_name ?? 'N/A',
                         $item->variant->variant_sku ?? 'N/A',
-                        '$'.number_format($item->rental_price ?? 0, 2),
-                        '$'.number_format($item->deposit_amount ?? 0, 2),
+                        '₱'.number_format($item->rental_price ?? 0, 2),
+                        '₱'.number_format($item->deposit_amount ?? 0, 2),
                         $rentalCount,
                     ]);
                 }
@@ -202,8 +203,8 @@ class InventoryController extends Controller
                         $item->design ?? 'N/A',
                         $item->status->status_name ?? 'N/A',
                         $item->variant->variant_sku ?? 'N/A',
-                        '$'.number_format($item->rental_price ?? 0, 2),
-                        '$'.number_format($item->deposit_amount ?? 0, 2),
+                        '₱'.number_format($item->rental_price ?? 0, 2),
+                        '₱'.number_format($item->deposit_amount ?? 0, 2),
                     ]);
                 }
 
@@ -214,7 +215,7 @@ class InventoryController extends Controller
                 }
             } elseif ($reportType === 'revenue_by_item') {
                 // Revenue by Item Report
-                fputcsv($output, ['Total Revenue', '$'.number_format($reportData['total_revenue'], 2)]);
+                fputcsv($output, ['Total Revenue', '₱'.number_format($reportData['total_revenue'], 2)]);
                 fputcsv($output, ['Total Rentals', $reportData['total_rentals']]);
                 fputcsv($output, []); // Empty row
 
@@ -229,8 +230,8 @@ class InventoryController extends Controller
                         $item->sku ?? 'N/A',
                         $item->item_type,
                         $itemData['rental_count'],
-                        '$'.number_format($itemData['total_revenue'], 2),
-                        '$'.number_format($itemData['average_revenue'], 2),
+                        '₱'.number_format($itemData['total_revenue'], 2),
+                        '₱'.number_format($itemData['average_revenue'], 2),
                     ]);
                 }
             }
