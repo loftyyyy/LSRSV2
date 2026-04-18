@@ -24,29 +24,34 @@ class CustomerController extends Controller
         $endDate = $request->get('end_date');
         $statusId = $request->get('status_id');
 
-        $query = Customer::with(['status', 'rentals', 'reservations']);
+        $baseQuery = Customer::query();
 
         // Filter by date range
         if ($startDate && $endDate) {
-            $query->whereBetween('created_at', [$startDate, $endDate]);
+            $baseQuery->whereBetween('created_at', [$startDate, $endDate]);
         }
 
         // Filter by status
         if ($statusId) {
-            $query->where('status_id', $statusId);
+            $baseQuery->where('status_id', $statusId);
         }
 
-        $customers = $query->get();
-
-        // Generate report statistics (case-insensitive status comparison)
+        // Generate report statistics using DB queries instead of memory
         $statistics = [
-            'total_customers' => $customers->count(),
-            'active_customers' => $customers->filter(fn ($c) => strtolower($c->status->status_name ?? '') === 'active')->count(),
-            'inactive_customers' => $customers->filter(fn ($c) => strtolower($c->status->status_name ?? '') === 'inactive')->count(),
-            'total_rentals' => $customers->sum(fn ($c) => $c->rentals->count()),
-            'customers_with_rentals' => $customers->filter(fn ($c) => $c->rentals->count() > 0)->count(),
-            'total_reservations' => $customers->sum(fn ($c) => $c->reservations->count()),
+            'total_customers' => (clone $baseQuery)->count(),
+            'active_customers' => (clone $baseQuery)->whereHas('status', fn ($q) => $q->whereRaw('LOWER(status_name) = ?', ['active']))->count(),
+            'inactive_customers' => (clone $baseQuery)->whereHas('status', fn ($q) => $q->whereRaw('LOWER(status_name) = ?', ['inactive']))->count(),
+            'total_rentals' => \App\Models\Rental::whereIn('customer_id', (clone $baseQuery)->select('customer_id'))->count(),
+            'customers_with_rentals' => (clone $baseQuery)->has('rentals')->count(),
+            'total_reservations' => \App\Models\Reservation::whereIn('customer_id', (clone $baseQuery)->select('customer_id'))->count(),
         ];
+
+        // Fetch customers with aggregated data to avoid N+1 and loading huge relations
+        $customers = (clone $baseQuery)
+            ->with('status')
+            ->withCount(['rentals', 'reservations'])
+            ->withMax('rentals', 'rental_date')
+            ->get();
 
         // Customer rental history summary
         $customerData = $customers->map(function ($customer) {
@@ -56,10 +61,10 @@ class CustomerController extends Controller
                 'email' => $customer->email,
                 'contact_number' => $customer->contact_number,
                 'status' => $customer->status->status_name ?? 'N/A',
-                'total_rentals' => $customer->rentals->count(),
-                'total_reservations' => $customer->reservations->count(),
+                'total_rentals' => $customer->rentals_count,
+                'total_reservations' => $customer->reservations_count,
                 'registration_date' => $customer->created_at->format('Y-m-d'),
-                'last_rental_date' => $customer->rentals->max('rental_date'),
+                'last_rental_date' => $customer->rentals_max_rental_date,
             ];
         });
 
@@ -80,24 +85,27 @@ class CustomerController extends Controller
         $endDate = $request->get('end_date');
         $statusId = $request->get('status_id');
 
-        $query = Customer::with(['status', 'rentals', 'reservations']);
+        $baseQuery = Customer::query();
 
         if ($startDate && $endDate) {
-            $query->whereBetween('created_at', [$startDate, $endDate]);
+            $baseQuery->whereBetween('created_at', [$startDate, $endDate]);
         }
 
         if ($statusId) {
-            $query->where('status_id', $statusId);
+            $baseQuery->where('status_id', $statusId);
         }
 
-        $customers = $query->get();
-
         $statistics = [
-            'total_customers' => $customers->count(),
-            'active_customers' => $customers->filter(fn ($c) => strtolower($c->status->status_name ?? '') === 'active')->count(),
-            'inactive_customers' => $customers->filter(fn ($c) => strtolower($c->status->status_name ?? '') === 'inactive')->count(),
-            'total_rentals' => $customers->sum(fn ($c) => $c->rentals->count()),
+            'total_customers' => (clone $baseQuery)->count(),
+            'active_customers' => (clone $baseQuery)->whereHas('status', fn ($q) => $q->whereRaw('LOWER(status_name) = ?', ['active']))->count(),
+            'inactive_customers' => (clone $baseQuery)->whereHas('status', fn ($q) => $q->whereRaw('LOWER(status_name) = ?', ['inactive']))->count(),
+            'total_rentals' => \App\Models\Rental::whereIn('customer_id', (clone $baseQuery)->select('customer_id'))->count(),
         ];
+
+        $customers = (clone $baseQuery)
+            ->with('status')
+            ->withCount('rentals')
+            ->get();
 
         $customerData = $customers->map(function ($customer) {
             return [
@@ -105,7 +113,7 @@ class CustomerController extends Controller
                 'email' => $customer->email,
                 'contact_number' => $customer->contact_number,
                 'status' => $customer->status->status_name ?? 'N/A',
-                'total_rentals' => $customer->rentals->count(),
+                'total_rentals' => $customer->rentals_count,
                 'registration_date' => $customer->created_at->format('Y-m-d'),
             ];
         });
@@ -132,26 +140,30 @@ class CustomerController extends Controller
         $endDate = $request->get('end_date');
         $statusId = $request->get('status_id');
 
-        $query = Customer::with(['status', 'rentals', 'reservations']);
+        $baseQuery = Customer::query();
 
         if ($startDate && $endDate) {
-            $query->whereBetween('created_at', [$startDate, $endDate]);
+            $baseQuery->whereBetween('created_at', [$startDate, $endDate]);
         }
 
         if ($statusId) {
-            $query->where('status_id', $statusId);
+            $baseQuery->where('status_id', $statusId);
         }
 
-        $customers = $query->get();
-
         $statistics = [
-            'total_customers' => $customers->count(),
-            'active_customers' => $customers->filter(fn ($c) => strtolower($c->status->status_name ?? '') === 'active')->count(),
-            'inactive_customers' => $customers->filter(fn ($c) => strtolower($c->status->status_name ?? '') === 'inactive')->count(),
-            'total_rentals' => $customers->sum(fn ($c) => $c->rentals->count()),
-            'customers_with_rentals' => $customers->filter(fn ($c) => $c->rentals->count() > 0)->count(),
-            'total_reservations' => $customers->sum(fn ($c) => $c->reservations->count()),
+            'total_customers' => (clone $baseQuery)->count(),
+            'active_customers' => (clone $baseQuery)->whereHas('status', fn ($q) => $q->whereRaw('LOWER(status_name) = ?', ['active']))->count(),
+            'inactive_customers' => (clone $baseQuery)->whereHas('status', fn ($q) => $q->whereRaw('LOWER(status_name) = ?', ['inactive']))->count(),
+            'total_rentals' => \App\Models\Rental::whereIn('customer_id', (clone $baseQuery)->select('customer_id'))->count(),
+            'customers_with_rentals' => (clone $baseQuery)->has('rentals')->count(),
+            'total_reservations' => \App\Models\Reservation::whereIn('customer_id', (clone $baseQuery)->select('customer_id'))->count(),
         ];
+
+        $customers = (clone $baseQuery)
+            ->with('status')
+            ->withCount(['rentals', 'reservations'])
+            ->withMax('rentals', 'rental_date')
+            ->get();
 
         $customerData = $customers->map(function ($customer) {
             return [
@@ -160,10 +172,10 @@ class CustomerController extends Controller
                 'email' => $customer->email,
                 'contact_number' => $customer->contact_number,
                 'status' => $customer->status->status_name ?? 'N/A',
-                'total_rentals' => $customer->rentals->count(),
-                'total_reservations' => $customer->reservations->count(),
+                'total_rentals' => $customer->rentals_count,
+                'total_reservations' => $customer->reservations_count,
                 'registration_date' => $customer->created_at->format('Y-m-d'),
-                'last_rental_date' => $customer->rentals->max('rental_date') ? $customer->rentals->max('rental_date')->format('Y-m-d') : '',
+                'last_rental_date' => $customer->rentals_max_rental_date ? \Carbon\Carbon::parse($customer->rentals_max_rental_date)->format('Y-m-d') : '',
             ];
         });
 
