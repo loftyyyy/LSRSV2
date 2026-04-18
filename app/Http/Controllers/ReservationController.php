@@ -155,6 +155,7 @@ class ReservationController extends Controller
 
         $callback = function () use ($reservations, $statistics, $startDate, $endDate) {
             $output = fopen('php://output', 'w');
+fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
 
             // Add report header
             fputcsv($output, ['Reservation Report']);

@@ -241,6 +241,7 @@ class RentalController extends Controller
 
         $callback = function () use ($rentals, $statistics, $dateFrom, $dateTo) {
             $output = fopen('php://output', 'w');
+fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
 
             // Add report header
             fputcsv($output, ['Rental Report']);
@@ -345,6 +346,7 @@ class RentalController extends Controller
 
         $callback = function () use ($rentals, $dateFrom, $dateTo) {
             $output = fopen('php://output', 'w');
+fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
 
             fputcsv($output, ['Deposit Management Report']);
             fputcsv($output, ['Generated at', now()->format('Y-m-d H:i:s')]);
@@ -428,6 +430,7 @@ class RentalController extends Controller
 
         $callback = function () use ($rentals, $dateFrom, $dateTo) {
             $output = fopen('php://output', 'w');
+fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
 
             fputcsv($output, ['Late Fees & Penalties Report']);
             fputcsv($output, ['Generated at', now()->format('Y-m-d H:i:s')]);
@@ -543,6 +546,7 @@ class RentalController extends Controller
 
         $callback = function () use ($invoices, $dateFrom, $dateTo) {
             $output = fopen('php://output', 'w');
+fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
 
             fputcsv($output, ['Customer Payment History Report']);
             fputcsv($output, ['Generated at', now()->format('Y-m-d H:i:s')]);
@@ -642,6 +646,7 @@ class RentalController extends Controller
 
         $callback = function () use ($invoices, $dateFrom, $dateTo) {
             $output = fopen('php://output', 'w');
+fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
 
             fputcsv($output, ['Aged Invoices Report']);
             fputcsv($output, ['Generated at', now()->format('Y-m-d H:i:s')]);
@@ -743,6 +748,7 @@ class RentalController extends Controller
 
         $callback = function () use ($rentals, $dateFrom, $dateTo) {
             $output = fopen('php://output', 'w');
+fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
 
             fputcsv($output, ['Overdue Rentals Report']);
             fputcsv($output, ['Generated at', now()->format('Y-m-d H:i:s')]);

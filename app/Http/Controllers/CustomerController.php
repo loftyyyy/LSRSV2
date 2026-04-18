@@ -190,6 +190,7 @@ class CustomerController extends Controller
 
         $callback = function () use ($customerData, $statistics, $startDate, $endDate) {
             $output = fopen('php://output', 'w');
+fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
 
             // Add report header
             fputcsv($output, ['Customer Report']);
