@@ -50,7 +50,7 @@ class CustomerController extends Controller
         $customers = (clone $baseQuery)
             ->with('status')
             ->withCount(['rentals', 'reservations'])
-            ->withMax('rentals', 'rental_date')
+            ->withMax('rentals', 'released_date')
             ->get();
 
         // Customer rental history summary
@@ -64,7 +64,7 @@ class CustomerController extends Controller
                 'total_rentals' => $customer->rentals_count,
                 'total_reservations' => $customer->reservations_count,
                 'registration_date' => $customer->created_at->format('Y-m-d'),
-                'last_rental_date' => $customer->rentals_max_rental_date,
+                'last_rental_date' => $customer->rentals_max_released_date,
             ];
         });
 
@@ -162,7 +162,7 @@ class CustomerController extends Controller
         $customers = (clone $baseQuery)
             ->with('status')
             ->withCount(['rentals', 'reservations'])
-            ->withMax('rentals', 'rental_date')
+            ->withMax('rentals', 'released_date')
             ->get();
 
         $customerData = $customers->map(function ($customer) {
@@ -175,7 +175,7 @@ class CustomerController extends Controller
                 'total_rentals' => $customer->rentals_count,
                 'total_reservations' => $customer->reservations_count,
                 'registration_date' => $customer->created_at->format('Y-m-d'),
-                'last_rental_date' => $customer->rentals_max_rental_date ? \Carbon\Carbon::parse($customer->rentals_max_rental_date)->format('Y-m-d') : '',
+                'last_rental_date' => $customer->rentals_max_released_date ? \Carbon\Carbon::parse($customer->rentals_max_released_date)->format('Y-m-d') : '',
             ];
         });
 
