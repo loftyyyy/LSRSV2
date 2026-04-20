@@ -228,7 +228,6 @@
                                 min="0"
                                 max="999999.99"
                                 placeholder="0.00"
-                                value="0"
                                 class="w-full bg-transparent text-xs text-neutral-700 placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500 focus:outline-none transition-colors duration-300 ease-in-out"
                             />
                         </div>
