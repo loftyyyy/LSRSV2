@@ -131,6 +131,7 @@
                                         id="editMeasurementChest"
                                         name="measurement[chest]"
                                         step="0.1"
+                                        min="0"
                                         placeholder="38.0"
                                         class="w-full bg-transparent px-3 py-2 text-xs text-neutral-700 placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500 focus:outline-none"
                                     />
@@ -148,6 +149,7 @@
                                         id="editMeasurementWaist"
                                         name="measurement[waist]"
                                         step="0.1"
+                                        min="0"
                                         placeholder="32.0"
                                         class="w-full bg-transparent px-3 py-2 text-xs text-neutral-700 placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500 focus:outline-none"
                                     />
@@ -165,6 +167,7 @@
                                         id="editMeasurementHips"
                                         name="measurement[hips]"
                                         step="0.1"
+                                        min="0"
                                         placeholder="40.0"
                                         class="w-full bg-transparent px-3 py-2 text-xs text-neutral-700 placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500 focus:outline-none"
                                     />
@@ -182,6 +185,7 @@
                                         id="editMeasurementHeight"
                                         name="measurement[height]"
                                         step="0.1"
+                                        min="0"
                                         placeholder="70.0"
                                         class="w-full bg-transparent px-3 py-2 text-xs text-neutral-700 placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500 focus:outline-none"
                                     />
@@ -483,6 +487,18 @@
         if (!formData.get('address')?.trim()) {
             errors.push('Address is required');
         }
+        
+        // Measurement validation
+        var measurementInputs = document.querySelectorAll('#editCustomerForm input[name^="measurement["]');
+        measurementInputs.forEach(input => {
+            if (input.value) {
+                var val = parseFloat(input.value);
+                if (isNaN(val) || val < 0) {
+                    var name = input.name.match(/measurement\[(.+)\]/)[1];
+                    errors.push(name.charAt(0).toUpperCase() + name.slice(1) + ' measurement cannot be negative');
+                }
+            }
+        });
 
         return errors;
     }

@@ -28,6 +28,7 @@ class UpdateCustomerRequest extends FormRequest
             'contact_number' => ['sometimes', 'required', 'string', 'regex:/^([0-9\s\-\+\(\)]*)$/', 'min:10', 'max:20'],
             'address' => ['sometimes', 'required', 'string', 'max:1000'],
             'measurement' => ['sometimes', 'nullable', 'array'],
+            'measurement.*' => ['numeric', 'min:0'],
             'status_id' => ['sometimes', 'nullable', 'exists:customer_statuses,status_id'],
         ];
     }

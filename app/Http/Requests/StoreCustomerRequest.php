@@ -28,6 +28,7 @@ class StoreCustomerRequest extends FormRequest
             'contact_number' => ['required', 'string', 'regex:/^([0-9\s\-\+\(\)]*)$/', 'min:10', 'max:20'],
             'address' => ['required', 'string', 'max:1000'],
             'measurement' => ['nullable', 'array'],
+            'measurement.*' => ['numeric', 'min:0'],
             'status_id' => ['nullable', 'exists:customer_statuses,status_id'],
         ];
     }
