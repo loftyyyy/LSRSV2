@@ -1304,16 +1304,16 @@ fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
     {
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'return_date' => 'required|date',
-            'return_notes' => 'nullable|string',
-            'condition_notes' => 'nullable|string',
+            'return_notes' => 'nullable|string|max:1000',
+            'condition_notes' => 'nullable|string|max:1000',
             'deposit_return_action' => 'sometimes|in:full,partial,forfeit,hold',
             'deposit_return_method' => 'required_if:deposit_return_action,full,partial|in:cash,bank_transfer,gcash,paymaya,check',
             'deposit_return_reference' => 'nullable|string|max:100',
-            'deposit_return_notes' => 'nullable|string',
+            'deposit_return_notes' => 'nullable|string|max:1000',
             'deductions' => 'required_if:deposit_return_action,partial|array',
-            'deductions.*.type' => 'required_with:deductions|string',
-            'deductions.*.amount' => 'required_with:deductions|numeric|min:0',
-            'deductions.*.reason' => 'nullable|string',
+            'deductions.*.type' => 'required_with:deductions|string|max:100',
+            'deductions.*.amount' => 'required_with:deductions|numeric|min:0|max:999999.99',
+            'deductions.*.reason' => 'nullable|string|max:1000',
         ]);
 
         if ($validator->fails()) {
@@ -1462,7 +1462,7 @@ fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
     {
         $request->validate([
             'new_due_date' => 'required|date|after:due_date',
-            'extension_reason' => 'nullable|string',
+            'extension_reason' => 'nullable|string|max:1000',
         ]);
 
         // Check if rental was already returned
@@ -2092,11 +2092,11 @@ fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
             'action' => 'required|in:full,partial,forfeit',
             'return_method' => 'required_if:action,full,partial|in:cash,bank_transfer,gcash,paymaya,check',
             'reference' => 'nullable|string|max:100',
-            'notes' => 'nullable|string',
+            'notes' => 'nullable|string|max:1000',
             'deductions' => 'required_if:action,partial|array|min:1',
-            'deductions.*.type' => 'required_with:deductions|string',
-            'deductions.*.amount' => 'required_with:deductions|numeric|min:0',
-            'deductions.*.reason' => 'nullable|string',
+            'deductions.*.type' => 'required_with:deductions|string|max:100',
+            'deductions.*.amount' => 'required_with:deductions|numeric|min:0|max:999999.99',
+            'deductions.*.reason' => 'nullable|string|max:1000',
         ]);
 
         try {
@@ -2373,6 +2373,17 @@ fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
      */
     public function updateSettings(Request $request): JsonResponse
     {
+        $request->validate([
+            'settings' => 'required|array',
+            'settings.penalty_rate_per_day' => 'sometimes|numeric|min:0|max:999999.99',
+            'settings.penalty_grace_period_hours' => 'sometimes|integer|min:0|max:720',
+            'settings.max_penalty_days' => 'sometimes|integer|min:0|max:365',
+            'settings.notification_due_days_before' => 'sometimes|integer|min:0|max:30',
+            'settings.notification_overdue_enabled' => 'sometimes|boolean',
+            'settings.default_rental_days' => 'sometimes|integer|min:1|max:365',
+            'settings.max_extension_count' => 'sometimes|integer|min:0|max:100',
+        ]);
+
         try {
             $settings = $request->input('settings', []);
 

@@ -44,7 +44,7 @@
                                 </span>
                                 <div class="relative mt-2">
                                     <span class="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500 dark:text-neutral-400 text-sm">₱</span>
-                                    <input type="number" name="penalty_rate_per_day" id="settingPenaltyRate" step="0.01" min="0"
+                                    <input type="number" name="penalty_rate_per_day" id="settingPenaltyRate" step="0.01" min="0" max="999999.99"
                                            class="w-full rounded-xl border border-neutral-300 bg-white pl-8 pr-4 py-3 text-sm text-neutral-900 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white transition-colors duration-200" />
                                 </div>
                             </label>
@@ -56,7 +56,7 @@
                                 <span class="text-sm font-medium text-neutral-700 dark:text-neutral-300">
                                     Grace Period (Hours)
                                 </span>
-                                <input type="number" name="penalty_grace_period_hours" id="settingGracePeriod" min="0"
+                                <input type="number" name="penalty_grace_period_hours" id="settingGracePeriod" min="0" max="720"
                                        class="mt-2 w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white transition-colors duration-200" />
                             </label>
                             <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-500">Hours after due date before penalty starts</p>
@@ -69,7 +69,7 @@
                             <span class="text-sm font-medium text-neutral-700 dark:text-neutral-300">
                                 Maximum Penalty Days
                             </span>
-                            <input type="number" name="max_penalty_days" id="settingMaxPenaltyDays" min="0"
+                            <input type="number" name="max_penalty_days" id="settingMaxPenaltyDays" min="0" max="365"
                                    class="mt-2 w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white transition-colors duration-200" />
                         </label>
                         <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-500">Maximum number of days to charge penalty (0 = unlimited)</p>
@@ -89,7 +89,7 @@
                                 <span class="text-sm font-medium text-neutral-700 dark:text-neutral-300">
                                     Reminder Days Before Due
                                 </span>
-                                <input type="number" name="notification_due_days_before" id="settingReminderDays" min="0"
+                                <input type="number" name="notification_due_days_before" id="settingReminderDays" min="0" max="30"
                                        class="mt-2 w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white transition-colors duration-200" />
                             </label>
                             <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-500">Days before due date to send reminder</p>
@@ -120,7 +120,7 @@
                                 <span class="text-sm font-medium text-neutral-700 dark:text-neutral-300">
                                     Default Rental Period (Days)
                                 </span>
-                                <input type="number" name="default_rental_days" id="settingDefaultRentalDays" min="1"
+                                <input type="number" name="default_rental_days" id="settingDefaultRentalDays" min="1" max="365"
                                        class="mt-2 w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white transition-colors duration-200" />
                             </label>
                             <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-500">Default number of days for new rentals</p>
@@ -131,7 +131,7 @@
                                 <span class="text-sm font-medium text-neutral-700 dark:text-neutral-300">
                                     Maximum Extensions Allowed
                                 </span>
-                                <input type="number" name="max_extension_count" id="settingMaxExtensions" min="0"
+                                <input type="number" name="max_extension_count" id="settingMaxExtensions" min="0" max="100"
                                        class="mt-2 w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white transition-colors duration-200" />
                             </label>
                             <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-500">Maximum number of extensions per rental (0 = unlimited)</p>
@@ -285,13 +285,13 @@
         document.getElementById('rentalSettingsSuccess').classList.add('hidden');
 
         var settingsData = {
-            penalty_rate_per_day: parseFloat(document.getElementById('settingPenaltyRate').value) || 0,
-            penalty_grace_period_hours: parseInt(document.getElementById('settingGracePeriod').value) || 0,
-            max_penalty_days: parseInt(document.getElementById('settingMaxPenaltyDays').value) || 0,
-            notification_due_days_before: parseInt(document.getElementById('settingReminderDays').value) || 0,
+            penalty_rate_per_day: Math.min(parseFloat(document.getElementById('settingPenaltyRate').value) || 0, 999999.99),
+            penalty_grace_period_hours: Math.min(parseInt(document.getElementById('settingGracePeriod').value) || 0, 720),
+            max_penalty_days: Math.min(parseInt(document.getElementById('settingMaxPenaltyDays').value) || 0, 365),
+            notification_due_days_before: Math.min(parseInt(document.getElementById('settingReminderDays').value) || 0, 30),
             notification_overdue_enabled: document.getElementById('settingOverdueNotifications').checked ? 1 : 0,
-            default_rental_days: parseInt(document.getElementById('settingDefaultRentalDays').value) || 1,
-            max_extension_count: parseInt(document.getElementById('settingMaxExtensions').value) || 0
+            default_rental_days: Math.max(1, Math.min(parseInt(document.getElementById('settingDefaultRentalDays').value) || 1, 365)),
+            max_extension_count: Math.min(parseInt(document.getElementById('settingMaxExtensions').value) || 0, 100)
         };
 
         axios.put('/api/rentals/settings', { settings: settingsData })
