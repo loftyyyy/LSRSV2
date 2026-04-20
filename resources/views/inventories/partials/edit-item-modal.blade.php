@@ -170,6 +170,7 @@
                                 required
                                 step="0.01"
                                 min="0"
+                                max="999999.99"
                                 placeholder="0.00"
                                 class="w-full bg-transparent text-xs text-neutral-700 placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500 focus:outline-none transition-colors duration-300 ease-in-out"
                             />
@@ -199,6 +200,7 @@
                                 name="selling_price"
                                 step="0.01"
                                 min="0"
+                                max="999999.99"
                                 placeholder="0.00"
                                 disabled
                                 class="w-full bg-transparent text-xs text-neutral-700 placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500 focus:outline-none transition-colors duration-300 ease-in-out"
@@ -217,6 +219,7 @@
                                 name="deposit_amount"
                                 step="0.01"
                                 min="0"
+                                max="999999.99"
                                 placeholder="0.00"
                                 class="w-full bg-transparent text-xs text-neutral-700 placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500 focus:outline-none transition-colors duration-300 ease-in-out"
                             />
@@ -927,34 +930,49 @@
         var errors = [];
 
         // Required fields validation
+        var nameRegex = /^[a-zA-Z0-9\s\-\.\,\(\)]+$/;
         if (!formData.get('name')?.trim()) {
             errors.push('Item name is required');
+        } else if (!nameRegex.test(formData.get('name'))) {
+            errors.push('Item name contains invalid characters');
         }
+        
         if (!formData.get('sku')?.trim()) {
             errors.push('SKU is required');
         }
+        
         var variantSku = formData.get('variant_sku');
         if (variantSku && variantSku.length > 50) {
             errors.push('Variant SKU must be 50 characters or fewer');
         }
+        
         if (!formData.get('item_type')?.trim()) {
             errors.push('Item type is required');
         }
+        
+        var sizeRegex = /^[a-zA-Z0-9\s\-]+$/;
         if (!formData.get('size')?.trim()) {
             errors.push('Size is required');
+        } else if (!sizeRegex.test(formData.get('size'))) {
+            errors.push('Size contains invalid characters');
         }
+        
+        var colorRegex = /^[a-zA-Z\s\-]+$/;
         if (!formData.get('color')?.trim()) {
             errors.push('Color is required');
+        } else if (!colorRegex.test(formData.get('color'))) {
+            errors.push('Color can only contain letters, spaces, and hyphens');
         }
         if (!formData.get('design')?.trim()) {
             errors.push('Design is required');
         }
+        
         if (!formData.get('rental_price')?.trim()) {
             errors.push('Rental price is required');
         } else {
             var price = parseFloat(formData.get('rental_price'));
-            if (isNaN(price) || price < 0) {
-                errors.push('Please enter a valid rental price');
+            if (isNaN(price) || price < 0 || price > 999999.99) {
+                errors.push('Please enter a valid rental price between 0 and 999999.99');
             }
         }
 
@@ -965,9 +983,17 @@
                 errors.push('Selling price is required when item is marked as sellable');
             } else {
                 var parsedSellingPrice = parseFloat(sellingPrice);
-                if (isNaN(parsedSellingPrice) || parsedSellingPrice < 0) {
-                    errors.push('Please enter a valid selling price');
+                if (isNaN(parsedSellingPrice) || parsedSellingPrice < 0 || parsedSellingPrice > 999999.99) {
+                    errors.push('Please enter a valid selling price between 0 and 999999.99');
                 }
+            }
+        }
+
+        var depositAmount = formData.get('deposit_amount');
+        if (depositAmount && depositAmount.trim() !== '') {
+            var parsedDeposit = parseFloat(depositAmount);
+            if (isNaN(parsedDeposit) || parsedDeposit < 0 || parsedDeposit > 999999.99) {
+                errors.push('Please enter a valid deposit amount between 0 and 999999.99');
             }
         }
 
