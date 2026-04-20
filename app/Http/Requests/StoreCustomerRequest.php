@@ -22,13 +22,13 @@ class StoreCustomerRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'first_name' => ['required', 'string', 'max:255'],
-            'last_name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:customers,email'],
-            'contact_number' => ['required', 'string', 'max:255'],
-            'address' => ['required', 'string'],
+            'first_name' => ['required', 'string', 'max:255', 'regex:/^[\pL\s\-]+$/u'],
+            'last_name' => ['required', 'string', 'max:255', 'regex:/^[\pL\s\-]+$/u'],
+            'email' => ['required', 'email:rfc,dns', 'max:255', 'unique:customers,email'],
+            'contact_number' => ['required', 'string', 'regex:/^([0-9\s\-\+\(\)]*)$/', 'min:10', 'max:20'],
+            'address' => ['required', 'string', 'max:1000'],
             'measurement' => ['nullable', 'array'],
-            'status_id' => ['required', 'exists:customer_statuses,status_id'],
+            'status_id' => ['nullable', 'exists:customer_statuses,status_id'],
         ];
     }
 }

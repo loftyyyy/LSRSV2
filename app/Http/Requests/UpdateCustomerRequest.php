@@ -22,13 +22,13 @@ class UpdateCustomerRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'first_name' => ['sometimes', 'required', 'string', 'max:255'],
-            'last_name' => ['sometimes', 'required', 'string', 'max:255'],
-            'email' => ['sometimes', 'required', 'email', 'max:255', 'unique:customers,email,' . $this->route('customer')->customer_id . ',customer_id'],
-            'contact_number' => ['sometimes', 'required', 'string', 'max:255'],
-            'address' => ['sometimes', 'required', 'string'],
+            'first_name' => ['sometimes', 'required', 'string', 'max:255', 'regex:/^[\pL\s\-]+$/u'],
+            'last_name' => ['sometimes', 'required', 'string', 'max:255', 'regex:/^[\pL\s\-]+$/u'],
+            'email' => ['sometimes', 'required', 'email:rfc,dns', 'max:255', 'unique:customers,email,' . $this->route('customer')->customer_id . ',customer_id'],
+            'contact_number' => ['sometimes', 'required', 'string', 'regex:/^([0-9\s\-\+\(\)]*)$/', 'min:10', 'max:20'],
+            'address' => ['sometimes', 'required', 'string', 'max:1000'],
             'measurement' => ['sometimes', 'nullable', 'array'],
-            'status_id' => ['sometimes', 'required', 'exists:customer_statuses,status_id'],
+            'status_id' => ['sometimes', 'nullable', 'exists:customer_statuses,status_id'],
         ];
     }
 }

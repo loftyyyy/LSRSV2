@@ -413,11 +413,17 @@
         var errors = [];
 
         // Required fields validation
+        var nameRegex = /^[\p{L}\s\-]+$/u;
         if (!formData.get('first_name')?.trim()) {
             errors.push('First name is required');
+        } else if (!nameRegex.test(formData.get('first_name'))) {
+            errors.push('First name can only contain letters, spaces, and hyphens');
         }
+        
         if (!formData.get('last_name')?.trim()) {
             errors.push('Last name is required');
+        } else if (!nameRegex.test(formData.get('last_name'))) {
+            errors.push('Last name can only contain letters, spaces, and hyphens');
         }
         if (!formData.get('email')?.trim()) {
             errors.push('Email is required');
@@ -429,6 +435,11 @@
         }
         if (!formData.get('contact_number')?.trim()) {
             errors.push('Contact number is required');
+        } else {
+            var phoneRegex = /^([0-9\s\-\+\(\)]*)$/;
+            if (!phoneRegex.test(formData.get('contact_number')) || formData.get('contact_number').length < 10) {
+                errors.push('Please enter a valid contact number (at least 10 digits)');
+            }
         }
         if (!formData.get('address')?.trim()) {
             errors.push('Address is required');
