@@ -32,8 +32,8 @@ class UpdateReservationRequest extends FormRequest
             'items.*.reservation_item_id' => 'sometimes|exists:reservation_items,reservation_item_id',
             'items.*.item_id' => 'nullable|exists:inventories,item_id',
             'items.*.variant_id' => 'required_with:items|exists:inventory_variants,variant_id',
-            'items.*.quantity' => 'sometimes|integer|min:1',
-            'items.*.rental_price' => 'sometimes|numeric|min:0',
+            'items.*.quantity' => 'sometimes|integer|min:1|max:500',
+            'items.*.rental_price' => 'sometimes|numeric|min:0|max:999999.99',
             'items.*.notes' => 'nullable|string|max:500',
 
             // Flag to replace all items

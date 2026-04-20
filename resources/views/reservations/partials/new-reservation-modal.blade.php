@@ -599,10 +599,15 @@
         });
 
         if (item) {
-            var parsedQuantity = Math.max(1, parseInt(quantity) || 1);
+            var parsedQuantity = parseInt(quantity, 10);
+            if (isNaN(parsedQuantity) || parsedQuantity < 1) {
+                parsedQuantity = 1;
+            }
             if (item.available_quantity > 0) {
                 parsedQuantity = Math.min(parsedQuantity, item.available_quantity);
             }
+            parsedQuantity = Math.min(parsedQuantity, 500); // Strict maximum bound
+            
             item.quantity = parsedQuantity;
             renderSelectedItems();
         }
@@ -638,7 +643,7 @@
                         <input
                             type="number"
                             min="1"
-                            max="${item.available_quantity > 0 ? item.available_quantity : ''}"
+                            max="${item.available_quantity > 0 ? Math.min(item.available_quantity, 500) : 500}"
                             value="${item.quantity}"
                             onchange="updateItemQuantity(${item.variant_id}, this.value)"
                             class="w-14 text-center text-xs rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-black/60 text-neutral-700 dark:text-neutral-100 px-2 py-1 focus:outline-none focus:border-violet-500"
@@ -867,13 +872,13 @@
                         customer_id: document.getElementById('customerSelect').value,
                         start_date: document.getElementById('startDate').value,
                         end_date: document.getElementById('endDate').value,
-                        notes: document.getElementById('reservationNotes').value,
+                        notes: (document.getElementById('reservationNotes').value || '').trim(),
                         items: reservationState.selectedItems.map(function(item) {
                             return {
                                 variant_id: item.variant_id,
                                 quantity: item.quantity,
                                 rental_price: item.rental_price,
-                                notes: item.notes || ''
+                                notes: (item.notes || '').trim()
                             };
                         })
                     };
