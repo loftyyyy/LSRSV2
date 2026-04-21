@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" class="transition-colors duration-300">
+<html lang="en">
 <head>
     {{-- Prevent flash of wrong theme --}}
     @include('components.theme-init')
@@ -26,7 +26,7 @@
     @endif
 </head>
 
-<body class="min-h-screen font-geist text-neutral-900 dark:text-neutral-50 flex overflow-hidden">
+<body class="min-h-screen font-geist text-neutral-900 flex overflow-hidden">
 
     {{-- LEFT PANEL --}}
     <div class="hidden lg:flex lg:w-[58%] min-h-screen flex-col bg-gradient-to-br from-violet-700 via-indigo-600 to-blue-500 text-white relative overflow-hidden">

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" class="transition-colors duration-300">
+<html lang="en">
 <head>
     {{-- Prevent flash of wrong theme --}}
     @include('components.theme-init')
@@ -24,7 +24,7 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     @endif
 </head>
-<body class="min-h-screen flex flex-col justify-center items-center font-geist bg-neutral-100 text-neutral-900 dark:bg-black dark:text-neutral-50 transition-colors duration-300 ease-in-out px-4 py-8">
+<body class="min-h-screen flex flex-col justify-center items-center font-geist bg-neutral-100 text-neutral-900 px-4 py-8">
 
     {{-- Theme Toggle (Disabled for now) 
     <div class="absolute top-6 right-6">
@@ -112,13 +112,9 @@
     {{-- Theme Script --}}
     <script>
         function getThemeState() {
-            if (globalThis.themeController && typeof globalThis.themeController.getState === 'function') {
-                return globalThis.themeController.getState();
-            }
-
             return {
-                isDark: document.documentElement.classList.contains('dark'),
-                preference: null
+                isDark: false,
+                preference: 'light'
             };
         }
 
@@ -133,9 +129,9 @@
             if (globalThis.themeController && typeof globalThis.themeController.togglePreference === 'function') {
                 globalThis.themeController.togglePreference();
             } else {
-                themeState = { isDark: !themeState.isDark, preference: themeState.isDark ? 'light' : 'dark' };
-                document.documentElement.classList.toggle('dark', themeState.isDark);
-                document.documentElement.style.colorScheme = themeState.isDark ? 'dark' : 'light';
+                themeState = { isDark: false, preference: 'light' };
+                document.documentElement.classList.remove('dark');
+                document.documentElement.style.colorScheme = 'light';
             }
 
             themeState = getThemeState();
@@ -158,6 +154,9 @@
             const moonIcon = document.getElementById('iconMoon');
             const sunIcon = document.getElementById('iconSun');
             const systemIcon = document.getElementById('iconSystem');
+            if (!knob || !modeLabel || !moonIcon || !sunIcon || !systemIcon) {
+                return;
+            }
             const isDark = !!state.isDark;
             const preference = state.preference;
 

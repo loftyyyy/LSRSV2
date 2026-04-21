@@ -1,4 +1,5 @@
-@custom-variant dark (&:where(.dark, .dark *));
+/* Hard-disable dark variant globally: no element ever gets this selector. */
+@custom-variant dark (&:where(.dark-disabled-never-match, .dark-disabled-never-match *));
 @import 'tailwindcss';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
@@ -9,6 +10,9 @@
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+}
+:root {
+    color-scheme: light only;
 }
 
 /* Geist (default UI font) */
@@ -32,15 +36,9 @@ select:-webkit-autofill {
 }
 
 /* Light mode */
-html:not(.dark) input:-webkit-autofill {
+html input:-webkit-autofill {
     -webkit-text-fill-color: #171717; /* neutral-900 */
     -webkit-box-shadow: 0 0 0px 1000px #fafafa inset; /* neutral-50 */
-}
-
-/* Dark mode */
-.dark input:-webkit-autofill {
-    -webkit-text-fill-color: #ffffff;
-    -webkit-box-shadow: 0 0 0px 1000px #000000 inset;
 }
 
 /* Keep theme transitions opt-in to avoid page-load flicker */
@@ -89,15 +87,6 @@ select {
     display: none !important;
     width: 0 !important;
     height: 0 !important;
-}
-
-body > main {
-    opacity: 1;
-    transition: opacity 120ms ease-out;
-}
-
-html.page-enter body > main {
-    opacity: 0;
 }
 
 html.page-leaving body > main {

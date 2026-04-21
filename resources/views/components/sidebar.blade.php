@@ -106,13 +106,9 @@
 
     <script>
         function getThemeState() {
-            if (globalThis.themeController && typeof globalThis.themeController.getState === 'function') {
-                return globalThis.themeController.getState();
-            }
-
             return {
-                isDark: document.documentElement.classList.contains('dark'),
-                preference: null
+                isDark: false,
+                preference: 'light'
             };
         }
 
@@ -149,9 +145,9 @@
             if (globalThis.themeController && typeof globalThis.themeController.togglePreference === 'function') {
                 globalThis.themeController.togglePreference();
             } else {
-                var isDark = !document.documentElement.classList.contains('dark');
-                document.documentElement.classList.toggle('dark', isDark);
-                updateToggleUI({ isDark: isDark, preference: isDark ? 'dark' : 'light' });
+                document.documentElement.classList.remove('dark');
+                document.documentElement.style.colorScheme = 'light';
+                updateToggleUI({ isDark: false, preference: 'light' });
             }
 
             updateToggleUI(getThemeState());
@@ -164,6 +160,9 @@
             const moonIcon = document.getElementById('iconMoon');
             const sunIcon = document.getElementById('iconSun');
             const systemIcon = document.getElementById('iconSystem');
+            if (!knob || !modeLabel || !modeStatus || !moonIcon || !sunIcon || !systemIcon) {
+                return;
+            }
             const isDark = !!state.isDark;
             const preference = state.preference;
 
