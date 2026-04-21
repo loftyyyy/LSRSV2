@@ -273,7 +273,7 @@
 
         var data = {
             new_due_date: newDueDate,
-            extension_reason: extensionReason || null
+            extension_reason: extensionReason ? extensionReason.trim() : null
         };
 
         // Disable submit button and show loading

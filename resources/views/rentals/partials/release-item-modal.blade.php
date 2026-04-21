@@ -477,7 +477,7 @@
             customer_id: customerId,
             released_date: releasedDate,
             due_date: dueDate,
-            release_notes: document.getElementById('releaseNotes').value,
+            release_notes: document.getElementById('releaseNotes').value.trim() || null,
             collect_rental_payment: false
         };
 

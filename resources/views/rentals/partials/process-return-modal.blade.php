@@ -644,7 +644,7 @@
             '<div class="w-32">' +
             '<div class="relative">' +
             '<span class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 dark:text-neutral-400 text-sm">₱</span>' +
-            '<input type="number" name="deductions[' + index + '][amount]" step="0.01" min="0" placeholder="0.00" onchange="updateDeductionSummary()" required ' +
+            '<input type="number" name="deductions[' + index + '][amount]" step="0.01" min="0" max="999999.99" placeholder="0.00" onchange="updateDeductionSummary()" required ' +
             'class="w-full rounded-xl border border-neutral-300 bg-white pl-7 pr-3 py-2.5 text-sm text-neutral-900 placeholder-neutral-400 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:placeholder-neutral-500 transition-colors duration-200" />' +
             '</div>' +
             '</div>' +
@@ -740,8 +740,8 @@
 
         var data = {
             return_date: formData.get('return_date'),
-            return_notes: formData.get('return_notes') || null,
-            condition_notes: formData.get('condition_notes') || null
+            return_notes: formData.get('return_notes') ? formData.get('return_notes').trim() : null,
+            condition_notes: formData.get('condition_notes') ? formData.get('condition_notes').trim() : null
         };
 
         var depositAction = formData.get('deposit_return_action');
@@ -750,8 +750,8 @@
 
             if (depositAction === 'full' || depositAction === 'partial') {
                 data.deposit_return_method = formData.get('deposit_return_method');
-                data.deposit_return_reference = formData.get('deposit_return_reference') || null;
-                data.deposit_return_notes = formData.get('deposit_return_notes') || null;
+                data.deposit_return_reference = formData.get('deposit_return_reference') ? formData.get('deposit_return_reference').trim() : null;
+                data.deposit_return_notes = formData.get('deposit_return_notes') ? formData.get('deposit_return_notes').trim() : null;
             }
 
             if (depositAction === 'partial') {
@@ -764,9 +764,9 @@
 
                     if (typeInput && amountInput && typeInput.value && amountInput.value) {
                         deductions.push({
-                            type: typeInput.value,
+                            type: typeInput.value.trim(),
                             amount: parseFloat(amountInput.value),
-                            reason: reasonInput ? reasonInput.value : null
+                            reason: reasonInput && reasonInput.value ? reasonInput.value.trim() : null
                         });
                     }
                 });
@@ -774,7 +774,7 @@
             }
 
             if (depositAction === 'forfeit') {
-                data.deposit_return_notes = formData.get('deposit_return_notes') || document.getElementById('forfeitNotes').value || null;
+                data.deposit_return_notes = (formData.get('deposit_return_notes') || document.getElementById('forfeitNotes').value || '').trim() || null;
             }
         }
 
