@@ -26,7 +26,7 @@
 </head>
 <body class="min-h-screen flex flex-col justify-center items-center font-geist bg-neutral-100 text-neutral-900 dark:bg-black dark:text-neutral-50 transition-colors duration-300 ease-in-out px-4 py-8">
 
-    {{-- Theme Toggle --}}
+    {{-- Theme Toggle (Disabled for now) 
     <div class="absolute top-6 right-6">
         <button
             type="button"
@@ -50,6 +50,7 @@
             <span id="modeLabel" class="text-neutral-700 dark:text-neutral-200 text-[11px]">Dark</span>
         </button>
     </div>
+    --}}
 
     <div class="w-full max-w-md bg-white dark:bg-gradient-to-b dark:from-zinc-900 dark:to-black border border-neutral-200 dark:border-zinc-800 rounded-2xl p-6 sm:p-8 shadow-xl">
 

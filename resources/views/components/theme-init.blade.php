@@ -2,7 +2,7 @@
 
     html,
     body {
-        background-color: #f5f5f5;
+        /* No hardcoded bg color to avoid flash when custom gradient/bg used */
         color-scheme: light;
     }
 
@@ -14,7 +14,7 @@
 
     html:not(.dark),
     html:not(.dark) body {
-        background-color: #f5f5f5 !important;
+        /* No enforced background color here, letting Tailwind defaults apply */
         color-scheme: light;
     }
 
@@ -59,16 +59,7 @@
         }
 
         function resolveIsDark() {
-            var storedPreference = getStoredPreference();
-            if (storedPreference === 'dark') {
-                return true;
-            }
-
-            if (storedPreference === 'light') {
-                return false;
-            }
-
-            return prefersDarkQuery.matches;
+            return false;
         }
 
         function getState() {
@@ -80,16 +71,17 @@
         }
 
         function applyResolvedTheme() {
-            var isDarkMode = resolveIsDark();
-            root.classList.toggle('dark', isDarkMode);
-            root.style.colorScheme = isDarkMode ? 'dark' : 'light';
-            root.style.backgroundColor = isDarkMode ? '#000000' : '#f5f5f5';
+            var isDarkMode = false;
+            root.classList.remove('dark');
+            root.style.colorScheme = 'light';
+            // Do not force background style via JS to prevent overriding tailwind classes
+            root.style.backgroundColor = '';
 
             if (document.body) {
-                document.body.style.backgroundColor = isDarkMode ? '#000000' : '#f5f5f5';
+                document.body.style.backgroundColor = '';
             }
 
-            return isDarkMode;
+            return false;
         }
 
         root.classList.add('theme-preload');
@@ -146,9 +138,9 @@
         }
 
         if (typeof prefersDarkQuery.addEventListener === 'function') {
-            prefersDarkQuery.addEventListener('change', handleSystemThemeChange);
+            // prefersDarkQuery.addEventListener('change', handleSystemThemeChange);
         } else if (typeof prefersDarkQuery.addListener === 'function') {
-            prefersDarkQuery.addListener(handleSystemThemeChange);
+            // prefersDarkQuery.addListener(handleSystemThemeChange);
         }
 
         function cleanupAfterFirstPaint() {

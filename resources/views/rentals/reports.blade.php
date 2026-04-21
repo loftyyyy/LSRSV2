@@ -421,8 +421,8 @@
 
         function updateCharts(data) {
             const isDark = document.documentElement.classList.contains('dark') || 
-                          document.body.classList.contains('dark') ||
-                          window.matchMedia('(prefers-color-scheme: dark)').matches;
+                            document.body.classList.contains('dark') ||
+                            false; // Forced false to disable dark mode queries
 
             const textColor = isDark ? '#e5e7eb' : '#1f2937';
             const gridColor = isDark ? '#27272a' : '#d1d5db';

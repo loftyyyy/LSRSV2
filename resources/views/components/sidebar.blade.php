@@ -50,7 +50,7 @@
 
     {{-- Footer actions --}}
     <div class="px-4 pb-5 pt-2 border-t border-neutral-200 dark:border-neutral-800 space-y-3 text-xs">
-        {{-- Dark/Light Mode Toggle --}}
+        {{-- Dark/Light Mode Toggle (Disabled for now)
         <button
             type="button"
             id="darkModeToggle"
@@ -80,6 +80,7 @@
                 On
             </span>
         </button>
+        --}}
 
         {{-- Logout Button --}}
         <form method="POST" action="{{ route('logout') }}">
