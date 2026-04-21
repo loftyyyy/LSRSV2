@@ -12,6 +12,16 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
+/**
+ * Controller handling invoice management operations.
+ * 
+ * This controller manages all invoice-related functionality including:
+ * - Invoice CRUD operations (Create, Read, Update, Delete)
+ * - Invoice reporting and analytics
+ * - Payment tracking for invoices
+ * - Invoice item management
+ * - PDF report generation for invoices
+ */
 class InvoiceController extends Controller
 {
     /**
@@ -255,11 +265,64 @@ fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
     }
 
     /**
-     * Display Invoice Page
+     * Generate invoice reports based on filters.
+     * 
+     * Creates comprehensive invoice reports with statistics, grouped data, and breakdowns.
+     * Can be filtered by date range and report type (daily, weekly, monthly).
+     * 
+     * @param \Illuminate\Http\Request $request The HTTP request containing filter parameters
+     * @return \Illuminate\Http\JsonResponse JSON response with report data
      */
-    public function showInvoicePage(): View
+    public function report(Request $request): JsonResponse
     {
-        return view('invoices.index');
+        // Get filter parameters from request with defaults
+        $startDate = $request->get('start_date', Carbon::now()->startOfMonth());
+        $endDate = $request->get('end_date', Carbon::now()->endOfMonth());
+        $reportType = $request->get('report_type', 'daily'); // daily, weekly, monthly
+
+        // Base query with eager loading of related models
+        $query = Invoice::with(['customer', 'payments', 'invoiceItems'])
+            ->whereBetween('invoice_date', [$startDate, $endDate]);
+
+        // Calculate summary statistics
+        $summary = [
+            'total_invoices' => $query->count(),
+            'total_amount' => $query->sum('total_amount'),
+            'total_paid' => $query->sum('amount_paid'),
+            'total_balance_due' => $query->sum('balance_due'),
+            'fully_paid_count' => $query->clone()->where('balance_due', '<=', 0)->count(),
+            'pending_payment_count' => $query->clone()->where('balance_due', '>', 0)->count(),
+        ];
+
+        // Group invoices by period based on report type
+        $groupedData = $this->groupInvoicesByPeriod($query->get(), $reportType);
+
+        // Breakdown by payment method
+        $paymentMethodBreakdown = DB::table('payments')
+            ->join('invoices', 'payments.invoice_id', '=', 'invoices.invoice_id')
+            ->whereBetween('payments.payment_date', [$startDate, $endDate])
+            ->select('payment_method', DB::raw('COUNT(*) as count'), DB::raw('SUM(amount) as total'))
+            ->groupBy('payment_method')
+            ->get();
+
+        // Breakdown by invoice type
+        $invoiceTypeBreakdown = $query->clone()
+            ->select('invoice_type', DB::raw('COUNT(*) as count'), DB::raw('SUM(total_amount) as total'))
+            ->groupBy('invoice_type')
+            ->get();
+
+        // Return JSON response with all report data
+        return response()->json([
+            'summary' => $summary,
+            'grouped_data' => $groupedData,
+            'payment_method_breakdown' => $paymentMethodBreakdown,
+            'invoice_type_breakdown' => $invoiceTypeBreakdown,
+            'period' => [
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                'report_type' => $reportType,
+            ],
+        ]);
     }
 
     /**

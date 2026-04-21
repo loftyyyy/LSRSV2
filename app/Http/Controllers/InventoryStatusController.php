@@ -8,6 +8,13 @@ use App\Http\Requests\UpdateInventoryStatusRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
+/**
+ * Controller handling inventory status management operations.
+ * 
+ * This controller manages inventory statuses which are used to categorize
+ * inventory items (e.g., available, rented, damaged, maintenance, etc.). 
+ * It provides CRUD operations for managing inventory statuses in the system.
+ */
 class InventoryStatusController extends Controller
 {
     /**

@@ -14,23 +14,40 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Controller handling dashboard analytics and metrics.
+ * 
+ * This controller provides comprehensive dashboard functionality including:
+ * - Key performance indicators (KPIs) for the rental business
+ * - Revenue, customer, and inventory metrics
+ * - Charts and visualizations data
+ * - Top performing items and customers
+ */
 class DashboardController extends Controller
 {
 
     /**
-     * Display Dashboard Page
+     * Display the dashboard page.
+     * 
+     * @return \Illuminate\View\View The dashboard index view
      */
     public function showDashboardPage(): View
     {
+        // Return the main dashboard view
         return view('dashboard.index');
     }
 
     /**
-     * Get comprehensive dashboard metrics and statistics
+     * Get comprehensive dashboard metrics and statistics.
+     * 
+     * Calculates and returns key performance indicators, charts data, and top performers
+     * for the rental business dashboard.
+     * 
+     * @return \Illuminate\Http\JsonResponse JSON response containing dashboard metrics
      */
     public function getMetrics(): JsonResponse
     {
-        // Date range for metrics (last 30 days)
+        // Define date range for metrics (last 30 days)
         $thirtyDaysAgo = now()->subDays(30)->startOfDay();
         $today = now()->endOfDay();
 
@@ -179,6 +196,7 @@ class DashboardController extends Controller
             })
             ->values();
 
+        // Return JSON response with all dashboard metrics
         return response()->json([
             // KPIs
             'kpis' => [

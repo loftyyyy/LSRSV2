@@ -8,6 +8,13 @@ use App\Http\Requests\UpdateReservationStatusRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
+/**
+ * Controller handling reservation status management operations.
+ * 
+ * This controller manages reservation statuses which are used to track the
+ * lifecycle of reservations (e.g., pending, confirmed, completed, cancelled, etc.).
+ * It provides CRUD operations for managing reservation statuses in the system.
+ */
 class ReservationStatusController extends Controller
 {
     /**

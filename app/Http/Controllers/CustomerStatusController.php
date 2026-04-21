@@ -8,6 +8,13 @@ use App\Http\Requests\UpdateCustomerStatusRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
+/**
+ * Controller handling customer status management operations.
+ * 
+ * This controller manages customer statuses which are used to categorize
+ * customers (e.g., active, inactive, blocked, etc.). It provides CRUD
+ * operations for managing customer statuses in the system.
+ */
 class CustomerStatusController extends Controller
 {
     /**

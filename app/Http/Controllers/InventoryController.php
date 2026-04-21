@@ -15,15 +15,35 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
+/**
+ * Controller handling inventory management operations.
+ * 
+ * This controller manages all inventory-related functionality including:
+ * - Inventory CRUD operations (Create, Read, Update, Delete)
+ * - Inventory reporting and analytics
+ * - Inventory availability tracking
+ * - Inventory condition monitoring
+ * - Revenue analysis by inventory items
+ * - PDF and CSV report generation for inventory data
+ */
 class InventoryController extends Controller
 {
     /**
-     * Display Reports Page
+     * Generate inventory reports based on report type.
+     * 
+     * Routes report requests to the appropriate reporting method based on the
+     * report_type parameter. Supports multiple report types including inventory
+     * summary, availability, rental history, condition, and revenue reports.
+     * 
+     * @param \Illuminate\Http\Request $request The HTTP request containing report parameters
+     * @return \Illuminate\Http\JsonResponse JSON response with report data
      */
     public function report(Request $request): JsonResponse
     {
+        // Get report type from request, default to inventory summary
         $reportType = $request->get('report_type', 'inventory_summary');
 
+        // Route to appropriate report generator based on type
         $reportData = match ($reportType) {
             'inventory_summary' => $this->getInventorySummaryReport($request),
             'availability_report' => $this->getAvailabilityReport($request),
@@ -33,15 +53,26 @@ class InventoryController extends Controller
             default => $this->getInventorySummaryReport($request)
         };
 
+        // Return JSON response with report data
         return response()->json($reportData);
     }
 
     /**
-     * Create PDF for reports
+     * Generate PDF report for inventory.
+     * 
+     * Creates a downloadable PDF report containing inventory data based on the
+     * specified report type. Supports multiple report types including inventory
+     * summary, availability, rental history, condition, and revenue reports.
+     * 
+     * @param \Illuminate\Http\Request $request The HTTP request containing report parameters
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse PDF download response
      */
     public function generatePDF(Request $request): JsonResponse
     {
+        // Get report type from request, default to inventory summary
         $reportType = $request->get('report_type', 'inventory_summary');
+        
+        // Generate report data based on type
         $reportData = match ($reportType) {
             'inventory_summary' => $this->getInventorySummaryReport($request),
             'availability_report' => $this->getAvailabilityReport($request),
@@ -51,21 +82,33 @@ class InventoryController extends Controller
             default => $this->getInventorySummaryReport($request)
         };
 
+        // Load PDF view with report data
         $pdf = PDF::loadView('reports.inventory_pdf', [
             'reportType' => $reportType,
             'data' => $reportData,
-            'generatedAt' => now()->format('F d, Y h:i A'),
+            'generatedAt' => now()->format('F d, Y h:i A'), // Formatted timestamp
         ]);
 
+        // Return PDF download with timestamped filename
         return $pdf->download("inventory_report_{$reportType}_".now()->format('Y-m-d').'.pdf');
     }
 
     /**
-     * Generate CSV for reports
+     * Generate CSV report for inventory.
+     * 
+     * Creates a downloadable CSV report containing inventory data based on the
+     * specified report type. Supports multiple report types including inventory
+     * summary, availability, rental history, condition, and revenue reports.
+     * 
+     * @param \Illuminate\Http\Request $request The HTTP request containing report parameters
+     * @return \Symfony\Component\HttpFoundation\StreamedResponse CSV download response
      */
     public function generateCSV(Request $request)
     {
+        // Get report type from request, default to inventory summary
         $reportType = $request->get('report_type', 'inventory_summary');
+        
+        // Generate report data based on type
         $reportData = match ($reportType) {
             'inventory_summary' => $this->getInventorySummaryReport($request),
             'availability_report' => $this->getAvailabilityReport($request),
@@ -84,15 +127,17 @@ class InventoryController extends Controller
             'Expires' => '0',
         ];
 
+        // Create CSV output callback
         $callback = function () use ($reportData, $reportType) {
             $output = fopen('php://output', 'w');
-fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
+            // Add BOM for UTF-8 encoding support
+            fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
 
-            // Add report header
+            // Add report header information
             fputcsv($output, ['Inventory Report']);
             fputcsv($output, ['Report Type', ucfirst(str_replace('_', ' ', $reportType))]);
             fputcsv($output, ['Generated at', now()->format('Y-m-d H:i:s')]);
-            fputcsv($output, []); // Empty row
+            fputcsv($output, []); // Empty row for spacing
 
             // Add report-specific data
             if ($reportType === 'inventory_summary') {

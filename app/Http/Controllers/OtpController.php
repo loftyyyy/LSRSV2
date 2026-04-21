@@ -10,6 +10,14 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
+/**
+ * Controller handling OTP (One-Time Password) operations for password reset.
+ * 
+ * This controller manages the OTP-based password reset flow including:
+ * - OTP generation and delivery via email
+ * - OTP resending functionality
+ * - OTP verification for password reset confirmation
+ */
 class OtpController extends Controller
 {
 

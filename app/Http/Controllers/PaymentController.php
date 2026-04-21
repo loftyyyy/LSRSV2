@@ -16,31 +16,64 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
+/**
+ * Controller handling payment processing and financial transactions.
+ * 
+ * This controller manages all payment-related functionality including:
+ * - Payment processing and validation
+ * - Refunds and voids
+ * - Payment history and reporting
+ * - Invoice payment tracking
+ * - Payment method management
+ * - Financial reporting and analytics
+ * - PDF and CSV receipt/report generation
+ */
 class PaymentController extends Controller
 {
+    /**
+     * @var App\Services\PaymentService Service for processing payments
+     */
     protected PaymentService $paymentService;
 
+    /**
+     * Constructor for PaymentController.
+     * 
+     * Injects the PaymentService dependency for handling payment operations.
+     * 
+     * @param App\Services\PaymentService $paymentService The payment service instance
+     */
     public function __construct(PaymentService $paymentService)
     {
         $this->paymentService = $paymentService;
     }
 
     /**
-     * Display Payment Page
+     * Display the payment management page.
+     * 
+     * @return \Illuminate\View\View The payments index view
      */
     public function showPaymentPage(): View
     {
+        // Return the main payment management view
         return view('payments.index');
     }
 
     /**
-     * Display a listing of the resource.
+     * Display a listing of payments with filtering and pagination.
+     * 
+     * Retrieves payments based on various filter criteria including search,
+     * invoice ID, customer ID, status, payment method, and date range.
+     * Results are paginated and ordered by payment date (descending).
+     * 
+     * @param \Illuminate\Http\Request $request The HTTP request containing filter parameters
+     * @return \Illuminate\Http\JsonResponse JSON response with paginated payment data
      */
     public function index(Request $request): JsonResponse
     {
+        // Base query with eager loading of related models
         $query = Payment::with(['invoice', 'invoice.customer', 'status', 'processedBy']);
 
-        // Search functionality
+        // Apply search filter if provided
         if ($request->has('search')) {
             $search = $request->get('search');
             $query->where(function ($q) use ($search) {
@@ -57,24 +90,24 @@ class PaymentController extends Controller
             });
         }
 
-        // Filter by invoice_id
+        // Filter by invoice ID
         if ($request->has('invoice_id')) {
             $query->where('invoice_id', $request->get('invoice_id'));
         }
 
-        // Filter by customer_id (through invoice)
+        // Filter by customer ID (through invoice relationship)
         if ($request->has('customer_id')) {
             $query->whereHas('invoice', function ($q) use ($request) {
                 $q->where('customer_id', $request->get('customer_id'));
             });
         }
 
-        // Filter by status
+        // Filter by status ID
         if ($request->has('status_id')) {
             $query->where('status_id', $request->get('status_id'));
         }
 
-        // Filter by status name
+        // Filter by status name (case-insensitive)
         if ($request->has('status')) {
             $status = $request->get('status');
             $query->whereHas('status', function ($q) use ($status) {
@@ -82,7 +115,7 @@ class PaymentController extends Controller
             });
         }
 
-        // Filter by payment_method
+        // Filter by payment method
         if ($request->has('payment_method')) {
             $query->where('payment_method', $request->get('payment_method'));
         }
@@ -95,10 +128,11 @@ class PaymentController extends Controller
             $query->where('payment_date', '<=', $request->get('payment_date_to'));
         }
 
-        // Pagination
+        // Apply pagination with default of 15 items per page
         $perPage = $request->get('per_page', 15);
         $payments = $query->orderBy('payment_date', 'desc')->paginate($perPage);
 
+        // Return JSON response with paginated payment data
         return response()->json($payments);
     }
 

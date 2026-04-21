@@ -29,6 +29,19 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
+/**
+ * Controller handling rental operations and management.
+ * 
+ * This controller manages the complete rental lifecycle including:
+ * - Rental creation, modification, and deletion
+ * - Item release and return processing
+ * - Rental extensions and cancellations
+ * - Overdue rental detection and penalty calculation
+ * - Deposit handling and refunds
+ * - Comprehensive reporting and analytics
+ * - Notification management for due dates and overdues
+ * - Calendar integration for rental scheduling
+ */
 class RentalController extends Controller
 {
     public function __construct(

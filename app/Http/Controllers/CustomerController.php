@@ -13,23 +13,88 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Throwable;
 
+/**
+ * Controller handling customer management operations.
+ * 
+ * This controller manages all customer-related functionality including:
+ * - Customer CRUD operations (Create, Read, Update, Delete)
+ * - Customer status management (activation/deactivation)
+ * - Customer reports and analytics
+ * - Customer rental and reservation history
+ * - PDF and CSV report generation
+ */
 class CustomerController extends Controller
 {
     /**
-     * Display Reports for Customer
+     * Generate customer reports based on filters.
+     * 
+     * Creates comprehensive reports showing customer statistics and data.
+     * Can be filtered by date range and customer status.
+     * 
+     * @param \Illuminate\Http\Request $request The HTTP request containing filter parameters
+     * @return \Illuminate\Http\JsonResponse JSON response with report data
      */
     public function report(Request $request): JsonResponse
     {
+        // Get filter parameters from request
         $startDate = $request->get('start_date');
         $endDate = $request->get('end_date');
         $statusId = $request->get('status_id');
 
+        // Base query for customer data
         $baseQuery = Customer::query();
 
-        // Filter by date range
+        // Apply date range filter if provided
         if ($startDate && $endDate) {
             $baseQuery->whereBetween('created_at', [$startDate, $endDate]);
         }
+
+        // Apply status filter if provided
+        if ($statusId) {
+            $baseQuery->where('status_id', $statusId);
+        }
+
+        // Generate report statistics using efficient DB queries
+        // Clone query to avoid modifying original query object
+        $statistics = [
+            'total_customers' => (clone $baseQuery)->count(),
+            'active_customers' => (clone $baseQuery)->whereHas('status', fn ($q) => $q->whereRaw('LOWER(status_name) = ?', ['active']))->count(),
+            'inactive_customers' => (clone $baseQuery)->whereHas('status', fn ($q) => $q->whereRaw('LOWER(status_name) = ?', ['inactive']))->count(),
+            'total_rentals' => \App\Models\Rental::whereIn('customer_id', (clone $baseQuery)->select('customer_id'))->count(),
+            'customers_with_rentals' => (clone $baseQuery)->has('rentals')->count(),
+            'total_reservations' => \App\Models\Reservation::whereIn('customer_id', (clone $baseQuery)->select('customer_id'))->count(),
+        ];
+
+        // Fetch customers with related data and aggregates
+        // Using clone to preserve original query for statistics
+        $customers = (clone $baseQuery)
+            ->with('status')                    // Load customer status relationship
+            ->withCount(['rentals', 'reservations']) // Count rentals and reservations per customer
+            ->withMax('rentals', 'released_date')    // Get most recent rental date
+            ->get();
+
+        // Transform customer data for API response
+        $customerData = $customers->map(function ($customer) {
+            return [
+                'customer_id' => $customer->customer_id,
+                'name' => $customer->first_name.' '.$customer->last_name,
+                'email' => $customer->email,
+                'contact_number' => $customer->contact_number,
+                'status' => $customer->status->status_name ?? 'N/A',
+                'total_rentals' => $customer->rentals_count,
+                'total_reservations' => $customer->reservations_count,
+                'registration_date' => $customer->created_at->format('Y-m-d'),
+                'last_rental_date' => $customer->rentals_max_released_date,
+            ];
+        });
+
+        // Return JSON response with statistics and customer data
+        return response()->json([
+            'statistics' => $statistics,
+            'customers' => $customerData,
+            'generated_at' => now()->format('Y-m-d H:i:s'),
+        ]);
+    }
 
         // Filter by status
         if ($statusId) {
@@ -77,24 +142,35 @@ class CustomerController extends Controller
     }
 
     /**
-     * Download PDF
+     * Generate PDF report for customers.
+     * 
+     * Creates a downloadable PDF report containing customer data and statistics.
+     * Can be filtered by date range and customer status.
+     * 
+     * @param \Illuminate\Http\Request $request The HTTP request containing filter parameters
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse PDF download response
      */
     public function generatePDF(Request $request)
     {
+        // Get filter parameters from request
         $startDate = $request->get('start_date');
         $endDate = $request->get('end_date');
         $statusId = $request->get('status_id');
 
+        // Base query for customer data
         $baseQuery = Customer::query();
 
+        // Apply date range filter if provided
         if ($startDate && $endDate) {
             $baseQuery->whereBetween('created_at', [$startDate, $endDate]);
         }
 
+        // Apply status filter if provided
         if ($statusId) {
             $baseQuery->where('status_id', $statusId);
         }
 
+        // Generate report statistics
         $statistics = [
             'total_customers' => (clone $baseQuery)->count(),
             'active_customers' => (clone $baseQuery)->whereHas('status', fn ($q) => $q->whereRaw('LOWER(status_name) = ?', ['active']))->count(),
@@ -102,11 +178,13 @@ class CustomerController extends Controller
             'total_rentals' => \App\Models\Rental::whereIn('customer_id', (clone $baseQuery)->select('customer_id'))->count(),
         ];
 
+        // Fetch customers with related data
         $customers = (clone $baseQuery)
-            ->with('status')
-            ->withCount('rentals')
+            ->with('status')                    // Load customer status relationship
+            ->withCount('rentals')              // Count rentals per customer
             ->get();
 
+        // Transform customer data for PDF view
         $customerData = $customers->map(function ($customer) {
             return [
                 'name' => $customer->first_name.' '.$customer->last_name,
@@ -118,6 +196,7 @@ class CustomerController extends Controller
             ];
         });
 
+        // Load PDF view with data
         $pdf = PDF::loadView('customers.report-pdf', [
             'customers' => $customerData,
             'statistics' => $statistics,
@@ -128,28 +207,40 @@ class CustomerController extends Controller
             'generated_at' => now()->format('Y-m-d H:i:s'),
         ]);
 
+        // Return PDF download with timestamped filename
         return $pdf->download('customer-report-'.now()->format('Y-m-d').'.pdf');
     }
 
     /**
-     * Download CSV
+     * Generate CSV report for customers.
+     * 
+     * Creates a downloadable CSV report containing customer data and statistics.
+     * Can be filtered by date range and customer status.
+     * 
+     * @param \Illuminate\Http\Request $request The HTTP request containing filter parameters
+     * @return \Symfony\Component\HttpFoundation\StreamedResponse CSV download response
      */
     public function generateCSV(Request $request)
     {
+        // Get filter parameters from request
         $startDate = $request->get('start_date');
         $endDate = $request->get('end_date');
         $statusId = $request->get('status_id');
 
+        // Base query for customer data
         $baseQuery = Customer::query();
 
+        // Apply date range filter if provided
         if ($startDate && $endDate) {
             $baseQuery->whereBetween('created_at', [$startDate, $endDate]);
         }
 
+        // Apply status filter if provided
         if ($statusId) {
             $baseQuery->where('status_id', $statusId);
         }
 
+        // Generate report statistics
         $statistics = [
             'total_customers' => (clone $baseQuery)->count(),
             'active_customers' => (clone $baseQuery)->whereHas('status', fn ($q) => $q->whereRaw('LOWER(status_name) = ?', ['active']))->count(),
@@ -159,12 +250,14 @@ class CustomerController extends Controller
             'total_reservations' => \App\Models\Reservation::whereIn('customer_id', (clone $baseQuery)->select('customer_id'))->count(),
         ];
 
+        // Fetch customers with related data and aggregates
         $customers = (clone $baseQuery)
-            ->with('status')
-            ->withCount(['rentals', 'reservations'])
-            ->withMax('rentals', 'released_date')
+            ->with('status')                    // Load customer status relationship
+            ->withCount(['rentals', 'reservations']) // Count rentals and reservations per customer
+            ->withMax('rentals', 'released_date')    // Get most recent rental date
             ->get();
 
+        // Transform customer data for CSV export
         $customerData = $customers->map(function ($customer) {
             return [
                 'customer_id' => $customer->customer_id,
@@ -188,17 +281,19 @@ class CustomerController extends Controller
             'Expires' => '0',
         ];
 
+        // Create CSV output callback
         $callback = function () use ($customerData, $statistics, $startDate, $endDate) {
             $output = fopen('php://output', 'w');
-fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
+            // Add BOM for UTF-8 encoding support
+            fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
 
-            // Add report header
+            // Add report header information
             fputcsv($output, ['Customer Report']);
             fputcsv($output, ['Generated at', now()->format('Y-m-d H:i:s')]);
             fputcsv($output, ['Date Range', $startDate.' to '.$endDate]);
-            fputcsv($output, []); // Empty row
+            fputcsv($output, []); // Empty row for spacing
 
-            // Add statistics
+            // Add report statistics section
             fputcsv($output, ['Report Statistics']);
             fputcsv($output, ['Total Customers', $statistics['total_customers']]);
             fputcsv($output, ['Active Customers', $statistics['active_customers']]);
@@ -206,7 +301,7 @@ fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
             fputcsv($output, ['Total Rentals', $statistics['total_rentals']]);
             fputcsv($output, ['Customers with Rentals', $statistics['customers_with_rentals']]);
             fputcsv($output, ['Total Reservations', $statistics['total_reservations']]);
-            fputcsv($output, []); // Empty row
+            fputcsv($output, []); // Empty row for spacing
 
             // Add customer data header
             fputcsv($output, ['Customer Details']);
@@ -237,25 +332,33 @@ fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
                 ]);
             }
 
+            // Close output handle
             fclose($output);
         };
 
+        // Return streaming response for CSV download
         return response()->stream($callback, 200, $headers);
     }
 
     /**
-     * Display the Customer Page
+     * Display the customer management page.
+     * 
+     * @return \Illuminate\View\View The customer index view
      */
     public function showCustomerPage(): View
     {
+        // Return the main customer management view
         return view('customers.index');
     }
 
     /**
-     * Display customer reports page
+     * Display the customer reports page.
+     * 
+     * @return \Illuminate\View\View The customer reports view
      */
     public function showReportsPage(): View
     {
+        // Return the customer reports view
         return view('customers.reports');
     }
 

@@ -8,36 +8,51 @@ use App\Http\Requests\UpdateInvoiceItemRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
+/**
+ * Controller handling invoice item management operations.
+ * 
+ * This controller manages individual line items within invoices, which represent
+ * specific products or services being charged to a customer. Invoice items link
+ * to both invoices and inventory items, providing detailed breakdown of charges.
+ */
 class InvoiceItemController extends Controller
 {
 
     /**
-     * Display a listing of the resource.
+     * Display a listing of invoice items with filtering and pagination.
+     * 
+     * Retrieves invoice items based on various filter criteria including invoice ID,
+     * item type, and search terms. Results are paginated.
+     * 
+     * @param \Illuminate\Http\Request $request The HTTP request containing filter parameters
+     * @return \Illuminate\Http\JsonResponse JSON response with paginated invoice item data
      */
     public function index(Request $request): JsonResponse
     {
+        // Base query with eager loading of related models
         $query = InvoiceItem::with(['invoice', 'item']);
 
-        // Filter by invoice_id (most common use case)
+        // Filter by invoice ID (most common use case)
         if ($request->has('invoice_id')) {
             $query->where('invoice_id', $request->get('invoice_id'));
         }
 
-        // Filter by item_type
+        // Filter by item type
         if ($request->has('item_type')) {
             $query->where('item_type', $request->get('item_type'));
         }
 
-        // Search functionality
+        // Apply search filter if provided
         if ($request->has('search')) {
             $search = $request->get('search');
             $query->where('description', 'like', "%{$search}%");
         }
 
-        // Pagination
+        // Apply pagination with default of 15 items per page
         $perPage = $request->get('per_page', 15);
         $invoiceItems = $query->paginate($perPage);
 
+        // Return JSON response with paginated invoice item data
         return response()->json($invoiceItems);
     }
 

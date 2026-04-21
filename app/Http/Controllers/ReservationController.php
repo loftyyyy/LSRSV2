@@ -21,6 +21,17 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
+/**
+ * Controller handling reservation management operations.
+ * 
+ * This controller manages all reservation-related functionality including:
+ * - Reservation creation, modification, and deletion
+ * - Reservation confirmation and cancellation
+ * - Availability checking for inventory items
+ * - Report generation for reservations
+ * - PDF and CSV report exports
+ * - Calendar integration for reservation scheduling
+ */
 class ReservationController extends Controller
 {
     /**
