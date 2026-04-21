@@ -273,7 +273,7 @@ fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
      * @param \Illuminate\Http\Request $request The HTTP request containing filter parameters
      * @return \Illuminate\Http\JsonResponse JSON response with report data
      */
-    public function report(Request $request): JsonResponse
+    public function reportInvoices(Request $request): JsonResponse
     {
         // Get filter parameters from request with defaults
         $startDate = $request->get('start_date', Carbon::now()->startOfMonth());

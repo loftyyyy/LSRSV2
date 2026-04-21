@@ -273,37 +273,54 @@
          });
      }
 
-      // Load invoices from API
-      function loadInvoices(searchQuery = '') {
-          if (!window.axios) {
-              console.warn('Axios not available, retrying in 100ms');
-              setTimeout(() => loadInvoices(searchQuery), 100);
-              return;
-          }
+       // Load payments from API
+        function loadInvoices(searchQuery = '') {
+           if (!window.axios) {
+               console.warn('Axios not available, retrying in 100ms');
+               setTimeout(() => loadInvoices(searchQuery), 100);
+               return;
+           }
 
-          // Use 'all' as default if currentFilter is not set
-          const filterToUse = currentFilter || 'all';
-          let url = filterToUse === 'all' 
-              ? '/api/invoices/monitor?status=all'
-              : `/api/invoices/monitor?status=${filterToUse}`;
-          
-          // Add search parameter if provided
-          if (searchQuery && searchQuery.trim() !== '') {
-              url += `&search=${encodeURIComponent(searchQuery.trim())}`;
-          }
+           // Use 'all' as default if currentFilter is not set
+           const filterToUse = currentFilter || 'all';
+           let url = filterToUse === 'all' 
+               ? '/api/payments/monitor?status=all'
+               : `/api/payments/monitor?status=${filterToUse}`;
+           
+           // Add search parameter if provided
+           if (searchQuery && searchQuery.trim() !== '') {
+               url += `&search=${encodeURIComponent(searchQuery.trim())}`;
+           }
 
-          window.axios.get(url)
-              .then(function(resp) {
-                  const invoices = resp.data?.invoices?.data || [];
-                  console.log('Loaded invoices:', invoices.length, resp.data);
-                  renderInvoices(invoices);
-              })
-              .catch(function(err) {
-                  console.error('Error loading invoices:', err);
-                  invoicesTableBody.innerHTML = '';
-                  noInvoices.classList.remove('hidden');
-              });
-      }
+           window.axios.get(url)
+               .then(function(resp) {
+                   // Support multiple potential response shapes from the API:
+                   // 1) paginated payments: resp.data.payments.data
+                   // 2) paginated payments object: resp.data.payments (with .data)
+                   // 3) plain array: resp.data.payments
+                   const data = resp.data || {};
+                   let paymentsList = [];
+                   if (data.payments !== undefined) {
+                       if (Array.isArray(data.payments)) {
+                           paymentsList = data.payments;
+                       } else if (data.payments.data !== undefined) {
+                           paymentsList = data.payments.data;
+                       } else {
+                           paymentsList = [];
+                       }
+                   } else if (Array.isArray(data)) {
+                       paymentsList = data;
+                   }
+
+                   console.log('Loaded payments:', paymentsList.length, resp.data);
+                   renderInvoices(paymentsList);
+               })
+               .catch(function(err) {
+                   console.error('Error loading invoices:', err);
+                   invoicesTableBody.innerHTML = '';
+                   noInvoices.classList.remove('hidden');
+               });
+       }
 
      // Render invoices in table
      function renderInvoices(invoices) {
@@ -316,14 +333,16 @@
 
          noInvoices.classList.add('hidden');
 
-         invoices.forEach(function(inv) {
+          invoices.forEach(function(inv) {
              const row = document.createElement('tr');
              row.className = 'border-b border-neutral-200 hover:bg-neutral-100 dark:border-neutral-900/60 dark:hover:bg-white/5 transition-colors duration-300 ease-in-out cursor-pointer';
              
-             // Highlight the invoice if it matches the URL parameter
-             if (highlightedInvoiceId === inv.invoice_id) {
-                 row.classList.add('bg-violet-50', 'dark:bg-violet-900/20');
-             }
+              // Determine the related invoice id (support nested invoice object)
+              const relatedInvoiceId = (inv.invoice && inv.invoice.invoice_id) ? inv.invoice.invoice_id : (inv.invoice_id || 0);
+              // Highlight the invoice if it matches the URL parameter
+              if (highlightedInvoiceId && relatedInvoiceId && highlightedInvoiceId === relatedInvoiceId) {
+                  row.classList.add('bg-violet-50', 'dark:bg-violet-900/20');
+              }
              
              row.addEventListener('click', function(e) {
                  // Don't trigger if clicking on action buttons
@@ -334,20 +353,20 @@
                  const statusName = inv.status?.status_name?.toLowerCase() || 'unknown';
                  
                  // If the invoice is fully paid, open invoice details instead of record payment modal
-                 if (statusName === 'paid') {
-                     openInvoiceDetailsModal(inv.invoice_id);
-                 } else {
-                     openRecordPaymentModalWithInvoice(inv.invoice_id);
-                 }
-             });
+              if (statusName === 'paid') {
+                  openInvoiceDetailsModal(relatedInvoiceId);
+                  } else {
+                      openRecordPaymentModalWithInvoice(relatedInvoiceId);
+                  }
+              });
 
-            const customer = inv.customer 
-                ? `${inv.customer.first_name} ${inv.customer.last_name}` 
-                : 'Unknown Customer';
+              const customer = inv.invoice?.customer 
+                  ? `${inv.invoice.customer.first_name} ${inv.invoice.customer.last_name}` 
+                  : 'Unknown Customer';
 
-            const invoiceDate = inv.invoice_date 
-                ? new Date(inv.invoice_date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
-                : '-';
+              const invoiceDate = inv.invoice?.invoice_date 
+                  ? new Date(inv.invoice.invoice_date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+                  : '-';
 
             const statusName = inv.status?.status_name?.toLowerCase() || 'unknown';
             let statusClass = 'bg-neutral-500/15 text-neutral-600 border-neutral-500/40 dark:text-neutral-300';
@@ -358,16 +377,16 @@
                 statusClass = 'bg-amber-500/15 text-amber-600 border-amber-500/40 dark:text-amber-300';
             }
 
-            const invoiceType = inv.invoice_type 
-                ? `<span class="capitalize">${inv.invoice_type === 'reservation' ? 'Deposit' : inv.invoice_type}</span>` 
-                : '-';
+              const invoiceType = inv.invoice?.invoice_type 
+                  ? `<span class="capitalize">${inv.invoice.invoice_type === 'reservation' ? 'Deposit' : inv.invoice.invoice_type}</span>` 
+                  : '-';
 
             row.innerHTML = `
-                <td class="py-3.5 pr-4 pl-4 text-neutral-500 font-geist-mono">${inv.invoice_number || 'N/A'}</td>
+                <td class="py-3.5 pr-4 pl-4 text-neutral-500 font-geist-mono">${(inv.invoice?.invoice_number ?? inv.invoice_number ?? 'N/A') }</td>
                 <td class="py-3.5 pr-4 text-neutral-900 dark:text-neutral-100">${customer}</td>
-                <td class="py-3.5 pr-4 text-neutral-600 dark:text-neutral-300 font-geist-mono">₱${parseFloat(inv.total_amount || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                <td class="py-3.5 pr-4 text-neutral-600 dark:text-neutral-300 font-geist-mono">₱${parseFloat(inv.amount_paid || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                <td class="py-3.5 pr-4 text-neutral-600 dark:text-neutral-300 font-geist-mono">₱${parseFloat(inv.balance_due || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                <td class="py-3.5 pr-4 text-neutral-600 dark:text-neutral-300 font-geist-mono">₱${parseFloat(inv.invoice?.total_amount ?? inv.total_amount ?? 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                <td class="py-3.5 pr-4 text-neutral-600 dark:text-neutral-300 font-geist-mono">₱${parseFloat(inv.invoice?.amount_paid ?? inv.amount_paid ?? 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                <td class="py-3.5 pr-4 text-neutral-600 dark:text-neutral-300 font-geist-mono">₱${parseFloat(inv.invoice?.balance_due ?? inv.balance_due ?? 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                 <td class="py-3.5 pr-4 text-neutral-600 dark:text-neutral-300 font-geist-mono">${invoiceDate}</td>
                 <td class="py-3.5 pr-4 text-neutral-600 dark:text-neutral-300 capitalize">${invoiceType}</td>
                 <td class="py-3.5 pr-2">
@@ -378,7 +397,7 @@
                 </td>
                 <td class="py-3.5 pl-2 text-left text-neutral-500 dark:text-neutral-400">
                     <div class="inline-flex items-center gap-2">
-                        <button class="rounded-lg p-1.5 hover:bg-violet-600 hover:text-white transition-colors duration-300 ease-in-out" aria-label="Download" onclick="downloadInvoice(${inv.invoice_id})">
+                        <button class="rounded-lg p-1.5 hover:bg-violet-600 hover:text-white transition-colors duration-300 ease-in-out" aria-label="Download" onclick="downloadInvoice(${relatedInvoiceId})">
                             <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
                         </button>
                     </div>
@@ -409,53 +428,55 @@
          }, 700);
      }
 
-     // Load payment metrics
-     function loadPaymentMetrics() {
-         if (!window.axios) return;
+      // Load payment metrics
+      function loadPaymentMetrics() {
+          if (!window.axios) return;
 
-         window.axios.get('/api/invoices/monitor?status=all')
-             .then(function(resp) {
-                 const invoices = resp.data?.invoices?.data || [];
-                 
-                 // Calculate metrics
-                 let totalRevenue = 0;
-                 let pendingAmount = 0;
-                 let overdueAmount = 0;
-                 let paidAmount = 0;
+          window.axios.get('/api/payments/monitor?status=all')
+              .then(function(resp) {
+                  const payments = resp.data?.payments || [];
+                  
+                  // Calculate metrics
+                  let totalRevenue = 0;
+                  let pendingAmount = 0;
+                  let overdueAmount = 0;
+                  let paidAmount = 0;
 
-                 invoices.forEach(function(inv) {
-                     // Only calculate invoices of type "Rental" for Total Revenue
-                     if (inv.invoice_type === 'rental') {
-                         totalRevenue += parseFloat(inv.total_amount || 0);
-                         paidAmount += parseFloat(inv.amount_paid || 0);
-                     }
-                     
-                     const status = inv.status?.status_name?.toLowerCase() || '';
-                     if (status === 'unpaid') {
-                         pendingAmount += parseFloat(inv.balance_due || 0);
-                     } else if (status === 'overdue') {
-                         overdueAmount += parseFloat(inv.balance_due || 0);
-                     }
-                 });
+                  payments.forEach(function(payment) {
+                      // Calculate based on payment status
+                      const status = payment.status?.status_name?.toLowerCase() || '';
+                      const amount = parseFloat(payment.amount || 0);
+                      
+                      if (status === 'paid' || status === 'completed') {
+                          paidAmount += amount;
+                      } else if (status === 'pending') {
+                          pendingAmount += amount;
+                      } else if (status === 'overdue') {
+                          overdueAmount += amount;
+                      }
+                      
+                      // For total revenue, we'll use paid amount for now
+                      totalRevenue += amount;
+                  });
 
-                 // Calculate collection rate
-                 const collectionRate = totalRevenue > 0 ? ((paidAmount / totalRevenue) * 100).toFixed(1) : 0;
+                  // Calculate collection rate (paid / total)
+                  const collectionRate = (paidAmount > 0 && totalRevenue > 0) ? ((paidAmount / totalRevenue) * 100).toFixed(1) : 0;
 
-                 // Update KPI displays
-                 const totalRevenueEl = document.getElementById('totalRevenueCount');
-                 const pendingPaymentsEl = document.getElementById('pendingPaymentsCount');
-                 const overduePaymentsEl = document.getElementById('overduePaymentsCount');
-                 const collectionRateEl = document.getElementById('collectionRateCount');
+                  // Update KPI displays
+                  const totalRevenueEl = document.getElementById('totalRevenueCount');
+                  const pendingPaymentsEl = document.getElementById('pendingPaymentsCount');
+                  const overduePaymentsEl = document.getElementById('overduePaymentsCount');
+                  const collectionRateEl = document.getElementById('collectionRateCount');
 
-                 if (totalRevenueEl) totalRevenueEl.textContent = '₱' + totalRevenue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-                 if (pendingPaymentsEl) pendingPaymentsEl.textContent = '₱' + pendingAmount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-                 if (overduePaymentsEl) overduePaymentsEl.textContent = '₱' + overdueAmount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-                 if (collectionRateEl) collectionRateEl.textContent = collectionRate + '%';
-             })
-             .catch(function(err) {
-                 console.error('Error loading payment metrics:', err);
-             });
-     }
+                  if (totalRevenueEl) totalRevenueEl.textContent = '₱' + totalRevenue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                  if (pendingPaymentsEl) pendingPaymentsEl.textContent = '₱' + pendingAmount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                  if (overduePaymentsEl) overduePaymentsEl.textContent = '₱' + overdueAmount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                  if (collectionRateEl) collectionRateEl.textContent = collectionRate + '%';
+              })
+              .catch(function(err) {
+                  console.error('Error loading payment metrics:', err);
+              });
+      }
 
       // Load invoices on page load
       // Wait for axios to be available
