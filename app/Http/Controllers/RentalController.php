@@ -1,5 +1,11 @@
 <?php
-
+/**
+ * Module: Rental Management
+ * Description: Controller handling rental workflows, including creating, updating,
+ * returning items, and querying rental records.
+ * It coordinates with inventories, reservations, and status models to manage
+ * rental lifecycles.
+ */
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ReleaseItemRequest;

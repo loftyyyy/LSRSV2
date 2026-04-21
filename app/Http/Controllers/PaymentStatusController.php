@@ -1,5 +1,9 @@
 <?php
-
+/**
+ * Module: Payment Statuses
+ * Description: Manage statuses for payments (paid, unpaid, overdue, refunded, etc.).
+ * CRUD endpoints for payment status definitions.
+ */
 namespace App\Http\Controllers;
 
 use App\Models\PaymentStatus;

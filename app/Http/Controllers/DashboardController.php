@@ -1,5 +1,9 @@
 <?php
-
+/**
+ * Module: Dashboard
+ * Description: Controller for rendering dashboard data endpoints and aggregations.
+ * Provides overview metrics and quick access to common reports.
+ */
 namespace App\Http\Controllers;
 
 use App\Models\Customer;

@@ -1,5 +1,9 @@
 <?php
-
+/**
+ * Module: Invoicing
+ * Description: Controller handling invoices, their statuses, generation, and summaries.
+ * Bridges reservations and payments with the billing layer of the application.
+ */
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreInvoiceRequest;

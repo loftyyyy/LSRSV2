@@ -1,5 +1,12 @@
 <?php
-
+/**
+ * Module: Reservation Management
+ * Description: Controller responsible for creating, updating, deleting,
+ * generating reports (CSV/PDF), and managing the lifecycle of reservations
+ * including related invoices, items, and statuses.
+ * This controller coordinates data interactions between reservations, customers,
+ * inventory, invoices, and reservation-related statuses.
+ */
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreReservationRequest;
@@ -28,9 +35,10 @@ class ReservationController extends Controller
      */
     public function report(Request $request): JsonResponse
     {
+        // Base query with necessary relationships for report generation and exports
         $query = Reservation::with(['customer', 'status', 'reservedBy', 'items.item', 'items.variant']);
 
-        // Filter by date range
+        // Apply date range filter to narrow the report
         if ($request->has('start_date')) {
             $query->where('reservation_date', '>=', $request->get('start_date'));
         }
@@ -154,6 +162,7 @@ class ReservationController extends Controller
         ];
 
         $callback = function () use ($reservations, $statistics, $startDate, $endDate) {
+            // Initialize CSV output stream
             $output = fopen('php://output', 'w');
 fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
 
@@ -293,6 +302,7 @@ fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
      */
     public function showReservationPage(): View
     {
+        // Render the main reservations page
         return view('reservations.index');
     }
 
@@ -301,6 +311,7 @@ fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
      */
     public function showReportsPage(): View
     {
+        // Render the reservations reports page
         return view('reservations.reports');
     }
 

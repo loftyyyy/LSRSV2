@@ -1,5 +1,9 @@
 <?php
-
+/**
+ * Module: Reservation Status Management
+ * Description: Controller for managing reservation statuses (list, create, update, delete).
+ * This file provides endpoints to interact with ReservationStatus models and related reservations.
+ */
 namespace App\Http\Controllers;
 
 use App\Models\ReservationStatus;

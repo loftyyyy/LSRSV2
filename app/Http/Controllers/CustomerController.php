@@ -1,5 +1,9 @@
 <?php
-
+/**
+ * Module: Customer Management
+ * Description: Controller for customer CRUD, profile access, and related queries.
+ * Coordinates with reservations, invoices, and status systems for customer data.
+ */
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreCustomerRequest;

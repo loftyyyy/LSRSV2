@@ -1,5 +1,9 @@
 <?php
-
+/**
+ * Module: Rental Statuses
+ * Description: Manage statuses applicable to rentals (active, returned, overdue, etc.).
+ * Provides CRUD operations for rental status definitions.
+ */
 namespace App\Http\Controllers;
 
 use App\Models\RentalStatus;

@@ -1,5 +1,9 @@
 <?php
-
+/**
+ * Module: Authentication
+ * Description: Handles user authentication flows (login, logout, token refresh, etc.).
+ * Integrates with user models and session management for secure access.
+ */
 namespace App\Http\Controllers;
 
 use App\Models\User;

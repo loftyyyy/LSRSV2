@@ -1,5 +1,9 @@
 <?php
-
+/**
+ * Module: OTP & Security
+ * Description: Controller for handling one-time passwords and related security flows.
+ * This includes generating and validating tokens for authentication steps.
+ */
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;

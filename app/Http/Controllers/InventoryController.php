@@ -1,5 +1,9 @@
 <?php
-
+/**
+ * Module: Inventory Management
+ * Description: Controller for inventory items, variants, and stock levels.
+ * Coordinates inventory data with reservations and rental processes.
+ */
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreInventoryRequest;

@@ -1,5 +1,9 @@
 <?php
-
+/**
+ * Module: Inventory Images
+ * Description: Manage images associated with inventory items.
+ * Handles image uploads, retrieval, and associations with inventories.
+ */
 namespace App\Http\Controllers;
 
 use App\Models\Inventory;

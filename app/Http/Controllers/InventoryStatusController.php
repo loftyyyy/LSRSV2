@@ -1,5 +1,9 @@
 <?php
-
+/**
+ * Module: Inventory Statuses
+ * Description: Controller for managing inventory statuses (available, reserved, retired, etc.).
+ * Provides endpoints to query and update item status lifecycles.
+ */
 namespace App\Http\Controllers;
 
 use App\Models\InventoryStatus;

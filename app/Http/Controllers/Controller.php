@@ -1,5 +1,9 @@
 <?php
-
+/**
+ * Base Controller
+ * Description: Shared controller utilities and common traits for all HTTP controllers.
+ * This header documents the purpose of the base class.
+ */
 namespace App\Http\Controllers;
 
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;

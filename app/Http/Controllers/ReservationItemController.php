@@ -1,5 +1,9 @@
 <?php
-
+/**
+ * Module: Reservation Items
+ * Description: Controller managing items that belong to reservations.
+ * Handles creation, updates, and retrieval of reservation-item associations.
+ */
 namespace App\Http\Controllers;
 
 use App\Models\ReservationItem;

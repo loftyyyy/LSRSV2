@@ -1,5 +1,9 @@
 <?php
-
+/**
+ * Module: Invoice Items
+ * Description: Controller for managing items associated with invoices.
+ * Provides CRUD operations and retrieval helpers for invoice line items.
+ */
 namespace App\Http\Controllers;
 
 use App\Models\InvoiceItem;

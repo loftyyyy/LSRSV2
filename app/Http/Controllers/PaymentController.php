@@ -1,5 +1,9 @@
 <?php
-
+/**
+ * Module: Payment Management
+ * Description: Controller responsible for payment workflows, processing,
+ * refunds, and reporting related to invoices and reservations.
+ */
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StorePaymentRequest;

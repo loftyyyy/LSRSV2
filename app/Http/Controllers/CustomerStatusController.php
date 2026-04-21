@@ -1,5 +1,9 @@
 <?php
-
+/**
+ * Module: Customer Statuses
+ * Description: Manage statuses applicable to customers (active, blocked, etc.).
+ * Allows querying, creating, updating, and deleting customer status definitions.
+ */
 namespace App\Http\Controllers;
 
 use App\Models\CustomerStatus;
