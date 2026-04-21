@@ -23,27 +23,29 @@
         @foreach ($navItems as $item)
             @php
                 $isActive = request()->routeIs($item['route'] . '*');
+                $tag = $isActive ? 'div' : 'a';
             @endphp
 
-            <a
+            <{{ $tag }}
+                @if(!$isActive)
                 href="{{ route($item['route']) }}"
-                data-turbo="false"
-                data-subsystem-link="true"
-                class="group flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200
-                       {{ $isActive
-                            ? 'bg-violet-600 dark:text-neutral-900 text-neutral-100 shadow-[0_0_0_1px_rgba(167,139,250,0.7)]'
-                            : 'text-neutral-700 dark:text-neutral-300 hover:bg-violet-200 dark:hover:bg-neutral-900 hover:text-neutral-900 dark:hover:text-neutral-100' }}"
-                style="font-family: 'Geist', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;"
+            data-subsystem-link="true"
+            @endif
+            class="group flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200
+            {{ $isActive
+                ? 'bg-violet-600 dark:text-neutral-900 text-neutral-100 shadow-[0_0_0_1px_rgba(167,139,250,0.7)] cursor-default pointer-events-none'
+                : 'text-neutral-700 dark:text-neutral-300 hover:bg-violet-200 dark:hover:bg-neutral-900 hover:text-neutral-900 dark:hover:text-neutral-100 cursor-pointer' }}"
+            style="font-family: 'Geist', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;"
             >
-                <span class="flex items-center justify-center h-8 w-8 {{ $isActive ? 'dark:text-neutral-900 text-neutral-100' : 'text-neutral-900 dark:text-neutral-100' }}">
-                    <x-icon :name="$item['icon']" class="h-6 w-6" />
-                </span>
+            <span class="flex items-center justify-center h-8 w-8 {{ $isActive ? 'dark:text-neutral-900 text-neutral-100' : 'text-neutral-900 dark:text-neutral-100' }}">
+                <x-icon :name="$item['icon']" class="h-6 w-6" />
+            </span>
 
-                <span class="truncate text-[13px] font-semibold">
-                    {{ $item['label'] }}
-                </span>
-            </a>
-        @endforeach
+            <span class="truncate text-[13px] font-semibold">
+                {{ $item['label'] }}
+            </span>
+    </{{ $tag }}>
+    @endforeach
     </nav>
 
     {{-- Footer actions --}}

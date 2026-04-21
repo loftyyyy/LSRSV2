@@ -14,20 +14,15 @@ function getPreferredDarkMode() {
     return window.matchMedia('(prefers-color-scheme: dark)').matches;
 }
 
-function applyThemePreference() {
-    if (globalThis.themeController && typeof globalThis.themeController.getIsDark === 'function') {
-        const isDarkMode = globalThis.themeController.getIsDark();
-        const root = document.documentElement;
 
-        root.classList.toggle('dark', isDarkMode);
-        root.style.colorScheme = isDarkMode ? 'dark' : 'light';
-        root.style.backgroundColor = isDarkMode ? '#000000' : '#f5f5f5';
+function applyThemePreference() {
+    if (globalThis.themeController) {
         return;
     }
 
+    // Fallback only if inline script never ran (e.g. JS blocked)
     const isDarkMode = getPreferredDarkMode();
     const root = document.documentElement;
-
     root.classList.toggle('dark', isDarkMode);
     root.style.colorScheme = isDarkMode ? 'dark' : 'light';
     root.style.backgroundColor = isDarkMode ? '#000000' : '#f5f5f5';
@@ -35,6 +30,3 @@ function applyThemePreference() {
 
 applyThemePreference();
 
-document.addEventListener('turbo:before-render', applyThemePreference);
-document.addEventListener('turbo:load', applyThemePreference);
-document.addEventListener('turbo:before-cache', applyThemePreference);

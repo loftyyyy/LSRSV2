@@ -339,7 +339,7 @@
     </main>
 
     <script>
-        // Use window object to store charts and observer to avoid redeclaration errors with Turbo
+        // Use window object to store charts and observer to avoid redeclaration errors
         if (!window.rentalState) {
             window.rentalState = {
                 charts: {

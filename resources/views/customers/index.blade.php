@@ -500,7 +500,7 @@
         try {
             var tbody = document.getElementById('customersTableBody');
 
-            // Guard against missing tbody element (can happen during Turbo navigation)
+            // Guard against missing tbody element
             if (!tbody) {
                 console.warn('customersTableBody element not found');
                 return;
@@ -623,7 +623,7 @@
         var pageTotal = document.getElementById('pageTotal');
         var paginationControls = document.getElementById('paginationControls');
 
-        // Guard against missing elements (can happen during Turbo navigation)
+        // Guard against missing elements
         if (!prevBtn || !nextBtn || !pageInfo) {
             console.warn('Pagination elements not found');
             return;
@@ -655,7 +655,7 @@
         var emptyState = document.getElementById('emptyState');
         var paginationControls = document.getElementById('paginationControls');
 
-        // Guard against missing elements (can happen during Turbo navigation)
+        // Guard against missing elements
         if (tbody) {
             tbody.innerHTML = '';
         }
@@ -671,7 +671,7 @@
     // Hide empty state
     function hideEmptyState() {
         var emptyState = document.getElementById('emptyState');
-        // Guard against missing elements (can happen during Turbo navigation)
+        // Guard against missing elements
         if (emptyState) {
             emptyState.style.display = 'none';
         }
@@ -683,7 +683,7 @@
         var emptyState = document.getElementById('emptyState');
         var paginationControls = document.getElementById('paginationControls');
 
-        // Guard against missing elements (can happen during Turbo navigation)
+        // Guard against missing elements
         if (!tbody) {
             console.warn('customersTableBody element not found');
             return;
@@ -715,7 +715,7 @@
     function hideLoadingState() {
         hideEmptyState();
         var tbody = document.getElementById('customersTableBody');
-        // Guard against missing elements (can happen during Turbo navigation)
+        // Guard against missing elements
         if (tbody) {
             tbody.style.opacity = '1';
         }

@@ -359,7 +359,7 @@
 </style>
 
 <script>
-    // Use globalThis to avoid redeclaration errors when Turbo navigates between pages
+    // Use globalThis to avoid redeclaration errors
     if (!globalThis.reservationDetailsModalState) {
         globalThis.reservationDetailsModalState = {
             isOpen: false,

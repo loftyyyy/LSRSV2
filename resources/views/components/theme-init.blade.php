@@ -1,35 +1,32 @@
 <style id="theme-preload-style">
+
     html,
     body {
         background-color: #f5f5f5;
         color-scheme: light;
     }
 
-    @media (prefers-color-scheme: dark) {
-        html,
-        body {
-            background-color: #000000;
-            color-scheme: dark;
-        }
-    }
-
     html.dark,
     html.dark body {
-        background-color: #000000;
+        background-color: #000000 !important;
         color-scheme: dark;
     }
 
     html:not(.dark),
     html:not(.dark) body {
-        background-color: #f5f5f5;
+        background-color: #f5f5f5 !important;
         color-scheme: light;
     }
 
+    html.theme-preload,
+    html.theme-preload body,
     html.theme-preload *,
     html.theme-preload *::before,
     html.theme-preload *::after {
         transition: none !important;
+        animation: none !important;
     }
+
 </style>
 
 <script>
@@ -87,6 +84,10 @@
             root.classList.toggle('dark', isDarkMode);
             root.style.colorScheme = isDarkMode ? 'dark' : 'light';
             root.style.backgroundColor = isDarkMode ? '#000000' : '#f5f5f5';
+
+            if (document.body) {
+                document.body.style.backgroundColor = isDarkMode ? '#000000' : '#f5f5f5';
+            }
 
             return isDarkMode;
         }
