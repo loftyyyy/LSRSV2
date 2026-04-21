@@ -28,7 +28,6 @@
     }
 
 </style>
-
 <script>
     (function () {
         var root = document.documentElement;
@@ -51,32 +50,17 @@
                 } else {
                     localStorage.removeItem(STORAGE_KEY);
                 }
-
                 localStorage.removeItem('darkMode');
             } catch (_e) {
-                // Ignore storage failures; fallback to system preference.
+                // Ignore storage failures.
             }
         }
 
         function resolveIsDark() {
             var storedPreference = getStoredPreference();
-            if (storedPreference === 'dark') {
-                return true;
-            }
-
-            if (storedPreference === 'light') {
-                return false;
-            }
-
+            if (storedPreference === 'dark') return true;
+            if (storedPreference === 'light') return false;
             return prefersDarkQuery.matches;
-        }
-
-        function getState() {
-            var preference = getStoredPreference();
-            return {
-                preference: preference,
-                isDark: resolveIsDark()
-            };
         }
 
         function applyResolvedTheme() {
@@ -84,21 +68,17 @@
             root.classList.toggle('dark', isDarkMode);
             root.style.colorScheme = isDarkMode ? 'dark' : 'light';
             root.style.backgroundColor = isDarkMode ? '#000000' : '#f5f5f5';
-
-            if (document.body) {
-                document.body.style.backgroundColor = isDarkMode ? '#000000' : '#f5f5f5';
-            }
-
             return isDarkMode;
         }
 
-        root.classList.add('theme-preload');
-        root.classList.add('page-enter');
-        try {
-            localStorage.removeItem('darkMode');
-        } catch (_e) {
-            // Ignore storage failures.
+        function getState() {
+            return {
+                preference: getStoredPreference(),
+                isDark: resolveIsDark()
+            };
         }
+
+        // Apply theme as early as possible to avoid wrong first paint.
         applyResolvedTheme();
 
         globalThis.themeController = {
@@ -132,16 +112,10 @@
         };
 
         function handleSystemThemeChange() {
-            if (getStoredPreference() !== null) {
-                return;
-            }
-
+            if (getStoredPreference() !== null) return;
             var isDarkMode = applyResolvedTheme();
             window.dispatchEvent(new CustomEvent('theme:changed', {
-                detail: {
-                    isDark: isDarkMode,
-                    preference: null
-                }
+                detail: { isDark: isDarkMode, preference: null }
             }));
         }
 
@@ -149,28 +123,6 @@
             prefersDarkQuery.addEventListener('change', handleSystemThemeChange);
         } else if (typeof prefersDarkQuery.addListener === 'function') {
             prefersDarkQuery.addListener(handleSystemThemeChange);
-        }
-
-        function cleanupAfterFirstPaint() {
-            requestAnimationFrame(function () {
-                root.classList.remove('theme-preload');
-                requestAnimationFrame(function () {
-                    root.classList.remove('page-enter');
-                });
-            });
-        }
-
-        var preloadTimeout = window.setTimeout(cleanupAfterFirstPaint, 250);
-
-        function onWindowLoad() {
-            window.clearTimeout(preloadTimeout);
-            cleanupAfterFirstPaint();
-        }
-
-        if (document.readyState === 'complete') {
-            onWindowLoad();
-        } else {
-            window.addEventListener('load', onWindowLoad, { once: true });
         }
     })();
 </script>

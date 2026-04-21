@@ -91,16 +91,3 @@ select {
     height: 0 !important;
 }
 
-body > main {
-    opacity: 1;
-    transition: opacity 120ms ease-out;
-}
-
-html.page-enter body > main {
-    opacity: 0;
-}
-
-html.page-leaving body > main {
-    opacity: 0.84;
-    transition-duration: 90ms;
-}

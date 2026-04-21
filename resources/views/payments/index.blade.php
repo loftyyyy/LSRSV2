@@ -1,36 +1,9 @@
-<!doctype html>
-<html lang="en">
-<head>
-    {{-- Prevent flash of wrong theme --}}
-    @include('components.theme-init')
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Payments · Love &amp; Styles</title>
+@extends('main')
 
-    {{-- Favicon --}}
-    <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any">
-    <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
-    <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
-    <link rel="manifest" href="{{ asset('site.webmanifest') }}">
+@section('title', 'Payments · Love & Styles')
 
-    {{-- Fonts: Geist & Geist Mono --}}
-    <link
-        rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap"
-    >
-
-    {{-- App styles --}}
-    @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @endif
-</head>
-<body class="min-h-screen flex font-geist bg-neutral-100 text-neutral-900 dark:bg-black dark:text-neutral-50">
-<x-sidebar />
-
-<main class="flex-1 ml-64 flex flex-col px-10 py-8 overflow-x-hidden overflow-y-auto bg-gradient-to-b from-neutral-100 via-neutral-100 to-neutral-200 dark:from-black dark:via-black dark:to-neutral-950">
-
-    <header class="mb-8 transition-colors duration-300 ease-in-out">
+@section('content')
+<header class="mb-8 transition-colors duration-300 ease-in-out">
         <div class="flex items-center justify-between gap-4">
             <div>
                 <h1 class="text-3xl font-semibold tracking-tight text-neutral-900 dark:text-white transition-colors duration-300 ease-in-out">
@@ -104,10 +77,10 @@
                 <!-- Search -->
                 <div class="flex items-center gap-3 rounded-2xl px-4 py-2.5 border border-neutral-300 bg-white focus-within:border-neutral-500 dark:border-neutral-800 dark:bg-black/60 transition-colors duration-300 ease-in-out">
                     <x-icon name="search" class="h-4 w-4 text-neutral-500 transition-colors duration-300 ease-in-out" />
-                    <input 
+                    <input
                         id="searchInput"
-                        type="text" 
-                        placeholder="Search by customer, item, or ID..." 
+                        type="text"
+                        placeholder="Search by customer, item, or ID..."
                         class="w-72 bg-transparent text-xs text-neutral-700 placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500 focus:outline-none transition-colors duration-300 ease-in-out">
                 </div>
 
@@ -164,8 +137,14 @@
                 </div>
             </div>
     </section>
-</main>
+@endsection
 
+@section('scripts')
+{{-- Include Record Payment Modal --}}
+@include('payments.partials.record-payment-modal')
+
+{{-- Include Invoice Details Modal --}}
+@include('payments.partials.invoice-details-modal')
 
 <script>
      const filterButton = document.getElementById('filter-button');
@@ -264,7 +243,7 @@
          searchInput.addEventListener('input', function(e) {
              // Clear previous timeout
              clearTimeout(searchTimeout);
-             
+
              // Set a new timeout to avoid making API calls on every keystroke
              searchTimeout = setTimeout(() => {
                  const searchQuery = e.target.value;
@@ -283,10 +262,10 @@
 
           // Use 'all' as default if currentFilter is not set
           const filterToUse = currentFilter || 'all';
-          let url = filterToUse === 'all' 
+          let url = filterToUse === 'all'
               ? '/api/invoices/monitor?status=all'
               : `/api/invoices/monitor?status=${filterToUse}`;
-          
+
           // Add search parameter if provided
           if (searchQuery && searchQuery.trim() !== '') {
               url += `&search=${encodeURIComponent(searchQuery.trim())}`;
@@ -319,20 +298,20 @@
          invoices.forEach(function(inv) {
              const row = document.createElement('tr');
              row.className = 'border-b border-neutral-200 hover:bg-neutral-100 dark:border-neutral-900/60 dark:hover:bg-white/5 transition-colors duration-300 ease-in-out cursor-pointer';
-             
+
              // Highlight the invoice if it matches the URL parameter
              if (highlightedInvoiceId === inv.invoice_id) {
                  row.classList.add('bg-violet-50', 'dark:bg-violet-900/20');
              }
-             
+
              row.addEventListener('click', function(e) {
                  // Don't trigger if clicking on action buttons
                  if (e.target.closest('button')) {
                      return;
                  }
-                 
+
                  const statusName = inv.status?.status_name?.toLowerCase() || 'unknown';
-                 
+
                  // If the invoice is fully paid, open invoice details instead of record payment modal
                  if (statusName === 'paid') {
                      openInvoiceDetailsModal(inv.invoice_id);
@@ -341,25 +320,25 @@
                  }
              });
 
-            const customer = inv.customer 
-                ? `${inv.customer.first_name} ${inv.customer.last_name}` 
+            const customer = inv.customer
+                ? `${inv.customer.first_name} ${inv.customer.last_name}`
                 : 'Unknown Customer';
 
-            const invoiceDate = inv.invoice_date 
+            const invoiceDate = inv.invoice_date
                 ? new Date(inv.invoice_date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
                 : '-';
 
             const statusName = inv.status?.status_name?.toLowerCase() || 'unknown';
             let statusClass = 'bg-neutral-500/15 text-neutral-600 border-neutral-500/40 dark:text-neutral-300';
-            
+
             if (statusName === 'paid') {
                 statusClass = 'bg-emerald-500/15 text-emerald-600 border-emerald-500/40 dark:text-emerald-300';
             } else if (statusName === 'unpaid') {
                 statusClass = 'bg-amber-500/15 text-amber-600 border-amber-500/40 dark:text-amber-300';
             }
 
-            const invoiceType = inv.invoice_type 
-                ? `<span class="capitalize">${inv.invoice_type === 'reservation' ? 'Deposit' : inv.invoice_type}</span>` 
+            const invoiceType = inv.invoice_type
+                ? `<span class="capitalize">${inv.invoice_type === 'reservation' ? 'Deposit' : inv.invoice_type}</span>`
                 : '-';
 
             row.innerHTML = `
@@ -416,7 +395,7 @@
          window.axios.get('/api/invoices/monitor?status=all')
              .then(function(resp) {
                  const invoices = resp.data?.invoices?.data || [];
-                 
+
                  // Calculate metrics
                  let totalRevenue = 0;
                  let pendingAmount = 0;
@@ -429,7 +408,7 @@
                          totalRevenue += parseFloat(inv.total_amount || 0);
                          paidAmount += parseFloat(inv.amount_paid || 0);
                      }
-                     
+
                      const status = inv.status?.status_name?.toLowerCase() || '';
                      if (status === 'unpaid') {
                          pendingAmount += parseFloat(inv.balance_due || 0);
@@ -464,20 +443,13 @@
               setTimeout(initializePaymentsPage, 50);
               return;
           }
-          
+
           initializeFilterText();
           checkForInvoiceIdInUrl();
           loadPaymentMetrics();
           loadInvoices();
       }
-      
+
       initializePaymentsPage();
   </script>
-
-{{-- Include Record Payment Modal --}}
-@include('payments.partials.record-payment-modal')
-
-{{-- Include Invoice Details Modal --}}
-@include('payments.partials.invoice-details-modal')
-</body>
-</html>
+@endsection

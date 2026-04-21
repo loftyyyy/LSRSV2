@@ -1,34 +1,17 @@
-<!doctype html>
-<html lang="en">
-<head>
-    {{-- Prevent flash of wrong theme --}}
-    @include('components.theme-init')
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Inventory Reports · Love &amp; Styles</title>
+@extends('main')
 
-    {{-- Favicon --}}
-    <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any">
-    <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
-    <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
-    <link rel="manifest" href="{{ asset('site.webmanifest') }}">
+@section('title', 'Inventory Reports · Love &amp; Styles')
 
-    {{-- Fonts: Geist & Geist Mono --}}
-    <link
-        rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap"
-    >
+@section('head_scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+@endsection
 
-    {{-- App styles --}}
-    @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @endif
+@section('body_classes', 'min-h-screen flex font-geist bg-neutral-100 text-neutral-900 dark:bg-black dark:text-neutral-50 transition-colors duration-300 ease-in-out')
 
-    {{-- Chart.js Library --}}
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+@section('main_classes', 'flex-1 ml-64 flex flex-col px-10 py-8 overflow-x-hidden overflow-y-auto bg-gradient-to-b from-neutral-100 via-neutral-100 to-neutral-200 dark:from-black dark:via-black dark:to-neutral-950 transition-colors duration-300 ease-in-out')
 
-    <style>
+@section('styles')
+<style>
         /* Hide scrollbar while keeping scroll functionality */
         html {
             scrollbar-width: none; /* Firefox - hide on document root */
@@ -90,13 +73,10 @@
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%23d1d5db' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
         }
     </style>
-</head>
-<body class="min-h-screen flex font-geist bg-neutral-100 text-neutral-900 dark:bg-black dark:text-neutral-50 transition-colors duration-300 ease-in-out">
-    <x-sidebar />
+@endsection
 
-    <main class="flex-1 ml-64 flex flex-col px-10 py-8 overflow-x-hidden overflow-y-auto bg-gradient-to-b from-neutral-100 via-neutral-100 to-neutral-200 dark:from-black dark:via-black dark:to-neutral-950 transition-colors duration-300 ease-in-out">
-
-        <header class="mb-8 transition-colors duration-300 ease-in-out">
+@section('content')
+<header class="mb-8 transition-colors duration-300 ease-in-out">
             <div class="flex items-center justify-between gap-4">
                 <div>
                     <h1 class="text-3xl font-semibold tracking-tight text-neutral-900 dark:text-white transition-colors duration-300 ease-in-out">
@@ -304,9 +284,9 @@
                 </div>
             </div>
         </section>
+@endsection
 
-    </main>
-
+@section('scripts')
 <script>
     // Page state
     var reportsState = {
@@ -845,6 +825,4 @@
             });
         }
 </script>
-
-</body>
-</html>
+@endsection

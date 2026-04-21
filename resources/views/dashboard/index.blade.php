@@ -1,33 +1,15 @@
-<!doctype html>
-<html lang="en">
-<head>
-    {{-- Prevent flash of wrong theme --}}
-    @include('components.theme-init')
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard · Love &amp; Styles</title>
+@extends('main')
 
-    {{-- Favicon --}}
-    <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any">
-    <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
-    <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
-    <link rel="manifest" href="{{ asset('site.webmanifest') }}">
+@section('title', 'Dashboard · Love &amp; Styles')
 
-    {{-- Fonts: Geist & Geist Mono --}}
-    <link
-        rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap"
-    >
+@section('head_scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+@endsection
 
-    {{-- Chart.js --}}
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+@section('main_classes', 'flex-1 ml-64 flex flex-col px-10 py-8 overflow-x-hidden overflow-y-auto scrollbar-hide bg-gradient-to-b from-neutral-100 via-neutral-100 to-neutral-200 dark:from-black dark:via-black dark:to-neutral-950')
 
-    {{-- App styles --}}
-    @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @endif
-
-    <style>
+@section('styles')
+<style>
         /* Hide scrollbar while keeping scroll functionality */
         .scrollbar-hide {
             -ms-overflow-style: none;
@@ -63,13 +45,10 @@
             }
         }
     </style>
-</head>
-<body class="min-h-screen flex font-geist bg-neutral-100 text-neutral-900 dark:bg-black dark:text-neutral-50">
-    <x-sidebar />
+@endsection
 
-    <main class="flex-1 ml-64 flex flex-col px-10 py-8 overflow-x-hidden overflow-y-auto scrollbar-hide bg-gradient-to-b from-neutral-100 via-neutral-100 to-neutral-200 dark:from-black dark:via-black dark:to-neutral-950">
-
-        <header class="mb-8">
+@section('content')
+<header class="mb-8">
             <div class="flex items-center justify-between gap-4">
                 <div>
                     <h1 class="text-3xl font-semibold tracking-tight text-neutral-900 dark:text-white transition-colors duration-300 ease-in-out">
@@ -244,10 +223,10 @@
                 </div>
             </div>
         </section>
+@endsection
 
-    </main>
-
-    <script>
+@section('scripts')
+<script>
         // Use window object to store charts and observer to avoid redeclaration errors
         if (!window.dashboardState) {
             window.dashboardState = {
@@ -826,6 +805,4 @@
          // Initial load
          initializeDashboard();
     </script>
-
-</body>
-</html>
+@endsection
