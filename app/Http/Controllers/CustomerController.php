@@ -96,50 +96,7 @@ class CustomerController extends Controller
         ]);
     }
 
-        // Filter by status
-        if ($statusId) {
-            $baseQuery->where('status_id', $statusId);
-        }
-
-        // Generate report statistics using DB queries instead of memory
-        $statistics = [
-            'total_customers' => (clone $baseQuery)->count(),
-            'active_customers' => (clone $baseQuery)->whereHas('status', fn ($q) => $q->whereRaw('LOWER(status_name) = ?', ['active']))->count(),
-            'inactive_customers' => (clone $baseQuery)->whereHas('status', fn ($q) => $q->whereRaw('LOWER(status_name) = ?', ['inactive']))->count(),
-            'total_rentals' => \App\Models\Rental::whereIn('customer_id', (clone $baseQuery)->select('customer_id'))->count(),
-            'customers_with_rentals' => (clone $baseQuery)->has('rentals')->count(),
-            'total_reservations' => \App\Models\Reservation::whereIn('customer_id', (clone $baseQuery)->select('customer_id'))->count(),
-        ];
-
-        // Fetch customers with aggregated data to avoid N+1 and loading huge relations
-        $customers = (clone $baseQuery)
-            ->with('status')
-            ->withCount(['rentals', 'reservations'])
-            ->withMax('rentals', 'released_date')
-            ->get();
-
-        // Customer rental history summary
-        $customerData = $customers->map(function ($customer) {
-            return [
-                'customer_id' => $customer->customer_id,
-                'name' => $customer->first_name.' '.$customer->last_name,
-                'email' => $customer->email,
-                'contact_number' => $customer->contact_number,
-                'status' => $customer->status->status_name ?? 'N/A',
-                'total_rentals' => $customer->rentals_count,
-                'total_reservations' => $customer->reservations_count,
-                'registration_date' => $customer->created_at->format('Y-m-d'),
-                'last_rental_date' => $customer->rentals_max_released_date,
-            ];
-        });
-
-        return response()->json([
-            'statistics' => $statistics,
-            'customers' => $customerData,
-            'generated_at' => now()->format('Y-m-d H:i:s'),
-        ]);
-
-    }
+        
 
     /**
      * Generate PDF report for customers.
