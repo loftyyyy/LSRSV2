@@ -54,8 +54,10 @@ class PaymentController extends Controller
      */
     public function showPaymentPage(): View
     {
+        $paymentStatuses = PaymentStatus::all();
+
         // Return the main payment management view
-        return view('payments.index');
+        return view('payments.index', compact('paymentStatuses'));
     }
 
     /**

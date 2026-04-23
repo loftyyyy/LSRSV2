@@ -523,14 +523,24 @@ fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
      */
     public function monitorPayments(Request $request): JsonResponse
     {
-        $status = $request->get('status', 'all'); // all, completed, pending
+        $status = $request->get('status', 'all');
 
         $query = Invoice::with(['customer', 'payments', 'reservation', 'rental', 'status']);
 
-        if ($status === 'completed') {
-            $query->where('balance_due', '<=', 0);
-        } elseif ($status === 'pending') {
-            $query->where('balance_due', '>', 0);
+        if ($status !== 'all') {
+            // First check if the requested status matches a PaymentStatus by name
+            $paymentStatus = \App\Models\PaymentStatus::whereRaw('LOWER(status_name) = ?', [strtolower($status)])->first();
+            
+            if ($paymentStatus) {
+                $query->where('status_id', $paymentStatus->status_id);
+            } else {
+                // Fallback for legacy "completed" / "pending" logic if not in DB
+                if ($status === 'completed') {
+                    $query->where('balance_due', '<=', 0);
+                } elseif ($status === 'pending') {
+                    $query->where('balance_due', '>', 0);
+                }
+            }
         }
 
         // Search functionality

@@ -125,11 +125,10 @@
 
                     <div id="filter-menu" class="absolute right-0 mt-2 w-48 rounded-xl border border-neutral-300 bg-white dark:border-neutral-800 dark:bg-black/60 shadow-lg z-50 overflow-hidden opacity-0 scale-95 pointer-events-none transition-all duration-200 ease-in-out">
                         <ul class="flex flex-col text-xs">
-                            <li class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">All Status</li>
-                            <li class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">Paid</li>
-                            <li class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">Pending</li>
-                            <li class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">Overdue</li>
-                            <li class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">Cancelled</li>
+                            <li class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200" data-value="all">All Status</li>
+                            @foreach($paymentStatuses as $status)
+                                <li class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200" data-value="{{ strtolower($status->status_name) }}">{{ ucfirst($status->status_name) }}</li>
+                            @endforeach
                         </ul>
                     </div>
                 </div>
@@ -232,15 +231,7 @@
             iconDown.classList.remove('hidden');
             iconUp.classList.add('hidden');
 
-            // Map filter text to status value
-            const filterMap = {
-                'All Status': 'all',
-                'Paid': 'completed',
-                'Pending': 'pending',
-                'Overdue': 'overdue',
-                'Cancelled': 'cancelled'
-            };
-            currentFilter = filterMap[item.textContent] || 'all';
+            currentFilter = item.getAttribute('data-value') || 'all';
             loadInvoices();
         });
     });
@@ -284,8 +275,8 @@
            // Use 'all' as default if currentFilter is not set
            const filterToUse = currentFilter || 'all';
            let url = filterToUse === 'all' 
-               ? '/api/payments/monitor?status=all'
-               : `/api/payments/monitor?status=${filterToUse}`;
+               ? '/api/invoices/monitor?status=all'
+               : `/api/invoices/monitor?status=${filterToUse}`;
            
            // Add search parameter if provided
            if (searchQuery && searchQuery.trim() !== '') {
@@ -300,13 +291,17 @@
                    // 3) plain array: resp.data.payments
                    const data = resp.data || {};
                    let paymentsList = [];
-                   if (data.payments !== undefined) {
+                   if (data.invoices !== undefined) {
+                       if (Array.isArray(data.invoices)) {
+                           paymentsList = data.invoices;
+                       } else if (data.invoices.data !== undefined) {
+                           paymentsList = data.invoices.data;
+                       }
+                   } else if (data.payments !== undefined) {
                        if (Array.isArray(data.payments)) {
                            paymentsList = data.payments;
                        } else if (data.payments.data !== undefined) {
                            paymentsList = data.payments.data;
-                       } else {
-                           paymentsList = [];
                        }
                    } else if (Array.isArray(data)) {
                        paymentsList = data;
@@ -352,33 +347,36 @@
                  
                  const statusName = inv.status?.status_name?.toLowerCase() || 'unknown';
                  
-                 // If the invoice is fully paid, open invoice details instead of record payment modal
-              if (statusName === 'paid') {
+                  // If the invoice is fully paid, open invoice details instead of record payment modal
+               if (statusName === 'paid' || statusName === 'completed' || parseFloat(inv.balance_due || 0) <= 0) {
                   openInvoiceDetailsModal(relatedInvoiceId);
                   } else {
                       openRecordPaymentModalWithInvoice(relatedInvoiceId);
                   }
               });
 
-              const customer = inv.invoice?.customer 
-                  ? `${inv.invoice.customer.first_name} ${inv.invoice.customer.last_name}` 
+              const customerObj = inv.invoice?.customer || inv.customer;
+              const customer = customerObj 
+                  ? `${customerObj.first_name} ${customerObj.last_name}` 
                   : 'Unknown Customer';
 
-              const invoiceDate = inv.invoice?.invoice_date 
-                  ? new Date(inv.invoice.invoice_date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+              const dateStr = inv.invoice?.invoice_date || inv.invoice_date;
+              const invoiceDate = dateStr 
+                  ? new Date(dateStr).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
                   : '-';
 
             const statusName = inv.status?.status_name?.toLowerCase() || 'unknown';
             let statusClass = 'bg-neutral-500/15 text-neutral-600 border-neutral-500/40 dark:text-neutral-300';
             
-            if (statusName === 'paid') {
+            if (statusName === 'paid' || statusName === 'completed') {
                 statusClass = 'bg-emerald-500/15 text-emerald-600 border-emerald-500/40 dark:text-emerald-300';
-            } else if (statusName === 'unpaid') {
+            } else if (statusName === 'unpaid' || statusName === 'pending') {
                 statusClass = 'bg-amber-500/15 text-amber-600 border-amber-500/40 dark:text-amber-300';
             }
 
-              const invoiceType = inv.invoice?.invoice_type 
-                  ? `<span class="capitalize">${inv.invoice.invoice_type === 'reservation' ? 'Deposit' : inv.invoice.invoice_type}</span>` 
+              const typeStr = inv.invoice?.invoice_type || inv.invoice_type;
+              const invoiceType = typeStr 
+                  ? `<span class="capitalize">${typeStr === 'reservation' ? 'Deposit' : typeStr}</span>` 
                   : '-';
 
             row.innerHTML = `
@@ -391,8 +389,8 @@
                 <td class="py-3.5 pr-4 text-neutral-600 dark:text-neutral-300 capitalize">${invoiceType}</td>
                 <td class="py-3.5 pr-2">
                     <span class="inline-flex items-center rounded-full ${statusClass} px-2 py-1 text-[11px] font-medium border transition-colors duration-300 ease-in-out">
-                        <span class="mr-1.5 h-1.5 w-1.5 rounded-full ${statusName === 'paid' ? 'bg-emerald-500' : statusName === 'unpaid' ? 'bg-amber-500' : 'bg-neutral-500'}"></span>
-                        ${inv.status?.status_name || 'Unknown'}
+                        <span class="mr-1.5 h-1.5 w-1.5 rounded-full ${statusName === 'paid' || statusName === 'completed' ? 'bg-emerald-500' : statusName === 'unpaid' || statusName === 'pending' ? 'bg-amber-500' : 'bg-neutral-500'}"></span>
+                        ${inv.status?.status_name || (inv.balance_due <= 0 ? 'Paid' : 'Unpaid')}
                     </span>
                 </td>
                 <td class="py-3.5 pl-2 text-left text-neutral-500 dark:text-neutral-400">
@@ -432,9 +430,25 @@
       function loadPaymentMetrics() {
           if (!window.axios) return;
 
-          window.axios.get('/api/payments/monitor?status=all')
+          window.axios.get('/api/invoices/monitor?status=all')
               .then(function(resp) {
-                  const payments = resp.data?.payments || [];
+                  const data = resp.data || {};
+                  let payments = [];
+                  if (data.invoices !== undefined) {
+                      if (Array.isArray(data.invoices)) {
+                          payments = data.invoices;
+                      } else if (data.invoices.data !== undefined) {
+                          payments = data.invoices.data;
+                      }
+                  } else if (data.payments !== undefined) {
+                      if (Array.isArray(data.payments)) {
+                          payments = data.payments;
+                      } else if (data.payments.data !== undefined) {
+                          payments = data.payments.data;
+                      }
+                  } else if (Array.isArray(data)) {
+                      payments = data;
+                  }
                   
                   // Calculate metrics
                   let totalRevenue = 0;
@@ -442,25 +456,30 @@
                   let overdueAmount = 0;
                   let paidAmount = 0;
 
-                  payments.forEach(function(payment) {
-                      // Calculate based on payment status
-                      const status = payment.status?.status_name?.toLowerCase() || '';
-                      const amount = parseFloat(payment.amount || 0);
+                  payments.forEach(function(invoice) {
+                      const status = invoice.status?.status_name?.toLowerCase() || '';
+                      const totalAmount = parseFloat(invoice.total_amount || 0);
+                      const paid = parseFloat(invoice.amount_paid || 0);
+                      const balance = parseFloat(invoice.balance_due || 0);
                       
-                      if (status === 'paid' || status === 'completed') {
-                          paidAmount += amount;
-                      } else if (status === 'pending') {
-                          pendingAmount += amount;
-                      } else if (status === 'overdue') {
-                          overdueAmount += amount;
+                      paidAmount += paid;
+                      
+                      if (status === 'overdue') {
+                          overdueAmount += balance;
+                      } else {
+                          pendingAmount += balance;
                       }
                       
-                      // For total revenue, we'll use paid amount for now
-                      totalRevenue += amount;
+                      // For total revenue, only include non-deposit (e.g. rental) payments that are paid
+                      const invoiceType = invoice.invoice_type?.toLowerCase() || '';
+                      if (invoiceType !== 'reservation' && invoiceType !== 'deposit') {
+                          totalRevenue += paid;
+                      }
                   });
 
-                  // Calculate collection rate (paid / total)
-                  const collectionRate = (paidAmount > 0 && totalRevenue > 0) ? ((paidAmount / totalRevenue) * 100).toFixed(1) : 0;
+                  // Calculate collection rate (paid / total expected)
+                  const totalExpected = paidAmount + pendingAmount + overdueAmount;
+                  const collectionRate = (paidAmount > 0 && totalExpected > 0) ? ((paidAmount / totalExpected) * 100).toFixed(1) : 0;
 
                   // Update KPI displays
                   const totalRevenueEl = document.getElementById('totalRevenueCount');
