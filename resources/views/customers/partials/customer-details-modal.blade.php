@@ -379,7 +379,18 @@
             globalThis.customerDetailsModalState.currentCustomer = customer;
             globalThis.customerDetailsModalState.rentalStats = rentalStats;
 
-            populateCustomerDetails(customer, rentalStats);
+            // Ensure we have rentals data; fetch if not present
+            var rentalsList = customer.rentals || [];
+            if (!rentalsList || rentalsList.length === 0) {
+                try {
+                    var rentalsResponse = await axios.get(`/api/customers/${customerId}/rentals`);
+                    rentalsList = rentalsResponse.data?.data || [];
+                } catch (e) {
+                    rentalsList = [];
+                }
+            }
+
+            populateCustomerDetails(customer, rentalStats, rentalsList);
 
             // Hide loading, show data
             document.getElementById('customerDetailsLoading').classList.add('hidden');
@@ -394,7 +405,7 @@
     }
 
     // Populate customer details in the modal
-    function populateCustomerDetails(customer, rentalStats) {
+    function populateCustomerDetails(customer, rentalStats, rentals) {
         // Title and Avatar
         var fullName = `${customer.first_name} ${customer.last_name}`;
         document.getElementById('customerDetailsTitle').textContent = fullName;
@@ -467,7 +478,8 @@
             : '-';
 
         // Render recent rentals
-        renderRecentRentals(customer.rentals || []);
+        var rentalsToShow = (Array.isArray(rentals) && rentals.length) ? rentals : (customer.rentals || []);
+        renderRecentRentals(rentalsToShow);
 
         // Render recent reservations
         renderRecentReservations(customer.reservations || []);
@@ -508,6 +520,8 @@
                     var rentalDate = rental.rental_date ? formatCustomerDate(rental.rental_date) : '-';
                     var returnDate = rental.return_date ? formatCustomerDate(rental.return_date) : 'Not returned';
 
+                    // Determine item/product name if available
+                    var itemName = rental.item?.name || rental.product?.name || rental.name || rental.title || '';
                     return `
                         <div class="px-4 py-3 flex items-center justify-between hover:bg-neutral-100 dark:hover:bg-neutral-800/50 transition-colors">
                             <div class="flex items-center gap-3">
@@ -517,6 +531,7 @@
                                 <div class="min-w-0">
                                     <p class="text-sm font-medium text-neutral-900 dark:text-white truncate">${rentalDate}</p>
                                     <p class="text-xs text-neutral-500 dark:text-neutral-400 truncate">Return: ${returnDate}</p>
+                                    ${itemName ? `<p class="text-xs text-neutral-500 dark:text-neutral-400 truncate">Item: ${itemName}</p>` : ''}
                                 </div>
                             </div>
                             <span class="inline-flex items-center rounded-full ${statusColor} px-2 py-1 text-[10px] font-medium border flex-shrink-0 ml-2">

@@ -865,6 +865,16 @@ fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
             'cancelled_by' => Auth::id(),
         ]);
 
+        // Cancel pending invoices associated with the reservation
+        $invoiceCancelledStatus = \App\Models\PaymentStatus::whereRaw('LOWER(status_name) = ?', ['cancelled'])->first();
+        $invoicePendingStatus = \App\Models\PaymentStatus::whereRaw('LOWER(status_name) = ?', ['pending'])->first();
+        
+        if ($invoiceCancelledStatus && $invoicePendingStatus) {
+            $reservation->invoices()
+                ->where('status_id', $invoicePendingStatus->status_id)
+                ->update(['status_id' => $invoiceCancelledStatus->status_id]);
+        }
+
         // Update inventory status for all reserved items
         // Change reserved items back to available
         $availableStatusId = InventoryStatus::whereRaw('LOWER(status_name) = ?', ['available'])

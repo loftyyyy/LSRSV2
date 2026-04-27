@@ -16,11 +16,7 @@ class PaymentStatusSeeder extends Seeder
         DB::table('payment_statuses')->insert([
             ['status_name' => 'pending'],
             ['status_name' => 'paid'],
-            ['status_name' => 'refunded'],
             ['status_name' => 'cancelled'],
-            ['status_name' => 'voided'],
-            ['status_name' => 'failed'],
-
         ]);
     }
 }
