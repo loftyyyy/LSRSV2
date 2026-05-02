@@ -389,7 +389,13 @@ class CustomerController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $query = Customer::with(['status'])->withCount(['rentals', 'reservations']);
+        $query = Customer::with(['status'])->withCount([
+            'rentals', 
+            'reservations',
+            'rentals as overdue_rentals_count' => function ($query) {
+                $query->whereNull('return_date')->where('due_date', '<', \Carbon\Carbon::now());
+            }
+        ]);
 
         // Search functionality
         if ($request->has('search')) {

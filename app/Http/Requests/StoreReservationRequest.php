@@ -15,6 +15,31 @@ class StoreReservationRequest extends FormRequest
     }
 
     /**
+     * Configure the validator instance.
+     *
+     * @param  \Illuminate\Validation\Validator  $validator
+     * @return void
+     */
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            if ($this->customer_id) {
+                $hasOverdue = \App\Models\Rental::where('customer_id', $this->customer_id)
+                    ->whereNull('return_date')
+                    ->where('due_date', '<', \Carbon\Carbon::now())
+                    ->exists();
+
+                if ($hasOverdue) {
+                    $validator->errors()->add(
+                        'customer_id',
+                        'This customer has overdue rentals and cannot make new reservations.'
+                    );
+                }
+            }
+        });
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>

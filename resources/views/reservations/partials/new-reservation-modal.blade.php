@@ -468,7 +468,16 @@
             activeCustomers.forEach(function(customer) {
                 var option = document.createElement('option');
                 option.value = customer.customer_id;
-                option.textContent = customer.first_name + ' ' + customer.last_name;
+                
+                if (customer.overdue_rentals_count > 0) {
+                    option.disabled = true;
+                    option.textContent = customer.first_name + ' ' + customer.last_name + ' (Has Overdue Rentals)';
+                    // Optionally add a visual indicator for disabled items
+                    option.classList.add('text-red-500', 'dark:text-red-400');
+                } else {
+                    option.textContent = customer.first_name + ' ' + customer.last_name;
+                }
+                
                 option.dataset.email = customer.email || '';
                 option.dataset.phone = customer.contact_number || '';
                 select.appendChild(option);
