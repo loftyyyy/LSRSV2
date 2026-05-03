@@ -273,14 +273,12 @@
         var html = '';
         reservations.forEach(function(res) {
             var customerName = res.customer ? (res.customer.first_name + ' ' + res.customer.last_name) : 'Unknown';
-            var eventDate = res.event_date ? new Date(res.event_date).toLocaleDateString() : 'N/A';
             var itemCount = res.items ? res.items.length : 0;
 
             html += '<div class="p-3 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:border-emerald-500 dark:hover:border-emerald-500 cursor-pointer transition-colors duration-200" onclick="selectReservation(' + res.reservation_id + ')">';
             html += '  <div class="flex items-center justify-between">';
             html += '    <div>';
             html += '      <p class="text-sm font-medium text-neutral-900 dark:text-white">' + customerName + '</p>';
-            html += '      <p class="text-xs text-neutral-500 dark:text-neutral-400">Res #' + res.reservation_id + ' • Event: ' + eventDate + '</p>';
             html += '    </div>';
             html += '    <span class="text-xs px-2 py-1 rounded-full bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400">' + itemCount + ' items</span>';
             html += '  </div>';
