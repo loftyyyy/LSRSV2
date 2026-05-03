@@ -405,7 +405,7 @@
             : '-';
         document.getElementById('detailInvoiceDueDate').textContent = invoice.due_date
             ? formatInvoiceDate(invoice.due_date)
-            : '-';
+            : (invoice.rental && invoice.rental.due_date ? formatInvoiceDate(invoice.rental.due_date) : '-');
 
         // Linked Reservation
         var resEl = document.getElementById('detailInvoiceLinkedReservation');
@@ -413,10 +413,14 @@
             resEl.innerHTML = `
                 <div class="flex items-center gap-3">
                     <div class="h-8 w-8 rounded-lg bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center flex-shrink-0">
-                        <span class="text-[10px] font-bold text-violet-600 dark:text-violet-400 font-geist-mono">#${invoice.reservation_id}</span>
-                    </div>
-                    <p class="text-sm font-medium text-neutral-900 dark:text-white">Reservation</p>
-                </div>
+                                        <span class="text-[10px] font-bold text-violet-600 dark:text-violet-400 font-geist-mono">#${invoice.reservation_id}</span>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <p class="text-sm font-medium text-neutral-900 dark:text-white">Reservation</p>
+                                        <p class="text-xs text-neutral-500 dark:text-neutral-400 truncate">ID: ${invoice.reservation_id}</p>
+                                    </div>
+                                </div>
+                            </a>
             `;
         } else {
             resEl.innerHTML = '<p class="text-sm text-neutral-500 dark:text-neutral-400">No linked reservation</p>';
@@ -426,12 +430,17 @@
         var rentEl = document.getElementById('detailInvoiceLinkedRental');
         if (invoice.rental_id) {
             rentEl.innerHTML = `
-                <div class="flex items-center gap-3">
-                    <div class="h-8 w-8 rounded-lg bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center flex-shrink-0">
-                        <span class="text-[10px] font-bold text-sky-600 dark:text-sky-400 font-geist-mono">#${invoice.rental_id}</span>
-                    </div>
-                    <p class="text-sm font-medium text-neutral-900 dark:text-white">Rental</p>
-                </div>
+                            <a href="/rentals?highlight=${invoice.rental_id}" class="block hover:bg-neutral-100 dark:hover:bg-neutral-800/50 rounded-lg -mx-2 -my-1 px-2 py-1 transition-colors">
+                                <div class="flex items-center gap-3">
+                                    <div class="h-8 w-8 rounded-lg bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center flex-shrink-0">
+                                        <span class="text-[10px] font-bold text-sky-600 dark:text-sky-400 font-geist-mono">#${invoice.rental_id}</span>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <p class="text-sm font-medium text-neutral-900 dark:text-white">Rental</p>
+                                        <p class="text-xs text-neutral-500 dark:text-neutral-400 truncate">ID: ${invoice.rental_id}</p>
+                                    </div>
+                                </div>
+                            </a>
             `;
         } else {
             rentEl.innerHTML = '<p class="text-sm text-neutral-500 dark:text-neutral-400">No linked rental</p>';
@@ -456,7 +465,16 @@
         }
 
         // Subtotal Breakdown
-        document.getElementById('detailInvoiceSubtotal').textContent = `₱${Number(invoice.subtotal || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+        var calcSubtotal = Number(invoice.subtotal || 0);
+        
+        // If subtotal is not directly provided or is 0, let's calculate it from items
+        if (calcSubtotal === 0 && invoice.invoiceItems && invoice.invoiceItems.length > 0) {
+            calcSubtotal = invoice.invoiceItems.reduce(function(sum, item) {
+                return sum + Number(item.total_price || (Number(item.unit_price || 0) * Number(item.quantity || 1)));
+            }, 0);
+        }
+        
+        document.getElementById('detailInvoiceSubtotal').textContent = `₱${calcSubtotal.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
         
         var discount = Number(invoice.discount || 0);
         var discountRow = document.getElementById('detailInvoiceDiscountRow');
