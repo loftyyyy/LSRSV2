@@ -274,7 +274,7 @@
             <div class="fixed inset-0 transition-opacity bg-neutral-900/60 dark:bg-black/80" onclick="closeEventModal()"></div>
 
             {{-- Modal panel --}}
-            <div class="inline-block w-full max-w-md my-8 overflow-hidden text-left align-middle transition-all transform bg-white dark:bg-neutral-950 rounded-2xl shadow-xl border border-neutral-200 dark:border-neutral-800">
+            <div class="relative z-10 inline-block w-full max-w-md my-8 overflow-hidden text-left align-middle transition-all transform bg-white dark:bg-neutral-950 rounded-2xl shadow-xl border border-neutral-200 dark:border-neutral-800">
                 {{-- Header --}}
                 <div class="flex items-center justify-between px-6 py-4 border-b border-neutral-200 dark:border-neutral-800">
                     <div class="flex items-center gap-3">

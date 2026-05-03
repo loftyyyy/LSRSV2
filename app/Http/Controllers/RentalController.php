@@ -2485,15 +2485,15 @@ fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
                 // Add due date event
                 $events[] = [
                     'id' => 'due-'.$rental->rental_id,
-                    'title' => ($rental->customer->first_name ?? 'Unknown').' - '.($rental->item->item_name ?? 'Unknown'),
+                    'title' => ($rental->customer->first_name ?? 'Unknown').' - '.($rental->item->name ?? 'Unknown'),
                     'start' => $rental->due_date,
                     'allDay' => true,
                     'className' => $eventClass,
                     'extendedProps' => [
                         'rentalId' => $rental->rental_id,
                         'customerName' => $rental->customer ? ($rental->customer->first_name.' '.$rental->customer->last_name) : 'Unknown',
-                        'itemName' => $rental->item->item_name ?? 'Unknown',
-                        'itemCode' => $rental->item->item_code ?? '',
+                        'itemName' => $rental->item->name ?? 'Unknown',
+                        'itemCode' => $rental->item->sku ?? '',
                         'releasedDate' => $rental->released_date,
                         'dueDate' => $rental->due_date,
                         'returnDate' => $rental->return_date,
@@ -2514,8 +2514,8 @@ fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
                             'extendedProps' => [
                                 'rentalId' => $rental->rental_id,
                                 'customerName' => $rental->customer ? ($rental->customer->first_name.' '.$rental->customer->last_name) : 'Unknown',
-                                'itemName' => $rental->item->item_name ?? 'Unknown',
-                                'itemCode' => $rental->item->item_code ?? '',
+                                'itemName' => $rental->item->name ?? 'Unknown',
+                                'itemCode' => $rental->item->sku ?? '',
                                 'releasedDate' => $rental->released_date,
                                 'dueDate' => $rental->due_date,
                                 'returnDate' => $rental->return_date,
