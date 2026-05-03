@@ -31,21 +31,24 @@ Route::middleware(['guest'])->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'showDashboardPage'])->name('dashboard');
+    Route::middleware('admin')->group(function () {
+        Route::get('/dashboard', [DashboardController::class, 'showDashboardPage'])->name('dashboard');
+        Route::get('/customers/reports', [CustomerController::class, 'showReportsPage'])->name('customers.reports');
+        Route::get('/inventories/reports', [InventoryController::class, 'showReportsPage'])->name('inventories.reports');
+        Route::get('/reservations/reports', [ReservationController::class, 'showReportsPage'])->name('reservations.reports');
+        Route::get('/rentals/reports', [RentalController::class, 'showReportsPage'])->name('rentals.reports');
+        Route::get('/payments/reports', function () {
+            return view('payments.reports');
+        })->name('payments.reports');
+    });
+
     Route::get('/customers', [CustomerController::class, 'showCustomerPage'])->name('customers');
-    Route::get('/customers/reports', [CustomerController::class, 'showReportsPage'])->name('customers.reports');
     Route::get('/inventories', [InventoryController::class, 'showInventoryPage'])->name('inventories');
-    Route::get('/inventories/reports', [InventoryController::class, 'showReportsPage'])->name('inventories.reports');
     Route::get('/reservations', [ReservationController::class, 'showReservationPage'])->name('reservations');
-    Route::get('/reservations/reports', [ReservationController::class, 'showReportsPage'])->name('reservations.reports');
     Route::get('/rentals', [RentalController::class, 'showRentalPage'])->name('rentals');
     Route::get('/rentals/calendar', [RentalController::class, 'showCalendarPage'])->name('rentals.calendar');
-    Route::get('/rentals/reports', [RentalController::class, 'showReportsPage'])->name('rentals.reports');
     Route::get('/invoices', [InvoiceController::class, 'showInvoicePage'])->name('invoices');
     Route::get('/payments', [PaymentController::class, 'showPaymentPage'])->name('payments');
-    Route::get('/payments/reports', function () {
-        return view('payments.reports');
-    });
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
@@ -53,9 +56,45 @@ Route::middleware('auth')->group(function () {
     Route::prefix('api')->group(function () {
 
         // ============================================
-        // DASHBOARD ROUTES
+        // DASHBOARD ROUTES (Admin Only)
         // ============================================
-        Route::get('/dashboard/metrics', [DashboardController::class, 'getMetrics']);
+        Route::middleware('admin')->group(function () {
+            Route::get('/dashboard/metrics', [DashboardController::class, 'getMetrics']);
+            
+            // Customer Reports
+            Route::get('/customers/reports/generate', [CustomerController::class, 'report']);
+            Route::get('/customers/reports/pdf', [CustomerController::class, 'generatePDF']);
+            Route::get('/customers/reports/csv', [CustomerController::class, 'generateCSV']);
+            Route::get('/customers/reports/registration-trend', [CustomerController::class, 'getRegistrationTrend']);
+
+            // Inventory Reports
+            Route::get('/inventories/reports/generate', [InventoryController::class, 'report']);
+            Route::get('/inventories/reports/pdf', [InventoryController::class, 'generatePDF']);
+            Route::get('/inventories/reports/csv', [InventoryController::class, 'generateCSV']);
+            Route::get('/inventories/reports/statistics', [InventoryController::class, 'getStatistics']);
+            Route::get('/inventories/reports/metrics', [InventoryController::class, 'getMetrics']);
+
+            // Reservation Reports
+            Route::get('/reservations/reports/generate', [ReservationController::class, 'report']);
+            Route::get('/reservations/reports/pdf', [ReservationController::class, 'generatePDF']);
+            Route::get('/reservations/reports/csv', [ReservationController::class, 'generateCSV']);
+
+            // Rental Reports
+            Route::get('/rentals/reports/generate', [RentalController::class, 'report']);
+            Route::get('/rentals/reports/pdf', [RentalController::class, 'generatePDF']);
+            Route::get('/rentals/reports/csv', [RentalController::class, 'generateCSV']);
+            Route::get('/rentals/reports/metrics', [RentalController::class, 'getMetrics']);
+
+            // Invoice Reports
+            Route::get('/invoices/reports/generate', [InvoiceController::class, 'report']);
+            Route::get('/invoices/reports/pdf', [InvoiceController::class, 'generatePDF']);
+            Route::get('/invoices/reports/csv', [InvoiceController::class, 'generateCSV']);
+
+            // Payment Reports API
+            Route::get('/payments/reports/generate', [PaymentController::class, 'report']);
+            Route::get('/payments/reports/pdf', [PaymentController::class, 'generatePDF']);
+            Route::get('/payments/reports/csv', [PaymentController::class, 'generateCSV']);
+        });
 
         // ============================================
         // AUTH ROUTES
@@ -65,12 +104,6 @@ Route::middleware('auth')->group(function () {
         // ============================================
         // CUSTOMER ROUTES
         // ============================================
-
-        // Customer Reports
-        Route::get('/customers/reports/generate', [CustomerController::class, 'report']);
-        Route::get('/customers/reports/pdf', [CustomerController::class, 'generatePDF']);
-        Route::get('/customers/reports/csv', [CustomerController::class, 'generateCSV']);
-        Route::get('/customers/reports/registration-trend', [CustomerController::class, 'getRegistrationTrend']);
 
         // Customer Stats
         Route::get('/customers/stats', [CustomerController::class, 'stats']);
@@ -91,13 +124,6 @@ Route::middleware('auth')->group(function () {
         // ============================================
         // INVENTORY ROUTES
         // ============================================
-
-        // Inventory Reports
-        Route::get('/inventories/reports/generate', [InventoryController::class, 'report']);
-        Route::get('/inventories/reports/pdf', [InventoryController::class, 'generatePDF']);
-        Route::get('/inventories/reports/csv', [InventoryController::class, 'generateCSV']);
-        Route::get('/inventories/reports/statistics', [InventoryController::class, 'getStatistics']);
-        Route::get('/inventories/reports/metrics', [InventoryController::class, 'getMetrics']);
 
         // Inventory Stats & Statuses
         Route::get('/inventories/statuses', [InventoryController::class, 'statuses']);
@@ -132,11 +158,6 @@ Route::middleware('auth')->group(function () {
         // RESERVATION ROUTES
         // ============================================
 
-        // Reservation Reports
-        Route::get('/reservations/reports/generate', [ReservationController::class, 'report']);
-        Route::get('/reservations/reports/pdf', [ReservationController::class, 'generatePDF']);
-        Route::get('/reservations/reports/csv', [ReservationController::class, 'generateCSV']);
-
         // Browse & Check Available Items
         Route::get('/reservations/items/browse', [ReservationController::class, 'browseAvailableItems']);
         Route::get('/reservations/items/{itemId}/details', [ReservationController::class, 'checkItemDetails']);
@@ -155,12 +176,6 @@ Route::middleware('auth')->group(function () {
         // ============================================
         // RENTAL ROUTES
         // ============================================
-
-        // Rental Reports
-        Route::get('/rentals/reports/generate', [RentalController::class, 'report']);
-        Route::get('/rentals/reports/pdf', [RentalController::class, 'generatePDF']);
-        Route::get('/rentals/reports/csv', [RentalController::class, 'generateCSV']);
-        Route::get('/rentals/reports/metrics', [RentalController::class, 'getMetrics']);
 
         // Rental Calendar
         Route::get('/rentals/calendar', [RentalController::class, 'getCalendarEvents']);
@@ -215,9 +230,6 @@ Route::middleware('auth')->group(function () {
         // ============================================
 
         // Invoice Reports
-        Route::get('/invoices/reports/generate', [InvoiceController::class, 'report']);
-        Route::get('/invoices/reports/pdf', [InvoiceController::class, 'generatePDF']);
-        Route::get('/invoices/reports/csv', [InvoiceController::class, 'generateCSV']);
         Route::get('/invoices/reports/invoice/{invoice}', [InvoiceController::class, 'generateInvoicePDF']);
 
         // Invoice Details & Monitoring (before CRUD)
@@ -234,11 +246,6 @@ Route::middleware('auth')->group(function () {
         // ============================================
         // PAYMENT ROUTES
         // ============================================
-
-        // Payment Reports API
-        Route::get('/payments/reports/generate', [PaymentController::class, 'report']);
-        Route::get('/payments/reports/pdf', [PaymentController::class, 'generatePDF']);
-        Route::get('/payments/reports/csv', [PaymentController::class, 'generateCSV']);
 
         // Payment Monitoring & Analytics (before CRUD)
         Route::get('/payments/monitor', [PaymentController::class, 'monitorPayments']);

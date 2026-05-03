@@ -317,12 +317,22 @@
 
         loadReservationItems(reservation);
 
-        var today = new Date().toISOString().split('T')[0];
-        document.getElementById('releaseReleasedDate').value = today;
+        if (reservation.start_date) {
+            var startDate = new Date(reservation.start_date);
+            document.getElementById('releaseReleasedDate').value = startDate.getFullYear() + '-' + String(startDate.getMonth() + 1).padStart(2, '0') + '-' + String(startDate.getDate()).padStart(2, '0');
+        } else {
+            var today = new Date();
+            document.getElementById('releaseReleasedDate').value = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+        }
 
-        var dueDate = new Date();
-        dueDate.setDate(dueDate.getDate() + 3);
-        document.getElementById('releaseDueDate').value = dueDate.toISOString().split('T')[0];
+        if (reservation.end_date) {
+            var endDate = new Date(reservation.end_date);
+            document.getElementById('releaseDueDate').value = endDate.getFullYear() + '-' + String(endDate.getMonth() + 1).padStart(2, '0') + '-' + String(endDate.getDate()).padStart(2, '0');
+        } else {
+            var dueDate = new Date();
+            dueDate.setDate(dueDate.getDate() + 3);
+            document.getElementById('releaseDueDate').value = dueDate.getFullYear() + '-' + String(dueDate.getMonth() + 1).padStart(2, '0') + '-' + String(dueDate.getDate()).padStart(2, '0');
+        }
 
         document.getElementById('releaseItemSubmitBtn').disabled = false;
     }
@@ -346,12 +356,12 @@
         loadCustomersForRelease();
         loadAvailableItems();
 
-        var today = new Date().toISOString().split('T')[0];
-        document.getElementById('releaseReleasedDate').value = today;
+        var today = new Date();
+        document.getElementById('releaseReleasedDate').value = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
 
         var dueDate = new Date();
         dueDate.setDate(dueDate.getDate() + 3);
-        document.getElementById('releaseDueDate').value = dueDate.toISOString().split('T')[0];
+        document.getElementById('releaseDueDate').value = dueDate.getFullYear() + '-' + String(dueDate.getMonth() + 1).padStart(2, '0') + '-' + String(dueDate.getDate()).padStart(2, '0');
 
         document.getElementById('releaseItemSubmitBtn').disabled = false;
     }

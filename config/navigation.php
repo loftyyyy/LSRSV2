@@ -7,6 +7,7 @@ return [
             'label' => 'Dashboard',
             'route' => 'dashboard',
             'icon'  => 'chart-column',
+            'admin_only' => true,
         ],
         [
             'key'   => 'reservations',

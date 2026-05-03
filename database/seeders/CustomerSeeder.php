@@ -27,6 +27,16 @@ class CustomerSeeder extends Seeder
                 'address' => '34 Sampaguita St, Quezon City',
                 'measurement' => ['bust' => 34, 'waist' => 27, 'hips' => 36, 'height_cm' => 162],
                 'status_id' => $activeStatusId,
+            ],
+
+            [
+                'first_name' => 'Rho',
+                'last_name' => 'Alphonce',
+                'email' => 'r.alphonce@example.com',
+                'contact_number' => '09171234567',
+                'address' => '34 Sampaguita St, Quezon City',
+                'measurement' => ['bust' => 34, 'waist' => 27, 'hips' => 36, 'height_cm' => 162],
+                'status_id' => $activeStatusId,
             ]
         ];
 

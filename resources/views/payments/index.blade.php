@@ -42,10 +42,12 @@
             </div>
 
             <div class="flex items-center gap-3 text-xs">
+                @if(auth()->check() && auth()->user()->is_admin)
                 <a href="/payments/reports" class="inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-[14px] font-medium border dark:hover:text-black hover:text-white border-neutral-300 bg-white text-neutral-700 dark:hover:bg-violet-600 hover:bg-violet-600 dark:border-neutral-800 dark:bg-neutral-950/80 dark:text-neutral-200 dark:hover:bg-neutral-900 transition-colors duration-300 ease-in-out">
                     <x-icon name="chart-column" class="h-4 w-4" />
                     <span>Reports</span>
                 </a>
+                @endif
 
                 <button onclick="openRecordPaymentModal()" class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-[14px] font-medium bg-violet-600 text-white hover:bg-violet-500 transition-colors duration-100 ease-in-out">
                     <x-icon name="plus" class="h-4 w-4" />

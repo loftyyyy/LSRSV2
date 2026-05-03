@@ -22,6 +22,10 @@
     <nav class="flex-1 px-3 py-4 space-y-2 text-sm overflow-y-auto">
         @foreach ($navItems as $item)
             @php
+                if (isset($item['admin_only']) && $item['admin_only'] && (!auth()->check() || !auth()->user()->is_admin)) {
+                    continue;
+                }
+                
                 $isActive = request()->routeIs($item['route'] . '*');
                 $tag = $isActive ? 'div' : 'a';
             @endphp
