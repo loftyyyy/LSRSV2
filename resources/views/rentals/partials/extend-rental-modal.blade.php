@@ -191,9 +191,9 @@
     // Populate form with rental data
     function populateExtendForm(rental, isOverdue) {
         var customerName = rental.customer ? (rental.customer.first_name + ' ' + rental.customer.last_name) : 'Unknown';
-        var itemCode = rental.item ? rental.item.item_code : 'N/A';
+        var itemCode = rental.item ? rental.item.sku : 'N/A';
         var itemName = rental.item ? rental.item.name : 'Unknown Item';
-        var releaseDate = rental.release_date ? formatExtendDate(rental.release_date) : 'N/A';
+        var releaseDate = rental.released_date ? formatExtendDate(rental.released_date) : 'N/A';
         var dueDate = rental.due_date ? formatExtendDate(rental.due_date) : 'N/A';
         var extensionCount = rental.extension_count || 0;
 
