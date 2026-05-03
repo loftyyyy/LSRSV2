@@ -259,7 +259,7 @@
                     document.getElementById('settingReminderDays').value = setting.setting_value;
                     break;
                 case 'notification_overdue_enabled':
-                    document.getElementById('settingOverdueNotifications').checked = Boolean(parseInt(setting.setting_value));
+                    document.getElementById('settingOverdueNotifications').checked = setting.setting_value === '1' || setting.setting_value === 1 || setting.setting_value === true || setting.setting_value === 'true';
                     break;
                 case 'default_rental_days':
                     document.getElementById('settingDefaultRentalDays').value = setting.setting_value;
