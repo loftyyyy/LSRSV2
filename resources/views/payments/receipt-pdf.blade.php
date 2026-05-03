@@ -278,7 +278,7 @@
             <div class="info-block">
                 <strong>{{ $payment->invoice->customer->first_name }} {{ $payment->invoice->customer->last_name }}</strong>
                 <p>Email: {{ $payment->invoice->customer->email }}</p>
-                <p>Phone: {{ $payment->invoice->customer->contact_number ?? 'N/A' }}</p>
+                <p>Phone: {{ $payment->invoice->customer->contact_number ?? '-' }}</p>
                 <p>Customer ID: #{{ $payment->invoice->customer->customer_id }}</p>
             </div>
         </div>
@@ -288,18 +288,18 @@
             <div class="info-block">
                 <p><strong>Invoice Number:</strong> #{{ $payment->invoice->invoice_number }}</p>
                 <p><strong>Invoice Date:</strong> {{ \Carbon\Carbon::parse($payment->invoice->invoice_date)->format('F d, Y') }}</p>
-                <p><strong>Invoice Total:</strong> &#8369;{{ number_format($payment->invoice->total_amount ?? 0, 2) }}</p>
+                <p><strong>Invoice Total:</strong> PHP {{ number_format($payment->invoice->total_amount ?? 0, 2) }}</p>
             </div>
         </div>
         
         <div class="payment-details">
             <div class="payment-details-row">
                 <span class="payment-details-label">Payment Method:</span>
-                <span class="payment-details-value">{{ ucfirst($payment->payment_method ?? 'N/A') }}</span>
+                <span class="payment-details-value">{{ ucfirst($payment->payment_method ?? '-') }}</span>
             </div>
             <div class="payment-details-row">
                 <span class="payment-details-label">Amount Paid:</span>
-                <span class="payment-details-value">&#8369;{{ number_format($payment->amount ?? 0, 2) }}</span>
+                <span class="payment-details-value">PHP {{ number_format($payment->amount ?? 0, 2) }}</span>
             </div>
             @if($payment->reference_number)
             <div class="payment-details-row">
@@ -312,7 +312,26 @@
         @if($payment->invoice->balance_due > 0)
         <div class="amount-due">
             <div class="amount-due-label">Remaining Balance Due</div>
-            <div class="amount-due-value">&#8369;{{ number_format($payment->invoice->balance_due, 2) }}</div>
+            <div class="amount-due-value">PHP {{ number_format($payment->invoice->balance_due, 2) }}</div>
+        </div>
+        @else
+        <div style="background-color: #d4edda; padding: 15px; border-radius: 4px; text-align: center; margin: 20px 0;">
+            <div style="color: #155724; font-size: 14px; font-weight: 600;">✓ Invoice Fully Paid</div>
+        </div>
+        @endif
+        
+        @if($payment->notes)
+        <div class="notes">
+            <strong>Notes:</strong>
+            {{ $payment->notes }}
+        </div>
+        @endif
+        
+        <div class="footer">
+            <div class="thank-you">Thank You For Your Payment!</div>
+            <p>This receipt serves as proof of payment for the transaction above.</p>
+            <p style="margin-top: 10px; font-size: 10px;">Generated on {{ now()->format('F d, Y H:i:s') }}</p>
+            <p style="margin-top: 15px; border-top: 1px solid #ecf0f1; padding-top: 10px;">For inquiries, please contact our office at {{ $payment->invoice->customer->contact_number ?? 'our provided number' }}</p>
         </div>
         @else
         <div style="background-color: #d4edda; padding: 15px; border-radius: 4px; text-align: center; margin: 20px 0;">

@@ -253,7 +253,7 @@
                 </div>
                 <div class="row">
                     <span class="invoice-meta-label">Due Date:</span>
-                    <span class="invoice-meta-value">{{ $invoice->due_date ? \Carbon\Carbon::parse($invoice->due_date)->format('M d, Y') : 'N/A' }}</span>
+                    <span class="invoice-meta-value">{{ $invoice->due_date ? \Carbon\Carbon::parse($invoice->due_date)->format('M d, Y') : ($invoice->rental && $invoice->rental->due_date ? \Carbon\Carbon::parse($invoice->rental->due_date)->format('M d, Y') : '') }}</span>
                 </div>
                 <div class="row" style="margin-top: 10px;">
                     <span class="status-badge status-{{ strtolower($invoice->status->status_name ?? 'pending') }}">
@@ -269,12 +269,12 @@
                     <div class="section-title">Bill To:</div>
                     <strong>{{ $invoice->customer->first_name }} {{ $invoice->customer->last_name }}</strong>
                     <p>Email: {{ $invoice->customer->email }}</p>
-                    <p>Phone: {{ $invoice->customer->contact_number ?? 'N/A' }}</p>
-                    <p>Address: {{ $invoice->customer->address ?? 'N/A' }}</p>
+                    <p>Phone: {{ $invoice->customer->contact_number ?? '-' }}</p>
+                    <p>Address: {{ $invoice->customer->address ?? '-' }}</p>
                 </div>
                 <div class="info-block">
                     <div class="section-title">Invoice Details:</div>
-                    <p><strong>Invoice Type:</strong> {{ ucfirst($invoice->invoice_type ?? 'N/A') }}</p>
+                    <p><strong>Invoice Type:</strong> {{ ucfirst($invoice->invoice_type ?? '-') }}</p>
                     @if($invoice->rental)
                         <p><strong>Rental ID:</strong> #{{ $invoice->rental->rental_id }}</p>
                     @endif
@@ -301,11 +301,11 @@
                 <tbody>
                     @foreach($invoice->invoiceItems as $item)
                     <tr>
-                        <td>{{ $item->description ?? 'N/A' }}</td>
-                        <td>{{ ucfirst($item->item_type ?? 'N/A') }}</td>
+                        <td>{{ $item->description ?? '-' }}</td>
+                        <td>{{ ucfirst($item->item_type ?? '-') }}</td>
                         <td>{{ $item->quantity ?? 1 }}</td>
-                        <td>&#8369;{{ number_format($item->unit_price ?? 0, 2) }}</td>
-                        <td class="text-right">&#8369;{{ number_format($item->total_price ?? 0, 2) }}</td>
+                        <td>PHP {{ number_format($item->unit_price ?? 0, 2) }}</td>
+                        <td class="text-right">PHP {{ number_format($item->total_price ?? 0, 2) }}</td>
                     </tr>
                     @endforeach
                 </tbody>
@@ -317,15 +317,15 @@
             <table class="summary-table">
                 <tr>
                     <td class="summary-label">Subtotal:</td>
-                    <td class="summary-value">&#8369;{{ number_format($invoice->total_amount ?? 0, 2) }}</td>
+                    <td class="summary-value">PHP {{ number_format($invoice->total_amount ?? 0, 2) }}</td>
                 </tr>
                 <tr>
                     <td class="summary-label">Amount Paid:</td>
-                    <td class="summary-value">&#8369;{{ number_format($invoice->amount_paid ?? 0, 2) }}</td>
+                    <td class="summary-value">PHP {{ number_format($invoice->amount_paid ?? 0, 2) }}</td>
                 </tr>
                 <tr class="summary-total">
                     <td class="summary-label">Balance Due:</td>
-                    <td class="summary-value">&#8369;{{ number_format($invoice->balance_due ?? 0, 2) }}</td>
+                    <td class="summary-value">PHP {{ number_format($invoice->balance_due ?? 0, 2) }}</td>
                 </tr>
             </table>
         </div>
@@ -347,8 +347,8 @@
                     @foreach($invoice->payments as $payment)
                     <tr>
                         <td>{{ \Carbon\Carbon::parse($payment->payment_date)->format('M d, Y') }}</td>
-                        <td>&#8369;{{ number_format($payment->amount ?? 0, 2) }}</td>
-                        <td>{{ ucfirst($payment->payment_method ?? 'N/A') }}</td>
+                        <td>PHP {{ number_format($payment->amount ?? 0, 2) }}</td>
+                        <td>{{ ucfirst($payment->payment_method ?? '-') }}</td>
                         <td>{{ $payment->reference_number ?? '-' }}</td>
                         <td>
                             <span class="status-badge status-{{ strtolower($payment->status->status_name ?? 'pending') }}">
