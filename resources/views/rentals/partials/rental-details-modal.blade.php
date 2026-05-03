@@ -287,8 +287,8 @@
                                     </div>
                                 </div>
 
-                                {{-- Released Event --}}
-                                <div id="timelineReleasedEvent" class="relative flex items-start gap-3">
+                                {{-- Released Event (conditional) --}}
+                                <div id="timelineReleasedEvent" class="hidden relative items-start gap-3">
                                     <div class="absolute left-[-15px] top-1 h-4 w-4 rounded-full bg-emerald-500 border-2 border-white dark:border-neutral-900 z-10 flex items-center justify-center">
                                         <div class="h-1.5 w-1.5 rounded-full bg-white"></div>
                                     </div>
@@ -798,7 +798,14 @@
         var releasedAtEl = document.getElementById('timelineReleasedAt');
         var releasedByEl = document.getElementById('timelineReleasedBy');
         if (releasedAtEl) {
-            releasedAtEl.textContent = rental.released_date ? formatRentalDateTime(rental.released_date) : '-';
+            if (rental.released_date && rental.status?.status_name?.toLowerCase() !== 'pending') {
+                releasedAtEl.textContent = formatRentalDate(rental.released_date);
+                document.getElementById('timelineReleasedEvent')?.classList.remove('hidden');
+                document.getElementById('timelineReleasedEvent')?.classList.add('flex');
+            } else {
+                document.getElementById('timelineReleasedEvent')?.classList.add('hidden');
+                document.getElementById('timelineReleasedEvent')?.classList.remove('flex');
+            }
         }
         if (releasedByEl) {
             var releasedBy = rental.released_by_user || rental.releasedBy;
@@ -916,7 +923,7 @@
             if (rental.return_date) {
                 returnedEvent.classList.remove('hidden');
                 if (returnedAtEl) {
-                    returnedAtEl.textContent = formatRentalDateTime(rental.return_date);
+                    returnedAtEl.textContent = formatRentalDate(rental.return_date);
                 }
                 if (returnedByEl) {
                     var returnedTo = rental.returned_to_user || rental.returnedTo;

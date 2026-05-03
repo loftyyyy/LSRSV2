@@ -51,12 +51,14 @@
             </div>
 
             <div class="flex items-center gap-3 text-xs">
+                @if(auth()->check() && auth()->user()->is_admin)
                 <a href="/reservations/reports" class="inline-flex items-center gap-2 rounded-xl border border-neutral-300 bg-white px-3.5 py-2 text-neutral-700 hover:bg-violet-600 dark:hover:text-black hover:text-white dark:border-neutral-800 dark:bg-neutral-950/80 dark:text-neutral-200 transition-colors duration-300 ease-in-out">
                     <span class="inline-flex h-5 w-5 items-center justify-center rounded-md">
                         <x-icon name="chart-column" class="h-4 w-4" />
                     </span>
                     <span class="text-[14px] font-medium tracking-wide">Reports</span>
                 </a>
+                @endif
 
                 <button type="button" onclick="openBrowseItemsModal()" class="inline-flex items-center gap-2 rounded-xl border border-neutral-300 bg-white px-3.5 py-2 text-neutral-700 hover:bg-violet-600 dark:hover:text-black hover:text-white dark:border-neutral-800 dark:bg-neutral-950/80 dark:text-neutral-200 transition-colors duration-300 ease-in-out">
                     <span class="inline-flex h-5 w-5 items-center justify-center rounded-md">
@@ -145,11 +147,10 @@
 
                             <div id="filter-menu" class="absolute right-0 mt-2 w-48 rounded-xl border border-neutral-300 bg-white dark:border-neutral-800 dark:bg-black/60 shadow-lg z-50 overflow-hidden opacity-0 scale-95 pointer-events-none transition-all duration-200 ease-in-out">
                                 <ul class="flex flex-col text-xs">
-                                    <li class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">All Status</li>
-                                    <li class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">Confirmed</li>
-                                    <li class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">Pending</li>
-                                    <li class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">Cancelled</li>
-                                    <li class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">Completed</li>
+                                    <li data-status="" class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">All Status</li>
+                                    @foreach(\App\Models\ReservationStatus::all() as $status)
+                                        <li data-status="{{ $status->status_name }}" class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">{{ ucfirst($status->status_name) }}</li>
+                                    @endforeach
                                 </ul>
                             </div>
                         </div>
@@ -300,11 +301,10 @@
             filterMenu.querySelectorAll('li').forEach(function(item) {
                 item.addEventListener('click', function() {
                     var statusText = item.textContent.trim();
+                    var statusValue = item.getAttribute('data-status');
                     filterButtonText.textContent = statusText;
 
-                    reservationState.statusFilter = statusText === 'All Status'
-                        ? ''
-                        : statusText.toLowerCase();
+                    reservationState.statusFilter = statusValue || '';
 
                     reservationState.currentPage = 1;
                     fetchReservations();

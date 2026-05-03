@@ -68,14 +68,16 @@
                     <span class="text-[14px] font-medium tracking-wide">Calendar</span>
                 </a>
 
+                @if(auth()->check() && auth()->user()->is_admin)
                 <a href="/rentals/reports" class="inline-flex items-center gap-2 rounded-xl border border-neutral-300 bg-white px-3.5 py-2 text-neutral-700 hover:bg-violet-600 dark:hover:text-black hover:text-white dark:border-neutral-800 dark:bg-neutral-950/80 dark:text-neutral-200 transition-colors duration-300 ease-in-out">
                     <span class="inline-flex h-5 w-5 items-center justify-center rounded-md">
                         <x-icon name="chart-column" class="h-4 w-4" />
                     </span>
                     <span class="text-[14px] font-medium tracking-wide">Reports</span>
                 </a>
+                @endif
 
-                <button type="button" onclick="openProcessReturnModal()" class="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2 text-[14px] font-medium tracking-wide text-white dark:text-black shadow-lg hover:text-black dark:hover:text-white hover:bg-violet-500 transition-colors duration-300 ease-in-out">
+                 <button type="button" onclick="openProcessReturnModal()" class="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2 text-[14px] font-medium tracking-wide text-white dark:text-black shadow-lg hover:text-black dark:hover:text-white hover:bg-violet-500 transition-colors duration-300 ease-in-out">
                     <span class="inline-flex h-5 w-5 items-center justify-center rounded-md">
                         <x-icon name="arrow-left-circle" class="h-4 w-4" />
                     </span>
@@ -170,10 +172,9 @@
                             <div id="filter-menu" class="absolute right-0 mt-2 w-48 rounded-xl border border-neutral-300 bg-white dark:border-neutral-800 dark:bg-black/60 shadow-lg z-50 overflow-hidden opacity-0 scale-95 pointer-events-none transition-all duration-200 ease-in-out">
                                 <ul class="flex flex-col text-xs">
                                     <li data-status="" class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">All Status</li>
-                                    <li data-status="active" class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">Rented</li>
-                                    <li data-status="overdue" class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">Overdue</li>
-                                    <li data-status="returned" class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">Returned</li>
-                                    <li data-status="cancelled" class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">Cancelled</li>
+                                    @foreach(\App\Models\RentalStatus::all() as $status)
+                                        <li data-status="{{ $status->status_name }}" class="px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer transition-colors duration-200">{{ ucfirst($status->status_name) }}</li>
+                                    @endforeach
                                 </ul>
                             </div>
                         </div>

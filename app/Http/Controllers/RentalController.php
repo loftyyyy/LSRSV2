@@ -1134,16 +1134,12 @@ fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
             $query->where('status_id', $request->get('status_id'));
         }
 
-        // Filter by rental status (active/returned)
+        // Filter by rental status
         if ($request->has('rental_status')) {
             $rentalStatus = $request->get('rental_status');
-            if ($rentalStatus === 'active') {
-                $query->whereNull('return_date');
-            } elseif ($rentalStatus === 'returned') {
-                $query->whereNotNull('return_date');
-            } elseif ($rentalStatus === 'overdue') {
-                $query->whereNull('return_date')->where('due_date', '<', Carbon::now());
-            }
+            $query->whereHas('status', function ($statusQuery) use ($rentalStatus) {
+                $statusQuery->where('status_name', $rentalStatus);
+            });
         }
 
         // Filter by date range
