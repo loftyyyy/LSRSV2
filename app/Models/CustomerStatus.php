@@ -12,6 +12,7 @@ class CustomerStatus extends Model
 
     protected $table = 'customer_statuses';
     protected $primaryKey = 'status_id';
+    public $timestamps = false;
     protected $fillable = [
         'status_name',
         'reason'

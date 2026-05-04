@@ -468,7 +468,7 @@
                       
                       if (status === 'overdue') {
                           overdueAmount += balance;
-                      } else {
+                      } else if (status !== 'cancelled' && status !== 'canceled') {
                           pendingAmount += balance;
                       }
                       

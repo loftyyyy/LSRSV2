@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\InventoryStatus;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -17,7 +18,14 @@ class InventoryFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'name' => $this->faker->word(),
+            'item_type' => $this->faker->randomElement(['gown', 'suit']),
+            'sku' => $this->faker->unique()->lexify('???-###'),
+            'size' => 'M',
+            'color' => 'Red',
+            'design' => $this->faker->randomElement(['Modern', 'Classic', 'Embellished']),
+            'rental_price' => 500,
+            'status_id' => InventoryStatus::factory()->state(['status_name'=>'active']),
         ];
     }
 }

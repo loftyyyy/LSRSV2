@@ -9,15 +9,11 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class CustomerStatusFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
         return [
-            //
+            'status_name' => $this->faker->word(),
+            'reason' => $this->faker->sentence(),
         ];
     }
 }

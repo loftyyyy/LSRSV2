@@ -11,6 +11,7 @@ class ReservationStatus extends Model
     use HasFactory;
     protected $table = 'reservation_statuses';
     protected $primaryKey = 'status_id';
+    public $timestamps = false;
     protected $fillable = [
         'status_name',
     ];

@@ -354,9 +354,17 @@ class CustomerController extends Controller
         // Get the last 6 months of data (or all data if less than 6 months)
         $sixMonthsAgo = now()->subMonths(6)->startOfMonth();
 
-        // Group customers by month of registration (MySQL compatible)
+        // Group customers by month of registration (SQLite/MySQL compatible)
+        $driver = \Illuminate\Support\Facades\DB::connection()->getDriverName();
+        
+        if ($driver === 'sqlite') {
+            $selectRaw = "strftime('%Y-%m', created_at) as month, COUNT(*) as count";
+        } else {
+            $selectRaw = "DATE_FORMAT(created_at, '%Y-%m') as month, COUNT(*) as count";
+        }
+
         $registrationData = Customer::where('created_at', '>=', $sixMonthsAgo)
-            ->selectRaw("DATE_FORMAT(created_at, '%Y-%m') as month, COUNT(*) as count")
+            ->selectRaw($selectRaw)
             ->groupBy('month')
             ->orderBy('month', 'asc')
             ->get();
@@ -452,6 +460,7 @@ class CustomerController extends Controller
                 ->value('status_id');
 
             if (! $activeStatusId) {
+                DB::rollBack();
                 return response()->json([
                     'message' => 'Active customer status not found.',
                 ], 422);

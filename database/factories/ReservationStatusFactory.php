@@ -9,15 +9,10 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class ReservationStatusFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
         return [
-            //
+            'status_name' => $this->faker->word(),
         ];
     }
 }

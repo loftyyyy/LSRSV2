@@ -9,15 +9,15 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class ReservationFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
         return [
-            //
+            'reserved_by' => \App\Models\User::factory(),
+            'customer_id' => \App\Models\Customer::factory(),
+            'status_id' => \App\Models\ReservationStatus::factory(),
+            'reservation_date' => now()->format('Y-m-d'),
+            'start_date' => now()->format('Y-m-d'),
+            'end_date' => now()->addDays(7)->format('Y-m-d'),
         ];
     }
 }
