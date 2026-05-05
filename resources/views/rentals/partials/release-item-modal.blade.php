@@ -272,8 +272,18 @@
 
         var html = '';
         reservations.forEach(function(res) {
+            // Filter out reservations where all items have been released (fulfillment_status = 'fulfilled')
+            var unreleasedItems = res.items ? res.items.filter(function(item) {
+                return item.fulfillment_status !== 'fulfilled';
+            }) : [];
+
+            // Skip this reservation if all items have been released
+            if (unreleasedItems.length === 0) {
+                return;
+            }
+
             var customerName = res.customer ? (res.customer.first_name + ' ' + res.customer.last_name) : 'Unknown';
-            var itemCount = res.items ? res.items.length : 0;
+            var itemCount = unreleasedItems.length;
 
             html += '<div class="p-3 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:border-emerald-500 dark:hover:border-emerald-500 cursor-pointer transition-colors duration-200" onclick="selectReservation(' + res.reservation_id + ')">';
             html += '  <div class="flex items-center justify-between">';
@@ -284,6 +294,11 @@
             html += '  </div>';
             html += '</div>';
         });
+
+        if (html === '') {
+            listContainer.innerHTML = '<p class="text-center text-sm text-neutral-500 dark:text-neutral-400 py-4">No confirmed reservations with unreleased items found</p>';
+            return;
+        }
 
         listContainer.innerHTML = html;
     }
@@ -409,8 +424,14 @@
         axios.get('/api/customers?status=active&per_page=100')
             .then(function(response) {
                 var customers = response.data.data || [];
+                
+                // Filter out customers with overdue rentals
+                var filteredCustomers = customers.filter(function(customer) {
+                    return (customer.overdue_rentals_count || 0) === 0;
+                });
+
                 var html = '<option value="">Select a customer...</option>';
-                customers.forEach(function(customer) {
+                filteredCustomers.forEach(function(customer) {
                     html += '<option value="' + customer.customer_id + '">' + customer.first_name + ' ' + customer.last_name + ' (' + (customer.email || customer.contact_number || 'N/A') + ')</option>';
                 });
                 customerSelect.innerHTML = html;

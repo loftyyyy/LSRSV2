@@ -164,4 +164,44 @@ class Rental extends Model
             ->whereNotNull('return_date')
             ->where('deposit_amount', '>', 0);
     }
+
+    /**
+     * Mutator: Ensure due_date is stored as Y-m-d format without time
+     */
+    public function setDueDateAttribute($value)
+    {
+        if ($value) {
+            $this->attributes['due_date'] = \Carbon\Carbon::parse($value)->format('Y-m-d');
+        }
+    }
+
+    /**
+     * Mutator: Ensure released_date is stored as Y-m-d format without time
+     */
+    public function setReleasedDateAttribute($value)
+    {
+        if ($value) {
+            $this->attributes['released_date'] = \Carbon\Carbon::parse($value)->format('Y-m-d');
+        }
+    }
+
+    /**
+     * Mutator: Ensure original_due_date is stored as Y-m-d format without time
+     */
+    public function setOriginalDueDateAttribute($value)
+    {
+        if ($value) {
+            $this->attributes['original_due_date'] = \Carbon\Carbon::parse($value)->format('Y-m-d');
+        }
+    }
+
+    /**
+     * Mutator: Ensure return_date is stored as Y-m-d format without time
+     */
+    public function setReturnDateAttribute($value)
+    {
+        if ($value) {
+            $this->attributes['return_date'] = \Carbon\Carbon::parse($value)->format('Y-m-d');
+        }
+    }
 }

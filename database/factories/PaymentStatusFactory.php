@@ -17,7 +17,7 @@ class PaymentStatusFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'status_name' => $this->faker->unique()->word(),
         ];
     }
 }

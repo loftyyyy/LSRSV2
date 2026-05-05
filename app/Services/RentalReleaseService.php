@@ -93,7 +93,7 @@ class RentalReleaseService
                 return $item;
             }
             // Step 2: Load reservation if provided
-            $reservation = $data['reservation_id']
+            $reservation = isset($data['reservation_id']) && $data['reservation_id']
                 ? Reservation::find($data['reservation_id'])
                 : null;
             // Step 2.5: Validate reservation status if provided

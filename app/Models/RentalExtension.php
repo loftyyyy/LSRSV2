@@ -33,4 +33,24 @@ class RentalExtension extends Model
     {
         return $this->belongsTo(User::class, 'extended_by', 'user_id');
     }
+
+    /**
+     * Mutator: Ensure old_due_date is stored as Y-m-d format without time
+     */
+    public function setOldDueDateAttribute($value)
+    {
+        if ($value) {
+            $this->attributes['old_due_date'] = \Carbon\Carbon::parse($value)->format('Y-m-d');
+        }
+    }
+
+    /**
+     * Mutator: Ensure new_due_date is stored as Y-m-d format without time
+     */
+    public function setNewDueDateAttribute($value)
+    {
+        if ($value) {
+            $this->attributes['new_due_date'] = \Carbon\Carbon::parse($value)->format('Y-m-d');
+        }
+    }
 }

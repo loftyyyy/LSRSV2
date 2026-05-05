@@ -3,35 +3,33 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ReleaseItemRequest;
-use App\Http\Requests\StoreRentalRequest;
-use App\Http\Requests\UpdateRentalRequest;
+use App\Models\Customer;
 use App\Models\Inventory;
 use App\Models\InventoryMovement;
 use App\Models\InventoryStatus;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
-use App\Models\Payment;
 use App\Models\PaymentStatus;
 use App\Models\Rental;
-use App\Models\RentalNotification;
+use App\Models\RentalExtension;
 use App\Models\RentalSetting;
 use App\Models\RentalStatus;
 use App\Models\Reservation;
-use App\Models\ReservationItem;
 use App\Models\ReservationItemAllocation;
 use App\Models\ReservationStatus;
 use App\Services\DepositService;
 use App\Services\RentalReleaseService;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Illuminate\View\View;
 
 /**
  * Controller handling rental operations and management.
- * 
+ *
  * This controller manages the complete rental lifecycle including:
  * - Rental creation, modification, and deletion
  * - Item release and return processing
@@ -254,7 +252,7 @@ class RentalController extends Controller
 
         $callback = function () use ($rentals, $statistics, $dateFrom, $dateTo) {
             $output = fopen('php://output', 'w');
-fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
+            fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
 
             // Add report header
             fputcsv($output, ['Rental Report']);
@@ -327,7 +325,10 @@ fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
             fclose($output);
         };
 
-        return response()->stream($callback, 200, $headers);
+        $response = response()->stream($callback, 200, $headers);
+        // Force Content-Type to be exactly 'text/csv' without charset
+        $response->headers->set('Content-Type', 'text/csv');
+        return $response;
     }
 
     /**
@@ -359,7 +360,7 @@ fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
 
         $callback = function () use ($rentals, $dateFrom, $dateTo) {
             $output = fopen('php://output', 'w');
-fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
+            fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
 
             fputcsv($output, ['Deposit Management Report']);
             fputcsv($output, ['Generated at', now()->format('Y-m-d H:i:s')]);
@@ -411,7 +412,10 @@ fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
             fclose($output);
         };
 
-        return response()->stream($callback, 200, $headers);
+        $response = response()->stream($callback, 200, $headers);
+        // Force Content-Type to be exactly 'text/csv' without charset
+        $response->headers->set('Content-Type', 'text/csv');
+        return $response;
     }
 
     /**
@@ -443,7 +447,7 @@ fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
 
         $callback = function () use ($rentals, $dateFrom, $dateTo) {
             $output = fopen('php://output', 'w');
-fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
+            fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
 
             fputcsv($output, ['Late Fees & Penalties Report']);
             fputcsv($output, ['Generated at', now()->format('Y-m-d H:i:s')]);
@@ -559,7 +563,7 @@ fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
 
         $callback = function () use ($invoices, $dateFrom, $dateTo) {
             $output = fopen('php://output', 'w');
-fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
+            fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
 
             fputcsv($output, ['Customer Payment History Report']);
             fputcsv($output, ['Generated at', now()->format('Y-m-d H:i:s')]);
@@ -659,7 +663,7 @@ fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
 
         $callback = function () use ($invoices, $dateFrom, $dateTo) {
             $output = fopen('php://output', 'w');
-fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
+            fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
 
             fputcsv($output, ['Aged Invoices Report']);
             fputcsv($output, ['Generated at', now()->format('Y-m-d H:i:s')]);
@@ -761,7 +765,7 @@ fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
 
         $callback = function () use ($rentals, $dateFrom, $dateTo) {
             $output = fopen('php://output', 'w');
-fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
+            fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
 
             fputcsv($output, ['Overdue Rentals Report']);
             fputcsv($output, ['Generated at', now()->format('Y-m-d H:i:s')]);
@@ -1138,7 +1142,7 @@ fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
         if ($request->has('rental_status')) {
             $rentalStatus = $request->get('rental_status');
             $query->whereHas('status', function ($statusQuery) use ($rentalStatus) {
-                $statusQuery->where('status_name', $rentalStatus);
+                $statusQuery->whereRaw('LOWER(status_name) = ?', [strtolower($rentalStatus)]);
             });
         }
 
@@ -1343,106 +1347,106 @@ fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
             ], 422);
         }
 
-        DB::beginTransaction();
+        // Check required statuses before transaction
+        $availableInventoryStatus = $this->findInventoryStatusByName('available');
+        $rentedInventoryStatus = $this->findInventoryStatusByName('rented');
+        if (! $availableInventoryStatus || ! $rentedInventoryStatus) {
+            return response()->json([
+                'message' => 'Required inventory statuses (available/rented) are missing.',
+            ], 500);
+        }
+
         try {
-            $availableInventoryStatus = $this->findInventoryStatusByName('available');
-            $rentedInventoryStatus = $this->findInventoryStatusByName('rented');
-            if (! $availableInventoryStatus || ! $rentedInventoryStatus) {
-                return response()->json([
-                    'message' => 'Required inventory statuses (available/rented) are missing.',
-                ], 500);
-            }
+            DB::transaction(function () use ($rental, $request, $availableInventoryStatus, $rentedInventoryStatus) {
+                // Update rental with return information
+                $rental->update([
+                    'return_date' => $request->input('return_date'),
+                    'returned_to' => auth()->id(),
+                    'return_notes' => $request->input('return_notes'),
+                ]);
 
-            // Update rental with return information
-            $rental->update([
-                'return_date' => $request->input('return_date'),
-                'returned_to' => auth()->id(),
-                'return_notes' => $request->input('return_notes'),
-            ]);
+                // Process deposit handling (no invoice creation on return)
+                $depositReturnAction = $request->input('deposit_return_action', 'hold');
+                if ($depositReturnAction === 'full') {
+                    $this->depositService->returnFullDeposit(
+                        $rental,
+                        $request->input('deposit_return_method'),
+                        auth()->id(),
+                        $request->input('deposit_return_reference')
+                    );
+                } elseif ($depositReturnAction === 'partial') {
+                    $this->depositService->returnPartialDeposit(
+                        $rental,
+                        $request->input('deductions', []),
+                        $request->input('deposit_return_method'),
+                        auth()->id(),
+                        null,
+                        $request->input('deposit_return_reference')
+                    );
+                } elseif ($depositReturnAction === 'forfeit') {
+                    $this->depositService->forfeitDeposit(
+                        $rental,
+                        $request->input('deposit_return_notes', 'Deposit forfeited on return processing.'),
+                        auth()->id()
+                    );
+                }
 
-            // Process deposit handling (no invoice creation on return)
-            $depositReturnAction = $request->input('deposit_return_action', 'hold');
-            if ($depositReturnAction === 'full') {
-                $this->depositService->returnFullDeposit(
-                    $rental,
-                    $request->input('deposit_return_method'),
-                    auth()->id(),
-                    $request->input('deposit_return_reference')
-                );
-            } elseif ($depositReturnAction === 'partial') {
-                $this->depositService->returnPartialDeposit(
-                    $rental,
-                    $request->input('deductions', []),
-                    $request->input('deposit_return_method'),
-                    auth()->id(),
-                    null,
-                    $request->input('deposit_return_reference')
-                );
-            } elseif ($depositReturnAction === 'forfeit') {
-                $this->depositService->forfeitDeposit(
-                    $rental,
-                    $request->input('deposit_return_notes', 'Deposit forfeited on return processing.'),
-                    auth()->id()
-                );
-            }
+                // Update rental status to returned
+                $returnedStatus = $this->findRentalStatusByName('returned');
+                if ($returnedStatus) {
+                    $rental->update(['status_id' => $returnedStatus->status_id]);
+                }
 
-            // Update rental status to returned
-            $returnedStatus = $this->findRentalStatusByName('returned');
-            if ($returnedStatus) {
-                $rental->update(['status_id' => $returnedStatus->status_id]);
-            }
+                // Generate penalty invoice if overdue
+                $this->createOrUpdatePenaltyInvoice($rental);
 
-            // Generate penalty invoice if overdue
-            $this->createOrUpdatePenaltyInvoice($rental);
+                $reservationItemId = null;
+                if ($rental->reservation_id) {
+                    $allocation = ReservationItemAllocation::where('item_id', $rental->item_id)
+                        ->whereHas('reservationItem', function ($query) use ($rental) {
+                            $query->where('reservation_id', $rental->reservation_id);
+                        })
+                        ->whereIn('allocation_status', ['allocated', 'released'])
+                        ->orderByDesc('id')
+                        ->first();
 
-            $reservationItemId = null;
-            if ($rental->reservation_id) {
-                $allocation = ReservationItemAllocation::where('item_id', $rental->item_id)
-                    ->whereHas('reservationItem', function ($query) use ($rental) {
-                        $query->where('reservation_id', $rental->reservation_id);
-                    })
-                    ->whereIn('allocation_status', ['allocated', 'released'])
-                    ->orderByDesc('id')
-                    ->first();
+                    if ($allocation) {
+                        $allocation->update([
+                            'allocation_status' => 'returned',
+                            'returned_at' => now(),
+                            'updated_by' => auth()->id(),
+                        ]);
 
-                if ($allocation) {
-                    $allocation->update([
-                        'allocation_status' => 'returned',
-                        'returned_at' => now(),
-                        'updated_by' => auth()->id(),
-                    ]);
-
-                    $reservationItemId = $allocation->reservation_item_id;
-                    if ($allocation->reservationItem) {
-                        $this->syncReservationItemFulfillment($allocation->reservationItem);
+                        $reservationItemId = $allocation->reservation_item_id;
+                        if ($allocation->reservationItem) {
+                            $this->syncReservationItemFulfillment($allocation->reservationItem);
+                        }
                     }
                 }
-            }
 
-            if ($rental->item) {
-                $fromStatusId = $rental->item->status_id;
-                $rental->item->update(['status_id' => $availableInventoryStatus->status_id]);
+                if ($rental->item) {
+                    $fromStatusId = $rental->item->status_id;
+                    $rental->item->update(['status_id' => $availableInventoryStatus->status_id]);
 
-                $returnNotes = $request->input('return_notes');
-                if ($request->filled('condition_notes')) {
-                    $returnNotes = trim(($returnNotes ? $returnNotes.' | ' : '').'Condition: '.$request->input('condition_notes'));
+                    $returnNotes = $request->input('return_notes');
+                    if ($request->filled('condition_notes')) {
+                        $returnNotes = trim(($returnNotes ? $returnNotes.' | ' : '').'Condition: '.$request->input('condition_notes'));
+                    }
+
+                    $this->createInventoryMovement(
+                        $rental->item,
+                        'return',
+                        $fromStatusId ?: $rentedInventoryStatus->status_id,
+                        $availableInventoryStatus->status_id,
+                        [
+                            'reservation_id' => $rental->reservation_id,
+                            'reservation_item_id' => $reservationItemId,
+                            'rental_id' => $rental->rental_id,
+                            'notes' => $returnNotes,
+                        ]
+                    );
                 }
-
-                $this->createInventoryMovement(
-                    $rental->item,
-                    'return',
-                    $fromStatusId ?: $rentedInventoryStatus->status_id,
-                    $availableInventoryStatus->status_id,
-                    [
-                        'reservation_id' => $rental->reservation_id,
-                        'reservation_item_id' => $reservationItemId,
-                        'rental_id' => $rental->rental_id,
-                        'notes' => $returnNotes,
-                    ]
-                );
-            }
-
-            DB::commit();
+            });
 
             $rental->load(['customer', 'item', 'status', 'invoices.invoiceItems']);
 
@@ -1453,8 +1457,6 @@ fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
             ]);
 
         } catch (\Exception $e) {
-            DB::rollBack();
-
             return response()->json([
                 'message' => 'Failed to process return',
                 'error' => $e->getMessage(),
@@ -1488,28 +1490,27 @@ fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
             ], 422);
         }
 
-        DB::beginTransaction();
         try {
-            $oldDueDate = $rental->due_date;
-            $newDueDate = $request->new_due_date;
+            DB::transaction(function () use ($rental, $request) {
+                $oldDueDate = $rental->due_date;
+                $newDueDate = $request->new_due_date;
 
-            \App\Models\RentalExtension::create([
-                'rental_id' => $rental->rental_id,
-                'old_due_date' => $oldDueDate,
-                'new_due_date' => $newDueDate,
-                'extension_reason' => $request->extension_reason,
-                'extended_by' => auth()->id(),
-            ]);
+                \App\Models\RentalExtension::create([
+                    'rental_id' => $rental->rental_id,
+                    'old_due_date' => $oldDueDate,
+                    'new_due_date' => $newDueDate,
+                    'extension_reason' => $request->extension_reason,
+                    'extended_by' => auth()->id(),
+                ]);
 
-            $rental->update([
-                'due_date' => $newDueDate,
-                'extension_count' => $rental->extension_count + 1,
-                'extended_by' => auth()->id(),
-                'last_extended_at' => now(),
-                'extension_reason' => $request->extension_reason,
-            ]);
-
-            DB::commit();
+                $rental->update([
+                    'due_date' => $request->new_due_date,
+                    'extension_count' => $rental->extension_count + 1,
+                    'extended_by' => auth()->id(),
+                    'last_extended_at' => now(),
+                    'extension_reason' => $request->extension_reason,
+                ]);
+            });
 
             $rental->load(['customer', 'item', 'status', 'extendedBy', 'extensions.extendedBy']);
 
@@ -1519,8 +1520,6 @@ fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
             ]);
 
         } catch (\Exception $e) {
-            DB::rollBack();
-
             return response()->json([
                 'message' => 'Failed to extend rental',
                 'error' => $e->getMessage(),
@@ -1549,50 +1548,49 @@ fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
             'failed' => [],
         ];
 
-        DB::beginTransaction();
         try {
-            $rentals = Rental::whereIn('rental_id', $rentalIds)
-                ->whereNull('return_date')
-                ->get();
+            DB::transaction(function () use ($rentalIds, $days, $reason, &$results) {
+                $rentals = Rental::whereIn('rental_id', $rentalIds)
+                    ->whereNull('return_date')
+                    ->get();
 
-            foreach ($rentals as $rental) {
-                // Skip if rental is overdue
-                if (Carbon::parse($rental->due_date)->lessThan(Carbon::now())) {
-                    $results['failed'][] = [
-                        'rental_id' => $rental->rental_id,
-                        'reason' => 'Rental is overdue. Settle penalties first.',
-                    ];
+                foreach ($rentals as $rental) {
+                    // Skip if rental is overdue
+                    if (Carbon::parse($rental->due_date)->lessThan(Carbon::now())) {
+                        $results['failed'][] = [
+                            'rental_id' => $rental->rental_id,
+                            'reason' => 'Rental is overdue. Settle penalties first.',
+                        ];
 
-                    continue;
+                        continue;
+                    }
+
+                    // Calculate new due date
+                    $newDueDate = Carbon::parse($rental->due_date)->addDays($days);
+
+                    $rental->update([
+                        'due_date' => $newDueDate,
+                        'extension_count' => $rental->extension_count + 1,
+                        'extended_by' => auth()->id(),
+                        'last_extended_at' => now(),
+                        'extension_reason' => $reason,
+                    ]);
+
+                    $results['success'][] = $rental->rental_id;
                 }
 
-                // Calculate new due date
-                $newDueDate = Carbon::parse($rental->due_date)->addDays($days);
+                // Check for already returned rentals
+                $returnedRentals = Rental::whereIn('rental_id', $rentalIds)
+                    ->whereNotNull('return_date')
+                    ->pluck('rental_id');
 
-                $rental->update([
-                    'due_date' => $newDueDate,
-                    'extension_count' => $rental->extension_count + 1,
-                    'extended_by' => auth()->id(),
-                    'last_extended_at' => now(),
-                    'extension_reason' => $reason,
-                ]);
-
-                $results['success'][] = $rental->rental_id;
-            }
-
-            // Check for already returned rentals
-            $returnedRentals = Rental::whereIn('rental_id', $rentalIds)
-                ->whereNotNull('return_date')
-                ->pluck('rental_id');
-
-            foreach ($returnedRentals as $rentalId) {
-                $results['failed'][] = [
-                    'rental_id' => $rentalId,
-                    'reason' => 'Rental has already been returned.',
-                ];
-            }
-
-            DB::commit();
+                foreach ($returnedRentals as $rentalId) {
+                    $results['failed'][] = [
+                        'rental_id' => $rentalId,
+                        'reason' => 'Rental has already been returned.',
+                    ];
+                }
+            });
 
             $successCount = count($results['success']);
             $failedCount = count($results['failed']);
@@ -1603,8 +1601,6 @@ fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
             ]);
 
         } catch (\Exception $e) {
-            DB::rollBack();
-
             return response()->json([
                 'message' => 'Failed to extend rentals',
                 'error' => $e->getMessage(),
@@ -1617,6 +1613,16 @@ fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
      */
     public function bulkReturn(Request $request): JsonResponse
     {
+        // Check for required statuses BEFORE validation
+        $availableInventoryStatus = $this->findInventoryStatusByName('available');
+        $returnedStatus = $this->findRentalStatusByName('returned');
+
+        if (! $availableInventoryStatus || ! $returnedStatus) {
+            return response()->json([
+                'message' => 'Required statuses (available/returned) are missing from the system.',
+            ], 500);
+        }
+
         $request->validate([
             'rental_ids' => 'required|array|min:1',
             'rental_ids.*' => 'exists:rentals,rental_id',
@@ -1633,76 +1639,66 @@ fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
             'failed' => [],
         ];
 
-        $availableInventoryStatus = $this->findInventoryStatusByName('available');
-        $returnedStatus = $this->findRentalStatusByName('returned');
-
-        if (! $availableInventoryStatus || ! $returnedStatus) {
-            return response()->json([
-                'message' => 'Required statuses (available/returned) are missing from the system.',
-            ], 500);
-        }
-
-        DB::beginTransaction();
         try {
-            $rentals = Rental::whereIn('rental_id', $rentalIds)
-                ->whereNull('return_date')
-                ->with(['item'])
-                ->get();
+            DB::transaction(function () use ($rentalIds, $returnDate, $returnNotes, $availableInventoryStatus, $returnedStatus, &$results) {
+                $rentals = Rental::whereIn('rental_id', $rentalIds)
+                    ->whereNull('return_date')
+                    ->with(['item'])
+                    ->get();
 
-            foreach ($rentals as $rental) {
-                try {
-                    // Update rental with return information
-                    $rental->update([
-                        'return_date' => $returnDate,
-                        'returned_to' => auth()->id(),
-                        'return_notes' => $returnNotes ? "[Bulk Return] {$returnNotes}" : '[Bulk Return]',
-                        'status_id' => $returnedStatus->status_id,
-                    ]);
+                foreach ($rentals as $rental) {
+                    try {
+                        // Update rental with return information
+                        $rental->update([
+                            'return_date' => $returnDate,
+                            'returned_to' => auth()->id(),
+                            'return_notes' => $returnNotes ? "[Bulk Return] {$returnNotes}" : '[Bulk Return]',
+                            'status_id' => $returnedStatus->status_id,
+                        ]);
 
-                    // Calculate and create penalty if overdue
-                    $this->createOrUpdatePenaltyInvoice($rental);
+                        // Calculate and create penalty if overdue
+                        $this->createOrUpdatePenaltyInvoice($rental);
 
-                    // Update inventory status back to available
-                    if ($rental->item) {
-                        $fromStatusId = $rental->item->status_id;
-                        $rental->item->update(['status_id' => $availableInventoryStatus->status_id]);
+                        // Update inventory status back to available
+                        if ($rental->item) {
+                            $fromStatusId = $rental->item->status_id;
+                            $rental->item->update(['status_id' => $availableInventoryStatus->status_id]);
 
-                        // Create inventory movement record
-                        $this->createInventoryMovement(
-                            $rental->item,
-                            'return',
-                            $fromStatusId,
-                            $availableInventoryStatus->status_id,
-                            [
-                                'rental_id' => $rental->rental_id,
-                                'notes' => 'Bulk return processed',
-                            ]
-                        );
+                            // Create inventory movement record
+                            $this->createInventoryMovement(
+                                $rental->item,
+                                'return',
+                                $fromStatusId,
+                                $availableInventoryStatus->status_id,
+                                [
+                                    'rental_id' => $rental->rental_id,
+                                    'notes' => 'Bulk return processed',
+                                ]
+                            );
+                        }
+
+                        $results['success'][] = $rental->rental_id;
+
+                    } catch (\Exception $e) {
+                        $results['failed'][] = [
+                            'rental_id' => $rental->rental_id,
+                            'reason' => $e->getMessage(),
+                        ];
                     }
+                }
 
-                    $results['success'][] = $rental->rental_id;
+                // Check for already returned rentals
+                $alreadyReturnedRentals = Rental::whereIn('rental_id', $rentalIds)
+                    ->whereNotNull('return_date')
+                    ->pluck('rental_id');
 
-                } catch (\Exception $e) {
+                foreach ($alreadyReturnedRentals as $rentalId) {
                     $results['failed'][] = [
-                        'rental_id' => $rental->rental_id,
-                        'reason' => $e->getMessage(),
+                        'rental_id' => $rentalId,
+                        'reason' => 'Rental has already been returned.',
                     ];
                 }
-            }
-
-            // Check for already returned rentals
-            $alreadyReturnedRentals = Rental::whereIn('rental_id', $rentalIds)
-                ->whereNotNull('return_date')
-                ->pluck('rental_id');
-
-            foreach ($alreadyReturnedRentals as $rentalId) {
-                $results['failed'][] = [
-                    'rental_id' => $rentalId,
-                    'reason' => 'Rental has already been returned.',
-                ];
-            }
-
-            DB::commit();
+            });
 
             $successCount = count($results['success']);
             $failedCount = count($results['failed']);
@@ -1713,8 +1709,6 @@ fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
             ]);
 
         } catch (\Exception $e) {
-            DB::rollBack();
-
             return response()->json([
                 'message' => 'Failed to process returns',
                 'error' => $e->getMessage(),
@@ -1742,38 +1736,37 @@ fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
             ], 422);
         }
 
-        DB::beginTransaction();
+        // Check if cancelled status exists BEFORE transaction
+        $cancelledStatus = $this->findRentalStatusByName('cancelled');
+        if (! $cancelledStatus) {
+            return response()->json([
+                'message' => 'Cancelled status not found in the system.',
+            ], 500);
+        }
+
         try {
-            // Update the rental status to cancelled
-            $cancelledStatus = $this->findRentalStatusByName('cancelled');
-            if (! $cancelledStatus) {
-                return response()->json([
-                    'message' => 'Cancelled status not found in the system.',
-                ], 500);
-            }
-
-            $rental->update([
-                'status_id' => $cancelledStatus->status_id,
-                'return_notes' => 'Rental cancelled on '.now()->format('Y-m-d H:i:s'),
-            ]);
-
-            // If there's a reservation, update its status too
-            if ($rental->reservation) {
-                $reservationCancelledStatus = $this->findReservationStatusByName('cancelled');
-                $rental->reservation->update([
-                    'status_id' => $reservationCancelledStatus?->status_id ?? $rental->reservation->status_id,
+            DB::transaction(function () use ($rental, $cancelledStatus) {
+                $rental->update([
+                    'status_id' => $cancelledStatus->status_id,
+                    'return_notes' => 'Rental cancelled on '.now()->format('Y-m-d H:i:s'),
                 ]);
-            }
 
-            // Update item availability back to available
-            if ($rental->item) {
-                $availableInventoryStatus = $this->findInventoryStatusByName('available');
-                if ($availableInventoryStatus) {
-                    $rental->item->update(['status_id' => $availableInventoryStatus->status_id]);
+                // If there's a reservation, update its status too
+                if ($rental->reservation) {
+                    $reservationCancelledStatus = $this->findReservationStatusByName('cancelled');
+                    $rental->reservation->update([
+                        'status_id' => $reservationCancelledStatus?->status_id ?? $rental->reservation->status_id,
+                    ]);
                 }
-            }
 
-            DB::commit();
+                // Update item availability back to available
+                if ($rental->item) {
+                    $availableInventoryStatus = $this->findInventoryStatusByName('available');
+                    if ($availableInventoryStatus) {
+                        $rental->item->update(['status_id' => $availableInventoryStatus->status_id]);
+                    }
+                }
+            });
 
             $rental->load(['customer', 'item', 'status', 'reservation', 'releasedBy']);
 
@@ -1783,8 +1776,6 @@ fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
             ]);
 
         } catch (\Exception $e) {
-            DB::rollBack();
-
             return response()->json([
                 'message' => 'Failed to cancel rental',
                 'error' => $e->getMessage(),
@@ -1832,15 +1823,15 @@ fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
         $maxPenaltyDays = RentalSetting::getMaxPenaltyDays();
 
         if ($rental->return_date !== null) {
-            $returnDate = Carbon::parse($rental->return_date);
-            $dueDate = Carbon::parse($rental->due_date);
+            $returnDate = Carbon::parse($rental->return_date)->startOfDay();
+            $dueDate = Carbon::parse($rental->due_date)->startOfDay();
 
             // Apply grace period
             $dueWithGrace = $dueDate->copy()->addHours($gracePeriodHours);
 
             // If returned within grace period, no penalty
             if ($returnDate->lessThanOrEqualTo($dueWithGrace)) {
-                return 0;
+                return 0.0;
             }
 
             // Calculate days late (from original due date, not grace period)
@@ -1848,14 +1839,14 @@ fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
             $daysLate = (int) ceil($dueDate->diffInRealHours($returnDate) / 24);
         } else {
             // Rental is still active
-            $now = Carbon::now();
-            $dueDate = Carbon::parse($rental->due_date);
+            $now = Carbon::now()->startOfDay();
+            $dueDate = Carbon::parse($rental->due_date)->startOfDay();
 
             // Apply grace period
             $dueWithGrace = $dueDate->copy()->addHours($gracePeriodHours);
 
             if ($now->lessThanOrEqualTo($dueWithGrace)) {
-                return 0;
+                return 0.0;
             }
 
             $daysLate = (int) ceil($dueDate->diffInRealHours($now) / 24);
@@ -1866,7 +1857,7 @@ fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
             $daysLate = $maxPenaltyDays;
         }
 
-        $penalty = $daysLate * $penaltyPerDay;
+        $penalty = (float) ($daysLate * $penaltyPerDay);
 
         return $penalty;
     }
@@ -1895,6 +1886,7 @@ fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
                     'invoice_type' => 'penalty',
                 ],
                 [
+                    'invoice_number' => $this->generateInvoiceNumber('INV-PENALTY'),
                     'customer_id' => $rental->customer_id,
                     'invoice_date' => now(),
                     'due_date' => now()->addDays(7),
@@ -1902,6 +1894,7 @@ fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
                     'tax_amount' => 0,
                     'total_amount' => 0,
                     'status_id' => $statusId,
+                    'created_by' => auth()->id() ?? 1,
                     'notes' => 'Late return penalty invoice',
                 ]
             );

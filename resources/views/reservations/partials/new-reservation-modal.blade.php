@@ -834,11 +834,21 @@
                     endDate.min = this.value;
                 }
                 updateRentalDuration();
+                // Refresh available items if item selector is open
+                if (reservationState.isItemSelectorOpen) {
+                    loadAvailableItems();
+                }
             });
         }
 
         if (endDate) {
-            endDate.addEventListener('change', updateRentalDuration);
+            endDate.addEventListener('change', function() {
+                updateRentalDuration();
+                // Refresh available items if item selector is open
+                if (reservationState.isItemSelectorOpen) {
+                    loadAvailableItems();
+                }
+            });
         }
 
         // Item search

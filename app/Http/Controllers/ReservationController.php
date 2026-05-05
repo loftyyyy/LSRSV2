@@ -23,7 +23,7 @@ use Illuminate\View\View;
 
 /**
  * Controller handling reservation management operations.
- * 
+ *
  * This controller manages all reservation-related functionality including:
  * - Reservation creation, modification, and deletion
  * - Reservation confirmation and cancellation
@@ -99,8 +99,8 @@ class ReservationController extends Controller
             }),
             'average_items_per_reservation' => $reservations->count() > 0
                 ? round($reservations->sum(function ($r) {
-                    return $r->items->count();
-                }) / $reservations->count(), 2)
+                        return $r->items->count();
+                    }) / $reservations->count(), 2)
                 : 0,
         ];
 
@@ -166,7 +166,7 @@ class ReservationController extends Controller
 
         $callback = function () use ($reservations, $statistics, $startDate, $endDate) {
             $output = fopen('php://output', 'w');
-fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
+            fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
 
             // Add report header
             fputcsv($output, ['Reservation Report']);
@@ -391,115 +391,128 @@ fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
     public function store(StoreReservationRequest $request): JsonResponse
     {
         try {
-            DB::beginTransaction();
+            $result = DB::transaction(function () use ($request) {
+                // Set the clerk who created the reservation and default status
+                $validatedData = $request->validated();
+                $validatedData['reserved_by'] = Auth::id();
+                $validatedData['reservation_date'] = now();
 
-            // Set the clerk who created the reservation and default status
-            $validatedData = $request->validated();
-            $validatedData['reserved_by'] = Auth::id();
-            $validatedData['reservation_date'] = now();
-
-            // Set default status to 'pending' if not provided
-            if (! isset($validatedData['status_id'])) {
-                $pendingStatus = ReservationStatus::where('status_name', 'pending')->first();
-                $validatedData['status_id'] = $pendingStatus?->status_id ?? 1;
-            }
-
-            // Create the reservation
-            $reservation = Reservation::create($validatedData);
-
-            // Auto-create invoice for the reservation
-            $unpaidStatus = PaymentStatus::where('status_name', 'unpaid')->first();
-            $invoiceTotal = 0;
-            $invoiceItemsData = [];
-
-            // Add items to reservation if provided
-            if ($request->has('items') && ! empty($request->items)) {
-                foreach ($request->items as $itemData) {
-                    $variant = InventoryVariant::findOrFail($itemData['variant_id']);
-                    $requestedQuantity = (int) ($itemData['quantity'] ?? 1);
-
-                    if ($requestedQuantity < 1) {
-                        DB::rollBack();
-
-                        return response()->json([
-                            'message' => 'Quantity must be at least 1',
-                            'error' => 'INVALID_QUANTITY',
-                        ], 422);
-                    }
-
-                    $availableCount = $this->getAvailableVariantUnitsForDateRange(
-                        $variant->variant_id,
-                        $validatedData['start_date'],
-                        $validatedData['end_date']
-                    );
-
-                    if ($availableCount < $requestedQuantity) {
-                        DB::rollBack();
-
-                        return response()->json([
-                            'message' => "Variant '{$variant->name}' has only {$availableCount} available unit(s) for the selected dates",
-                            'error' => 'VARIANT_NOT_AVAILABLE',
-                            'variant_id' => $variant->variant_id,
-                        ], 422);
-                    }
-
-                    // Use deposit amount for reservation invoice, not rental price
-                    $depositAmount = $itemData['deposit_amount'] ?? $variant->deposit_amount;
-                    $itemTotal = $depositAmount * $requestedQuantity;
-                    $invoiceTotal += $itemTotal;
-
-                    ReservationItem::create([
-                        'reservation_id' => $reservation->reservation_id,
-                        'item_id' => null,
-                        'variant_id' => $variant->variant_id,
-                        'quantity' => $requestedQuantity,
-                        'rental_price' => $itemData['rental_price'] ?? $variant->rental_price,
-                        'notes' => $itemData['notes'] ?? null,
-                    ]);
-
-                    $invoiceItemsData[] = [
-                        'description' => "Reservation Deposit: {$variant->name}",
-                        'item_type' => 'deposit',
-                        'item_id' => null,
-                        'quantity' => $requestedQuantity,
-                        'unit_price' => $depositAmount,
-                        'total_price' => $itemTotal,
-                    ];
+                // Set default status to 'pending' if not provided
+                if (! isset($validatedData['status_id'])) {
+                    $pendingStatus = ReservationStatus::where('status_name', 'pending')->first();
+                    $validatedData['status_id'] = $pendingStatus?->status_id ?? 1;
                 }
-            }
 
-            // Create invoice with unpaid status
-            $invoice = Invoice::create([
-                'invoice_number' => $this->generateInvoiceNumber(),
-                'customer_id' => $reservation->customer_id,
-                'reservation_id' => $reservation->reservation_id,
-                'rental_id' => null,
-                'invoice_type' => 'reservation',
-                'invoice_date' => now(),
-                'total_amount' => $invoiceTotal,
-                'amount_paid' => 0,
-                'balance_due' => $invoiceTotal,
-                'status_id' => $unpaidStatus?->status_id ?? 1,
-                'created_by' => Auth::id(),
-            ]);
+                // Create the reservation
+                $reservation = Reservation::create($validatedData);
 
-            // Add the generated invoice items
-            foreach ($invoiceItemsData as $itemData) {
-                $itemData['invoice_id'] = $invoice->invoice_id;
-                \App\Models\InvoiceItem::create($itemData);
-            }
+                // Auto-create invoice for the reservation
+                $unpaidStatus = PaymentStatus::where('status_name', 'unpaid')->first();
+                $invoiceTotal = 0;
+                $invoiceItemsData = [];
 
-            DB::commit();
+                // Add items to reservation if provided
+                if ($request->has('items') && ! empty($request->items)) {
+                    foreach ($request->items as $itemData) {
+                        // Use pessimistic lock to prevent race condition
+                        $variant = InventoryVariant::lockForUpdate()->findOrFail($itemData['variant_id']);
+                        $requestedQuantity = (int) ($itemData['quantity'] ?? 1);
 
-            $reservation->load(['customer', 'status', 'reservedBy', 'items.item', 'items.variant']);
+                        if ($requestedQuantity < 1) {
+                            throw new \Exception('INVALID_QUANTITY');
+                        }
+
+                        $availableCount = $this->getAvailableVariantUnitsForDateRange(
+                            $variant->variant_id,
+                            $validatedData['start_date'],
+                            $validatedData['end_date']
+                        );
+
+                        if ($availableCount < $requestedQuantity) {
+                            $exception = new \Exception('VARIANT_NOT_AVAILABLE');
+                            $exception->availableCount = $availableCount;
+                            $exception->variantName = $variant->name;
+                            $exception->variantId = $variant->variant_id;
+                            throw $exception;
+                        }
+
+                        // Use deposit amount for reservation invoice, not rental price
+                        $depositAmount = $itemData['deposit_amount'] ?? $variant->deposit_amount;
+                        $itemTotal = $depositAmount * $requestedQuantity;
+                        $invoiceTotal += $itemTotal;
+
+                        ReservationItem::create([
+                            'reservation_id' => $reservation->reservation_id,
+                            'item_id' => null,
+                            'variant_id' => $variant->variant_id,
+                            'quantity' => $requestedQuantity,
+                            'rental_price' => $itemData['rental_price'] ?? $variant->rental_price,
+                            'notes' => $itemData['notes'] ?? null,
+                        ]);
+
+                        $invoiceItemsData[] = [
+                            'description' => "Reservation Deposit: {$variant->name}",
+                            'item_type' => 'deposit',
+                            'item_id' => null,
+                            'quantity' => $requestedQuantity,
+                            'unit_price' => $depositAmount,
+                            'total_price' => $itemTotal,
+                        ];
+                    }
+                }
+
+                // Create invoice with unpaid status
+                $invoice = Invoice::create([
+                    'invoice_number' => $this->generateInvoiceNumber(),
+                    'customer_id' => $reservation->customer_id,
+                    'reservation_id' => $reservation->reservation_id,
+                    'rental_id' => null,
+                    'invoice_type' => 'reservation',
+                    'invoice_date' => now(),
+                    'total_amount' => $invoiceTotal,
+                    'amount_paid' => 0,
+                    'balance_due' => $invoiceTotal,
+                    'status_id' => $unpaidStatus?->status_id ?? 1,
+                    'created_by' => Auth::id(),
+                ]);
+
+                // Add the generated invoice items
+                foreach ($invoiceItemsData as $itemData) {
+                    $itemData['invoice_id'] = $invoice->invoice_id;
+                    \App\Models\InvoiceItem::create($itemData);
+                }
+
+                return $reservation;
+            });
+
+            $result->load(['customer', 'status', 'reservedBy', 'items.item', 'items.variant']);
 
             return response()->json([
                 'message' => 'Reservation created successfully',
-                'data' => $reservation,
+                'data' => $result,
             ], 201);
 
         } catch (\Exception $e) {
-            DB::rollBack();
+            // Handle validation errors that were thrown
+            if ($e->getMessage() === 'INVALID_QUANTITY') {
+                return response()->json([
+                    'message' => 'Quantity must be at least 1',
+                    'error' => 'INVALID_QUANTITY',
+                ], 422);
+            }
+
+            if ($e->getMessage() === 'VARIANT_NOT_AVAILABLE') {
+                $availableCount = $e->availableCount ?? 0;
+                $variantName = $e->variantName ?? 'variant';
+                $variantId = $e->variantId ?? null;
+
+                return response()->json([
+                    'message' => "Variant '{$variantName}' has only {$availableCount} available unit(s) for the selected dates",
+                    'error' => 'VARIANT_NOT_AVAILABLE',
+                    'variant_id' => $variantId,
+                ], 422);
+            }
+
             Log::error('Reservation creation failed:', [
                 'message' => $e->getMessage(),
                 'file' => $e->getFile(),
@@ -540,90 +553,96 @@ fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
     public function update(UpdateReservationRequest $request, Reservation $reservation): JsonResponse
     {
         try {
-            DB::beginTransaction();
-
-            // Only pending reservations can be updated
-            if (strtolower($reservation->status->status_name) !== 'pending') {
-                return response()->json([
-                    'message' => 'Only pending reservations can be updated',
-                ], 422);
-            }
-
-            // Update reservation basic info
-            $validatedData = $request->validated();
-            $reservation->update($validatedData);
-
-            // Update items if provided
-            if ($request->has('items')) {
-                // Remove old items if updating
-                if ($request->get('replace_items', false)) {
-                    $reservation->items()->delete();
+            $result = DB::transaction(function () use ($request, $reservation) {
+                // Only pending reservations can be updated
+                if (strtolower($reservation->status->status_name) !== 'pending') {
+                    throw new \Exception('RESERVATION_NOT_PENDING');
                 }
 
-                // Add new/updated items
-                foreach ($request->items as $itemData) {
-                    $variant = InventoryVariant::findOrFail($itemData['variant_id']);
-                    $requestedQuantity = (int) ($itemData['quantity'] ?? 1);
+                // Update reservation basic info
+                $validatedData = $request->validated();
+                $reservation->update($validatedData);
 
-                    if ($requestedQuantity < 1) {
-                        DB::rollBack();
-
-                        return response()->json([
-                            'message' => 'Quantity must be at least 1',
-                            'error' => 'INVALID_QUANTITY',
-                        ], 422);
+                // Update items if provided
+                if ($request->has('items')) {
+                    // Remove old items if updating
+                    if ($request->get('replace_items', false)) {
+                        $reservation->items()->delete();
                     }
 
-                    $availableCount = $this->getAvailableVariantUnitsForDateRange(
-                        $variant->variant_id,
-                        $validatedData['start_date'] ?? $reservation->start_date,
-                        $validatedData['end_date'] ?? $reservation->end_date,
-                        $reservation->reservation_id
-                    );
+                    // Add new/updated items
+                    foreach ($request->items as $itemData) {
+                        $variant = InventoryVariant::findOrFail($itemData['variant_id']);
+                        $requestedQuantity = (int) ($itemData['quantity'] ?? 1);
 
-                    if ($availableCount < $requestedQuantity) {
-                        DB::rollBack();
+                        if ($requestedQuantity < 1) {
+                            throw new \Exception('INVALID_QUANTITY');
+                        }
 
-                        return response()->json([
-                            'message' => "Variant '{$variant->name}' has only {$availableCount} available unit(s) for the selected dates",
-                            'error' => 'VARIANT_NOT_AVAILABLE',
-                            'variant_id' => $variant->variant_id,
-                        ], 422);
-                    }
+                        $availableCount = $this->getAvailableVariantUnitsForDateRange(
+                            $variant->variant_id,
+                            $validatedData['start_date'] ?? $reservation->start_date,
+                            $validatedData['end_date'] ?? $reservation->end_date,
+                            $reservation->reservation_id
+                        );
 
-                    if (isset($itemData['reservation_item_id'])) {
-                        ReservationItem::where('reservation_item_id', $itemData['reservation_item_id'])
-                            ->update([
+                        if ($availableCount < $requestedQuantity) {
+                            throw new \Exception('VARIANT_NOT_AVAILABLE');
+                        }
+
+                        if (isset($itemData['reservation_item_id'])) {
+                            ReservationItem::where('reservation_item_id', $itemData['reservation_item_id'])
+                                ->update([
+                                    'item_id' => null,
+                                    'variant_id' => $variant->variant_id,
+                                    'quantity' => $requestedQuantity,
+                                    'rental_price' => $itemData['rental_price'] ?? $variant->rental_price,
+                                    'notes' => $itemData['notes'] ?? null,
+                                ]);
+                        } else {
+                            ReservationItem::create([
+                                'reservation_id' => $reservation->reservation_id,
                                 'item_id' => null,
                                 'variant_id' => $variant->variant_id,
                                 'quantity' => $requestedQuantity,
                                 'rental_price' => $itemData['rental_price'] ?? $variant->rental_price,
                                 'notes' => $itemData['notes'] ?? null,
                             ]);
-                    } else {
-                        ReservationItem::create([
-                            'reservation_id' => $reservation->reservation_id,
-                            'item_id' => null,
-                            'variant_id' => $variant->variant_id,
-                            'quantity' => $requestedQuantity,
-                            'rental_price' => $itemData['rental_price'] ?? $variant->rental_price,
-                            'notes' => $itemData['notes'] ?? null,
-                        ]);
+                        }
                     }
                 }
-            }
 
-            DB::commit();
+                return $reservation;
+            });
 
-            $reservation->load(['customer', 'status', 'reservedBy', 'items.item', 'items.variant']);
+            $result->load(['customer', 'status', 'reservedBy', 'items.item', 'items.variant']);
 
             return response()->json([
                 'message' => 'Reservation updated successfully',
-                'data' => $reservation,
+                'data' => $result,
             ]);
 
         } catch (\Exception $e) {
-            DB::rollBack();
+            // Handle validation errors
+            if ($e->getMessage() === 'RESERVATION_NOT_PENDING') {
+                return response()->json([
+                    'message' => 'Only pending reservations can be updated',
+                ], 422);
+            }
+
+            if ($e->getMessage() === 'INVALID_QUANTITY') {
+                return response()->json([
+                    'message' => 'Quantity must be at least 1',
+                    'error' => 'INVALID_QUANTITY',
+                ], 422);
+            }
+
+            if ($e->getMessage() === 'VARIANT_NOT_AVAILABLE') {
+                return response()->json([
+                    'message' => 'Insufficient inventory available',
+                    'error' => 'VARIANT_NOT_AVAILABLE',
+                ], 422);
+            }
 
             return response()->json([
                 'message' => 'Failed to update reservation',
@@ -868,7 +887,7 @@ fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
         // Cancel pending invoices associated with the reservation
         $invoiceCancelledStatus = \App\Models\PaymentStatus::whereRaw('LOWER(status_name) = ?', ['cancelled'])->first();
         $invoicePendingStatus = \App\Models\PaymentStatus::whereRaw('LOWER(status_name) = ?', ['pending'])->first();
-        
+
         if ($invoiceCancelledStatus && $invoicePendingStatus) {
             $reservation->invoices()
                 ->where('status_id', $invoicePendingStatus->status_id)
@@ -920,21 +939,21 @@ fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
      */
     private function getAvailableVariantUnitsForDateRange(int $variantId, ?string $startDate, ?string $endDate, ?int $excludeReservationId = null): int
     {
+        // Only count units that are physically available right now.
+        // Items in rented, maintenance, reserved, retired, or sold status
+        // cannot be promised to a new reservation.
+        $availableStatusId = InventoryStatus::whereRaw('LOWER(status_name) = ?', ['available'])->value('status_id');
+
+        if (! $availableStatusId) {
+            return 0;
+        }
+
         $rentableUnits = Inventory::where('variant_id', $variantId)
-            ->whereHas('status', function ($query) {
-                $query->whereRaw('LOWER(status_name) NOT IN (?, ?)', ['retired', 'sold']);
-            })
+            ->where('status_id', $availableStatusId)
             ->count();
 
         if (! $startDate || ! $endDate) {
-            $availableStatusId = InventoryStatus::whereRaw('LOWER(status_name) = ?', ['available'])->value('status_id');
-            if (! $availableStatusId) {
-                return 0;
-            }
-
-            return Inventory::where('variant_id', $variantId)
-                ->where('status_id', $availableStatusId)
-                ->count();
+            return $rentableUnits;
         }
 
         $reservedUnits = ReservationItem::where('variant_id', $variantId)
@@ -958,9 +977,11 @@ fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
 
         $rentedUnits = DB::table('rentals')
             ->join('inventories', 'rentals.item_id', '=', 'inventories.item_id')
+            ->join('rental_statuses', 'rentals.status_id', '=', 'rental_statuses.status_id')
             ->where('inventories.variant_id', $variantId)
             ->whereDate('rentals.released_date', '<=', $endDate)
             ->whereDate(DB::raw('COALESCE(rentals.return_date, rentals.due_date)'), '>=', $startDate)
+            ->whereRaw('LOWER(rental_statuses.status_name) NOT IN (?, ?)', ['returned', 'completed'])
             ->count();
 
         return max($rentableUnits - $reservedUnits - $rentedUnits, 0);

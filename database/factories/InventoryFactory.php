@@ -19,12 +19,13 @@ class InventoryFactory extends Factory
     {
         return [
             'name' => $this->faker->word(),
-            'item_type' => $this->faker->randomElement(['gown', 'suit']),
+            'item_type' => $this->faker->randomElement(['gown', 'suit', 'accessory']),
             'sku' => $this->faker->unique()->lexify('???-###'),
             'size' => 'M',
             'color' => 'Red',
             'design' => $this->faker->randomElement(['Modern', 'Classic', 'Embellished']),
             'rental_price' => 500,
+            'deposit_amount' => 100,
             'status_id' => InventoryStatus::factory()->state(['status_name'=>'active']),
         ];
     }

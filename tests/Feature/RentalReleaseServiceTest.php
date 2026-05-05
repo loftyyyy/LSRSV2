@@ -6,6 +6,7 @@ use App\Models\Customer;
 use App\Models\Inventory;
 use App\Models\InventoryStatus;
 use App\Models\InventoryVariant;
+use App\Models\PaymentStatus;
 use App\Models\Rental;
 use App\Models\RentalStatus;
 use App\Models\Reservation;
@@ -45,7 +46,9 @@ class RentalReleaseServiceTest extends TestCase
         // Create statuses
         $this->availableStatus = InventoryStatus::factory()->create(['status_name' => 'available']);
         $this->rentedStatus = InventoryStatus::factory()->create(['status_name' => 'rented']);
+        RentalStatus::factory()->create(['status_name' => 'pending']);
         $this->rentedRentalStatus = RentalStatus::factory()->create(['status_name' => 'rented']);
+        PaymentStatus::factory()->create(['status_name' => 'unpaid']);
 
         // Create users and customers
         $this->user = User::factory()->create();
@@ -61,7 +64,7 @@ class RentalReleaseServiceTest extends TestCase
         $this->item = Inventory::factory()->create([
             'variant_id' => $this->variant->variant_id,
             'status_id' => $this->availableStatus->status_id,
-            'deposit_amount' => null, // Falls back to variant
+            'deposit_amount' => 500.00,
             'rental_price' => 100.00,
         ]);
     }
@@ -80,7 +83,7 @@ class RentalReleaseServiceTest extends TestCase
             'deposit_payment_method' => 'cash',
         ];
 
-        $result = $this->service->releaseItem($releaseData, $this->user->id);
+        $result = $this->service->releaseItem($releaseData, $this->user->user_id);
 
         // Assert it's a Rental instance, not an error array
         $this->assertInstanceOf(Rental::class, $result);
@@ -111,7 +114,7 @@ class RentalReleaseServiceTest extends TestCase
             'deposit_payment_method' => 'cash',
         ];
 
-        $result = $this->service->releaseItem($releaseData, $this->user->id);
+        $result = $this->service->releaseItem($releaseData, $this->user->user_id);
 
         // Should be error array
         $this->assertIsArray($result);
@@ -135,7 +138,7 @@ class RentalReleaseServiceTest extends TestCase
             'due_date' => now()->addDays(7)->format('Y-m-d'),
         ];
 
-        $result = $this->service->releaseItem($releaseData, $this->user->id);
+        $result = $this->service->releaseItem($releaseData, $this->user->user_id);
 
         $this->assertIsArray($result);
         $this->assertArrayHasKey('error', $result);
@@ -161,7 +164,7 @@ class RentalReleaseServiceTest extends TestCase
             'due_date' => now()->addDays(7)->format('Y-m-d'),
         ];
 
-        $result = $this->service->releaseItem($releaseData, $this->user->id);
+        $result = $this->service->releaseItem($releaseData, $this->user->user_id);
 
         $this->assertIsArray($result);
         $this->assertArrayHasKey('error', $result);
@@ -182,7 +185,7 @@ class RentalReleaseServiceTest extends TestCase
             'due_date' => now()->addDays(7)->format('Y-m-d'),
         ];
 
-        $result = $this->service->releaseItem($releaseData, $this->user->id);
+        $result = $this->service->releaseItem($releaseData, $this->user->user_id);
 
         $this->assertIsArray($result);
         $this->assertArrayHasKey('error', $result);
@@ -195,7 +198,7 @@ class RentalReleaseServiceTest extends TestCase
     public function test_error_when_deposit_not_configured(): void
     {
         $this->variant->update(['deposit_amount' => 0]);
-        $this->item->update(['deposit_amount' => null]);
+        $this->item->update(['deposit_amount' => 0]);
 
         $releaseData = [
             'item_id' => $this->item->item_id,
@@ -204,7 +207,7 @@ class RentalReleaseServiceTest extends TestCase
             'due_date' => now()->addDays(7)->format('Y-m-d'),
         ];
 
-        $result = $this->service->releaseItem($releaseData, $this->user->id);
+        $result = $this->service->releaseItem($releaseData, $this->user->user_id);
 
         $this->assertIsArray($result);
         $this->assertArrayHasKey('error', $result);
@@ -228,7 +231,7 @@ class RentalReleaseServiceTest extends TestCase
             'deposit_payment_method' => 'cash',
         ];
 
-        $result = $this->service->releaseItem($releaseData, $this->user->id);
+        $result = $this->service->releaseItem($releaseData, $this->user->user_id);
 
         $this->assertInstanceOf(Rental::class, $result);
         $this->assertEquals(750.00, $result->deposit_amount);
@@ -247,7 +250,7 @@ class RentalReleaseServiceTest extends TestCase
             'collect_deposit' => false,
         ];
 
-        $result = $this->service->releaseItem($releaseData, $this->user->id);
+        $result = $this->service->releaseItem($releaseData, $this->user->user_id);
 
         $this->assertInstanceOf(Rental::class, $result);
         $this->assertNotEquals('held', $result->deposit_status);
@@ -280,7 +283,7 @@ class RentalReleaseServiceTest extends TestCase
             'deposit_payment_method' => 'cash',
         ];
 
-        $result = $this->service->releaseItem($releaseData, $this->user->id);
+        $result = $this->service->releaseItem($releaseData, $this->user->user_id);
 
         $this->assertInstanceOf(Rental::class, $result);
         $this->assertEquals($reservation->reservation_id, $result->reservation_id);
@@ -300,7 +303,7 @@ class RentalReleaseServiceTest extends TestCase
             'deposit_payment_method' => 'cash',
         ];
 
-        $result = $this->service->releaseItem($releaseData, $this->user->id);
+        $result = $this->service->releaseItem($releaseData, $this->user->user_id);
 
         // Get the invoice
         $invoice = $result->invoices()->first();
@@ -335,7 +338,7 @@ class RentalReleaseServiceTest extends TestCase
             'due_date' => now()->addDays(7)->format('Y-m-d'),
         ];
 
-        $result = $this->service->releaseItem($releaseData, $this->user->id);
+        $result = $this->service->releaseItem($releaseData, $this->user->user_id);
 
         // Should return error
         $this->assertIsArray($result);

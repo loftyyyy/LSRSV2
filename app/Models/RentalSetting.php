@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 
 class RentalSetting extends Model
 {
+    use HasFactory;
     protected $table = 'rental_settings';
 
     protected $primaryKey = 'setting_id';
