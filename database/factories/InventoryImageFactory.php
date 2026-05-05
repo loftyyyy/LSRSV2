@@ -17,7 +17,10 @@ class InventoryImageFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'item_id' => \App\Models\Inventory::factory(),
+            'image_path' => 'inventory/' . $this->faker->uuid() . '.jpg',
+            'view_type' => $this->faker->randomElement(['front', 'back', 'side', 'detail']),
+            'is_primary' => false,
         ];
     }
 }

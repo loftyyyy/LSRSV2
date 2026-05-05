@@ -29,7 +29,7 @@ class UpdateInventoryRequest extends FormRequest
             'variant_id' => ['sometimes', 'nullable', 'exists:inventory_variants,variant_id'],
             'variant_sku' => ['sometimes', 'nullable', 'string', 'max:50', Rule::unique('inventory_variants', 'variant_sku')->ignore($variantId, 'variant_id')],
             'sku' => ['nullable', 'string', 'max:50', 'unique:inventories,sku,' . $inventoryId . ',item_id'],
-            'item_type' => ['sometimes', 'required', 'in:gown,suit'],
+            'item_type' => ['sometimes', 'required', 'in:gown,suit,accessory'],
             'name' => ['sometimes', 'required', 'string', 'max:255', 'regex:/^[a-zA-Z0-9\s\-\.\,\(\)]+$/'],
             'size' => ['sometimes', 'required', 'string', 'max:50', 'regex:/^[a-zA-Z0-9\s\-]+$/'],
             'color' => ['sometimes', 'required', 'string', 'max:100', 'regex:/^[a-zA-Z\s\-]+$/'],

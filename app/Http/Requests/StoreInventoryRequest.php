@@ -24,9 +24,9 @@ class StoreInventoryRequest extends FormRequest
         return [
             'quantity' => ['nullable', 'integer', 'min:1', 'max:500'],
             'variant_id' => ['nullable', 'exists:inventory_variants,variant_id'],
-            'variant_sku' => ['nullable', 'string', 'max:50', 'unique:inventory_variants,variant_sku'],
+            'variant_sku' => ['nullable', 'string', 'max:50'],
             'sku' => ['nullable', 'string', 'max:50', 'unique:inventories,sku'],
-            'item_type' => ['required', 'in:gown,suit'],
+            'item_type' => ['required', 'in:gown,suit,accessory'],
             'name' => ['required', 'string', 'max:255', 'regex:/^[a-zA-Z0-9\s\-\.\,\(\)]+$/'],
             'size' => ['required', 'string', 'max:50', 'regex:/^[a-zA-Z0-9\s\-]+$/'],
             'color' => ['required', 'string', 'max:100', 'regex:/^[a-zA-Z\s\-]+$/'],

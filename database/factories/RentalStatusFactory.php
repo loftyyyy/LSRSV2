@@ -17,7 +17,7 @@ class RentalStatusFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'status_name' => $this->faker->randomElement(['active', 'completed', 'cancelled', 'overdue']),
         ];
     }
 }

@@ -19,7 +19,7 @@ class RentalFactory extends Factory
             'released_date' => now()->format('Y-m-d'),
             'due_date' => now()->addDays(7)->format('Y-m-d'),
             'original_due_date' => now()->addDays(7)->format('Y-m-d'),
-            'status_id' => null,
+            'status_id' => \App\Models\RentalStatus::factory(),
         ];
     }
 }
