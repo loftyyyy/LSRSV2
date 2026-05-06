@@ -626,6 +626,13 @@ class InventoryController extends Controller
      */
     public function update(UpdateInventoryRequest $request, Inventory $inventory): JsonResponse
     {
+        $currentStatus = $inventory->status?->status_name;
+        if (strtolower($currentStatus) === 'rented') {
+            return response()->json([
+                'message' => 'Cannot edit an item that is currently rented. Please wait until the item is returned.',
+            ], 422);
+        }
+
         $data = $request->validated();
         $data['updated_by'] = auth()->id();
 
@@ -773,6 +780,13 @@ class InventoryController extends Controller
      */
     public function updateStatus(Request $request, Inventory $inventory): JsonResponse
     {
+        $currentStatus = $inventory->status?->status_name;
+        if (strtolower($currentStatus) === 'rented') {
+            return response()->json([
+                'message' => 'Cannot change status of an item that is currently rented. Please wait until the item is returned.',
+            ], 422);
+        }
+
         $request->validate([
             'status_id' => 'required|exists:inventory_statuses,status_id',
             'status_note' => 'nullable|string|max:1000',
