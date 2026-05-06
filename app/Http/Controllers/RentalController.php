@@ -15,6 +15,7 @@ use App\Models\RentalExtension;
 use App\Models\RentalSetting;
 use App\Models\RentalStatus;
 use App\Models\Reservation;
+use App\Models\ReservationItem;
 use App\Models\ReservationItemAllocation;
 use App\Models\ReservationStatus;
 use App\Services\DepositService;
