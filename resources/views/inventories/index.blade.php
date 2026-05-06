@@ -587,6 +587,8 @@
                  // Format item type (capitalize first letter)
                  var itemType = item.item_type ? item.item_type.charAt(0).toUpperCase() + item.item_type.slice(1) : 'N/A';
 
+                  var isRented = statusName === 'rented';
+
                  var row = document.createElement('tr');
                  row.className = 'border-b border-neutral-200 hover:bg-neutral-100 dark:border-neutral-900/60 dark:hover:bg-white/5 transition-colors duration-300 ease-in-out cursor-pointer';
                  row.setAttribute('data-item-id', item.item_id);
@@ -595,7 +597,7 @@
                      <td class="py-3.5 pr-4 text-neutral-900 dark:text-neutral-100">${itemType}</td>
                      <td class="py-3.5 pr-4 text-neutral-900 dark:text-neutral-100">
                          <div>${item.sku || 'N/A'}</div>
-                         <div class="text-[11px] text-neutral-500 dark:text-neutral-400">Variant: ${item.variant?.variant_sku || 'N/A'}</div>
+                         <div class="text-[11px] text-neutral-400">Variant: ${item.variant?.variant_sku || 'N/A'}</div>
                      </td>
                      <td class="py-3.5 pr-4 text-neutral-600 dark:text-neutral-300">${item.size || 'N/A'}</td>
                      <td class="py-3.5 pr-2 text-neutral-600 dark:text-neutral-300 font-geist-mono">₱${(item.rental_price || 0).toLocaleString()}</td>
@@ -607,10 +609,10 @@
                      </td>
                      <td class="py-3.5 pl-2 text-left text-neutral-500 dark:text-neutral-400" onclick="event.stopPropagation()">
                          <div class="inline-flex items-center gap-2">
-                             <button class="edit-item-btn rounded-lg p-1.5 hover:bg-violet-600 hover:text-white transition-colors duration-300 ease-in-out" aria-label="Edit" title="Edit item" data-item-id="${item.item_id}">
+                             <button class="edit-item-btn rounded-lg p-1.5 hover:bg-violet-600 hover:text-white transition-colors duration-300 ease-in-out ${isRented ? 'opacity-30 pointer-events-none cursor-not-allowed' : ''}" aria-label="Edit" title="${isRented ? 'Cannot edit rented item' : 'Edit item'}" data-item-id="${item.item_id}" ${isRented ? 'disabled' : ''}>
                                  <x-icon name="edit" class="h-3.5 w-3.5" />
                              </button>
-                             <button class="change-status-btn rounded-lg p-1.5 text-amber-600 hover:bg-amber-500/15 hover:text-amber-500 transition-colors duration-300 ease-in-out dark:text-amber-500 dark:hover:bg-amber-900/25" aria-label="Set Status" title="Set maintenance or retire" data-item-id="${item.item_id}">
+                             <button class="change-status-btn rounded-lg p-1.5 text-amber-600 hover:bg-amber-500/15 hover:text-amber-500 transition-colors duration-300 ease-in-out dark:text-amber-500 dark:hover:bg-amber-900/25 ${isRented ? 'opacity-30 pointer-events-none cursor-not-allowed' : ''}" aria-label="Set Status" title="${isRented ? 'Cannot change status of rented item' : 'Set maintenance or retire'}" data-item-id="${item.item_id}" ${isRented ? 'disabled' : ''}>
                                  <x-icon name="archive" class="h-3.5 w-3.5" />
                              </button>
                          </div>
