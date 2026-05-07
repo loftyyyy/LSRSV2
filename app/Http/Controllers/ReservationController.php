@@ -939,22 +939,26 @@ class ReservationController extends Controller
      */
     private function getAvailableVariantUnitsForDateRange(int $variantId, ?string $startDate, ?string $endDate, ?int $excludeReservationId = null): int
     {
-        // Only count units that are physically available right now.
-        // Items in rented, maintenance, reserved, retired, or sold status
-        // cannot be promised to a new reservation.
         $availableStatusId = InventoryStatus::whereRaw('LOWER(status_name) = ?', ['available'])->value('status_id');
+        $retiredStatusId = InventoryStatus::whereRaw('LOWER(status_name) = ?', ['retired'])->value('status_id');
+        $soldStatusId = InventoryStatus::whereRaw('LOWER(status_name) = ?', ['sold'])->value('status_id');
 
-        if (! $availableStatusId) {
-            return 0;
-        }
-
-        $rentableUnits = Inventory::where('variant_id', $variantId)
-            ->where('status_id', $availableStatusId)
-            ->count();
-
+        // When no dates are provided, return only physically available items right now.
         if (! $startDate || ! $endDate) {
-            return $rentableUnits;
+            if (! $availableStatusId) {
+                return 0;
+            }
+
+            return Inventory::where('variant_id', $variantId)
+                ->where('status_id', $availableStatusId)
+                ->count();
         }
+
+        // When checking a date range, count total rentable units minus what's already committed.
+        $rentableUnits = Inventory::where('variant_id', $variantId)
+            ->when($retiredStatusId, fn ($q) => $q->where('status_id', '!=', $retiredStatusId))
+            ->when($soldStatusId, fn ($q) => $q->where('status_id', '!=', $soldStatusId))
+            ->count();
 
         $reservedUnits = ReservationItem::where('variant_id', $variantId)
             ->whereHas('reservation', function ($query) use ($startDate, $endDate, $excludeReservationId) {
@@ -1000,48 +1004,17 @@ class ReservationController extends Controller
 
         $confirmedStatus = \App\Models\ReservationStatus::whereRaw('LOWER(status_name) = ?', ['confirmed'])->first();
 
-        $reservation->update([
-            'status_id' => $confirmedStatus->status_id,
-            'confirmed_at' => now(),
-            'confirmed_by' => Auth::id(),
-        ]);
+        DB::transaction(function () use ($reservation, $confirmedStatus) {
+            $reservation->update([
+                'status_id' => $confirmedStatus->status_id,
+                'confirmed_at' => now(),
+                'confirmed_by' => Auth::id(),
+            ]);
 
-        // Allocate physical items and set them to 'reserved'
-        $reservedStatus = InventoryStatus::whereRaw('LOWER(status_name) = ?', ['reserved'])->first();
-        if ($reservedStatus) {
-            foreach ($reservation->items as $reservationItem) {
-                $allocatedCount = \App\Models\ReservationItemAllocation::where('reservation_item_id', $reservationItem->reservation_item_id)
-                    ->where('allocation_status', 'allocated')
-                    ->count();
-
-                $needed = $reservationItem->quantity - $allocatedCount;
-
-                if ($needed > 0) {
-                    $availableItems = \App\Models\Inventory::where('variant_id', $reservationItem->variant_id)
-                        ->whereHas('status', function ($q) {
-                            $q->whereRaw('LOWER(status_name) = ?', ['available']);
-                        })
-                        ->limit($needed)
-                        ->get();
-
-                    foreach ($availableItems as $invItem) {
-                        \App\Models\ReservationItemAllocation::create([
-                            'reservation_item_id' => $reservationItem->reservation_item_id,
-                            'item_id' => $invItem->item_id,
-                            'allocation_status' => 'allocated',
-                            'allocated_at' => now(),
-                            'updated_by' => Auth::id() ?? 1,
-                        ]);
-
-                        $invItem->update(['status_id' => $reservedStatus->status_id]);
-
-                        if (! $reservationItem->item_id && $reservationItem->quantity == 1) {
-                            $reservationItem->update(['item_id' => $invItem->item_id]);
-                        }
-                    }
-                }
-            }
-        }
+            // Allocate physical items and set them to 'reserved'
+            $paymentService = new \App\Services\PaymentService();
+            $paymentService->updateReservationItemsStatusToReserved($reservation->reservation_id);
+        });
 
         $reservation->load(['customer', 'status', 'reservedBy', 'items.item', 'items.variant']);
 
