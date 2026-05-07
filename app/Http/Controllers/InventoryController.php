@@ -678,6 +678,7 @@ class InventoryController extends Controller
         $inventory->update($data);
 
         // Update the variant with the new values if a variant exists
+        // Variant is the single source of truth for pricing
         if ($inventory->variant_id) {
             $variantUpdate = [];
             if (isset($data['deposit_amount'])) {
@@ -695,6 +696,10 @@ class InventoryController extends Controller
             if (!empty($variantUpdate)) {
                 InventoryVariant::where('variant_id', $inventory->variant_id)->update($variantUpdate);
             }
+//            // Clear item-level deposit so it falls back to variant (single source of truth)
+//            if (isset($data['deposit_amount'])) {
+//                $inventory->update(['deposit_amount' => null]);
+//            }
         }
 
         if ($oldVariantId !== $inventory->variant_id) {

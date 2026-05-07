@@ -250,10 +250,8 @@ class RentalReleaseService
      */
     private function getDepositAmount(Inventory $item): array|float
     {
-        // Try item's deposit first, then variant's
-        $depositAmount = (float) $item->deposit_amount
-            ?? (float) $item->variant?->deposit_amount
-            ?? 0;
+        // Variant is the single source of truth for deposit amount
+        $depositAmount = (float) $item->variant?->deposit_amount ?? 0;
 
         if ($depositAmount <= 0) {
             return [

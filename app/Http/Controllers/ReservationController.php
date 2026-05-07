@@ -436,7 +436,9 @@ class ReservationController extends Controller
                             throw $exception;
                         }
 
-                        // Use deposit amount for reservation invoice, not rental price
+//                        // Use deposit amount from variant (single source of truth)
+//                        $depositAmount = $variant->deposit_amount;
+
                         $depositAmount = $itemData['deposit_amount'] ?? $variant->deposit_amount;
                         $itemTotal = $depositAmount * $requestedQuantity;
                         $invoiceTotal += $itemTotal;
@@ -446,7 +448,7 @@ class ReservationController extends Controller
                             'item_id' => null,
                             'variant_id' => $variant->variant_id,
                             'quantity' => $requestedQuantity,
-                            'rental_price' => $itemData['rental_price'] ?? $variant->rental_price,
+                            'rental_price' => $variant->rental_price,
                             'notes' => $itemData['notes'] ?? null,
                         ]);
 
