@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ReleaseItemRequest;
+use App\Models\Payment;
 use App\Models\Customer;
 use App\Models\Inventory;
 use App\Models\InventoryMovement;
@@ -854,7 +855,7 @@ class RentalController extends Controller
         $totalRentals = Rental::count();
         $activeRentals = Rental::whereHas('status', fn ($q) => $q->where('status_name', 'rented'))->count();
         $completedRentals = Rental::whereHas('status', fn ($q) => $q->where('status_name', 'returned'))->count();
-        $cancelledRentals = Rental::whereHas('status', fn ($q) => $q->where('status_name', 'overdue'))->count();
+        $cancelledRentals = Rental::whereHas('status', fn ($q) => $q->where('status_name', 'cancelled'))->count();
 
         // Overdue & Late Returns
         // Overdue = rental still active (not returned) AND due_date has passed
@@ -979,7 +980,9 @@ class RentalController extends Controller
             ->groupBy('customer_id')
             ->map(fn ($rentals, $customerId) => [
                 'customer_id' => $customerId,
-                'customer_name' => $rentals->first()->customer->first_name.' '.$rentals->first()->customer->last_name,
+                'customer_name' => $rentals->first()->customer
+                    ? $rentals->first()->customer->first_name . ' ' . $rentals->first()->customer->last_name
+                    : 'Unknown',
                 'rental_count' => $rentals->count(),
                 'total_spent' => $rentals->sum(fn ($rental) => $rental->invoices->sum('total_amount') ?? 0),
             ])
