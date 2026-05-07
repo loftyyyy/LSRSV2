@@ -339,8 +339,13 @@
 {{-- Axios for API calls --}}
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
-<script>
-    var rentalState = {
+    <script>
+        // Configure axios to send cookies for session auth
+        if (typeof axios !== 'undefined') {
+            axios.defaults.withCredentials = true;
+        }
+
+        var rentalState = {
         currentPage: 1,
         perPage: 15,
         searchQuery: '',
