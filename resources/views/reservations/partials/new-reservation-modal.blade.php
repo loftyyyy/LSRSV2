@@ -502,12 +502,13 @@
             var startDate = document.getElementById('startDate')?.value || null;
             var endDate = document.getElementById('endDate')?.value || null;
 
-            var response = await axios.get('/api/reservations/items/browse', {
-                params: {
-                    start_date: startDate,
-                    end_date: endDate
-                }
-            });
+        var response = await axios.get('/api/reservations/items/browse', {
+            params: {
+                start_date: startDate,
+                end_date: endDate,
+                _t: Date.now()
+            }
+        });
             // Handle paginated response: response.data = { data: { data: [...items], current_page, ... }, message }
             var responseData = response.data.data || response.data;
             // If paginated, items are in responseData.data; otherwise responseData is the items array
@@ -515,6 +516,19 @@
 
             reservationState.availableItems = items;
             loadingEl.classList.add('hidden');
+
+            // Sync selected items with fresh data from API
+            reservationState.selectedItems.forEach(function(selectedItem) {
+                var freshItem = items.find(function(item) {
+                    return item.variant_id === selectedItem.variant_id;
+                });
+                if (freshItem) {
+                    selectedItem.rental_price = parseFloat(freshItem.rental_price);
+                    selectedItem.deposit_amount = parseFloat(freshItem.deposit_amount || 0);
+                    selectedItem.available_quantity = Number(freshItem.available_quantity || 0);
+                }
+            });
+            renderSelectedItems();
 
             if (items.length === 0) {
                 emptyEl.classList.remove('hidden');
