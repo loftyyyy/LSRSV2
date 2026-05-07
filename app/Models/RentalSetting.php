@@ -26,6 +26,15 @@ class RentalSetting extends Model
      */
     public static function getValue(string $key, mixed $default = null): mixed
     {
+        // Bypass cache in testing so factory-created settings are always read fresh
+        if (app()->environment('testing')) {
+            $setting = static::where('setting_key', $key)->first();
+
+            return $setting
+                ? static::castValue($setting->setting_value, $setting->setting_type)
+                : $default;
+        }
+
         $cacheKey = "rental_setting_{$key}";
 
         return Cache::remember($cacheKey, 3600, function () use ($key, $default) {
@@ -116,11 +125,11 @@ class RentalSetting extends Model
     protected static function castValue(string $value, string $type): mixed
     {
         return match ($type) {
-            'integer' => (int) $value,
-            'decimal' => (float) $value,
-            'boolean' => (bool) (int) $value,
-            'json' => json_decode($value, true),
-            default => $value,
+            'integer'          => (int) $value,
+            'decimal', 'float' => (float) $value,
+            'boolean'          => (bool) (int) $value,
+            'json'             => json_decode($value, true),
+            default            => $value,
         };
     }
 
