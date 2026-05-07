@@ -20,6 +20,7 @@ use App\Services\DepositService;
 use App\Services\RentalReleaseService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
@@ -40,6 +41,7 @@ class RentalSubsystemTest extends TestCase
 
         $this->admin = User::factory()->create(['is_admin' => true]);
         $this->clerk = User::factory()->create(['is_admin' => false]);
+        Cache::flush();
     }
 
     // -------------------------------------------------------------------------
@@ -1053,7 +1055,7 @@ class RentalSubsystemTest extends TestCase
         $item     = $this->makeInventoryItem($availableStatus);
 
         $dueDate    = now()->subDays(3)->startOfDay();  // 3 days ago
-        $returnDate = now()->subHours(12)->format('Y-m-d'); // returned 2.5 days late → ceil = 3 days
+        $returnDate = now()->format('Y-m-d'); // returned 3 days
 
         $rental = $this->makeActiveRental($customer, $item, $activeStatus, [
             'due_date'    => $dueDate->format('Y-m-d'),
