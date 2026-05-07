@@ -60,7 +60,7 @@ Route::middleware('auth')->group(function () {
         // ============================================
         Route::middleware('admin')->group(function () {
             Route::get('/dashboard/metrics', [DashboardController::class, 'getMetrics']);
-            
+
             // Customer Reports
             Route::get('/customers/reports/generate', [CustomerController::class, 'report']);
             Route::get('/customers/reports/pdf', [CustomerController::class, 'generatePDF']);
@@ -181,15 +181,15 @@ Route::middleware('auth')->group(function () {
         Route::get('/rentals/calendar', [RentalController::class, 'getCalendarEvents']);
 
         // Rental Batch Operations
-        Route::post('/rentals/batch/check-overdue', [RentalController::class, 'batchCheckOverdue']);
+        Route::post('/rentals/batch-check-overdue', [RentalController::class, 'batchCheckOverdue']);
 
         // Rental Bulk Operations
-        Route::post('/rentals/bulk/extend', [RentalController::class, 'bulkExtend']);
-        Route::post('/rentals/bulk/return', [RentalController::class, 'bulkReturn']);
+        Route::post('/rentals/bulk-extend', [RentalController::class, 'bulkExtend']);
+        Route::post('/rentals/bulk-return', [RentalController::class, 'bulkReturn']);
 
         // Rental Settings (BEFORE {rental} parameter routes)
         Route::get('/rentals/settings', [RentalController::class, 'getSettings']);
-        Route::put('/rentals/settings', [RentalController::class, 'updateSettings']);
+        Route::post('/rentals/settings', [RentalController::class, 'updateSettings']);
 
         // Rental Notifications (BEFORE {rental} parameter routes)
         Route::get('/rentals/notifications', [RentalController::class, 'getNotifications']);
