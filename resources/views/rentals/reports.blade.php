@@ -22,6 +22,9 @@
     {{-- Chart.js --}}
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
+    {{-- Axios for API calls --}}
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
     {{-- App styles --}}
     @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
         @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -102,7 +105,7 @@
         <!-- KPI Cards Section -->
         <section class="mb-8">
             <h2 class="text-lg font-semibold text-neutral-900 dark:text-white mb-4">Key Metrics</h2>
-            
+
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                 <!-- Total Rentals -->
                 <div class="stat-card bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800 p-6 shadow-sm">
@@ -191,7 +194,7 @@
         <!-- Performance Metrics Section -->
         <section class="mb-8">
             <h2 class="text-lg font-semibold text-neutral-900 dark:text-white mb-4">Performance Metrics</h2>
-            
+
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <!-- On-Time Return Rate -->
                 <div class="stat-card bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800 p-6 shadow-sm">
@@ -262,7 +265,7 @@
         <!-- Charts Section -->
         <section class="mb-8">
             <h2 class="text-lg font-semibold text-neutral-900 dark:text-white mb-4">Analytics & Performance</h2>
-            
+
             <div class="chart-grid grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                 <!-- Monthly Rentals -->
                 <div class="bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800 p-6 shadow-sm">
@@ -339,6 +342,11 @@
     </main>
 
     <script>
+        // Configure axios to send cookies for session auth
+        if (typeof axios !== 'undefined') {
+            axios.defaults.withCredentials = true;
+        }
+
         // Use window object to store charts and observer to avoid redeclaration errors
         if (!window.rentalState) {
             window.rentalState = {
@@ -355,7 +363,7 @@
                 observer: null
             };
         }
-        
+
         // Convenience reference
         const rentalCharts = window.rentalState.charts;
 
@@ -365,7 +373,7 @@
                     chart.destroy();
                 }
             });
-            
+
             // Reset all charts to null
             rentalCharts.monthly = null;
             rentalCharts.revenue = null;
@@ -375,7 +383,7 @@
             rentalCharts.topItems = null;
             rentalCharts.returnPerformance = null;
             rentalCharts.extensionTrend = null;
-            
+
             // Cleanup the observer
             if (window.rentalState.observer) {
                 window.rentalState.observer.disconnect();
@@ -420,7 +428,7 @@
         }
 
         function updateCharts(data) {
-            const isDark = document.documentElement.classList.contains('dark') || 
+            const isDark = document.documentElement.classList.contains('dark') ||
                           document.body.classList.contains('dark') ||
                           window.matchMedia('(prefers-color-scheme: dark)').matches;
 
@@ -834,14 +842,14 @@
                              const isDark = htmlElement.classList.contains('dark');
                              const textColor = isDark ? '#e5e7eb' : '#000000';
                              const gridColor = isDark ? '#27272a' : '#d1d5db';
-                             
+
                              // Helper function to update chart colors
                              const updateChartColors = (chart) => {
                                  if (!chart) return;
-                                 
+
                                  const text = isDark ? '#e5e7eb' : '#000000';
                                  const grid = isDark ? '#27272a' : '#d1d5db';
-                                 
+
                                  // Update plugins (legend, tooltip)
                                  if (chart.options.plugins) {
                                      if (chart.options.plugins.legend?.labels) {
@@ -853,7 +861,7 @@
                                          chart.options.plugins.tooltip.borderColor = text;
                                      }
                                  }
-                                 
+
                                  // Update scales (axes, grid)
                                  if (chart.options.scales) {
                                      Object.values(chart.options.scales).forEach(scale => {
@@ -866,7 +874,7 @@
                                      });
                                  }
                              };
-                             
+
                              // Update all charts
                              if (rentalCharts.monthly) updateChartColors(rentalCharts.monthly);
                              if (rentalCharts.revenue) updateChartColors(rentalCharts.revenue);
@@ -876,7 +884,7 @@
                              if (rentalCharts.topItems) updateChartColors(rentalCharts.topItems);
                              if (rentalCharts.returnPerformance) updateChartColors(rentalCharts.returnPerformance);
                              if (rentalCharts.extensionTrend) updateChartColors(rentalCharts.extensionTrend);
-                             
+
                              // Update all charts with animation
                              Object.values(rentalCharts).forEach(chart => {
                                  if (chart) chart.update('none');
