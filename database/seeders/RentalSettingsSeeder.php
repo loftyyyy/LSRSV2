@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\RentalSetting;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class RentalSettingsSeeder extends \Illuminate\Database\Seeder

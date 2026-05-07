@@ -390,6 +390,9 @@
 
     function openNewReservationModal() {
         reservationState.isOpen = true;
+        reservationState.availableItems = [];  // clear stale cache
+        reservationState.customers = [];
+
         var modal = document.getElementById('newReservationModal');
         modal.classList.remove('hidden');
         modal.classList.add('flex');
@@ -429,11 +432,12 @@
 
     function openItemSelector() {
         reservationState.isItemSelectorOpen = true;
+        reservationState.availableItems = [];  // clear cache to ensure fresh data
         var modal = document.getElementById('itemSelectorModal');
         modal.classList.remove('hidden');
         modal.classList.add('flex');
 
-        // Load available items
+        // Load available items (fresh)
         loadAvailableItems();
     }
 
@@ -448,11 +452,18 @@
 
     async function loadCustomers() {
         try {
-            var response = await axios.get('/api/customers', {
+            var timestamp = Date.now();
+            var random = Math.random().toString(36).substring(2, 15);
+            var response = await axios.get('/api/customers?_=' + timestamp + '&r=' + random, {
                 params: {
                     per_page: 100,
                     sort_by: 'first_name',
                     sort_order: 'asc'
+                },
+                headers: {
+                    'Cache-Control': 'no-cache, no-store, must-revalidate',
+                    'Pragma': 'no-cache',
+                    'Expires': '0'
                 }
             });
 
@@ -468,7 +479,7 @@
             activeCustomers.forEach(function(customer) {
                 var option = document.createElement('option');
                 option.value = customer.customer_id;
-                
+
                 if (customer.overdue_rentals_count > 0) {
                     option.disabled = true;
                     option.textContent = customer.first_name + ' ' + customer.last_name + ' (Has Overdue Rentals)';
@@ -477,7 +488,7 @@
                 } else {
                     option.textContent = customer.first_name + ' ' + customer.last_name;
                 }
-                
+
                 option.dataset.email = customer.email || '';
                 option.dataset.phone = customer.contact_number || '';
                 select.appendChild(option);
@@ -501,12 +512,18 @@
         try {
             var startDate = document.getElementById('startDate')?.value || null;
             var endDate = document.getElementById('endDate')?.value || null;
+            var timestamp = Date.now();
+            var random = Math.random().toString(36).substring(2, 15);
 
-        var response = await axios.get('/api/reservations/items/browse', {
+        var response = await axios.get('/api/reservations/items/browse?_=' + timestamp + '&r=' + random, {
             params: {
                 start_date: startDate,
-                end_date: endDate,
-                _t: Date.now()
+                end_date: endDate
+            },
+            headers: {
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache',
+                'Expires': '0'
             }
         });
             // Handle paginated response: response.data = { data: { data: [...items], current_page, ... }, message }
@@ -589,17 +606,21 @@
         });
 
         if (!exists) {
+            var freshItem = reservationState.availableItems.find(function(fresh) {
+                return fresh.variant_id === item.variant_id;
+            }) || item;
+
             reservationState.selectedItems.push({
-                variant_id: item.variant_id,
-                name: item.name,
-                sku: item.representative_sku || '',
-                size: item.size,
-                color: item.color,
-                rental_price: parseFloat(item.rental_price),
-                deposit_amount: parseFloat(item.deposit_amount || 0),
+                variant_id: freshItem.variant_id,
+                name: freshItem.name,
+                sku: freshItem.representative_sku || '',
+                size: freshItem.size,
+                color: freshItem.color,
+                rental_price: parseFloat(freshItem.rental_price),
+                deposit_amount: parseFloat(freshItem.deposit_amount || 0),
                 quantity: 1,
                 notes: '',
-                available_quantity: Number(item.available_quantity || 0)
+                available_quantity: Number(freshItem.available_quantity || 0)
             });
 
             renderSelectedItems();
@@ -630,7 +651,7 @@
                 parsedQuantity = Math.min(parsedQuantity, item.available_quantity);
             }
             parsedQuantity = Math.min(parsedQuantity, 500); // Strict maximum bound
-            
+
             item.quantity = parsedQuantity;
             renderSelectedItems();
         }

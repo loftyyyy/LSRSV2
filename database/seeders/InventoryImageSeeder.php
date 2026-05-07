@@ -2,10 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
-class InvoiceItemSeeder extends Seeder
+class InventoryImageSeeder extends Seeder
 {
     /**
      * Run the database seeds.

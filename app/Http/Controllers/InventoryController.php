@@ -677,6 +677,26 @@ class InventoryController extends Controller
 
         $inventory->update($data);
 
+        // Update the variant with the new values if a variant exists
+        if ($inventory->variant_id) {
+            $variantUpdate = [];
+            if (isset($data['deposit_amount'])) {
+                $variantUpdate['deposit_amount'] = $data['deposit_amount'];
+            }
+            if (isset($data['rental_price'])) {
+                $variantUpdate['rental_price'] = $data['rental_price'];
+            }
+            if (isset($data['is_sellable'])) {
+                $variantUpdate['is_sellable'] = $data['is_sellable'];
+            }
+            if (isset($data['selling_price'])) {
+                $variantUpdate['selling_price'] = $data['selling_price'];
+            }
+            if (!empty($variantUpdate)) {
+                InventoryVariant::where('variant_id', $inventory->variant_id)->update($variantUpdate);
+            }
+        }
+
         if ($oldVariantId !== $inventory->variant_id) {
             $this->refreshVariantCounters($oldVariantId);
         }

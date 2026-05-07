@@ -1158,6 +1158,10 @@ var row = document.createElement('tr');
     function openBrowseItemsModal() {
         browseItemsModalState.isOpen = true;
 
+        browseItemsModalState.loaded = false;   // <-- force re-fetch on every open
+        browseItemsModalState.items = [];
+        browseItemsModalState.filteredItems = [];
+
         var modal = document.getElementById('browseItemsModal');
         if (!modal) {
             return;
@@ -1171,12 +1175,7 @@ var row = document.createElement('tr');
             searchInput.value = '';
         }
 
-        if (!browseItemsModalState.loaded) {
-            fetchBrowseItems();
-        } else {
-            browseItemsModalState.filteredItems = browseItemsModalState.items.slice();
-            renderBrowseItems();
-        }
+        fetchBrowseItems();
     }
 
     function closeBrowseItemsModal() {
@@ -1204,7 +1203,10 @@ var row = document.createElement('tr');
         toggleBrowseItemsState('loading');
 
         try {
-            var response = await axios.get('/api/reservations/items/browse');
+            var response = await axios.get('/api/reservations/items/browse', {
+                params: { _t: Date.now() },
+                headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
+            });
             var responseData = response.data && response.data.data ? response.data.data : response.data;
             var items = Array.isArray(responseData) ? responseData : (responseData && responseData.data ? responseData.data : []);
 
@@ -1323,7 +1325,7 @@ var row = document.createElement('tr');
         document.getElementById('browseItemDetailsSubtitle').textContent = 'Loading...';
 
         try {
-            var response = await axios.get('/api/reservations/items/' + itemId + '/details');
+            var response = await axios.get('/api/reservations/items/' + itemId + '/details', { params: { _t: Date.now() } });
             var item = response.data && response.data.data ? response.data.data : null;
 
             if (!item) {
