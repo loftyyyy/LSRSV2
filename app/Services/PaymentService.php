@@ -644,7 +644,7 @@ class PaymentService
     /**
      * Update inventory items status to 'reserved' for a reservation
      */
-    private function updateReservationItemsStatusToReserved(int $reservationId): void
+    public function updateReservationItemsStatusToReserved(int $reservationId): void
     {
         // Get the 'reserved' inventory status
         $reservedStatus = \App\Models\InventoryStatus::whereRaw('LOWER(status_name) = ?', ['reserved'])->first();
@@ -663,11 +663,12 @@ class PaymentService
             $needed = $reservationItem->quantity - $allocatedCount;
 
             if ($needed > 0) {
-                // Find available items
+                // Find available items with pessimistic locking to prevent race conditions
                 $availableItems = \App\Models\Inventory::where('variant_id', $reservationItem->variant_id)
                     ->whereHas('status', function ($q) {
                         $q->whereRaw('LOWER(status_name) = ?', ['available']);
                     })
+                    ->lockForUpdate()
                     ->limit($needed)
                     ->get();
 
