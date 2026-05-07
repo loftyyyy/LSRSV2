@@ -10,6 +10,7 @@ use App\Models\InventoryVariant;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -17,7 +18,7 @@ use Illuminate\View\View;
 
 /**
  * Controller handling inventory management operations.
- * 
+ *
  * This controller manages all inventory-related functionality including:
  * - Inventory CRUD operations (Create, Read, Update, Delete)
  * - Inventory reporting and analytics
@@ -30,11 +31,11 @@ class InventoryController extends Controller
 {
     /**
      * Generate inventory reports based on report type.
-     * 
+     *
      * Routes report requests to the appropriate reporting method based on the
      * report_type parameter. Supports multiple report types including inventory
      * summary, availability, rental history, condition, and revenue reports.
-     * 
+     *
      * @param \Illuminate\Http\Request $request The HTTP request containing report parameters
      * @return \Illuminate\Http\JsonResponse JSON response with report data
      */
@@ -59,19 +60,19 @@ class InventoryController extends Controller
 
     /**
      * Generate PDF report for inventory.
-     * 
+     *
      * Creates a downloadable PDF report containing inventory data based on the
      * specified report type. Supports multiple report types including inventory
      * summary, availability, rental history, condition, and revenue reports.
-     * 
+     *
      * @param \Illuminate\Http\Request $request The HTTP request containing report parameters
      * @return \Symfony\Component\HttpFoundation\BinaryFileResponse PDF download response
      */
-    public function generatePDF(Request $request): JsonResponse
+    public function generatePDF(Request $request): Response
     {
         // Get report type from request, default to inventory summary
         $reportType = $request->get('report_type', 'inventory_summary');
-        
+
         // Generate report data based on type
         $reportData = match ($reportType) {
             'inventory_summary' => $this->getInventorySummaryReport($request),
@@ -95,11 +96,11 @@ class InventoryController extends Controller
 
     /**
      * Generate CSV report for inventory.
-     * 
+     *
      * Creates a downloadable CSV report containing inventory data based on the
      * specified report type. Supports multiple report types including inventory
      * summary, availability, rental history, condition, and revenue reports.
-     * 
+     *
      * @param \Illuminate\Http\Request $request The HTTP request containing report parameters
      * @return \Symfony\Component\HttpFoundation\StreamedResponse CSV download response
      */
@@ -107,7 +108,7 @@ class InventoryController extends Controller
     {
         // Get report type from request, default to inventory summary
         $reportType = $request->get('report_type', 'inventory_summary');
-        
+
         // Generate report data based on type
         $reportData = match ($reportType) {
             'inventory_summary' => $this->getInventorySummaryReport($request),
@@ -529,8 +530,8 @@ class InventoryController extends Controller
                     // Generate unique filename
                     $filename = Str::uuid().'.'.$file->getClientOriginalExtension();
 
-                    // Store image in public disk under inventory folder
-                    $path = $file->storeAs('inventory/'.$inventory->item_id, $filename, 'public');
+                    // Store image in public disk under variant folder (shared across all items of this variant)
+                    $path = $file->storeAs('inventory/'.$inventory->variant_id, $filename, 'public');
 
                     // Get metadata
                     $viewType = $imageData['view_type'] ?? 'front';
@@ -551,7 +552,7 @@ class InventoryController extends Controller
                         $isPrimary = true;
                     }
 
-                    // Create image record
+                    // Create image record for the first item
                     $inventoryImage = $inventory->images()->create([
                         'image_path' => $path,
                         'image_url' => Storage::url($path),
@@ -564,6 +565,24 @@ class InventoryController extends Controller
                     ]);
 
                     $uploadedImages[] = $inventoryImage;
+                }
+            }
+
+            // Share images with all other items of the same variant created in this batch
+            if ($quantity > 1 && count($uploadedImages) > 0) {
+                foreach ($inventories->skip(1) as $otherItem) {
+                    foreach ($uploadedImages as $uploadedImage) {
+                        $otherItem->images()->create([
+                            'image_path' => $uploadedImage->image_path,
+                            'image_url' => $uploadedImage->image_url,
+                            'view_type' => $uploadedImage->view_type,
+                            'caption' => $uploadedImage->caption,
+                            'is_primary' => $uploadedImage->is_primary,
+                            'display_order' => $uploadedImage->display_order,
+                            'file_size' => $uploadedImage->file_size,
+                            'mime_type' => $uploadedImage->mime_type,
+                        ]);
+                    }
                 }
             }
         }
