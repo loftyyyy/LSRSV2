@@ -16,7 +16,7 @@ use Tests\TestCase;
 /**
  * PaymentSubsystemTest
  *
- * Black-box feature tests for the Payment subsystem.
+ * White Box feature tests for the Payment subsystem.
  * Each test case corresponds directly to a row in the black-box test plan.
  *
  * Techniques used:
