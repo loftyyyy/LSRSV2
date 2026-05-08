@@ -270,7 +270,7 @@
                 type="button"
                 id="reservationDetailsEditBtn"
                 onclick="openEditFromReservationDetails()"
-                class="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-[14px] font-medium bg-violet-600 text-white hover:bg-violet-500 transition-colors duration-100 ease-in-out"
+                class="hidden items-center gap-2 rounded-xl px-4 py-2.5 text-[14px] font-medium bg-violet-600 text-white hover:bg-violet-500 transition-colors duration-100 ease-in-out"
             >
                 <x-icon name="edit" class="h-4 w-4" />
                 <span>Edit</span>
@@ -507,12 +507,13 @@
         // Render related invoices
         renderRelatedInvoices(reservation.invoices || []);
 
-        // Update edit button visibility based on status
         var editBtn = document.getElementById('reservationDetailsEditBtn');
-        if (statusName === 'cancelled' || statusName === 'completed') {
+        if (statusName === 'cancelled' || statusName === 'confirmed') {
             editBtn.classList.add('hidden');
+            editBtn.classList.remove('inline-flex');
         } else {
             editBtn.classList.remove('hidden');
+            editBtn.classList.add('inline-flex');
         }
     }
 
@@ -601,7 +602,7 @@
 
                     var releaseDate = rental.released_date ? formatReservationDate(rental.released_date) : (rental.created_at ? formatReservationDate(rental.created_at) : '-');
                     var dueDate = rental.due_date ? formatReservationDate(rental.due_date) : '-';
-                    
+
                     var itemName = rental.item?.name || 'Unknown Item';
                     var itemSku = rental.item?.sku || '';
                     var itemDisplay = itemSku ? `${itemName} (${itemSku})` : itemName;
@@ -665,10 +666,10 @@
                     var totalAmount = invoice.total_amount || 0;
                     var amountPaid = invoice.amount_paid || 0;
                     var balanceDue = invoice.balance_due || 0;
-                    
+
                     var isPaid = statusName === 'paid';
-                    var paymentButtonClass = isPaid 
-                        ? 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 cursor-not-allowed' 
+                    var paymentButtonClass = isPaid
+                        ? 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 cursor-not-allowed'
                         : 'bg-violet-600 text-white hover:bg-violet-500 dark:hover:bg-violet-700 cursor-pointer';
 
                     return `
@@ -698,16 +699,16 @@
                                         ${invoice.status?.status_name || invoice.payment_status || 'Unknown'}
                                     </span>
                                     ${!isPaid ? `
-                                        <a 
-                                            href="/payments?invoice_id=${invoice.invoice_id}" 
+                                        <a
+                                            href="/payments?invoice_id=${invoice.invoice_id}"
                                             class="inline-flex items-center rounded-lg px-2.5 py-1 text-[10px] font-medium ${paymentButtonClass} transition-colors duration-100 ease-in-out"
                                             title="Pay this invoice"
                                         >
                                             Pay
                                         </a>
                                     ` : `
-                                        <button 
-                                            disabled 
+                                        <button
+                                            disabled
                                             class="inline-flex items-center rounded-lg px-2.5 py-1 text-[10px] font-medium ${paymentButtonClass}"
                                             title="Already paid"
                                         >
