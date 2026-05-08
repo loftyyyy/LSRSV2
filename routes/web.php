@@ -99,7 +99,7 @@ Route::middleware('auth')->group(function () {
         // ============================================
         // AUTH ROUTES
         // ============================================
-        Route::post('/verify-password', [AuthController::class, 'verifyPassword'])->middleware('throttle:5,15');
+        Route::post('/verify-password', [AuthController::class, 'verifyPassword'])->middleware('throttle:30,1');
 
         // ============================================
         // CUSTOMER ROUTES
