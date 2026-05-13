@@ -31,10 +31,10 @@ class StoreInventoryRequest extends FormRequest
             'size' => ['required', 'string', 'max:50', 'regex:/^[a-zA-Z0-9\s\-]+$/'],
             'color' => ['required', 'string', 'max:100', 'regex:/^[a-zA-Z\s\-]+$/'],
             'design' => ['required', 'string', 'max:255'],
-            'rental_price' => ['required', 'numeric', 'min:0', 'max:999999.99'],
+            'rental_price' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],
+            'deposit_amount' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],
             'is_sellable' => ['nullable', 'boolean'],
             'selling_price' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],
-            'deposit_amount' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],
             'status_id' => ['nullable', 'exists:inventory_statuses,status_id'],
         ];
     }

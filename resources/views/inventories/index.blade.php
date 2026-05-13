@@ -600,7 +600,7 @@
                          <div class="text-[11px] text-neutral-400">Variant: ${item.variant?.variant_sku || 'N/A'}</div>
                      </td>
                      <td class="py-3.5 pr-4 text-neutral-600 dark:text-neutral-300">${item.size || 'N/A'}</td>
-                     <td class="py-3.5 pr-2 text-neutral-600 dark:text-neutral-300 font-geist-mono">₱${(item.rental_price || 0).toLocaleString()}</td>
+                     <td class="py-3.5 pr-2 text-neutral-600 dark:text-neutral-300 font-geist-mono">₱${(item.variant?.rental_price || 0).toLocaleString()}</td>
                      <td class="py-3.5 pr-2">
                          <span class="inline-flex items-center rounded-full ${statusColor} px-2 py-1 text-[11px] font-medium border transition-colors duration-300 ease-in-out">
                              <span class="mr-1.5 h-1.5 w-1.5 rounded-full ${statusBgColor}"></span>

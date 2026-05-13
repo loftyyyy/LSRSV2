@@ -551,7 +551,8 @@
             var itemLabel = additionalItemsCount > 0 ? (firstItemName + ' +' + additionalItemsCount) : firstItemName;
 
             var totalAmount = reservationItems.reduce(function(total, item) {
-                return total + ((Number(item.rental_price) || 0) * (Number(item.quantity) || 1));
+                var rentalPrice = item.variant?.rental_price || item.rental_price || 0;
+                return total + (Number(rentalPrice) * (Number(item.quantity) || 1));
             }, 0);
 
             var actionButtonHtml = isPending
@@ -1277,7 +1278,7 @@ var row = document.createElement('tr');
 
             var statusLabel = statusName.charAt(0).toUpperCase() + statusName.slice(1);
             var itemType = item.item_type ? (item.item_type.charAt(0).toUpperCase() + item.item_type.slice(1)) : 'Item';
-            var rentalPrice = Number(item.rental_price || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            var rentalPrice = Number(item.variant?.rental_price || item.rental_price || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
             return '' +
                 '<button type="button" onclick="openBrowseItemDetailsModal(' + item.variant_id + ')" class="w-full text-left rounded-2xl border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900/30 p-4 transition-colors duration-300 ease-in-out hover:border-violet-300 dark:hover:border-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-500/40">' +
@@ -1425,19 +1426,19 @@ var row = document.createElement('tr');
         document.getElementById('browseItemDetailColor').textContent = item.color || '-';
         document.getElementById('browseItemDetailDesign').textContent = item.design || '-';
 
-        document.getElementById('browseItemDetailRentalPrice').textContent = item.rental_price
-            ? ('₱' + parseFloat(item.rental_price).toLocaleString())
+        document.getElementById('browseItemDetailRentalPrice').textContent = item.variant?.rental_price || item.rental_price
+            ? ('₱' + parseFloat(item.variant?.rental_price || item.rental_price).toLocaleString())
             : '-';
 
-        var depositAmount = item.deposit_amount ? parseFloat(item.deposit_amount) : 0;
+        var depositAmount = item.variant?.deposit_amount || item.deposit_amount ? parseFloat(item.variant?.deposit_amount || item.deposit_amount) : 0;
         document.getElementById('browseItemDetailDeposit').textContent = '₱' + depositAmount.toLocaleString();
 
-        var sellable = item.is_sellable === true || item.is_sellable === 1 || item.is_sellable === '1';
+        var sellable = item.variant?.is_sellable === true || item.variant?.is_sellable === 1 || item.variant?.is_sellable === '1' || item.is_sellable === true || item.is_sellable === 1 || item.is_sellable === '1';
         var sellingRow = document.getElementById('browseItemDetailSellingPriceRow');
         if (sellable) {
             sellingRow.classList.remove('hidden');
-            if (item.selling_price && parseFloat(item.selling_price) > 0) {
-                document.getElementById('browseItemDetailSellingPrice').textContent = '₱' + parseFloat(item.selling_price).toLocaleString();
+            if ((item.variant?.selling_price || item.selling_price) && parseFloat(item.variant?.selling_price || item.selling_price) > 0) {
+                document.getElementById('browseItemDetailSellingPrice').textContent = '₱' + parseFloat(item.variant?.selling_price || item.selling_price).toLocaleString();
             } else {
                 document.getElementById('browseItemDetailSellingPrice').textContent = '-';
             }

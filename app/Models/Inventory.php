@@ -22,21 +22,12 @@ class Inventory extends Model
         'size',
         'color',
         'design',
-        'rental_price',
-        'is_sellable',
-        'selling_price',
-        'deposit_amount',
         'status_id',
         'status_note',
         'updated_by',
     ];
 
-    protected $casts = [
-        'rental_price' => 'decimal:2',
-        'is_sellable' => 'boolean',
-        'selling_price' => 'decimal:2',
-        'deposit_amount' => 'decimal:2',
-    ];
+    protected $casts = [];
 
     public function status()
     {
@@ -143,10 +134,32 @@ class Inventory extends Model
      */
     public function scopeAvailableForSale($query)
     {
-        return $query->whereNotNull('selling_price')
-            ->where('selling_price', '>', 0)
+        return $query->whereHas('variant', function ($q) {
+            $q->whereNotNull('selling_price')
+                ->where('selling_price', '>', 0);
+        })
             ->whereHas('status', function ($q) {
                 $q->where('status_name', 'available');
             });
+    }
+
+    public function getRentalPriceAttribute($value)
+    {
+        return $this->variant?->rental_price ?? $value;
+    }
+
+    public function getDepositAmountAttribute($value)
+    {
+        return $this->variant?->deposit_amount ?? $value;
+    }
+
+    public function getIsSellableAttribute($value)
+    {
+        return $this->variant?->is_sellable ?? $value;
+    }
+
+    public function getSellingPriceAttribute($value)
+    {
+        return $this->variant?->selling_price ?? $value;
     }
 }

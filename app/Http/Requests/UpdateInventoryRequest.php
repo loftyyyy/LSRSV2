@@ -34,10 +34,10 @@ class UpdateInventoryRequest extends FormRequest
             'size' => ['sometimes', 'required', 'string', 'max:50', 'regex:/^[a-zA-Z0-9\s\-]+$/'],
             'color' => ['sometimes', 'required', 'string', 'max:100', 'regex:/^[a-zA-Z\s\-]+$/'],
             'design' => ['sometimes', 'required', 'string', 'max:255'],
-            'rental_price' => ['sometimes', 'required', 'numeric', 'min:0', 'max:999999.99'],
-            'is_sellable' => ['sometimes', 'boolean'],
-            'selling_price' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],
+            'rental_price' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],
             'deposit_amount' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],
+            'is_sellable' => ['nullable', 'boolean'],
+            'selling_price' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],
             'status_id' => ['sometimes', 'required', 'exists:inventory_statuses,status_id'],
         ];
     }

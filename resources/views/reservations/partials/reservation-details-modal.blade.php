@@ -492,7 +492,7 @@
         var items = reservation.items || [];
         var totalItems = items.length;
         var totalQuantity = items.reduce((sum, item) => sum + (item.quantity || 1), 0);
-        var totalAmount = items.reduce((sum, item) => sum + ((item.rental_price || 0) * (item.quantity || 1)), 0);
+        var totalAmount = items.reduce((sum, item) => sum + ((item.variant?.rental_price || item.rental_price || 0) * (item.quantity || 1)), 0);
 
         document.getElementById('detailTotalItems').textContent = totalItems;
         document.getElementById('detailTotalQuantity').textContent = totalQuantity;
@@ -540,7 +540,7 @@
                     var variant = item.variant || {};
                     var itemName = variant.name || item.item?.name || 'Unknown Item';
                     var itemDetails = [variant.size, variant.color, variant.design].filter(Boolean).join(' · ');
-                    var rentalPrice = item.rental_price || variant.rental_price || 0;
+                    var rentalPrice = variant.rental_price || item.rental_price || 0;
                     var quantity = item.quantity || 1;
                     var subtotal = rentalPrice * quantity;
 

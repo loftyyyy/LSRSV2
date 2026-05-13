@@ -447,18 +447,18 @@
         document.getElementById('detailItemSize').textContent = item.size || '-';
         document.getElementById('detailItemColor').textContent = item.color || '-';
         document.getElementById('detailItemDesign').textContent = item.design || '-';
-        document.getElementById('detailItemPrice').textContent = item.rental_price
-            ? `₱${parseFloat(item.rental_price).toLocaleString()}`
+        document.getElementById('detailItemPrice').textContent = item.variant?.rental_price
+            ? `₱${parseFloat(item.variant.rental_price).toLocaleString()}`
             : '-';
 
         // Selling Price (only show when item is sellable)
         var sellingPriceRow = document.getElementById('detailSellingPriceRow');
         var sellingPriceElement = document.getElementById('detailItemSellingPrice');
-        var isSellable = item.is_sellable === true || item.is_sellable === 1 || item.is_sellable === '1';
+        var isSellable = item.variant?.is_sellable === true || item.variant?.is_sellable === 1 || item.variant?.is_sellable === '1';
         if (isSellable) {
             sellingPriceRow.classList.remove('hidden');
-            if (item.selling_price && parseFloat(item.selling_price) > 0) {
-                sellingPriceElement.textContent = `₱${parseFloat(item.selling_price).toLocaleString()}`;
+            if (item.variant?.selling_price && parseFloat(item.variant.selling_price) > 0) {
+                sellingPriceElement.textContent = `₱${parseFloat(item.variant.selling_price).toLocaleString()}`;
             } else {
                 sellingPriceElement.textContent = '-';
             }
@@ -467,7 +467,7 @@
         }
 
         // Deposit Amount
-        var depositAmount = item.deposit_amount ? parseFloat(item.deposit_amount) : 0;
+        var depositAmount = item.variant?.deposit_amount ? parseFloat(item.variant.deposit_amount) : 0;
         document.getElementById('detailItemDeposit').textContent = `₱${depositAmount.toLocaleString()}`;
 
         // Dates

@@ -387,7 +387,8 @@
 
             var reservationItems = Array.isArray(reservation.items) ? reservation.items : [];
             var totalAmount = reservationItems.reduce(function(total, item) {
-                return total + ((Number(item.rental_price) || 0) * (Number(item.quantity) || 1));
+                var rentalPrice = item.variant?.rental_price || item.rental_price || 0;
+                return total + (Number(rentalPrice) * (Number(item.quantity) || 1));
             }, 0);
 
             return '' +

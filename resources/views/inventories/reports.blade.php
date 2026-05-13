@@ -686,7 +686,7 @@
                             ${statusName.charAt(0).toUpperCase() + statusName.slice(1)}
                         </span>
                     </td>
-                    <td class="py-3.5 pr-4 font-geist-mono">₱${(item.rental_price || 0).toLocaleString()}</td>
+                    <td class="py-3.5 pr-4 font-geist-mono">₱${(item.variant?.rental_price || 0).toLocaleString()}</td>
                 </tr>
             `;
         }).join('');

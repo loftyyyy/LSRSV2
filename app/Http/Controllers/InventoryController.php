@@ -310,7 +310,8 @@ class InventoryController extends Controller
     public function getMetrics(): JsonResponse
     {
         $totalItems = Inventory::count();
-        $totalValue = Inventory::sum('rental_price') ?? 0;
+        $totalValue = Inventory::join('inventory_variants', 'inventories.variant_id', '=', 'inventory_variants.variant_id')
+            ->sum('inventory_variants.rental_price') ?? 0;
 
         $availableItems = Inventory::whereHas('status', fn ($q) => $q->where('status_name', 'available'))->count();
         $rentedItems = Inventory::whereHas('status', fn ($q) => $q->where('status_name', 'rented'))->count();
@@ -342,8 +343,9 @@ class InventoryController extends Controller
             });
 
         // Value Distribution by Item Type
-        $valueByType = Inventory::selectRaw('item_type, SUM(rental_price) as total_value, COUNT(*) as count')
-            ->groupBy('item_type')
+        $valueByType = Inventory::join('inventory_variants', 'inventories.variant_id', '=', 'inventory_variants.variant_id')
+            ->selectRaw('inventories.item_type, SUM(inventory_variants.rental_price) as total_value, COUNT(*) as count')
+            ->groupBy('inventories.item_type')
             ->orderBy('total_value', 'desc')
             ->limit(8)
             ->get()
@@ -385,7 +387,9 @@ class InventoryController extends Controller
 
         $retiredStatusId = InventoryStatus::where('status_name', 'retired')->first()?->status_id ?? 0;
         $valueAtRisk = $retiredStatusId > 0
-            ? Inventory::where('status_id', $retiredStatusId)->sum('rental_price')
+            ? Inventory::where('status_id', $retiredStatusId)
+                ->join('inventory_variants', 'inventories.variant_id', '=', 'inventory_variants.variant_id')
+                ->sum('inventory_variants.rental_price')
             : 0;
 
         return response()->json([
@@ -509,6 +513,8 @@ class InventoryController extends Controller
         if (empty($data['variant_id'])) {
             $data['variant_id'] = $this->resolveVariantId($data);
         }
+
+        unset($data['rental_price'], $data['deposit_amount'], $data['is_sellable'], $data['selling_price']);
 
         $inventories = collect();
         for ($i = 0; $i < $quantity; $i++) {
@@ -655,6 +661,14 @@ class InventoryController extends Controller
         $data = $request->validated();
         $data['updated_by'] = auth()->id();
 
+        $pricingFields = ['rental_price', 'deposit_amount', 'is_sellable', 'selling_price'];
+        $pricingValues = [];
+        foreach ($pricingFields as $field) {
+            if (array_key_exists($field, $data)) {
+                $pricingValues[$field] = $data[$field];
+            }
+        }
+
         $oldVariantId = $inventory->variant_id;
 
         if (array_key_exists('variant_id', $data)) {
@@ -675,31 +689,12 @@ class InventoryController extends Controller
             $data['variant_id'] = $this->resolveVariantId(array_merge($inventory->toArray(), $data));
         }
 
+        unset($data['rental_price'], $data['deposit_amount'], $data['is_sellable'], $data['selling_price']);
+
         $inventory->update($data);
 
-        // Update the variant with the new values if a variant exists
-        // Variant is the single source of truth for pricing
-        if ($inventory->variant_id) {
-            $variantUpdate = [];
-            if (isset($data['deposit_amount'])) {
-                $variantUpdate['deposit_amount'] = $data['deposit_amount'];
-            }
-            if (isset($data['rental_price'])) {
-                $variantUpdate['rental_price'] = $data['rental_price'];
-            }
-            if (isset($data['is_sellable'])) {
-                $variantUpdate['is_sellable'] = $data['is_sellable'];
-            }
-            if (isset($data['selling_price'])) {
-                $variantUpdate['selling_price'] = $data['selling_price'];
-            }
-            if (!empty($variantUpdate)) {
-                InventoryVariant::where('variant_id', $inventory->variant_id)->update($variantUpdate);
-            }
-//            // Clear item-level deposit so it falls back to variant (single source of truth)
-//            if (isset($data['deposit_amount'])) {
-//                $inventory->update(['deposit_amount' => null]);
-//            }
+        if (!empty($pricingValues) && $inventory->variant_id) {
+            InventoryVariant::where('variant_id', $inventory->variant_id)->update($pricingValues);
         }
 
         if ($oldVariantId !== $inventory->variant_id) {
@@ -897,7 +892,8 @@ class InventoryController extends Controller
             'retired_items' => Inventory::whereHas('status', function ($q) {
                 $q->where('status_name', 'retired');
             })->count(),
-            'inventory_value' => Inventory::sum('rental_price') ?? 0,
+            'inventory_value' => Inventory::join('inventory_variants', 'inventories.variant_id', '=', 'inventory_variants.variant_id')
+                ->sum('inventory_variants.rental_price') ?? 0,
             'by_item_type' => Inventory::select('item_type', DB::raw('count(*) as count'))
                 ->groupBy('item_type')
                 ->get(),

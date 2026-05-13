@@ -536,11 +536,11 @@
             document.getElementById('editItemSize').value = item.size || '';
             document.getElementById('editItemColor').value = item.color || '';
             document.getElementById('editItemDesign').value = item.design || '';
-            document.getElementById('editItemRentalPrice').value = item.rental_price || '';
-            document.getElementById('editItemIsSellable').checked = Boolean(item.is_sellable);
-            document.getElementById('editItemSellingPrice').value = item.selling_price || '';
+            document.getElementById('editItemRentalPrice').value = item.variant?.rental_price || '';
+            document.getElementById('editItemIsSellable').checked = Boolean(item.variant?.is_sellable);
+            document.getElementById('editItemSellingPrice').value = item.variant?.selling_price || '';
             syncEditSellableState();
-            document.getElementById('editItemDepositAmount').value = item.deposit_amount || '';
+            document.getElementById('editItemDepositAmount').value = item.variant?.deposit_amount || '';
 
             // Load existing images
             if (item.images && Array.isArray(item.images)) {

@@ -582,8 +582,8 @@
                             <p class="text-sm font-medium text-neutral-900 dark:text-white">${item.name}</p>
                             <p class="text-xs text-neutral-500 dark:text-neutral-400">${item.representative_sku || 'No SKU'} &bull; ${item.size} &bull; ${item.color}</p>
                             <p class="text-xs text-neutral-500 dark:text-neutral-400">Available: ${item.available_quantity ?? 0}</p>
-                            <p class="text-xs font-medium text-violet-600 dark:text-violet-400">Rental: ₱${parseFloat(item.rental_price).toLocaleString('en-PH', {minimumFractionDigits: 2})}</p>
-                            <p class="text-xs text-neutral-500 dark:text-neutral-400">Deposit: ₱${parseFloat(item.deposit_amount || 0).toLocaleString('en-PH', {minimumFractionDigits: 2})}</p>
+                            <p class="text-xs font-medium text-violet-600 dark:text-violet-400">Rental: ₱${parseFloat(item.variant?.rental_price || item.rental_price || 0).toLocaleString('en-PH', {minimumFractionDigits: 2})}</p>
+                            <p class="text-xs text-neutral-500 dark:text-neutral-400">Deposit: ₱${parseFloat(item.variant?.deposit_amount || item.deposit_amount || 0).toLocaleString('en-PH', {minimumFractionDigits: 2})}</p>
                         </div>
                     </div>
                     <button
@@ -675,14 +675,16 @@
         summaryEl.classList.remove('hidden');
 
         bodyEl.innerHTML = reservationState.selectedItems.map(function(item) {
-            var subtotal = (item.rental_price + item.deposit_amount) * item.quantity;
+            var rentalPrice = item.variant?.rental_price || item.rental_price || 0;
+            var depositAmount = item.variant?.deposit_amount || item.deposit_amount || 0;
+            var subtotal = (rentalPrice + depositAmount) * item.quantity;
             return `
                 <tr class="text-[13px]">
                     <td class="py-2.5 pr-3 text-neutral-900 dark:text-neutral-100">${item.name}</td>
                     <td class="py-2.5 pr-3 text-neutral-600 dark:text-neutral-400">${item.size}</td>
                     <td class="py-2.5 pr-3 text-neutral-600 dark:text-neutral-400">${item.color}</td>
-                    <td class="py-2.5 pr-3 text-right text-neutral-700 dark:text-neutral-300 font-geist-mono">₱${item.rental_price.toLocaleString('en-PH', {minimumFractionDigits: 2})}</td>
-                    <td class="py-2.5 pr-3 text-right text-neutral-700 dark:text-neutral-300 font-geist-mono">₱${item.deposit_amount.toLocaleString('en-PH', {minimumFractionDigits: 2})}</td>
+                    <td class="py-2.5 pr-3 text-right text-neutral-700 dark:text-neutral-300 font-geist-mono">₱${rentalPrice.toLocaleString('en-PH', {minimumFractionDigits: 2})}</td>
+                    <td class="py-2.5 pr-3 text-right text-neutral-700 dark:text-neutral-300 font-geist-mono">₱${depositAmount.toLocaleString('en-PH', {minimumFractionDigits: 2})}</td>
                     <td class="py-2.5 pr-3 text-center">
                         <input
                             type="number"
@@ -730,7 +732,9 @@
         var total = 0;
 
         reservationState.selectedItems.forEach(function(item) {
-            total += (item.rental_price + item.deposit_amount) * item.quantity;
+            var rentalPrice = item.variant?.rental_price || item.rental_price || 0;
+            var depositAmount = item.variant?.deposit_amount || item.deposit_amount || 0;
+            total += (rentalPrice + depositAmount) * item.quantity;
         });
 
         document.getElementById('estimatedTotal').textContent = '₱' + total.toLocaleString('en-PH', {minimumFractionDigits: 2});
@@ -931,7 +935,7 @@
                             return {
                                 variant_id: item.variant_id,
                                 quantity: item.quantity,
-                                rental_price: item.rental_price,
+                                rental_price: item.variant?.rental_price || item.rental_price,
                                 notes: (item.notes || '').trim()
                             };
                         })
