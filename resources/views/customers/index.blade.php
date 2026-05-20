@@ -200,6 +200,7 @@
 
 
 <script>
+
     // Page state
     var customerState = {
         currentPage: 1,
@@ -265,7 +266,7 @@
                 filterButtonText.textContent = statusText;
 
                 customerState.statusFilter = statusValue || '';
-                
+
                 customerState.currentPage = 1;
                 fetchCustomers();
             });

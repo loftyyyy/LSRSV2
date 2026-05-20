@@ -46,18 +46,33 @@ class PaymentService
                 throw new \InvalidArgumentException('Payment amount cannot exceed the balance due');
             }
 
-            // Get payment status - use provided status_id or default to 'paid'
-            $statusId = $data['status_id'] ?? $this->getPaymentStatusId('paid');
+            // Get payment status - use provided status_id or default based on payment method
+            $statusId = $data['status_id'] ?? null;
             if (! $statusId) {
-                // Fallback to paid status if not provided
-                $statusId = $this->getPaymentStatusId('paid');
+                // For GCash and Bank Transfer, default to 'completed'
+                // For other methods, also default to 'completed'
+                $statusId = $this->getPaymentStatusId('completed');
                 if (! $statusId) {
-                    throw new \RuntimeException('Payment status configuration error');
+                    // Fallback to paid status if completed not found
+                    $statusId = $this->getPaymentStatusId('paid');
+                    if (! $statusId) {
+                        throw new \RuntimeException('Payment status configuration error');
+                    }
                 }
             }
 
-            // Generate payment reference
-            $paymentReference = $this->generatePaymentReference();
+            // Use provided payment reference for GCash/Bank Transfer, generate for others
+            $paymentReference = null;
+            if (in_array($data['payment_method'], ['gcash', 'bank_transfer'])) {
+                // Use the provided reference from the form
+                $paymentReference = $data['payment_reference'] ?? null;
+                if (! $paymentReference) {
+                    throw new \InvalidArgumentException('Payment reference is required for '.$data['payment_method']);
+                }
+            } else {
+                // Generate a reference for other payment methods
+                $paymentReference = $this->generatePaymentReference();
+            }
 
             // Create payment record
             $payment = Payment::create([
@@ -65,6 +80,8 @@ class PaymentService
                 'payment_reference' => $paymentReference,
                 'amount' => $data['amount'],
                 'payment_method' => $data['payment_method'],
+                'bank_name' => $data['bank_name'] ?? null,
+                'transaction_id' => $data['transaction_id'] ?? null,
                 'payment_date' => $data['payment_date'] ?? now(),
                 'notes' => $data['notes'] ?? null,
                 'processed_by' => $processedBy,

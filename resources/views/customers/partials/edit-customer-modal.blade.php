@@ -587,7 +587,9 @@
          var modal = document.createElement('div');
          modal.id = 'passwordConfirmationModal';
          modal.className = 'fixed inset-0 z-[51] flex items-center justify-center px-2 py-6 bg-black/60 backdrop-blur-sm';
-        modal.innerHTML = `
+         // Store newStatus on the modal element so it can be accessed by event listeners
+         modal.dataset.newStatus = newStatus;
+         modal.innerHTML = `
             <div class="w-full max-w-md bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-3xl shadow-2xl">
                 <div class="flex items-center justify-between px-6 py-4 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/80 dark:bg-neutral-900/50 rounded-t-3xl">
                     <div>
@@ -643,37 +645,40 @@
 
          document.body.appendChild(modal);
 
-         // Handle confirm button
-         document.getElementById('confirmPasswordBtn').addEventListener('click', async function() {
-             var password = document.getElementById('passwordConfirmationInput').value;
+          // Handle confirm button
+          document.getElementById('confirmPasswordBtn').addEventListener('click', async function() {
+              var password = document.getElementById('passwordConfirmationInput').value;
+              // Retrieve newStatus from modal's data attribute (set in showPasswordConfirmationModal)
+              var passwordModal = document.getElementById('passwordConfirmationModal');
+              var newStatusFromModal = parseInt(passwordModal.dataset.newStatus, 10);
 
-             if (!password.trim()) {
-                 var errorDiv = document.getElementById('passwordConfirmationError');
-                 errorDiv.querySelector('p').textContent = 'Please enter your password';
-                 errorDiv.classList.remove('hidden');
-                 return;
-             }
-
-             this.disabled = true;
-             document.getElementById('confirmPasswordBtnText').classList.add('hidden');
-             document.getElementById('confirmPasswordBtnLoading').classList.remove('hidden');
-
-              try {
-                  // Verify password with backend
-                  var response = await axios.post('/api/verify-password', { password });
-
-                   if (response.data.valid) {
-                       closePasswordConfirmationModal();
-                       await changeCustomerStatus(newStatus);
-                  } else {
-                      var errorDiv = document.getElementById('passwordConfirmationError');
-                      errorDiv.querySelector('p').textContent = 'Invalid password. Please try again.';
-                      errorDiv.classList.remove('hidden');
-                  }
-              } catch (error) {
+              if (!password.trim()) {
                   var errorDiv = document.getElementById('passwordConfirmationError');
-                  errorDiv.querySelector('p').textContent = error.response?.data?.message || 'Error verifying password. Please try again.';
+                  errorDiv.querySelector('p').textContent = 'Please enter your password';
                   errorDiv.classList.remove('hidden');
+                  return;
+              }
+
+              this.disabled = true;
+              document.getElementById('confirmPasswordBtnText').classList.add('hidden');
+              document.getElementById('confirmPasswordBtnLoading').classList.remove('hidden');
+
+               try {
+                   // Verify password with backend
+                   var response = await axios.post('/api/verify-password', { password });
+
+                    if (response.data.valid) {
+                        closePasswordConfirmationModal();
+                        await changeCustomerStatus(newStatusFromModal);
+                   } else {
+                       var errorDiv = document.getElementById('passwordConfirmationError');
+                       errorDiv.querySelector('p').textContent = 'Invalid password. Please try again.';
+                       errorDiv.classList.remove('hidden');
+                   }
+               } catch (error) {
+                   var errorDiv = document.getElementById('passwordConfirmationError');
+                   errorDiv.querySelector('p').textContent = error.response?.data?.message || 'Error verifying password. Please try again.';
+                   errorDiv.classList.remove('hidden');
               } finally {
                  this.disabled = false;
                  document.getElementById('confirmPasswordBtnText').classList.remove('hidden');
