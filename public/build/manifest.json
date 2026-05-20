@@ -1,0 +1,25 @@
+{
+  "resources/css/app.css": {
+    "file": "assets/app-anCeLwbJ.css",
+    "src": "resources/css/app.css",
+    "isEntry": true,
+    "name": "app",
+    "names": [
+      "app.css"
+    ]
+  },
+  "resources/fonts/colonna.TTF": {
+    "file": "assets/colonna-BRPP0jAH.TTF",
+    "src": "resources/fonts/colonna.TTF"
+  },
+  "resources/fonts/pristina.TTF": {
+    "file": "assets/pristina-DUixff0z.TTF",
+    "src": "resources/fonts/pristina.TTF"
+  },
+  "resources/js/app.js": {
+    "file": "assets/app-CDfFro8V.js",
+    "name": "app",
+    "src": "resources/js/app.js",
+    "isEntry": true
+  }
+}
