@@ -26,144 +26,141 @@
     @endif
 </head>
 
-<body class="min-h-screen font-geist text-neutral-900 dark:text-neutral-50 flex overflow-hidden">
+<body class="min-h-screen font-harmonia text-neutral-900 dark:text-neutral-50 flex overflow-hidden">
 
-    {{-- LEFT PANEL --}}
-    <div class="hidden lg:flex lg:w-[58%] min-h-screen flex-col bg-gradient-to-br from-violet-700 via-indigo-600 to-blue-500 text-white relative overflow-hidden">
-        {{-- Decorative radial overlays --}}
-        <div class="absolute inset-0 pointer-events-none">
-            <div class="absolute top-0 left-0 w-[500px] h-[500px] rounded-full bg-purple-500/30 blur-3xl -translate-x-1/3 -translate-y-1/3"></div>
-            <div class="absolute bottom-0 right-0 w-[400px] h-[400px] rounded-full bg-blue-400/20 blur-3xl translate-x-1/4 translate-y-1/4"></div>
+{{-- LEFT PANEL (FORM) --}}
+<div class="w-full lg:w-[45%] xl:w-[40%] min-h-screen flex flex-col bg-white dark:bg-neutral-950 px-8 py-10 sm:px-12 lg:px-16 xl:px-24 relative overflow-y-auto">
+    <div class="w-full max-w-[400px] m-auto flex flex-col justify-center min-h-[calc(100vh-5rem)]">
+        {{-- Header --}}
+        <div class="mb-10">
+            <p class="text-[10px] uppercase tracking-[0.25em] text-[#8b31ff] dark:text-purple-400 font-bold mb-3">Welcome back</p>
+            <h2 class="text-[2.5rem] text-neutral-900 dark:text-neutral-50 font-bold mb-4">Sign in</h2>
+            <p class="text-[13px] text-neutral-500 dark:text-neutral-400 leading-relaxed max-w-[300px]">
+                Access your admin dashboard to manage rentals, customers and analytics in real time.
+            </p>
         </div>
 
-        {{-- Content --}}
-        <div class="relative z-10 flex flex-col h-full p-10 xl:p-14">
-            {{-- Logo / Brand --}}
-            <div class="flex items-center gap-3 mb-auto">
-                <div class="h-10 w-10 rounded-xl bg-white/15 border border-white/20 grid place-items-center">
-                    <x-icon name="lock" class="h-5 w-5 text-white" />
-                </div>
-                <div>
-                    <p class="text-base font-semibold leading-none">Love &amp; Styles</p>
-                    <p class="text-xs text-white/60 mt-0.5">Admin Portal</p>
-                </div>
-            </div>
+        {{-- Form --}}
+        <form method="POST" action="{{ route('login') }}" class="space-y-5">
+            @csrf
 
-            {{-- Hero copy --}}
-            <div class="py-12 xl:py-16">
-                <h1 class="text-3xl xl:text-4xl font-semibold leading-tight max-w-lg">
-                    Manage rentals with a clean, consistent interface.
-                </h1>
-                <p class="mt-4 text-white/70 text-sm leading-relaxed max-w-md">
-                    Access and organize customers, invoices, rentals, and analytics all in one secure location.
-                </p>
-
-                {{-- Feature cards --}}
-                <div class="mt-8 space-y-3">
-                    <div class="flex items-start gap-4 rounded-2xl border border-white/15 bg-white/10 px-5 py-4">
-                        <div class="mt-0.5 h-8 w-8 rounded-lg bg-white/15 grid place-items-center shrink-0">
-                            <x-icon name="shield" class="h-4 w-4 text-white" />
-                        </div>
-                        <div>
-                            <p class="text-sm font-semibold">Enterprise Security</p>
-                            <p class="text-xs text-white/60 mt-0.5">Time-boxed codes, encrypted data, and comprehensive audit logs</p>
-                        </div>
-                    </div>
-
-                    <div class="flex items-start gap-4 rounded-2xl border border-white/15 bg-white/10 px-5 py-4">
-                        <div class="mt-0.5 h-8 w-8 rounded-lg bg-white/15 grid place-items-center shrink-0">
-                            <x-icon name="check-circle" class="h-4 w-4 text-white" />
-                        </div>
-                        <div>
-                            <p class="text-sm font-semibold">Uptime-First Reliability</p>
-                            <p class="text-xs text-white/60 mt-0.5">Resilient infrastructure with 99.9% SLA guarantee</p>
-                        </div>
-                    </div>
+            {{-- Email --}}
+            <div class="space-y-1.5">
+                <label class="text-[11px] font-semibold text-neutral-800 dark:text-neutral-200 uppercase tracking-wide">Email address</label>
+                <div class="flex items-center bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-3.5 focus-within:border-purple-500 focus-within:ring-2 focus-within:ring-purple-100 dark:focus-within:ring-purple-500/20 transition group hover:border-neutral-300 dark:hover:border-neutral-700">
+                    <x-icon name="mail" class="h-4 w-4 text-[#8b31ff] opacity-80 mr-2.5 shrink-0" />
+                    <input
+                        type="email"
+                        name="email"
+                        required
+                        autocomplete="email"
+                        placeholder="admin@lovestyles.com"
+                        value="{{ old('email') }}"
+                        class="w-full bg-transparent py-3 text-sm text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 dark:placeholder-neutral-600 focus:outline-none"
+                    />
                 </div>
             </div>
 
-            {{-- Footer --}}
-            <p class="text-xs text-white/40 mt-auto">Enterprise-grade rental management system</p>
+            {{-- Password --}}
+            <div class="space-y-1.5">
+                <div class="flex items-center justify-between">
+                    <label class="text-[11px] font-semibold text-neutral-800 dark:text-neutral-200 uppercase tracking-wide">Password</label>
+                    <button type="button" onclick="openForgotModal()" class="text-[11px] font-medium text-[#8b31ff] hover:text-[#7a2ce0] dark:text-purple-400 dark:hover:text-purple-300">Forgot password?</button>
+                </div>
+                <div class="flex items-center bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-3.5 focus-within:border-purple-500 focus-within:ring-2 focus-within:ring-purple-100 dark:focus-within:ring-purple-500/20 transition group hover:border-neutral-300 dark:hover:border-neutral-700">
+                    <x-icon name="lock" class="h-4 w-4 text-[#8b31ff] opacity-80 mr-2.5 shrink-0" />
+                    <input
+                        id="passwordInput"
+                        type="password"
+                        name="password"
+                        required
+                        autocomplete="current-password"
+                        placeholder="••••••••"
+                        class="w-full bg-transparent py-3 text-sm text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 dark:placeholder-neutral-600 focus:outline-none"
+                    />
+                    <button type="button" onclick="togglePassword()" class="ml-2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition">
+                        <span id="eyeOpen"><x-icon name="eye" class="h-4 w-4" /></span>
+                        <span id="eyeClosed" class="hidden"><x-icon name="eye-off" class="h-4 w-4" /></span>
+                    </button>
+                </div>
+            </div>
+
+            @error('email')
+            <p class="text-xs text-red-600 dark:text-red-400 -mt-2">{{ $message }}</p>
+            @enderror
+
+{{--            TODO: To be Implemeneted --}}
+            {{-- Keep me signed in --}}
+{{--            <div class="flex items-center gap-2 pt-1 pb-2">--}}
+{{--                <input type="checkbox" id="remember" name="remember" class="h-3.5 w-3.5 rounded border-neutral-300 text-[#8b31ff] focus:ring-[#8b31ff] cursor-pointer accent-[#8b31ff]">--}}
+{{--                <label for="remember" class="text-[11px] text-neutral-600 dark:text-neutral-400 cursor-pointer">Keep me signed in for 30 days</label>--}}
+{{--            </div>--}}
+
+            {{-- Submit --}}
+            <button type="submit" class="w-full flex items-center justify-center gap-2 bg-[#9333ea] hover:bg-[#7e22ce] active:bg-[#6b21a8] rounded-xl py-3.5 text-white text-[13px] font-semibold shadow-md shadow-purple-600/20 transition-all duration-150">
+                Sign in to dashboard
+                <x-icon name="arrow-right" class="h-4 w-4" />
+            </button>
+        </form>
+
+        {{-- Divider --}}
+        <div class="mt-12 mb-6">
+            <p class="text-[10px] font-semibold text-neutral-400 dark:text-neutral-500 uppercase tracking-widest mb-4">Admin Capabilities</p>
+            <div class="space-y-3">
+                <div class="flex items-center gap-3">
+                    <div class="h-[18px] w-[18px] rounded-full border border-[#8b31ff]/30 flex items-center justify-center text-[#8b31ff] dark:text-purple-400 shrink-0">
+                        <x-icon name="check" class="h-2.5 w-2.5" />
+                    </div>
+                    <span class="text-[12px] text-neutral-600 dark:text-neutral-400">Secure encrypted access</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="h-[18px] w-[18px] rounded-full border border-[#8b31ff]/30 flex items-center justify-center text-[#8b31ff] dark:text-purple-400 shrink-0">
+                        <x-icon name="check" class="h-2.5 w-2.5" />
+                    </div>
+                    <span class="text-[12px] text-neutral-600 dark:text-neutral-400">Real-time inventory updates</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="h-[18px] w-[18px] rounded-full border border-[#8b31ff]/30 flex items-center justify-center text-[#8b31ff] dark:text-purple-400 shrink-0">
+                        <x-icon name="check" class="h-2.5 w-2.5" />
+                    </div>
+                    <span class="text-[12px] text-neutral-600 dark:text-neutral-400">Advanced analytics</span>
+                </div>
+            </div>
         </div>
-    </div>
 
-    {{-- RIGHT PANEL --}}
-    <div class="flex-1 min-h-screen flex items-center justify-center bg-neutral-50 dark:bg-neutral-950 px-6 py-12">
-        <div class="w-full max-w-sm">
-            {{-- Header --}}
-            <div class="mb-8">
-                <p class="text-[10px] uppercase tracking-[0.25em] text-neutral-400 dark:text-neutral-500 font-medium mb-1">Welcome back</p>
-                <h2 class="text-2xl font-bold text-neutral-900 dark:text-neutral-50">Sign in to dashboard</h2>
-                <p class="text-sm text-neutral-500 dark:text-neutral-400 mt-1.5">Access rentals, customers, invoices, and analytics.</p>
-            </div>
-
-            {{-- Form --}}
-            <form method="POST" action="{{ route('login') }}" class="space-y-5">
-                @csrf
-
-                {{-- Email --}}
-                <div class="space-y-1.5">
-                    <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Email address</label>
-                    <div class="flex items-center bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-3.5 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100 dark:focus-within:ring-indigo-500/20 transition">
-                        <x-icon name="mail" class="h-4 w-4 text-neutral-400 mr-2.5 shrink-0" />
-                        <input
-                            type="email"
-                            name="email"
-                            required
-                            autocomplete="email"
-                            placeholder="admin@example.com"
-                            value="{{ old('email') }}"
-                            class="w-full bg-transparent py-3 text-sm text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 dark:placeholder-neutral-600 focus:outline-none"
-                        />
-                    </div>
-                </div>
-
-                {{-- Password --}}
-                <div class="space-y-1.5">
-                    <div class="flex items-center justify-between">
-                        <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Password</label>
-                        <button type="button" onclick="openForgotModal()" class="text-xs font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300">Forgot password?</button>
-                    </div>
-                    <div class="flex items-center bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-3.5 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100 dark:focus-within:ring-indigo-500/20 transition">
-                        <x-icon name="lock" class="h-4 w-4 text-neutral-400 mr-2.5 shrink-0" />
-                        <input
-                            id="passwordInput"
-                            type="password"
-                            name="password"
-                            required
-                            autocomplete="current-password"
-                            placeholder="••••••••"
-                            class="w-full bg-transparent py-3 text-sm text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 dark:placeholder-neutral-600 focus:outline-none"
-                        />
-                        <button type="button" onclick="togglePassword()" class="ml-2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition">
-                            <span id="eyeOpen"><x-icon name="eye" class="h-4 w-4" /></span>
-                            <span id="eyeClosed" class="hidden"><x-icon name="eye-off" class="h-4 w-4" /></span>
-                        </button>
-                    </div>
-                </div>
-
-                @error('email')
-                <p class="text-xs text-red-600 dark:text-red-400 -mt-2">{{ $message }}</p>
-                @enderror
-
-                {{-- Submit --}}
-                <button type="submit" class="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 rounded-xl py-3.5 text-white text-sm font-semibold shadow-md shadow-indigo-600/25 transition-all duration-150">
-                    Sign in
-                    <x-icon name="arrow-right" class="h-4 w-4" />
-                </button>
-            </form>
-
-            {{-- Divider --}}
-            <div class="mt-8 flex items-center gap-3 text-xs text-neutral-400 dark:text-neutral-600">
-                <span class="h-px flex-1 bg-neutral-200 dark:bg-neutral-800"></span>
-            </div>
-
-            <p class="mt-5 text-center text-sm text-neutral-500 dark:text-neutral-400">
-                Need access? <a href="mailto:admin@yourdomain.com" class="font-semibold text-neutral-800 dark:text-neutral-100 hover:underline">Contact your administrator</a>
+        <div class="mt-auto border-t border-neutral-100 dark:border-neutral-800 pt-6">
+            <p class="text-center text-[11px] text-neutral-500 dark:text-neutral-400">
+                Need access? <a href="mailto:admin@lovestyles.com" class="font-semibold text-[#8b31ff] dark:text-purple-400 hover:underline">Contact administrator</a>
+            </p>
+            <p class="text-center text-[10px] text-neutral-400 mt-2">
+                &copy; 2024 Love &amp; Styles. Privacy &bull; Terms &bull; Security
             </p>
         </div>
     </div>
+</div>
 
+{{-- RIGHT PANEL (IMAGE) --}}
+<div class="hidden lg:block lg:flex-1 relative overflow-hidden bg-[#A36AA8]">
+    {{-- Glow Effect Behind Model --}}
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-white/40 rounded-full blur-[120px] pointer-events-none"></div>
+
+    {{-- Right Panel Model Image (Cutout) --}}
+    <img src="{{ asset('images/model-cutout.png') }}" alt="Love and Styles Model" class="absolute inset-0 w-full h-full object-contain object-bottom z-10 drop-shadow-2xl pointer-events-none" />
+
+    {{-- Logo Overlay (Top Right) --}}
+    <div class="absolute top-10 right-12 z-20 text-white flex items-center gap-2 drop-shadow-lg opacity-90">
+        <span class="text-[1.7rem] font-colonna tracking-[0.15em] uppercase">Love</span>
+        <span class="text-xl font-pristina">&amp;</span>
+        <span class="text-[2.2rem] font-pristina">Styles</span>
+    </div>
+
+    {{-- Text Overlay (Bottom Left) --}}
+    <div class="absolute bottom-16 left-12 z-20 text-white drop-shadow-md opacity-90">
+        <h1 class="text-[3.5rem] xl:text-[4.5rem] font-pristina leading-[1.1]">
+            Your Trusted Partner<br>in Timeless Style
+        </h1>
+    </div>
+</div>
 </body>
 
 {{-- OTP / Forgot password modal --}}
@@ -240,7 +237,7 @@
                         inputmode="numeric"
                         autocomplete="one-time-code"
                         placeholder="000000"
-                        class="w-full bg-transparent py-3 text-center text-lg font-geist-mono tracking-[0.4em] text-neutral-900 dark:text-neutral-50 placeholder-neutral-400 dark:placeholder-neutral-600 focus:outline-none"
+                        class="w-full bg-transparent py-3 text-center text-lg font-harmonia tracking-[0.4em] text-neutral-900 dark:text-neutral-50 placeholder-neutral-400 dark:placeholder-neutral-600 focus:outline-none"
                         oninput="this.value = this.value.replace(/[^0-9]/g, '')"
                     />
                 </div>
@@ -602,4 +599,3 @@
         }
     }
 </script>
-</html>
