@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('invoice_id')->constrained('invoices', 'invoice_id')->cascadeOnDelete();
             $table->string('payment_reference')->nullable(); // Transaction/receipt number
             $table->decimal('amount', 10, 2);
-            $table->enum('payment_method', ['cash', 'card', 'bank_transfer', 'gcash', 'paymaya']);
+            $table->enum('payment_method', ['cash', 'card', 'bank_transfer', 'gcash']);
             $table->dateTime('payment_date');
             $table->text('notes')->nullable();
             $table->foreignId('processed_by')->constrained('users', 'user_id')->cascadeOnDelete();

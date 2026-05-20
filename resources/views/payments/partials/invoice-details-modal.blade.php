@@ -464,17 +464,18 @@
             balCard.querySelector('p:last-child').className = 'text-xl font-bold text-amber-600 dark:text-amber-400 font-geist-mono';
         }
 
-        // Subtotal Breakdown
-        var calcSubtotal = Number(invoice.subtotal || 0);
-        
-        // If subtotal is not directly provided or is 0, let's calculate it from items
-        if (calcSubtotal === 0 && invoice.invoiceItems && invoice.invoiceItems.length > 0) {
-            calcSubtotal = invoice.invoiceItems.reduce(function(sum, item) {
-                return sum + Number(item.total_price || (Number(item.unit_price || 0) * Number(item.quantity || 1)));
-            }, 0);
-        }
-        
-        document.getElementById('detailInvoiceSubtotal').textContent = `₱${calcSubtotal.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+         // Subtotal Breakdown
+         var calcSubtotal = Number(invoice.subtotal || 0);
+         
+         // If subtotal is not directly provided or is 0, let's calculate it from items
+         var items = invoice.invoice_items || invoice.invoiceItems || [];
+         if (calcSubtotal === 0 && items.length > 0) {
+             calcSubtotal = items.reduce(function(sum, item) {
+                 return sum + Number(item.total_price || (Number(item.unit_price || 0) * Number(item.quantity || 1)));
+             }, 0);
+         }
+         
+         document.getElementById('detailInvoiceSubtotal').textContent = `₱${calcSubtotal.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
         
         var discount = Number(invoice.discount || 0);
         var discountRow = document.getElementById('detailInvoiceDiscountRow');
@@ -560,39 +561,55 @@
             return;
         }
 
-        container.innerHTML = `
-            <div class="divide-y divide-neutral-200 dark:divide-neutral-800">
-                ${payments.map(payment => {
-                    var payDate = payment.payment_date ? formatInvoiceDate(payment.payment_date) : '-';
-                    var amount = Number(payment.amount || 0);
-                    var method = payment.payment_method ? payment.payment_method.replace('_', ' ').toUpperCase() : 'UNKNOWN';
-                    
-                    var statusColor = payment.status_id === 2 || payment.status?.status_name === 'Completed'
-                        ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800/50'
-                        : 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800/50';
+         container.innerHTML = `
+             <div class="divide-y divide-neutral-200 dark:divide-neutral-800">
+                 ${payments.map(payment => {
+                     var payDate = payment.payment_date ? formatInvoiceDate(payment.payment_date) : '-';
+                     var amount = Number(payment.amount || 0);
+                     var method = payment.payment_method ? payment.payment_method.replace('_', ' ').toUpperCase() : 'UNKNOWN';
+                     
+                     var statusColor = payment.status_id === 2 || payment.status?.status_name === 'Completed'
+                         ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800/50'
+                         : 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800/50';
 
-                    return `
-                        <div class="px-4 py-3 flex items-center justify-between hover:bg-neutral-100 dark:hover:bg-neutral-800/50 transition-colors">
-                            <div class="flex items-center gap-3">
-                                <div class="h-8 w-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0 text-emerald-600 dark:text-emerald-400">
-                                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                </div>
-                                <div class="min-w-0">
-                                    <p class="text-sm font-medium text-neutral-900 dark:text-white truncate">${method}</p>
-                                    <p class="text-xs text-neutral-500 dark:text-neutral-400">${payDate}</p>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <span class="inline-flex items-center rounded-full ${statusColor} px-2 py-0.5 text-[10px] font-medium border flex-shrink-0">
-                                    ${payment.status?.status_name || (payment.status_id === 2 ? 'Completed' : 'Pending')}
-                                </span>
-                                <p class="text-sm font-semibold text-neutral-900 dark:text-white font-geist-mono ml-2">₱${amount.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
-                            </div>
-                        </div>
-                    `;
-                }).join('')}
-            </div>
-        `;
+                     // Determine payment details based on payment method
+                     var paymentDetails = '';
+                     if (payment.payment_method === 'card' && payment.transaction_id) {
+                         paymentDetails = `<p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1"><strong>Transaction ID:</strong> ${payment.transaction_id}</p>`;
+                     } else if (payment.payment_method === 'bank_transfer') {
+                         var bankInfo = '';
+                         if (payment.bank_name) bankInfo += `<strong>Bank:</strong> ${payment.bank_name}`;
+                         if (payment.payment_reference) bankInfo += bankInfo ? ` | <strong>Ref:</strong> ${payment.payment_reference}` : `<strong>Ref:</strong> ${payment.payment_reference}`;
+                         if (bankInfo) paymentDetails = `<p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">${bankInfo}</p>`;
+                     } else if (payment.payment_method === 'gcash' && payment.payment_reference) {
+                         paymentDetails = `<p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1"><strong>Reference:</strong> ${payment.payment_reference}</p>`;
+                     }
+
+                     return `
+                         <div class="px-4 py-3 hover:bg-neutral-100 dark:hover:bg-neutral-800/50 transition-colors">
+                             <div class="flex items-start justify-between">
+                                 <div class="flex items-start gap-3 flex-1">
+                                     <div class="h-8 w-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0 text-emerald-600 dark:text-emerald-400 mt-0.5">
+                                         <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                     </div>
+                                     <div class="min-w-0 flex-1">
+                                         <div class="flex items-center gap-2 flex-wrap">
+                                             <p class="text-sm font-medium text-neutral-900 dark:text-white">${method}</p>
+                                             <span class="inline-flex items-center rounded-full ${statusColor} px-2 py-0.5 text-[10px] font-medium border flex-shrink-0">
+                                                 ${payment.status?.status_name || (payment.status_id === 2 ? 'Completed' : 'Pending')}
+                                             </span>
+                                         </div>
+                                         <p class="text-xs text-neutral-500 dark:text-neutral-400">${payDate}</p>
+                                         ${paymentDetails}
+                                     </div>
+                                 </div>
+                                 <p class="text-sm font-semibold text-neutral-900 dark:text-white font-geist-mono ml-2 flex-shrink-0">₱${amount.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
+                             </div>
+                         </div>
+                     `;
+                 }).join('')}
+             </div>
+         `;
     }
 
     function formatInvoiceDate(dateString) {

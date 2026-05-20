@@ -99,7 +99,6 @@ Route::middleware('auth')->group(function () {
         // ============================================
         // AUTH ROUTES
         // ============================================
-        Route::post('/verify-password', [AuthController::class, 'verifyPassword'])->middleware('throttle:30,1');
 
         // ============================================
         // CUSTOMER ROUTES
@@ -271,6 +270,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/payments/{payment}/receipt', [PaymentController::class, 'generateReceiptPDF']);
         Route::post('/payments/{payment}/void', [PaymentController::class, 'voidPayment']);
         Route::post('/payments/{payment}/refund', [PaymentController::class, 'processRefund']);
+
+        // ============================================
+        // AUTH ROUTES (Inside API)
+        // ============================================
+        Route::post('/verify-password', [AuthController::class, 'verifyPassword'])->middleware('throttle:30,1');
 
     });
 });

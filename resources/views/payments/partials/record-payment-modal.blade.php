@@ -43,11 +43,62 @@
                         >
                             <option value="cash">Cash</option>
                             <option value="card">Card</option>
-                            <option value="gcash">GCash</option>
                             <option value="bank_transfer">Bank Transfer</option>
+                            <option value="gcash">GCash</option>
                         </select>
                     </div>
                 </div>
+            </div>
+
+            {{-- Transaction ID (for Card) --}}
+            <div class="space-y-2 hidden" id="transactionIdField">
+                <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Transaction ID</label>
+                <div class="flex items-center rounded-2xl bg-white px-3 py-2.5 border border-neutral-300 focus-within:border-neutral-500 dark:border-neutral-800 dark:bg-black/60 transition-colors duration-300 ease-in-out">
+                    <x-icon name="credit-card" class="h-4 w-4 text-neutral-500 mr-2 transition-colors duration-300 ease-in-out" />
+                    <input
+                        type="text"
+                        name="transaction_id"
+                        id="transactionId"
+                        placeholder="e.g., TXN123456789"
+                        class="w-full bg-transparent text-xs text-neutral-700 placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500 focus:outline-none"
+                    />
+                </div>
+                <p class="text-xs text-neutral-500 dark:text-neutral-400" id="transactionIdHint">
+                    Enter the card transaction ID
+                </p>
+            </div>
+
+            {{-- Bank Name (for Bank Transfer) --}}
+            <div class="space-y-2 hidden" id="bankNameField">
+                <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Bank Name</label>
+                <div class="flex items-center rounded-2xl bg-white px-3 py-2.5 border border-neutral-300 focus-within:border-neutral-500 dark:border-neutral-800 dark:bg-black/60 transition-colors duration-300 ease-in-out">
+                    <x-icon name="building-2" class="h-4 w-4 text-neutral-500 mr-2 transition-colors duration-300 ease-in-out" />
+                    <input
+                        type="text"
+                        name="bank_name"
+                        id="bankName"
+                        placeholder="e.g., BDO, BPI, Metrobank..."
+                        class="w-full bg-transparent text-xs text-neutral-700 placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500 focus:outline-none"
+                    />
+                </div>
+            </div>
+
+            {{-- Reference Number (for GCash & Bank Transfer) --}}
+            <div class="space-y-2 hidden" id="referenceField">
+                <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Reference Number</label>
+                <div class="flex items-center rounded-2xl bg-white px-3 py-2.5 border border-neutral-300 focus-within:border-neutral-500 dark:border-neutral-800 dark:bg-black/60 transition-colors duration-300 ease-in-out">
+                    <x-icon name="hash" class="h-4 w-4 text-neutral-500 mr-2 transition-colors duration-300 ease-in-out" />
+                    <input
+                        type="text"
+                        name="payment_reference"
+                        id="paymentReference"
+                        placeholder="Enter transaction reference number"
+                        class="w-full bg-transparent text-xs text-neutral-700 placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500 focus:outline-none"
+                    />
+                </div>
+                <p class="text-xs text-neutral-500 dark:text-neutral-400" id="referenceHint">
+                    This reference number must be unique
+                </p>
             </div>
 
             <div class="grid grid-cols-2 gap-6">
@@ -73,21 +124,21 @@
                 </div>
 
                 {{-- Status --}}
-                <div class="space-y-2">
-                    <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Status</label>
-                    <div class="flex items-center rounded-2xl bg-white px-3 py-2.5 border border-neutral-300 focus-within:border-neutral-500 dark:border-neutral-800 dark:bg-black/60 transition-colors duration-300 ease-in-out">
-                        <select
-                            name="status_id"
-                            required
-                            class="w-full bg-transparent text-xs text-neutral-700 dark:text-neutral-100 focus:outline-none appearance-none cursor-pointer"
-                        >
-                            <option value="2">Completed</option>
-                            <option value="1">Pending</option>
-                            <option value="3">Failed</option>
-                            <option value="4">Refunded</option>
-                        </select>
-                    </div>
-                </div>
+{{--                <div class="space-y-2">--}}
+{{--                    <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Status</label>--}}
+{{--                    <div class="flex items-center rounded-2xl bg-white px-3 py-2.5 border border-neutral-300 focus-within:border-neutral-500 dark:border-neutral-800 dark:bg-black/60 transition-colors duration-300 ease-in-out">--}}
+{{--                        <select--}}
+{{--                            name="status_id"--}}
+{{--                            required--}}
+{{--                            class="w-full bg-transparent text-xs text-neutral-700 dark:text-neutral-100 focus:outline-none appearance-none cursor-pointer"--}}
+{{--                        >--}}
+{{--                            <option value="2">Completed</option>--}}
+{{--                            <option value="1">Pending</option>--}}
+{{--                            <option value="3">Failed</option>--}}
+{{--                            <option value="4">Refunded</option>--}}
+{{--                        </select>--}}
+{{--                    </div>--}}
+{{--                </div>--}}
             </div>
 
             {{-- Notes --}}
@@ -173,9 +224,9 @@
          isSubmitting: false,
          pendingInvoiceId: null
      };
-     
+
      window.recordPaymentModalState = state;
-     
+
       window.openRecordPaymentModal = function() {
           state.isOpen = true;
           var modal = document.getElementById('recordPaymentModal');
@@ -190,7 +241,7 @@
           // Don't reset form here - it will be reset when closing
           hideMessages();
       };
-    
+
     window.closeRecordPaymentModal = function() {
         state.isOpen = false;
         state.isSubmitting = false;
@@ -204,14 +255,14 @@
         var bal = document.getElementById('balanceInfo');
         if (bal) bal.classList.add('hidden');
     };
-    
+
     function hideMessages() {
         var err = document.getElementById('recordPaymentError');
         var suc = document.getElementById('recordPaymentSuccess');
         if (err) err.classList.add('hidden');
         if (suc) suc.classList.add('hidden');
     }
-    
+
     function showError(msg) {
         var el = document.getElementById('recordPaymentError');
         if (el) {
@@ -221,7 +272,7 @@
         var suc = document.getElementById('recordPaymentSuccess');
         if (suc) suc.classList.add('hidden');
     }
-    
+
     function showSuccess(msg) {
         var el = document.getElementById('recordPaymentSuccess');
         if (el) {
@@ -231,7 +282,7 @@
         var err = document.getElementById('recordPaymentError');
         if (err) err.classList.add('hidden');
     }
-    
+
     function updateSubmitButton() {
         var btn = document.getElementById('recordPaymentSubmitBtn');
         var txt = document.getElementById('recordPaymentBtnText');
@@ -241,7 +292,7 @@
         txt.classList.toggle('hidden', state.isSubmitting);
         ldg.classList.toggle('hidden', !state.isSubmitting);
     }
-    
+
      function loadModalInvoices() {
           if (!window.axios) return;
           window.axios.get('/api/invoices/monitor?status=pending')
@@ -259,7 +310,7 @@
                           opt.dataset.balance = inv.balance_due;
                           sel.appendChild(opt);
                       });
-                      
+
                       // If there's a pending invoice to select, do it now
                       if (window.recordPaymentModalState.pendingInvoiceId) {
                           var pendingId = window.recordPaymentModalState.pendingInvoiceId;
@@ -283,7 +334,7 @@
                   if (sel) sel.innerHTML = '<option value="">Error loading</option>';
               });
       }
-    
+
     document.getElementById('invoiceSelect').addEventListener('change', function() {
         var opt = this.options[this.selectedIndex];
         var balInfo = document.getElementById('balanceInfo');
@@ -304,32 +355,121 @@
             }
         }
     });
-    
+
+    // Handle payment method change to show/hide reference and bank name fields
+    document.querySelector('select[name="payment_method"]').addEventListener('change', function() {
+        var method = this.value;
+        var referenceField = document.getElementById('referenceField');
+        var bankNameField = document.getElementById('bankNameField');
+        var transactionIdField = document.getElementById('transactionIdField');
+        var paymentReference = document.getElementById('paymentReference');
+        var bankName = document.getElementById('bankName');
+        var transactionId = document.getElementById('transactionId');
+
+        // Show/hide reference field for GCash and Bank Transfer
+        if (method === 'gcash' || method === 'bank_transfer') {
+            if (referenceField) referenceField.classList.remove('hidden');
+            if (paymentReference) paymentReference.required = true;
+        } else {
+            if (referenceField) referenceField.classList.add('hidden');
+            if (paymentReference) {
+                paymentReference.required = false;
+                paymentReference.value = '';
+            }
+        }
+
+        // Show/hide bank name field for Bank Transfer only
+        if (method === 'bank_transfer') {
+            if (bankNameField) bankNameField.classList.remove('hidden');
+            if (bankName) bankName.required = true;
+        } else {
+            if (bankNameField) bankNameField.classList.add('hidden');
+            if (bankName) {
+                bankName.required = false;
+                bankName.value = '';
+            }
+        }
+
+        // Show/hide Transaction ID field for Card only
+        if (method === 'card') {
+            if (transactionIdField) transactionIdField.classList.remove('hidden');
+            if (transactionId) transactionId.required = true;
+        } else {
+            if (transactionIdField) transactionIdField.classList.add('hidden');
+            if (transactionId) {
+                transactionId.required = false;
+                transactionId.value = '';
+            }
+        }
+
+        // Update reference hint text based on payment method
+        var referenceHint = document.getElementById('referenceHint');
+        if (referenceHint) {
+            if (method === 'gcash') {
+                referenceHint.textContent = 'Enter your GCash reference number. This reference number must be unique';
+            } else if (method === 'bank_transfer') {
+                referenceHint.textContent = 'Enter your bank transaction reference number. This reference number must be unique';
+            }
+        }
+    });
+
     document.getElementById('recordPaymentForm').addEventListener('submit', function(e) {
         e.preventDefault();
         if (state.isSubmitting) return;
-        
+
         hideMessages();
         var form = e.target;
         var data = new FormData(form);
-        
+
         var errors = [];
         if (!data.get('invoice_id')) errors.push('Please select an invoice');
         if (!data.get('amount') || parseFloat(data.get('amount')) <= 0) errors.push('Please enter a valid amount');
+        if (!data.get('payment_method')) errors.push('Please select a payment method');
+
+        var paymentMethod = data.get('payment_method');
         
+        // Check if reference is required for GCash and Bank Transfer
+        if ((paymentMethod === 'gcash' || paymentMethod === 'bank_transfer') && !data.get('payment_reference')) {
+            errors.push('Reference number is required for ' + (paymentMethod === 'gcash' ? 'GCash' : 'Bank Transfer'));
+        }
+
+        // Check if bank name is required for Bank Transfer
+        if (paymentMethod === 'bank_transfer' && !data.get('bank_name')) {
+            errors.push('Bank name is required for Bank Transfer');
+        }
+
+        // Check if Transaction ID is required for Card
+        if (paymentMethod === 'card' && !data.get('transaction_id')) {
+            errors.push('Transaction ID is required for Card payments');
+        }
+
         if (errors.length) { showError(errors[0]); return; }
-        
+
         state.isSubmitting = true;
         updateSubmitButton();
-        
+
         var payload = {
             invoice_id: data.get('invoice_id'),
             amount: parseFloat(data.get('amount')),
             payment_method: data.get('payment_method'),
-            status_id: parseInt(data.get('status_id')),
             notes: data.get('notes') || null
         };
-        
+
+        // Include payment reference if present
+        if (data.get('payment_reference')) {
+            payload.payment_reference = data.get('payment_reference');
+        }
+
+        // Include bank name if present
+        if (data.get('bank_name')) {
+            payload.bank_name = data.get('bank_name');
+        }
+
+        // Include transaction ID if present
+        if (data.get('transaction_id')) {
+            payload.transaction_id = data.get('transaction_id');
+        }
+
         window.axios.post('/api/payments', payload)
             .then(function(resp) {
                 if (resp.data.message) {
@@ -349,11 +489,11 @@
                 updateSubmitButton();
             });
     });
-    
+
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape' && state.isOpen) window.closeRecordPaymentModal();
     });
-    
+
     var modal = document.getElementById('recordPaymentModal');
     if (modal) {
         modal.addEventListener('click', function(e) {

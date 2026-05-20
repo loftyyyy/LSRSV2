@@ -56,6 +56,20 @@ class StorePaymentRequest extends FormRequest
                 'max:1000',
             ],
             'payment_reference' => [
+                'required_if:payment_method,gcash,bank_transfer',
+                'nullable',
+                'string',
+                'max:100',
+                'unique:payments,payment_reference',
+            ],
+            'bank_name' => [
+                'required_if:payment_method,bank_transfer',
+                'nullable',
+                'string',
+                'max:100',
+            ],
+            'transaction_id' => [
+                'required_if:payment_method,card',
                 'nullable',
                 'string',
                 'max:100',
@@ -81,6 +95,10 @@ class StorePaymentRequest extends FormRequest
             'status_id.exists' => 'The selected payment status does not exist.',
             'payment_date.before_or_equal' => 'Payment date cannot be in the future.',
             'notes.max' => 'Notes cannot exceed 1000 characters.',
+            'payment_reference.required_if' => 'Reference number is required for GCash and Bank Transfer payments.',
+            'payment_reference.unique' => 'This reference number has already been used. Please verify the reference number.',
+            'bank_name.required_if' => 'Bank name is required for Bank Transfer payments.',
+            'transaction_id.required_if' => 'Transaction ID is required for Card payments.',
         ];
     }
 
