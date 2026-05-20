@@ -1,14 +1,14 @@
 <aside class="fixed left-0 top-0 flex flex-col h-screen w-64 bg-white dark:bg-[#0b0b0b] border-r border-neutral-200 dark:border-neutral-800 text-neutral-900 dark:text-neutral-100 transition-colors duration-200 z-40">
     {{-- Brand --}}
     <div class="flex items-center gap-3 px-6 h-20 border-b border-neutral-200 dark:border-neutral-800">
-        <div class="flex items-center justify-center h-10 w-10 rounded-2xl bg-violet-600 text-sm font-semibold tracking-tight text-white">
-            LS
+        <div class="flex items-center justify-center h-10 w-10 rounded-md overflow-hidden shrink-0">
+            <img src="{{ asset('images/Love&Styles Logo.jpg') }}" alt="Love & Styles Logo" class="h-full w-full object-cover" />
         </div>
         <div class="flex flex-col">
-            <span class="text-sm font-semibold tracking-tight text-neutral-900 dark:text-white" style="font-family: 'Geist', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
-                Love &amp; Styles
+            <span class="text-sm font-semibold tracking-tight text-neutral-900 dark:text-white">
+                <span class="font-colonna">Love</span> <span class="font-pristina">&amp; Styles</span>
             </span>
-            <span class="text-xs text-neutral-500 dark:text-neutral-400" style="font-family: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;">
+            <span class="text-xs text-neutral-500 dark:text-neutral-400 font-harmonia">
                 Rental System
             </span>
         </div>
@@ -25,7 +25,7 @@
                 if (isset($item['admin_only']) && $item['admin_only'] && (!auth()->check() || !auth()->user()->is_admin)) {
                     continue;
                 }
-                
+
                 $isActive = request()->routeIs($item['route'] . '*');
                 $tag = $isActive ? 'div' : 'a';
             @endphp

@@ -20,6 +20,10 @@ Route::middleware(['guest'])->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login'])->name('login');
 
+//    // Password Reset Routes
+//    Route::get('/forgot-password', [AuthController::class, 'showForgotPasswordForm'])->name('password.request');
+//    Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->name('password.email');
+//
     Route::prefix('otp')->group(function () {
         Route::post('/generate-otp', [OtpController::class, 'generateOtp']);
         Route::post('/verify-otp', [OtpController::class, 'verifyOtp']);
