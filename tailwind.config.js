@@ -7,7 +7,13 @@ export default {
         './resources/**/*.vue',
     ],
     theme: {
-        extend: {},
+        extend: {
+            fontFamily: {
+                'colonna': ['Colonna', 'serif'],
+                'pristina': ['Pristina', 'serif'],
+                'harmonia': ['Harmonia Sans W01 Regular', 'sans-serif'],
+            },
+        },
     },
     plugins: [],
 }

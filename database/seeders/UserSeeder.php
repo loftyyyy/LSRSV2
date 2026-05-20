@@ -26,5 +26,12 @@ class UserSeeder extends Seeder
             'is_admin'=>false,
             'Password'=>Hash::make('clerk'),
         ]);
+
+        User::create([
+            'Name'=>'rho',
+            'Email'=>'r.jornadal.544960@umindanao.edu.ph',
+            'is_admin'=>true,
+            'Password'=>Hash::make('rho'),
+        ]);
     }
 }

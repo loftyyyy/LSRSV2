@@ -6,6 +6,33 @@
 @source '../**/*.blade.php';
 @source '../**/*.js';
 
+
+@font-face {
+    font-family: 'Harmonia Sans W01';
+    font-style: normal;
+    font-weight: 400;
+    src: local('Harmonia Sans W01 Regular'), local('Harmonia Sans W01');
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Colonna';
+    font-style: normal;
+    font-weight: 400;
+    src: url('../fonts/colonna.TTF') format('truetype'),
+    local('Colonna Regular'), local('Colonna MT');
+    font-display: swap;
+    size-adjust: 140%;
+}
+
+@font-face {
+    font-family: 'Pristina';
+    font-style: normal;
+    font-weight: 400;
+    src: url('../fonts/pristina.TTF') format('truetype'),
+    local('Pristina Black'), local('Pristina');
+    font-display: swap;
+}
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
@@ -21,6 +48,15 @@
 .font-geist-mono {
     font-family: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco,
     Consolas, 'Liberation Mono', 'Courier New', monospace;
+}
+
+/* Custom Fonts */
+.font-colonna {
+    font-family: 'Colonna', serif;
+}
+
+.font-pristina {
+    font-family: 'Pristina', cursive;
 }
 
 input:-webkit-autofill,

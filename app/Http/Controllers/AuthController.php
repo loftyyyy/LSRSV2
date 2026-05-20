@@ -14,7 +14,7 @@ use Illuminate\View\View;
 /**
  * Controller handling user authentication operations including login, registration,
  * password reset, and account management.
- * 
+ *
  * This controller manages the complete authentication lifecycle for users in the system,
  * providing secure authentication mechanisms and session management.
  */
@@ -22,7 +22,7 @@ class AuthController extends Controller
 {
     /**
      * Display the login view.
-     * 
+     *
      * @return \Illuminate\View\View The login form view
      */
     public function showLoginForm(): View
@@ -33,9 +33,9 @@ class AuthController extends Controller
 
     /**
      * Process user login request.
-     * 
+     *
      * Validates user credentials, authenticates the user, and redirects to the intended page.
-     * 
+     *
      * @param \Illuminate\Http\Request $request The HTTP request containing login credentials
      * @return \Illuminate\Http\RedirectResponse Redirect to dashboard or back with errors
      */
@@ -64,7 +64,7 @@ class AuthController extends Controller
 
     /**
      * Display the registration view.
-     * 
+     *
      * @return \Illuminate\View\View The registration form view
      */
     public function showRegisterForm(): View
@@ -75,9 +75,9 @@ class AuthController extends Controller
 
     /**
      * Process new user registration.
-     * 
+     *
      * Validates user input, creates a new user account, and redirects to login page.
-     * 
+     *
      * @param \Illuminate\Http\Request $request The HTTP request containing registration data
      * @return \Illuminate\Http\RedirectResponse Redirect to login page
      */
@@ -103,7 +103,7 @@ class AuthController extends Controller
 
     /**
      * Display the forgot password view.
-     * 
+     *
      * @return \Illuminate\View\View The forgot password form view
      */
     public function showForgotPasswordForm(): View
@@ -112,11 +112,53 @@ class AuthController extends Controller
         return view('auth.forgot-password');
     }
 
+//    /**
+//     * Send password reset link to user email.
+//     *
+//     * Validates the email exists in the system and sends a password reset link.
+//     * Provides specific error messages when email is not found.
+//     *
+//     * @param \Illuminate\Http\Request $request The HTTP request containing email
+//     * @return \Illuminate\Http\RedirectResponse Redirect with status or error message
+//     */
+//    public function sendResetLink(Request $request): RedirectResponse
+//    {
+//        // Validate email input
+//        $request->validate([
+//            'email' => ['required', 'email'],
+//        ]);
+//
+//        // Check if user exists with provided email
+//        $user = User::where('email', $request->email)->first();
+//
+//        if (!$user) {
+//            // Return specific error when email doesn't exist
+//            return back()->withErrors([
+//                'email' => 'This email address is not registered in our system. Please check and try again or register for a new account.',
+//            ])->onlyInput('email');
+//        }
+//
+//        // Send password reset link using Laravel's Password broker
+//        $status = Password::sendResetLink(
+//            $request->only('email')
+//        );
+//
+//        // Return success message or specific error based on broker response
+//        if ($status === Password::RESET_LINK_SENT) {
+//            return back()->with('status', 'We have emailed your password reset link. Please check your inbox and spam folder.');
+//        }
+//
+//        // Handle other password broker errors
+//        return back()->withErrors([
+//            'email' => trans($status),
+//        ])->onlyInput('email');
+//    }
+//
     /**
      * Process password reset request.
-     * 
+     *
      * Validates reset request data, verifies user identity, and updates password.
-     * 
+     *
      * @param \Illuminate\Http\Request $request The HTTP request containing reset data
      * @return \Illuminate\Http\JsonResponse JSON response indicating success or failure
      */
@@ -160,9 +202,9 @@ class AuthController extends Controller
 
     /**
      * Verify the current authenticated user's password.
-     * 
+     *
      * Used for sensitive operations requiring password re-verification.
-     * 
+     *
      * @param \Illuminate\Http\Request $request The HTTP request containing password to verify
      * @return \Illuminate\Http\JsonResponse JSON response indicating verification result
      */
@@ -190,9 +232,9 @@ class AuthController extends Controller
 
     /**
      * Process user logout request.
-     * 
+     *
      * Clears user session data and redirects to login page.
-     * 
+     *
      * @param \Illuminate\Http\Request $request The HTTP request
      * @return \Illuminate\Http\RedirectResponse Redirect to login page
      */
@@ -200,10 +242,10 @@ class AuthController extends Controller
     {
         // Clear authentication session
         Auth::logout();
-        
+
         // Invalidate session to remove all session data
         $request->session()->invalidate();
-        
+
         // Regenerate CSRF token for security
         $request->session()->regenerateToken();
 
