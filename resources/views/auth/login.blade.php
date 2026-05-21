@@ -500,8 +500,16 @@
             }
         } catch (err) {
             const data = err.data || {};
-            const message = data.message || 'Server error. Please try again later.';
-            setText('otpStep1Msg', message);
+            const status = err.status;
+            if (status === 422) {
+                // Extract first validation error (e.g. email not found)
+                const firstError = data.errors
+                    ? Object.values(data.errors)[0][0]
+                    : data.message;
+                setText('otpStep1Msg', firstError || 'Invalid request.');
+            } else {
+                setText('otpStep1Msg', data.message || 'Server error. Please try again later.');
+            }
         } finally {
             setLoading('otpSendBtn', false, 'Send code');
         }
