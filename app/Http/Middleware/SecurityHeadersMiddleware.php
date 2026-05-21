@@ -33,13 +33,20 @@ class SecurityHeadersMiddleware
         // Modern browsers use CSP, but this helps older IE browsers
         $response->header('X-XSS-Protection', '1; mode=block');
 
-        // Strict Transport Security - Force HTTPS for 1 year on production
+        // Strict Transport Security - Force HTTPS
+        // max-age=31536000: Force HTTPS for 1 year (31,536,000 seconds)
         // includeSubDomains: Apply to all subdomains
-        // preload: Allow inclusion in HSTS preload list
+        // preload: Allow inclusion in HSTS preload list at hstspreload.org
         if (app()->environment('production')) {
             $response->header(
                 'Strict-Transport-Security',
                 'max-age=31536000; includeSubDomains; preload'
+            );
+        } else {
+            // Development: Still enforce HTTPS but with shorter duration (1 day)
+            $response->header(
+                'Strict-Transport-Security',
+                'max-age=86400; includeSubDomains'
             );
         }
 

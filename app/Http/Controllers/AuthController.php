@@ -87,7 +87,7 @@ class AuthController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],          // User's full name
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'], // Unique email
-            'password' => ['required', 'string', 'min:8', 'confirmed'], // Password with confirmation
+            'password' => ['required', 'string', 'min:16', 'confirmed'], // Password with confirmation (16 char minimum - NIST/CISA compliant)
         ]);
 
         // Create new user with hashed password for security
@@ -167,8 +167,8 @@ class AuthController extends Controller
         // Validate password reset request data
         $request->validate([
             'email' => ['required', 'email'],           // User's email address
-            'password' => ['required', 'string', 'min:8'], // New password
-            'confirm_password' => ['required', 'string', 'min:8'], // Password confirmation
+            'password' => ['required', 'string', 'min:16'], // New password (16 char minimum - NIST/CISA compliant)
+            'confirm_password' => ['required', 'string', 'min:16'], // Password confirmation
         ]);
 
         // Find user by email address

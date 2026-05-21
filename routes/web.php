@@ -12,24 +12,39 @@ use App\Http\Controllers\RentalController;
 use App\Http\Controllers\ReservationController;
 use Illuminate\Support\Facades\Route;
 
+// ============================================
+// AUTHENTICATION ROUTES (Guest Only)
+// Rate limited to prevent brute force attacks
+// ============================================
 Route::middleware(['guest'])->group(function () {
 
+    // Login & Registration with rate limiting
+    // 5 attempts per 15 minutes (900 seconds)
     Route::get('/register', [AuthController::class,  'showRegisterForm'])->name('register');
     Route::get('/', [AuthController::class, 'showLoginForm'])->name('loginForm');
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('loginForm');
-    Route::post('/register', [AuthController::class, 'register']);
-    Route::post('/login', [AuthController::class, 'login'])->name('login');
+    Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:5,900');
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,900')->name('login');
 
 //    // Password Reset Routes
 //    Route::get('/forgot-password', [AuthController::class, 'showForgotPasswordForm'])->name('password.request');
 //    Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->name('password.email');
 //
+    // OTP Routes with strict rate limiting
     Route::prefix('otp')->group(function () {
-        Route::post('/generate-otp', [OtpController::class, 'generateOtp']);
-        Route::post('/verify-otp', [OtpController::class, 'verifyOtp']);
-        Route::post('/resend-otp', [OtpController::class, 'resendOtp']);
+        // Generate OTP: 3 attempts per 15 minutes (prevent email spam)
+        Route::post('/generate-otp', [OtpController::class, 'generateOtp'])->middleware('throttle:3,900');
+        
+        // Verify OTP: 5 attempts per 15 minutes (allow for user error)
+        Route::post('/verify-otp', [OtpController::class, 'verifyOtp'])->middleware('throttle:5,900');
+        
+        // Resend OTP: 2 attempts per 15 minutes (strict, prevent spam)
+        Route::post('/resend-otp', [OtpController::class, 'resendOtp'])->middleware('throttle:2,900');
+        
         Route::post('/delete-otp', [OtpController::class, 'deleteOtp']);
-        Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+        
+        // Reset password: 3 attempts per 15 minutes
+        Route::post('/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:3,900');
     });
 
 });
